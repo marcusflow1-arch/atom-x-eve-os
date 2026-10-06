@@ -1,108 +1,69 @@
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, ChevronUp, ChevronDown, X, LayoutGrid, SlidersHorizontal } from 'lucide-react';
-import { DEVELOPERS } from './devstore/devData';
-import DeveloperShowcaseSection from './devstore/DeveloperShowcaseSection';
-import DeveloperProfilePage from './devstore/DeveloperProfilePage';
-import StudioScrollRail from './devstore/StudioScrollRail';
-import DevSearchBar from './devstore/DevSearchBar';
+import {useEffect,useMemo,useRef,useState} from 'react';
+import {useSearchParams} from 'react-router-dom';
+import {ArrowRight,Building2,ChevronLeft,ChevronRight,Edit3,Search,SlidersHorizontal,X} from 'lucide-react';
+import {GameCover} from './redesign/StoreSections';
+import {discoveryOrder,label,normalize} from './redesign/discovery';
+import {useStudioHub} from './devstore/useStudioHub';
+import {filterStudios,firstLetter} from './devstore/studioDiscovery';
+import {ProjectCard,StudioCard,StudioComposer,StudioFeed,StudioLogo} from './devstore/StudioHubParts';
+import StudioHubProfile from './devstore/StudioHubProfile';
+import './devstore/studio-hub.css';
 
-const GENRES = ['All', ...Array.from(new Set(DEVELOPERS.flatMap((d) => [
-  ...(d.releasedGames || []).map((g) => g.genre),
-  ...(d.inDevelopment || []).map((g) => g.genre),
-].filter(Boolean)))).sort((a, b) => a.localeCompare(b))];
-
-export default function DevCardsContent({ onNavigateToGame }) {
-  const [selectedDev, setSelectedDev] = useState(null);
-  const [search, setSearch] = useState('');
-  const [genre, setGenre] = useState('All');
-  const [sortMode, setSortMode] = useState('alpha');
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [browseAllOpen, setBrowseAllOpen] = useState(false);
-  const railRef = useRef(null);
-  const wheelTsRef = useRef(0);
-
-  const handleSearchChange = useCallback((q) => setSearch(q), []);
-
-  const sortedDevs = useMemo(() => {
-    const list = [...DEVELOPERS];
-    if (sortMode === 'popular') return list.sort((a, b) => (b.followers || 0) - (a.followers || 0));
-    if (sortMode === 'games') return list.sort((a, b) => ((b.gamesReleased || 0) + (b.inDevelopment?.length || 0)) - ((a.gamesReleased || 0) + (a.inDevelopment?.length || 0)));
-    return list.sort((a, b) => a.name.localeCompare(b.name));
-  }, [sortMode]);
-
-  const filteredDevs = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return sortedDevs.filter((d) => {
-      const matchesGenre = genre === 'All' || [...(d.releasedGames || []), ...(d.inDevelopment || [])].some((g) => g.genre === genre);
-      const matchesSearch = !q || d.name.toLowerCase().includes(q) || d.tagline.toLowerCase().includes(q) || (d.inDevelopment || []).some((p) => p.title.toLowerCase().includes(q));
-      return matchesGenre && matchesSearch;
-    });
-  }, [sortedDevs, search, genre]);
-
-  useEffect(() => {
-    setActiveIndex((prev) => Math.min(Math.max(prev, 0), Math.max(0, filteredDevs.length - 1)));
-  }, [filteredDevs.length]);
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key !== 'Escape') return;
-      if (browseAllOpen) setBrowseAllOpen(false);
-      else if (selectedDev) setSelectedDev(null);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [browseAllOpen, selectedDev]);
-
-  const activeDev = filteredDevs[activeIndex] || filteredDevs[0];
-
-  const handleRailWheel = (e) => {
-    if (filteredDevs.length <= 1 || selectedDev || browseAllOpen) return;
-    e.preventDefault();
-    const now = Date.now();
-    if (now - wheelTsRef.current < 120) return;
-    wheelTsRef.current = now;
-    const dir = e.deltaY > 0 ? 1 : -1;
-    setActiveIndex((prev) => Math.min(filteredDevs.length - 1, Math.max(0, prev + dir)));
-  };
-
-  return (
-    <div className="w-full h-full pt-16 overflow-hidden">
-      <AnimatePresence mode="wait">
-        {selectedDev ? (
-          <motion.div key={`dev-profile-${selectedDev.id}`} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }} className="h-full">
-            <DeveloperProfilePage dev={selectedDev} onBack={() => setSelectedDev(null)} />
-          </motion.div>
-        ) : (
-          <motion.div key="dev-storefront" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col">
-            <div className="flex-shrink-0 px-6 py-4 flex items-center justify-between gap-4" style={{ background: 'rgba(8, 12, 18, 0.6)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0"><Building2 className="w-5 h-5 text-amber-400" /></div>
-                <div className="min-w-0"><h1 className="text-lg font-black tracking-tight text-white">Developer Showcase</h1><p className="text-[10px] uppercase tracking-wider text-white/40 font-bold">{DEVELOPERS.length} studios · {DEVELOPERS.reduce((s, d) => s + (d.inDevelopment?.length || 0), 0)} active projects</p></div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 border-b border-white/15 text-[9px] text-white/40 uppercase tracking-wider"><SlidersHorizontal className="w-3 h-3" /><select value={genre} onChange={(e) => { setGenre(e.target.value); setActiveIndex(0); }} className="bg-transparent text-white/60 focus:outline-none cursor-pointer">{GENRES.map((g) => <option key={g} value={g} className="bg-slate-900">{g}</option>)}</select></div>
-                <select value={sortMode} onChange={(e) => { setSortMode(e.target.value); setActiveIndex(0); }} className="hidden md:block bg-transparent border-b border-white/15 px-2 py-1.5 text-[9px] text-white/50 uppercase tracking-wider focus:outline-none"><option value="alpha" className="bg-slate-900">A–Z</option><option value="popular" className="bg-slate-900">Popularity</option><option value="games" className="bg-slate-900">Game Count</option></select>
-                <DevSearchBar studios={sortedDevs} onSelectStudio={(idx) => { const id = sortedDevs[idx]?.id; const next = filteredDevs.findIndex((d) => d.id === id); if (next >= 0) setActiveIndex(next); }} onSearchChange={handleSearchChange} />
-                <button onClick={() => setBrowseAllOpen(true)} className="hidden sm:flex items-center gap-1.5 px-3 py-2 border border-white/10 hover:border-white/20 hover:bg-white/5 text-[9px] text-white/55 uppercase tracking-wider transition-all" title="Browse all studios"><LayoutGrid className="w-3 h-3" /> Browse All</button>
-              </div>
-            </div>
-
-            <div className="flex-1 flex overflow-hidden">
-              {filteredDevs.length > 0 && <div ref={railRef} onWheel={handleRailWheel} className="w-[15%] min-w-[150px] max-w-[260px] flex-shrink-0 h-full"><StudioScrollRail studios={filteredDevs} activeIndex={activeIndex} onSelect={setActiveIndex} /></div>}
-              <div className="flex-1 overflow-y-auto custom-scrollbar">
-                {activeDev ? <div className="w-full px-6 xl:px-10 py-8"><AnimatePresence mode="wait"><motion.div key={activeDev.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}><DeveloperShowcaseSection dev={activeDev} index={0} onSelect={setSelectedDev} /></motion.div></AnimatePresence><div className="flex items-center justify-center gap-4 mt-2 mb-6 text-white/20 text-[10px]"><button onClick={() => setActiveIndex((prev) => Math.max(0, prev - 1))} disabled={activeIndex === 0} className="flex items-center gap-1 px-3 py-1.5 border border-white/10 hover:bg-white/5 disabled:opacity-30 transition-all"><ChevronUp className="w-3 h-3" /> Prev</button><span className="font-mono">{activeIndex + 1} / {filteredDevs.length}</span><button onClick={() => setActiveIndex((prev) => Math.min(filteredDevs.length - 1, prev + 1))} disabled={activeIndex === filteredDevs.length - 1} className="flex items-center gap-1 px-3 py-1.5 border border-white/10 hover:bg-white/5 disabled:opacity-30 transition-all">Next <ChevronDown className="w-3 h-3" /></button></div></div> : <div className="flex flex-col items-center justify-center h-full text-white/30"><Building2 className="w-16 h-16 mb-4 opacity-20" /><p className="text-sm font-medium">No developers match your filters</p></div>}
-              </div>
-            </div>
-
-            <AnimatePresence>{browseAllOpen && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-xl flex flex-col">
-              <div className="flex-shrink-0 px-8 py-5 border-b border-white/10 flex items-center justify-between"><div><p className="text-[9px] uppercase tracking-[0.25em] text-amber-300/60">Developer Directory</p><h2 className="text-2xl font-black text-white mt-1">All Studios</h2><p className="text-xs text-white/35 mt-1">{DEVELOPERS.length} studios · sorted by {sortMode === 'alpha' ? 'name' : sortMode === 'popular' ? 'popularity' : 'game count'}</p></div><button onClick={() => setBrowseAllOpen(false)} className="p-2 text-white/50 hover:text-white transition-colors"><X className="w-5 h-5" /></button></div>
-              <div className="flex-1 overflow-y-auto p-8"><div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 max-w-[1800px] mx-auto">{sortedDevs.map((dev) => <button key={dev.id} onClick={() => { setBrowseAllOpen(false); setSelectedDev(dev); }} className="text-left p-4 border border-white/10 bg-white/[0.025] hover:bg-white/[0.06] hover:border-white/20 transition-all group"><div className="aspect-[16/9] overflow-hidden bg-black/30 mb-3"><img src={dev.heroImage} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /></div><p className="text-sm font-bold text-white truncate">{dev.name}</p><p className="text-[9px] text-white/35 mt-1 line-clamp-2">{dev.tagline}</p><div className="flex items-center justify-between mt-3 text-[8px] uppercase tracking-wider text-white/25"><span>{dev.gamesReleased || 0} released</span><span>{dev.followers ? `${Math.round(dev.followers / 1000)}K followers` : '—'}</span></div></button>)}</div></div>
-              <div className="flex-shrink-0 text-center py-3 border-t border-white/10 text-[9px] text-white/25 uppercase tracking-widest">Press Escape to return to the developer browser</div>
-            </motion.div>}</AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+export default function DevCardsContent({onNavigateToGame}){
+ const hub=useStudioHub(),[params,setParams]=useSearchParams();
+ const selectedKey=params.get('studio')||'';
+ const [view,setView]=useState('discover'),[query,setQuery]=useState(''),[letter,setLetter]=useState('all'),[genre,setGenre]=useState('all'),[status,setStatus]=useState('all'),[sort,setSort]=useState('az'),[page,setPage]=useState(0),[filtersOpen,setFiltersOpen]=useState(false),[composer,setComposer]=useState(null),[featureIndex,setFeatureIndex]=useState(0);
+ const scroll=useRef(null),scrollPositions=useRef(new Map()),focusReturn=useRef(null);
+ const studios=hub.studios,editable=hub.editableStudios;
+ const selected=studios.find(s=>s.key===selectedKey);
+ const genres=useMemo(()=>[...new Set(studios.flatMap(s=>s.genres).map(normalize))].sort(),[studios]);
+ const letters=new Set(studios.map(firstLetter));
+ const filtered=useMemo(()=>filterStudios(studios,{query,letter,genre,status,sort}),[studios,query,letter,genre,status,sort]);
+ const projects=useMemo(()=>filtered.flatMap(studio=>studio.projects.map(project=>({studio,project}))),[filtered]);
+ const featured=useMemo(()=>discoveryOrder(studios.flatMap(studio=>studio.projects.map(project=>({id:project.key,genre:project.genre,studio,project}))),new Date().toISOString().slice(0,10)).slice(0,8),[studios]);
+ const feature=featured[featureIndex%Math.max(1,featured.length)];
+ const filtering=Boolean(query.trim()||letter!=='all'||genre!=='all'||status!=='all');
+ const directory=view==='directory'||filtering;
+ const items=view==='projects'?projects:filtered;
+ const pageCount=Math.max(1,Math.ceil(items.length/15)),activePage=Math.min(page,pageCount-1);
+ useEffect(()=>{setPage(0);if(!selectedKey)scroll.current?.scrollTo?.({top:0});},[query,letter,genre,status,sort,view]);
+ useEffect(()=>{if(scroll.current)scroll.current.scrollTop=scrollPositions.current.get(selectedKey)||0;},[selectedKey]);
+ const openStudio=key=>{focusReturn.current=document.activeElement;const next=new URLSearchParams(params);next.set('mode','devcards');next.set('studio',key);setParams(next);setComposer(null);};
+ const back=()=>{const next=new URLSearchParams(params);next.delete('studio');setParams(next);setComposer(null);requestAnimationFrame(()=>focusReturn.current?.isConnected&&focusReturn.current.focus());};
+ const compose=initial=>{setComposer(initial);scroll.current?.scrollTo?.({top:0,behavior:'smooth'});};
+ const clear=()=>{setQuery('');setLetter('all');setGenre('all');setStatus('all');};
+ const goPage=next=>{setPage(next);scroll.current?.scrollTo?.({top:0});};
+ useEffect(()=>{const escape=event=>{if(event.key!=='Escape')return;if(composer){setComposer(null);event.stopPropagation();}else if(selectedKey){back();event.stopPropagation();}else setFiltersOpen(false);};window.addEventListener('keydown',escape);return()=>window.removeEventListener('keydown',escape);},[composer,selectedKey,params]);
+ const paging=pageCount>1&&<nav className="dev-pagination" aria-label={view==='projects'?'Project pages':'Studio directory pages'}><button disabled={activePage===0} onClick={()=>goPage(activePage-1)}><ChevronLeft size={14}/>Previous</button><span>Page {activePage+1} of {pageCount}</span><button disabled={activePage+1>=pageCount} onClick={()=>goPage(activePage+1)}>Next<ChevronRight size={14}/></button></nav>;
+ return <main className="dev-hub" aria-label="Developer studios">
+  <header className="dev-hub-header"><div><Building2 size={20}/><span><strong>Dev</strong><small>Meet the minds behind the games</small></span></div><nav aria-label="Developer discovery sections">{[['discover','Discover'],['projects','In development'],['directory','Studios A–Z']].map(([key,name])=><button key={key} aria-current={!selectedKey&&view===key?'page':undefined} onClick={()=>{if(selectedKey)back();setView(key);}}>{name}</button>)}</nav><button className="dev-mobile-filters" aria-expanded={filtersOpen} aria-controls="dev-directory-filters" onClick={()=>setFiltersOpen(v=>!v)}><SlidersHorizontal size={15}/>Find a studio</button>{editable.length>0&&<button className="dev-publish-shortcut" onClick={()=>compose({studio_key:editable.includes(selectedKey)?selectedKey:editable[0]})}><Edit3 size={14}/>Write update</button>}</header>
+  <div className="dev-hub-layout">
+   <aside id="dev-directory-filters" className="dev-filters" data-open={filtersOpen}>
+    <div className="dev-filter-heading"><span>Find your studio</span><button aria-label="Close studio filters" onClick={()=>setFiltersOpen(false)}><X size={14}/></button></div>
+    <label className="dev-search"><Search size={15}/><input aria-label="Search studios and projects" placeholder="Studio or game name" value={query} onChange={e=>{if(selectedKey)back();setQuery(e.target.value);}}/>{query&&<button aria-label="Clear studio search" onClick={()=>setQuery('')}><X size={12}/></button>}</label>
+    <div className="dev-alphabet" aria-label="Browse studios by initial">{['all','#',...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map(char=><button key={char} aria-label={char==='all'?'All studio initials':'Studios starting with '+char} aria-pressed={letter===char} disabled={char!=='all'&&!letters.has(char)} onClick={()=>{if(selectedKey)back();setLetter(char);}}>{char==='all'?'All':char}</button>)}</div>
+    <label>Genre<select aria-label="Filter studios by genre" value={genre} onChange={e=>{if(selectedKey)back();setGenre(e.target.value);}}><option value="all">All genres</option>{genres.map(g=><option key={g} value={g}>{label(g)}</option>)}</select></label>
+    <label>Studio activity<select aria-label="Filter studio activity" value={status} onChange={e=>{if(selectedKey)back();setStatus(e.target.value);}}><option value="all">All studios</option><option value="projects">Projects in development</option><option value="games">Games in the store</option></select></label>
+    <label>Sort studios<select aria-label="Sort studios" value={sort} onChange={e=>setSort(e.target.value)}><option value="az">Name: A–Z</option><option value="za">Name: Z–A</option><option value="projects">Most current projects</option></select></label>
+    {filtering&&<button className="dev-text-button" onClick={clear}>Clear studio filters</button>}
+    <div className="dev-directory-count"><strong>{studios.length}</strong><span>studios to discover</span></div><p className="dev-source-note">Studio profiles, linked games and published updates from the Atom X Eve catalog.</p>
+   </aside>
+   <div className="dev-viewport" ref={scroll} onScroll={e=>scrollPositions.current.set(selectedKey,e.currentTarget.scrollTop)}>
+    {hub.isLoading?<div className="dev-empty" role="status">Loading studios and projects…</div>:hub.isError?<div className="dev-empty" role="alert"><h2>The studio directory couldn’t load.</h2><p>{hub.error?.message}</p><button className="dev-primary" onClick={()=>hub.refetch()}>Try again</button></div>:<>
+     {composer&&<StudioComposer key={composer.id||composer.studio_key} initial={composer} studios={studios.filter(s=>editable.includes(s.key))} onClose={()=>setComposer(null)}/>}
+     {selectedKey?(selected?<StudioHubProfile key={selected.key} studio={selected} studios={studios} editableStudios={editable} onBack={back} onSelectStudio={openStudio} onNavigateToGame={onNavigateToGame} onCompose={compose}/>:<div className="dev-empty"><h2>Studio not found</h2><button onClick={back}>Back to the directory</button></div>):view==='projects'?<>
+      <header className="dev-section-heading"><div><span className="dev-eyebrow">A look at what’s next</span><h1>In development</h1><p>{projects.length} current and upcoming projects</p></div></header><div className="dev-project-grid">{projects.slice(activePage*15,(activePage+1)*15).map(({project,studio})=><ProjectCard key={project.key} project={project} studio={studio} onSelectStudio={openStudio} onNavigateToGame={onNavigateToGame}/>)}</div>{paging}{!projects.length&&<div className="dev-empty">No projects match these filters.</div>}
+     </>:directory?<>
+      <header className="dev-section-heading"><div><span className="dev-eyebrow">The people behind the worlds</span><h1>Studio directory</h1><p role="status">{filtered.length} studios{filtering?' match your filters':''}</p></div><span>{sort==='za'?'Z → A':sort==='projects'?'Current projects':'A → Z'}</span></header><div className="dev-studio-grid">{filtered.slice(activePage*15,(activePage+1)*15).map(studio=><StudioCard key={studio.key} studio={studio} onSelect={openStudio}/>)}</div>{paging}{!filtered.length&&<div className="dev-empty"><Search size={26}/><h2>No studios match.</h2><p>Try another name, initial or genre.</p><button onClick={clear}>Clear studio filters</button></div>}
+     </>:<div className="dev-discover">
+      <div className="dev-discovery-intro"><div><span className="dev-eyebrow">Inside the studio</span><h1>See what’s taking shape.</h1><p>Follow the projects, meet their creators, and find your next world.</p></div><button className="dev-text-button" onClick={()=>setView('directory')}>Browse studios A–Z<ArrowRight size={14}/></button></div>
+      <div className="dev-spotlight-row">{feature?<section className="dev-project-spotlight"><div className="dev-spotlight-art"><GameCover game={{cover_image:feature.project.image||feature.studio.cover}} wide/></div><div className="dev-spotlight-shade"/><div className="dev-spotlight-copy"><button onClick={()=>openStudio(feature.studio.key)}><StudioLogo studio={feature.studio}/>{feature.studio.name}<ArrowUpRight size={12}/></button><span>{label(feature.project.status)}</span><h2>{feature.project.title}</h2><p>{feature.project.description}</p><button className="dev-primary" onClick={()=>openStudio(feature.studio.key)}>Explore the studio<ArrowRight size={14}/></button></div>{featured.length>1&&<div className="dev-spotlight-controls"><button aria-label="Previous studio spotlight" onClick={()=>setFeatureIndex(i=>(i-1+featured.length)%featured.length)}><ChevronLeft size={15}/></button><span>{featureIndex%featured.length+1} / {featured.length}</span><button aria-label="Next studio spotlight" onClick={()=>setFeatureIndex(i=>(i+1)%featured.length)}><ChevronRight size={15}/></button></div>}</section>:<div className="dev-empty"><Building2 size={28}/><h2>Discover the studios in your library.</h2><p>Upcoming projects will be featured as studios add them.</p></div>}
+       <section className="dev-studios-to-know"><header className="dev-section-heading"><h2>Studios to know</h2></header>{(feature?[feature.studio,...studios.filter(s=>s.key!==feature.studio.key)]:studios).slice(0,4).map(studio=><button key={studio.key} onClick={()=>openStudio(studio.key)}><StudioLogo studio={studio}/><span><strong>{studio.name}</strong><small>{studio.games.length} store titles · {studio.projects.length} projects</small></span><ArrowRight size={14}/></button>)}<button className="dev-text-button" onClick={()=>setView('directory')}>All {studios.length} studios<ArrowRight size={13}/></button></section>
+      </div>
+      <div className="dev-discover-columns"><StudioFeed studios={studios} editableStudios={editable} onSelectStudio={openStudio} onNavigateToGame={onNavigateToGame} onCompose={compose}/><aside><header className="dev-section-heading"><div><h2>On the horizon</h2><p>From the studio catalog</p></div></header>{featured.slice(0,4).map(({project,studio})=><ProjectCard key={project.key} project={project} studio={studio} onSelectStudio={openStudio} onNavigateToGame={onNavigateToGame} compact/>)}<button className="dev-text-button" onClick={()=>setView('projects')}>All projects<ArrowRight size={13}/></button></aside></div>
+     </div>}
+    </>}
+   </div>
+  </div>
+ </main>;
 }

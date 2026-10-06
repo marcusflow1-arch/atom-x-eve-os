@@ -1,6 +1,6 @@
 import {useRef,useState} from 'react';
 import {useQueryClient} from '@tanstack/react-query';
-import {ArrowRight,ArrowUpRight,Building2,Calendar,Check,Edit3,Gamepad2,ImagePlus,Plus,Send,Sparkles,X} from 'lucide-react';
+import {ArrowRight,ArrowUpRight,Edit3,Gamepad2,ImagePlus,Plus,Send,X} from 'lucide-react';
 import {base44} from '@/api/base44Client';
 import {GameCover} from '../redesign/StoreSections';
 import {label} from '../redesign/discovery';

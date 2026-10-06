@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {ArrowLeft,ArrowUpRight,Building2,Edit3,Gamepad2,Globe,MapPin} from 'lucide-react';
+import {ArrowLeft,ArrowUpRight,Edit3,Gamepad2,Globe} from 'lucide-react';
 import {CompactGameCard} from '../redesign/CompactStoreSections';
 import {GameCover} from '../redesign/StoreSections';
 import {comingSoon} from '../redesign/discovery';
