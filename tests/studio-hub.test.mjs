@@ -11,7 +11,7 @@ const require=createRequire(import.meta.url);
 const loadPure=path=>{
  const result=buildSync({entryPoints:[path],bundle:true,write:false,format:'cjs',platform:'node'});
  const mod=new Module(process.cwd()+'/tests/__studio_pure.cjs');
- mod.paths=Module._nodeModulePaths(process.cwd());mod._compile(result.outputFiles[0].text,mod.filename);
+ mod.paths=Module._nodeModulePaths(process.cwd());mod._compile(result.outputFiles[0].text,process.cwd()+'/tests/__studio_pure.cjs');
  return mod.exports;
 };
 const {buildStudioDirectory,studioKey,validateStudioPost}=loadPure('base44/shared/studioHub.ts');
@@ -144,7 +144,7 @@ const bundle=await import('esbuild').then(({build})=>build({
   b.onLoad({filter:/.*/,namespace:'fixture'},args=>({loader:'js',contents:args.path.includes('base44Client')?'export const base44=globalThis.studioTestSDK;':args.path.includes('AuthContext')?'export const useAuth=()=>globalThis.studioTestAuth();':'export default function WishlistButton(){return null;}'}));
  }}]
 }));
-const mod=new Module(process.cwd()+'/tests/__studio_ui.cjs');mod.paths=Module._nodeModulePaths(process.cwd());mod._compile(bundle.outputFiles[0].text,mod.filename);
+const mod=new Module(process.cwd()+'/tests/__studio_ui.cjs');mod.paths=Module._nodeModulePaths(process.cwd());mod._compile(bundle.outputFiles[0].text,process.cwd()+'/tests/__studio_ui.cjs');
 const {Dev,Store}=mod.exports;
 let root,client,selectedGame;
 const run=fn=>act(async()=>{await fn?.();await new Promise(resolve=>setTimeout(resolve,25));});
@@ -169,7 +169,6 @@ test('Dev renders actual projects, A–Z search, 15-studio pages, profiles and g
   assert.equal(document.querySelector('.dev-profile h1').textContent,'Alpha Studio');
   await click('Games');assert.equal(document.querySelectorAll('.dev-games-grid .sf-game').length,15);
   await click(document.querySelector('.dev-games-grid .sf-game-open'));assert.equal(selectedGame,'game-0');
-  await click('In development',document.querySelector('.dev-profile-tabs'));
   await click(button('In development',document.querySelector('.dev-profile-tabs')));
   assert(document.querySelector('.dev-project-grid').textContent.includes('Next World'));
   await click('About');assert(document.querySelector('.dev-about').textContent.includes('Alpha Studio'));
