@@ -161,7 +161,7 @@ export default function ScreenshotExtractor() {
   const [quality, setQuality] = useState(0.92);
   const [directoryHandle, setDirectoryHandle] = useState(null);
   const [folderState, setFolderState] = useState('idle'); // idle | opening | verifying | ready | error
-  const [outputMode, setOutputMode] = useState('downloads');
+  const [outputMode, setOutputMode] = useState('folder');
   const [status, setStatus] = useState('idle');
   const [completed, setCompleted] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -306,15 +306,15 @@ export default function ScreenshotExtractor() {
     if (!isSecurePage) {
       setDirectoryHandle(null);
       setFolderState('error');
-      setOutputMode('downloads');
+      setOutputMode('folder');
       setError('Direct folder access requires the secure HTTPS version of Atom X Eve. Open this page from the published HTTPS app.');
       return;
     }
     if (!supportsDirectoryPicker) {
       setDirectoryHandle(null);
       setFolderState('error');
-      setOutputMode('downloads');
-      setError('This browser does not support selecting a writable folder. Use desktop Chrome, Edge, or another Chromium browser, or use Browser Downloads.');
+      setOutputMode('folder');
+      setError('This browser does not support selecting a writable folder. Use desktop Chrome, Edge, or another Chromium browser, or choose Browser Downloads.');
       return;
     }
 
@@ -333,7 +333,7 @@ export default function ScreenshotExtractor() {
         return;
       }
       setDirectoryHandle(null);
-      setOutputMode('downloads');
+      setOutputMode('folder');
       setFolderState('error');
       const message = folderError?.name === 'SecurityError'
         ? 'The browser blocked folder access from this embedded page. Open the Screenshots tool in its own tab, then choose the folder there.'
@@ -602,7 +602,7 @@ export default function ScreenshotExtractor() {
                     <div className="text-[8px] font-bold uppercase tracking-[.14em] text-white/32">Output destination</div>
                     <div className="mt-1 flex min-w-0 items-center gap-2 text-[9px] text-white/52">
                       {folderState === 'ready' && outputMode === 'folder' && <Check className="h-3 w-3 shrink-0 text-emerald-300/70" />}
-                      <span className="max-w-[250px] truncate">{outputMode === 'folder' && directoryHandle ? directoryHandle.name : (isEmbeddedFrame ? 'Editor preview · folder access blocked here' : 'Browser Downloads · one file at a time')}</span>
+                      <span className="max-w-[250px] truncate">{outputMode === 'folder' && directoryHandle ? directoryHandle.name : outputMode === 'downloads' ? 'Browser Downloads · one file at a time' : (isEmbeddedFrame ? 'Editor preview · open the folder-enabled page' : 'Choose a writable folder')}</span>
                     </div>
                   </div>
                   <FolderOpen className="h-4 w-4 shrink-0 text-white/25" />
@@ -655,7 +655,7 @@ export default function ScreenshotExtractor() {
               </div>
               <div className="ml-auto flex items-center gap-2">
                 {status === 'running' ? <button type="button" onClick={stop} className="flex h-10 items-center gap-2 rounded-xl border border-red-200/[0.12] bg-red-200/[0.04] px-4 text-[8px] font-black uppercase tracking-[.12em] text-red-100/60 hover:bg-red-200/[0.08]"><CircleStop className="h-3.5 w-3.5" />Stop</button> : <button type="button" onClick={reset} className="flex h-10 items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 text-[8px] font-bold uppercase tracking-[.12em] text-white/42 hover:bg-white/[0.055]"><RotateCcw className="h-3.5 w-3.5" />Reset</button>}
-                <button type="button" disabled={!file || !duration || status === 'running' || estimatedFrames < 1} onClick={startExtraction} className="flex h-10 items-center gap-2 rounded-xl bg-cyan-200 px-5 text-[8px] font-black uppercase tracking-[.12em] text-slate-950 shadow-[0_0_24px_rgba(165,243,252,.08)] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-25"><Play className="h-3.5 w-3.5 fill-current" />Start extraction</button>
+                <button type="button" disabled={!file || !duration || status === 'running' || estimatedFrames < 1 || (outputMode === 'folder' && !directoryHandle)} onClick={startExtraction} className="flex h-10 items-center gap-2 rounded-xl bg-cyan-200 px-5 text-[8px] font-black uppercase tracking-[.12em] text-slate-950 shadow-[0_0_24px_rgba(165,243,252,.08)] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-25"><Play className="h-3.5 w-3.5 fill-current" />Start extraction</button>
               </div>
             </div>
             {error && <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200/[0.08] bg-amber-200/[0.025] px-3 py-2 text-[9px] leading-4 text-amber-100/52"><X className="mt-0.5 h-3 w-3 shrink-0" />{error}</div>}
