@@ -21,7 +21,7 @@ const cardPayload = skill => ({
   owned: true, can_equip: skill.can_equip, selectionSource: 'skill-book',
 });
 
-export default function LunaCardsPanel({ onClose }) {
+export default function LunaCardsPanel({ onClose, slotDockRef }) {
   const { games, skills, slots, isLoading, isSaving, error, refetch } = useSkillBookLoadout();
   const [selectedGameKey, setSelectedGameKey] = useState(null);
   const [selectedCardId, setSelectedCardId] = useState(null);
@@ -76,14 +76,19 @@ export default function LunaCardsPanel({ onClose }) {
     }
   };
   useEffect(() => {
+    const selectionChanged = event => {
+      if (!event.detail?.card) setSelectedCardId(null);
+    };
     const placed = event => {
       if (event.detail?.card?.selectionSource !== 'skill-book') return;
       setSelectedCardId(null);
       setSavedMessage(`${event.detail.card.title} saved to skill ${SKILL_KEYS[event.detail.index]}.`);
     };
     window.addEventListener('lunaShowcaseCardPlaced', placed);
+    window.addEventListener('lunaShowcaseCardSelected', selectionChanged);
     return () => {
       window.removeEventListener('lunaShowcaseCardPlaced', placed);
+      window.removeEventListener('lunaShowcaseCardSelected', selectionChanged);
       if (window.__lunaSelectedShowcaseCard?.selectionSource === 'skill-book') {
         window.__lunaSelectedShowcaseCard = null;
         window.dispatchEvent(new CustomEvent('lunaShowcaseCardSelected', { detail: { card: null } }));
@@ -118,8 +123,9 @@ export default function LunaCardsPanel({ onClose }) {
   const openGame = game => { clearSelection(); setSelectedGameKey(game.key); setQuery(''); setSavedMessage(''); };
   const goBack = () => { clearSelection(); setSelectedGameKey(null); setQuery(''); setSavedMessage(''); };
 
-  return <section className="luna-skill-book" aria-label="Skill Book" aria-busy={isLoading || isSaving}
+  return <section className="luna-skill-book" data-luna-skill-book-open aria-label="Skill Book" aria-busy={isLoading || isSaving}
     onWheel={event => event.stopPropagation()}>
+    <div className="lsb-browser">
     <header className="lsb-heading">
       <h2><BookOpen size={16} aria-hidden="true" /> Skill Book</h2>
       <span>{(slots || []).filter(slot => slot.card).length} / {SKILL_SLOT_COUNT} equipped</span>
@@ -142,7 +148,7 @@ export default function LunaCardsPanel({ onClose }) {
     </div>
     <p className="lsb-help" role="status" aria-live="polite">
       {isSaving ? 'Saving loadout…' : selectedCard ? `Choose a skill slot for ${selectedCard.title}. Click the card again to cancel.`
-        : savedMessage || 'Drag a card onto a skill slot below. Changes save automatically.'}
+        : savedMessage || 'Select a card, then choose a slot below. You can also drag and drop. Changes save automatically.'}
     </p>
     <div className="lsb-results">
       {isLoading ? <p className="lsb-empty">Loading your cards…</p>
@@ -180,5 +186,7 @@ export default function LunaCardsPanel({ onClose }) {
           </button>)}
         </div>}
     </div>
+    </div>
+    <footer className="lsb-slot-dock" ref={slotDockRef} aria-label="Skill Book loadout" />
   </section>;
 }

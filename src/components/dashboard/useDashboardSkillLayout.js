@@ -13,7 +13,6 @@ export default function useDashboardSkillLayout({ active, bookOpen }) {
         attributes: document.querySelector('[aria-label="AI Attribute Box"]'),
         hub: document.querySelector('[data-luna-environment-hub]'),
         owner: document.querySelector('[data-dashboard-avatar-overview]'),
-        hud: document.querySelector('[data-luna-skill-xp-hud]'),
       };
       for (const node of Object.values(nodes)) {
         if (node && !observed.has(node)) { observer?.observe(node); observed.add(node); }

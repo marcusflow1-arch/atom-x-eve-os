@@ -142,6 +142,8 @@ export function useSkills() {
       // loadout itself. Handling the key here as well used to send a second,
       // conflicting cast for every press.
       if (typeof window !== 'undefined' && window.__lunaPvPCombat?.active) return;
+      // The open Skill Book is a loadout editor; browsing must not cast a skill.
+      if (document.querySelector('[data-luna-skill-book-open]')) return;
       const target = event.target;
       if (target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
       if (target instanceof HTMLElement && target.isContentEditable) return;

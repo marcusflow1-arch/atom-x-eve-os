@@ -1,5 +1,5 @@
-// Shared boundaries keep the Skill Book and the real hotkeys in the same band.
-export function skillBookLayout({ width, height, library, attributes, hub, owner, hud }) {
+// Shared boundaries for the Skill Book and the closed-book dashboard hotkeys.
+export function skillBookLayout({ width, height, library, attributes, hub, owner }) {
   let left = library?.width > 0 ? library.right : Math.min(330, width * .28);
   let right = attributes?.width > 0 ? attributes.left : width - Math.min(338, width * .3);
   if (right - left < 280) { left = 12; right = width - 12; }
@@ -13,7 +13,6 @@ export function skillBookLayout({ width, height, library, attributes, hub, owner
       left: left + 'px', right: Math.max(0, width - right) + 'px',
       top: Math.max(64, hub?.height > 0 ? hub.bottom : 190) + 'px',
       bottom: bottom + 'px',
-      '--skill-book-hud-space': ((hud?.height || 200) + 36) + 'px',
     },
     hud: {
       position: 'fixed', left: ((left + right - mainWidth) / 2) + 'px',

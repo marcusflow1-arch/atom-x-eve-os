@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { RefreshCw, Sparkles } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Check, RefreshCw, Sparkles, X } from 'lucide-react';
 import useLunaStore from '@/components/luna/useLunaStore';
 import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
 import { SKILL_KEYS, SKILL_SET_COUNT } from '@/components/luna/skillSlots';
@@ -34,13 +35,15 @@ export function HotkeyFrame() {
   );
 }
 
-function HotkeySlot({ index, selected, pendingCard, onAssign, onSelect, combatMode, saving }) {
+function HotkeySlot({ index, selected, pendingCard, onAssign, onSelect, combatMode, saving, embedded }) {
+  const [dragOver, setDragOver] = useState(false);
   const assigned = useLunaStore((state) => state.hotbar[index]);
   const image = assigned?.image || assigned?.card_image || assigned?.icon_url || assigned?.icon || '';
   const title = assigned?.title || assigned?.name || assigned?.card_name || 'Empty skill';
   const key = SKILL_KEYS[index];
   const drop = (event) => {
     event.preventDefault();
+    setDragOver(false);
     if (combatMode || saving) return;
     try {
       const payload = JSON.parse(event.dataTransfer?.getData('application/json') || 'null');
@@ -62,25 +65,35 @@ function HotkeySlot({ index, selected, pendingCard, onAssign, onSelect, combatMo
   return (
     <button type="button" className="luna-hotbar-slot" data-hotkey={key}
       data-selected={selected || undefined} data-pending={Boolean(pendingCard) || undefined}
-      disabled={saving} aria-label={`Skill ${key}: ${title}`} aria-keyshortcuts={key}
+      data-drag-over={dragOver || undefined}
+      disabled={saving} aria-label={`Skill ${key}: ${title}`} aria-keyshortcuts={embedded ? undefined : key}
       title={pendingCard ? `Place ${pendingCard.title || pendingCard.card_name || 'skill'} in slot ${key}` : `${title} · ${key}`}
-      onClick={click} onDrop={drop} onDragOver={(event) => {
+      onClick={click} onDrop={drop}
+      onDragEnter={() => { if (!combatMode && !saving) setDragOver(true); }}
+      onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragOver(false); }}
+      onDragEnd={() => setDragOver(false)} onDragOver={(event) => {
         if (combatMode || saving) return;
         event.preventDefault();
         if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
       }}>
       {image ? <img src={image} alt="" draggable={false} /> : <Sparkles size={16} />}
+      {embedded && <span className="luna-hotbar-slot-name">{assigned ? title : "Empty"}</span>}
       <span className="luna-hotbar-key">{key}</span>
     </button>
   );
 }
 
-export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1, showcaseEditing = false, combatMode = false, dockStyle, stacked = false }) {
-  const { equip, isSaving, skillSets, activeSkillSetId, selectSkillSet } = useSkillBookLoadout();
+export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1, showcaseEditing = false, combatMode = false, dockStyle, stacked = false, embedded = false, dockTarget = null }) {
+  const { equip, isSaving, isLoading, error: loadoutError, skillSets, activeSkillSetId, selectSkillSet } = useSkillBookLoadout();
   const [pendingCard, setPendingCard] = useState(() => typeof window !== 'undefined' ? window.__lunaSelectedShowcaseCard || null : null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [previewCard, setPreviewCard] = useState(null);
   const assigning = useRef(false);
+  const cancelPlacement = () => {
+    setPendingCard(null);
+    window.__lunaSelectedShowcaseCard = null;
+    window.dispatchEvent(new CustomEvent("lunaShowcaseCardSelected", { detail: { card: null } }));
+  };
   useEffect(() => {
     const selected = (event) => setPendingCard(event?.detail?.card || null);
     const rejected = (event) => showError(new Error(event?.detail?.reason || 'This skill animation could not play.'), 'Cast Skill');
@@ -119,17 +132,29 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
   const xp = Number.isFinite(Number(currentXp)) ? Math.max(0, Number(currentXp)) : 0;
   const goal = Number.isFinite(Number(nextXp)) ? Math.max(1, Number(nextXp)) : 1;
   const progress = Math.max(0, Math.min(100, xp / goal * 100));
-  return (
-    <section data-luna-skill-xp-hud data-stacked={stacked || undefined} style={dockStyle} className={`luna-hotbar ${combatMode ? 'luna-hotbar-combat' : ''}`}
-      aria-label="Luna skill hotkeys" onKeyDown={(event) => {
+  const content = (
+    <section data-luna-skill-xp-hud data-embedded={embedded || undefined} data-placing={Boolean(pendingCard) || undefined} data-stacked={!embedded && stacked || undefined} style={embedded ? undefined : dockStyle} className={`luna-hotbar ${combatMode ? 'luna-hotbar-combat' : ''}`}
+      aria-label={embedded ? 'Skill Book skill slots' : 'Luna skill hotkeys'} onKeyDown={(event) => {
+        if (embedded && event.key === 'Escape' && pendingCard) {
+          event.preventDefault(); event.stopPropagation(); cancelPlacement(); return;
+        }
         if (!/^[0-9]$/.test(event.key)) event.stopPropagation();
       }}>
+      {embedded && <header className="luna-hotbar-book-heading">
+        <div><h3>Your skill slots</h3><p>{pendingCard
+          ? 'Place ' + (pendingCard.title || pendingCard.card_name || 'this skill') + ' in a slot below.'
+          : previewCard ? 'Skill ' + SKILL_KEYS[selectedSlot] + ' · ' + (previewCard.title || previewCard.card_name || 'Skill')
+          : 'Select a card above, then choose its slot.'}</p></div>
+        {pendingCard && <button type="button" className="luna-hotbar-cancel" disabled={isSaving} aria-label="Cancel skill placement" onClick={cancelPlacement}><X size={12}/>Cancel</button>}
+        <span className="luna-hotbar-save-state" role="status">{isSaving ? <><RefreshCw size={11} className="animate-spin"/>Saving…</>
+          : isLoading ? 'Loading…' : loadoutError ? 'Loadout unavailable' : <><Check size={12}/>Auto-save on</>}</span>
+      </header>}
       <div className="luna-hotbar-layout">
         <div className="luna-hotbar-main">
           <HotkeyFrame />
           <div className="luna-hotbar-grid" aria-label="Equipped skill keys 1 through 0">
             {SKILL_KEYS.map((key, index) => <HotkeySlot key={key} index={index} selected={selectedSlot === index}
-              pendingCard={pendingCard} onAssign={assign} saving={isSaving} combatMode={combatMode}
+              pendingCard={pendingCard} onAssign={assign} saving={isSaving || isLoading || Boolean(loadoutError)} combatMode={combatMode} embedded={embedded}
               onSelect={(slot, card) => { setSelectedSlot(slot); setPreviewCard(card); }} />)}
           </div>
           <div className="luna-hotbar-exp" aria-label="Avatar experience">
@@ -149,7 +174,7 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
         <nav className="luna-hotbar-prefabs" aria-label="Skill prefabs">
           {Array.from({ length: SKILL_SET_COUNT }, (_, index) => {
             const set = sets[index];
-            return <button key={index} type="button" disabled={combatMode || isSaving || !set}
+            return <button key={index} type="button" disabled={combatMode || isSaving || isLoading || Boolean(loadoutError) || !set}
               aria-pressed={Boolean(set && set.skill_set_id === activeSet?.skill_set_id)}
               title={combatMode ? 'Loadout locked during combat' : set?.skill_set_name || 'Loading prefab'}
               onClick={() => chooseSet(set)}>
@@ -161,4 +186,7 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
       </div>
     </section>
   );
+  // Keep one live HUD instance while its DOM moves into and out of the book.
+  // Ongoing saves, selected slots and the active prefab survive the move.
+  return embedded ? (dockTarget ? createPortal(content, dockTarget) : null) : content;
 }

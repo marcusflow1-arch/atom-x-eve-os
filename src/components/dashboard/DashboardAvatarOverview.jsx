@@ -97,6 +97,7 @@ export default function DashboardAvatarOverview() {
   const [inventoryMode, setInventoryMode] = useState(false);
   const [inventorySlot, setInventorySlot] = useState(null);
   const [cardsMode, setCardsMode] = useState(false);
+  const [skillBookDock, setSkillBookDock] = useState(null);
   const [leaderboardMode, setLeaderboardMode] = useState(false);
   const [messagesMode, setMessagesMode] = useState(false);
   const [friendsMode, setFriendsMode] = useState(false);
@@ -500,7 +501,7 @@ export default function DashboardAvatarOverview() {
 
       {!avatarFocusMode && surface === 'dashboard' && cardsMode && (
         <div data-dashboard-utility-workspace className="luna-skill-book-workspace" style={skillLayout.workspace}>
-          <LunaCardsPanel onClose={() => setCardsMode(false)} />
+          <LunaCardsPanel onClose={() => setCardsMode(false)} slotDockRef={setSkillBookDock} />
         </div>
       )}
 
@@ -560,6 +561,8 @@ export default function DashboardAvatarOverview() {
             nextXp={stats.nextXP}
             level={stats.level}
             showcaseEditing={cardsMode}
+            embedded={cardsMode}
+            dockTarget={skillBookDock}
             combatMode={false}
           />
         )}

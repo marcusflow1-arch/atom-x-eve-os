@@ -1,6 +1,6 @@
-/* One quiet surface, with clear space for the actual dashboard hotkeys. */
-.luna-skill-book-workspace { position:fixed; left:330px; right:338px; top:190px; bottom:48px; z-index:40; pointer-events:auto; overflow:hidden; background:linear-gradient(135deg,rgba(25,33,43,.95),rgba(12,19,29,.95)); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:inset 1px 0 rgba(213,231,244,.08),inset -1px 0 rgba(213,231,244,.06); padding-bottom:var(--skill-book-hud-space,236px); }
-.luna-skill-book { display:flex; flex-direction:column; height:100%; min-height:0; padding:18px 22px 0; color:#edf1f5; }
+/* The card browser and the live loadout share one surface. Only the browser scrolls. */
+.luna-skill-book-workspace { position:fixed; left:330px; right:338px; top:190px; bottom:48px; z-index:40; pointer-events:auto; overflow:hidden; background:linear-gradient(135deg,rgba(25,33,43,.95),rgba(12,19,29,.95)); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:inset 1px 0 rgba(213,231,244,.08),inset -1px 0 rgba(213,231,244,.06); }
+.luna-skill-book { display:flex; flex-direction:column; height:100%; min-height:0; overflow:hidden; color:#edf1f5; container:skillbook / size; }
 .lsb-heading { display:flex; align-items:center; gap:12px; flex:none; }
 .lsb-heading h2 { display:flex; align-items:center; gap:8px; font-size:16px; font-weight:550; letter-spacing:-.02em; }
 .lsb-heading h2 svg { color:#a9bfc8; }
@@ -52,5 +52,25 @@
 .lsb-empty { padding:22px 0; color:#bbc6ce; font-size:12px; line-height:1.6; }
 .lsb-empty button { display:block; margin-top:9px; text-decoration:underline; text-underline-offset:4px; color:#d1ecf3; }
 .luna-skill-book button:focus-visible,.luna-skill-book select:focus-visible { outline:2px solid #b8e9f4; outline-offset:3px; }
-@media (max-width:1100px) { .luna-skill-book { padding:12px 14px 0; } .lsb-controls { flex-wrap:wrap; gap:7px 12px; margin:8px 0; } .luna-skill-book .ll-voice-search { flex-basis:100%; max-width:none; } .lsb-genre { margin-left:0; } .lsb-help { margin:5px 0 8px; } }
+@media (max-width:1100px) { .lsb-browser { padding:12px 14px 8px; } .lsb-controls { flex-wrap:wrap; gap:7px 12px; margin:8px 0; } .luna-skill-book .ll-voice-search { flex-basis:100%; max-width:none; } .lsb-genre { margin-left:0; } .lsb-help { margin:5px 0 8px; } }
 @media (prefers-reduced-motion:reduce) { .luna-skill-book * { transition:none!important; } }
+
+.lsb-browser { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; padding:18px 22px 10px; }
+.lsb-slot-dock { flex:none; min-width:0; padding:13px 22px 14px; position:relative; background:linear-gradient(180deg,rgba(21,32,45,.8),rgba(13,23,34,.96)); box-shadow:0 -12px 24px rgba(9,16,24,.12); }
+.lsb-slot-dock::before { content:''; position:absolute; top:0; left:16px; right:16px; height:1px; pointer-events:none; background:linear-gradient(90deg,transparent,rgba(160,202,218,.25) 25%,rgba(160,202,218,.25) 75%,transparent); }
+@container skillbook (max-width:560px) {
+  .lsb-browser { padding:12px 14px 8px; }
+  .lsb-slot-dock { padding:10px 14px 12px; }
+  .lsb-controls { gap:8px 12px; flex-wrap:wrap; margin:8px 0; }
+  .luna-skill-book .ll-voice-search { max-width:none; flex-basis:100%; }
+  .lsb-genre { margin-left:0; }
+  .lsb-help { margin:5px 0 8px; }
+  .lsb-card-art { height:96px; }
+}
+@container skillbook (max-height:450px) {
+  .lsb-browser { overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#4a5661 transparent; }
+  .lsb-results { flex:none; overflow:visible; }
+  .lsb-card-art { height:80px; }
+  .lsb-controls { margin:7px 0; }
+  .lsb-help { margin:5px 0 8px; }
+}
