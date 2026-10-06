@@ -21,7 +21,7 @@ const base44={functions:{invoke:async(name,{action,data})=>{
 }}};
 const code=await build({
  stdin:{contents:"export {default as Store} from './src/components/store/redesign/StorefrontLayout.jsx';export {default as Search} from './src/components/store/redesign/StoreSearch.jsx';",resolveDir:process.cwd(),loader:'jsx'},
- bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},
+ loader:{'.css':'empty'},bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},
  plugins:[{name:'isolated-sdk',setup(b){
   b.onResolve({filter:/^lucide-react$/},()=>({path:process.cwd()+'/node_modules/lucide-react/dist/esm/lucide-react.js'}));
   b.onResolve({filter:/base44Client|AuthContext|WishlistButton/},args=>({path:args.path,namespace:'test'}));
@@ -49,7 +49,7 @@ const root=createRoot(document.getElementById('root'));
 const settle=()=>new Promise(resolve=>setTimeout(resolve,5));
 const run=async fn=>{await act(async()=>{fn();await settle();});};
 const buttons=(scope=document)=>[...scope.querySelectorAll('button')];
-const button=(text,scope=document)=>{const b=buttons(scope).find(x=>x.textContent.trim()===text);assert.ok(b,'Missing button: '+text);return b;};
+const button=(text,scope=document)=>{const b=buttons(scope).find(x=>x.textContent.trim()===text||x.getAttribute('aria-label')===text);assert.ok(b,'Missing button: '+text);return b;};
 const text=()=>document.body.textContent;
 const input=async(el,value)=>{
  await run(()=>{Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set.call(el,value);el.dispatchEvent(new window.Event('input',{bubbles:true}));});
