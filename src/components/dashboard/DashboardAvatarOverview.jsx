@@ -112,6 +112,12 @@ export default function DashboardAvatarOverview() {
   const { mode: aiBoxSocialMode } = useAIBoxSocialMode();
   const socialModeActive = aiBoxSocialMode === 'online' || aiBoxSocialMode === 'friends';
 
+  useEffect(() => {
+    if (!socialModeActive) return;
+    setAttributeView('overview');
+    setAttributeMenuOpen(false);
+  }, [socialModeActive]);
+
   // Observe the always-mounted AI Battle query cache without starting another
   // poller. The parent dashboard owns the popup, so it also owns the final
   // matchmaking -> arena handoff and cannot be blocked by stale popup state.
@@ -622,51 +628,79 @@ export default function DashboardAvatarOverview() {
         <div className="relative h-full w-full bg-transparent border-b border-white/[0.06] shadow-[0_20px_45px_rgba(0,0,0,0.10)]">
           <div className="relative flex h-full w-full flex-col bg-transparent backdrop-blur-[10px] overflow-hidden">
             <div className="relative shrink-0 px-5 pt-3 pb-2 border-b border-white/[0.12]">
-              <div className="flex items-center gap-2 pr-7">
+              <div className="flex items-center gap-2 pr-9">
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
-                <div>
-                  <div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">AI Attribute Box</div>
+                <div className="min-w-0">
+                  <div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">{socialModeActive ? 'AI Social' : 'AI Attribute Box'}</div>
                   <div className="flex items-center gap-2">
-                    <div className="text-white font-bold text-base">{companion?.name || 'AI Avatar'}</div>
-
+                    <div className="truncate text-white font-bold text-base">
+                      {aiBoxSocialMode === 'online' ? 'People Online' : aiBoxSocialMode === 'friends' ? 'Friends Online' : (companion?.name || 'AI Avatar')}
+                    </div>
                   </div>
                 </div>
               </div>
-              <button onClick={() => setAttributeMenuOpen(v => !v)} className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-16 bg-transparent flex items-center justify-center text-white/50 z-30">
-                <ChevronRight className={`w-4 h-4 ${attributeMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {attributeMenuOpen && <div className="absolute right-[-54px] top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">{circleOptions.map(({ id, label, icon: Icon }) => <button key={id} onClick={() => setAttributeView(id)} aria-label={label} className="w-10 h-10 rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl flex items-center justify-center text-white/55"><Icon className="w-4 h-4" /></button>)}</div>}
+
+              {socialModeActive ? (
+                <button
+                  type="button"
+                  onClick={() => { setAIBoxSocialMode(null); setAttributeView('overview'); }}
+                  aria-label="Close social view"
+                  className="absolute right-3 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full border border-white/[0.10] bg-white/[0.035] text-white/45 transition hover:bg-white/[0.08] hover:text-white"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              ) : (
+                <>
+                  <button onClick={() => setAttributeMenuOpen(v => !v)} className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-16 bg-transparent flex items-center justify-center text-white/50 z-30">
+                    <ChevronRight className={`w-4 h-4 ${attributeMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {attributeMenuOpen && <div className="absolute right-[-54px] top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">{circleOptions.map(({ id, label, icon: Icon }) => <button key={id} onClick={() => setAttributeView(id)} aria-label={label} className="w-10 h-10 rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl flex items-center justify-center text-white/55"><Icon className="w-4 h-4" /></button>)}</div>}
+                </>
+              )}
             </div>
 
-            <div className="relative min-h-0 flex-1 px-5 py-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-              {attributeView === 'overview' && <>
-                <StatRow icon={<Zap className="w-3 h-3" />} label="Power" value={stats.power} />
-                <StatRow icon={<Heart className="w-3 h-3" />} label="HP" value={stats.hp} />
-                <StatRow icon={<Shield className="w-3 h-3" />} label="Rank" value={stats.rank} />
-                <StatRow icon={<Star className="w-3 h-3" />} label="Avatar Level" value={stats.level} />
-                <StatRow icon={<BarChart3 className="w-3 h-3" />} label="Avatar XP" value={`${stats.currentXP.toLocaleString()} / ${stats.nextXP.toLocaleString()}`} />
-                <StatRow icon={<Trophy className="w-3 h-3" />} label="Gamer Score" value={stats.gamerScore.toLocaleString()} />
-                <StatRow icon={<Zap className="w-3 h-3" />} label="AI Points" value={stats.aiPoints.toLocaleString()} />
-                <StatRow icon={<Gamepad2 className="w-3 h-3" />} label="Games Played" value={stats.gamesPlayed} />
-                <StatRow icon={<Target className="w-3 h-3" />} label="Available Points" value={stats.availablePoints} />
-                <StatRow icon={<Shield className="w-3 h-3" />} label="Defense" value={stats.defense} />
-                <StatRow icon={<Activity className="w-3 h-3" />} label="Dodge" value={stats.dodge} />
-                <StatRow icon={<Heart className="w-3 h-3" />} label="Attack Speed" value={stats.attackSpeed} />
-                <StatRow icon={<Star className="w-3 h-3" />} label="Cooldown Reduction" value={stats.cooldown} />
-              </>}
+            <div
+              className={`relative min-h-0 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent ${socialModeActive ? 'px-3 py-2' : 'px-5 py-1'}`}
+              style={socialModeActive ? {
+                background: 'linear-gradient(145deg, rgba(5,12,22,.48), rgba(2,7,14,.26))',
+                backdropFilter: 'blur(20px) saturate(125%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(125%)',
+              } : undefined}
+            >
+              {socialModeActive ? (
+                <AIBoxSocialPanel mode={aiBoxSocialMode} />
+              ) : (
+                <>
+                  {attributeView === 'overview' && <>
+                    <StatRow icon={<Zap className="w-3 h-3" />} label="Power" value={stats.power} />
+                    <StatRow icon={<Heart className="w-3 h-3" />} label="HP" value={stats.hp} />
+                    <StatRow icon={<Shield className="w-3 h-3" />} label="Rank" value={stats.rank} />
+                    <StatRow icon={<Star className="w-3 h-3" />} label="Avatar Level" value={stats.level} />
+                    <StatRow icon={<BarChart3 className="w-3 h-3" />} label="Avatar XP" value={`${stats.currentXP.toLocaleString()} / ${stats.nextXP.toLocaleString()}`} />
+                    <StatRow icon={<Trophy className="w-3 h-3" />} label="Gamer Score" value={stats.gamerScore.toLocaleString()} />
+                    <StatRow icon={<Zap className="w-3 h-3" />} label="AI Points" value={stats.aiPoints.toLocaleString()} />
+                    <StatRow icon={<Gamepad2 className="w-3 h-3" />} label="Games Played" value={stats.gamesPlayed} />
+                    <StatRow icon={<Target className="w-3 h-3" />} label="Available Points" value={stats.availablePoints} />
+                    <StatRow icon={<Shield className="w-3 h-3" />} label="Defense" value={stats.defense} />
+                    <StatRow icon={<Activity className="w-3 h-3" />} label="Dodge" value={stats.dodge} />
+                    <StatRow icon={<Heart className="w-3 h-3" />} label="Attack Speed" value={stats.attackSpeed} />
+                    <StatRow icon={<Star className="w-3 h-3" />} label="Cooldown Reduction" value={stats.cooldown} />
+                  </>}
 
-              {attributeView.startsWith('blank-') && <div className="min-h-[300px]" />}
+                  {attributeView.startsWith('blank-') && <div className="min-h-[300px]" />}
 
-              <div className="mt-1 pt-1 border-t border-white/[0.08]">
-                <div className="flex justify-between mb-1"><span className="text-white/60 text-[7px] uppercase">Top Genres / Current Levels</span><span className="text-white/30 text-[6px]">XP / Level</span></div>
-                <GenreRows genres={progression?.genres} />
-              </div>
+                  <div className="mt-1 pt-1 border-t border-white/[0.08]">
+                    <div className="flex justify-between mb-1"><span className="text-white/60 text-[7px] uppercase">Top Genres / Current Levels</span><span className="text-white/30 text-[6px]">XP / Level</span></div>
+                    <GenreRows genres={progression?.genres} />
+                  </div>
 
-              <div className="mt-1 pt-1 border-t border-white/[0.08] grid grid-cols-2 gap-1">
-                {[['Strength', stats.strength], ['Intelligence', stats.intelligence], ['Wisdom', stats.wisdom], ['Vitality', stats.vitality]].map(([label, value]) => (
-                  <div key={label} className="border border-white/[0.07] bg-transparent px-2 py-1"><div className="text-white/35 text-[7px] uppercase">{label}</div><div className="text-white text-[10px] font-semibold">{value}</div></div>
-                ))}
-              </div>
+                  <div className="mt-1 pt-1 border-t border-white/[0.08] grid grid-cols-2 gap-1">
+                    {[['Strength', stats.strength], ['Intelligence', stats.intelligence], ['Wisdom', stats.wisdom], ['Vitality', stats.vitality]].map(([label, value]) => (
+                      <div key={label} className="border border-white/[0.07] bg-transparent px-2 py-1"><div className="text-white/35 text-[7px] uppercase">{label}</div><div className="text-white text-[10px] font-semibold">{value}</div></div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             {surface === 'dashboard' && (
