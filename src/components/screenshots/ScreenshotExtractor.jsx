@@ -452,25 +452,29 @@ export default function ScreenshotExtractor() {
         await sleep(0);
       }
 
-      await jobStartPromise;
       if (cancelRef.current) {
         setStatus('cancelled');
-        if (jobId) invokeJob('cancel', { job_id: jobId, completed_frames: writtenCount, output_folder_name: directoryHandle?.name || '' }).catch(() => {});
+        jobStartPromise.then(() => {
+          if (jobId) invokeJob('cancel', { job_id: jobId, completed_frames: writtenCount, output_folder_name: directoryHandle?.name || '' }).catch(() => {});
+        });
       } else {
         setStatus('completed');
-        if (jobId) invokeJob('complete', { job_id: jobId, completed_frames: count, output_folder_name: directoryHandle?.name || '' }).catch(() => {});
+        jobStartPromise.then(() => {
+          if (jobId) invokeJob('complete', { job_id: jobId, completed_frames: count, output_folder_name: directoryHandle?.name || '' }).catch(() => {});
+        });
       }
     } catch (runError) {
       setStatus('failed');
       setError(runError?.message || 'Screenshot extraction failed.');
-      await jobStartPromise.catch(() => null);
-      if (jobId) {
-        invokeJob('fail', {
-          job_id: jobId,
-          completed_frames: writtenCount,
-          error_message: runError?.message || 'Screenshot extraction failed.',
-        }).catch(() => {});
-      }
+      jobStartPromise.then(() => {
+        if (jobId) {
+          invokeJob('fail', {
+            job_id: jobId,
+            completed_frames: writtenCount,
+            error_message: runError?.message || 'Screenshot extraction failed.',
+          }).catch(() => {});
+        }
+      });
     } finally {
       queryClient.invalidateQueries({ queryKey: ['screenshot-extraction-jobs'] });
     }
