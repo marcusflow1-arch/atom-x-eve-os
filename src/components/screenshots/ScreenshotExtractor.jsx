@@ -499,7 +499,7 @@ export default function ScreenshotExtractor() {
                     <video
                       ref={videoRef}
                       src={videoUrl}
-                      controls
+                      controls={status !== 'running'}
                       preload="auto"
                       className="h-full max-h-[520px] min-h-[300px] w-full object-contain"
                       onLoadedMetadata={(event) => {
@@ -533,7 +533,7 @@ export default function ScreenshotExtractor() {
                   </div>
                 </button>
               )}
-              <input ref={fileInputRef} type="file" accept="video/*" className="hidden" onChange={(event) => onVideoFile(event.target.files?.[0])} />
+              <input ref={fileInputRef} type="file" accept="video/*,.mp4,.m4v,.mov,.webm,.ogv,.ogg,.avi,.mkv" className="hidden" onChange={(event) => onVideoFile(event.target.files?.[0])} />
               <canvas ref={canvasRef} className="hidden" />
             </section>
 
@@ -543,8 +543,8 @@ export default function ScreenshotExtractor() {
               <div className="mt-5">
                 <label className="text-[8px] font-bold uppercase tracking-[.14em] text-white/32">Capture every</label>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {[0.5, 1, 2, 5, 10].map((value) => <button key={value} type="button" disabled={status === 'running'} onClick={() => setIntervalSeconds(value)} className={`rounded-lg px-3 py-2 text-[9px] font-bold transition ${Number(interval) === value ? 'bg-cyan-200 text-slate-950' : 'border border-white/[0.07] bg-white/[0.025] text-white/48 hover:bg-white/[0.055]'} disabled:opacity-35`}>{value}s</button>)}
-                  <div className="flex items-center gap-1 rounded-lg border border-white/[0.07] bg-black/20 px-2"><input aria-label="Custom screenshot interval in seconds" type="number" min="0.05" max="3600" step="0.05" disabled={status === 'running'} value={interval} onChange={(event) => setIntervalSeconds(event.target.value)} className="w-16 bg-transparent py-2 text-right text-[9px] font-bold text-white/65 outline-none" /><span className="text-[8px] text-white/25">sec</span></div>
+                  {[0.5, 1, 2, 3, 4, 5].map((value) => <button key={value} type="button" disabled={status === 'running'} onClick={() => setIntervalSeconds(value)} className={`rounded-lg px-3 py-2 text-[9px] font-bold transition ${Number(interval) === value ? 'bg-cyan-200 text-slate-950' : 'border border-white/[0.07] bg-white/[0.025] text-white/48 hover:bg-white/[0.055]'} disabled:opacity-35`}>{value}s</button>)}
+                  <div className="flex items-center gap-1 rounded-lg border border-white/[0.07] bg-black/20 px-2"><input aria-label="Custom screenshot interval in seconds" type="number" min="0.01" step="0.01" disabled={status === 'running'} value={interval} onChange={(event) => setIntervalSeconds(event.target.value)} className="w-16 bg-transparent py-2 text-right text-[9px] font-bold text-white/65 outline-none" /><span className="text-[8px] text-white/25">sec</span></div>
                 </div>
               </div>
 
@@ -624,7 +624,7 @@ export default function ScreenshotExtractor() {
           </section>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[7px] uppercase tracking-[.11em] text-white/18">
-            <span>Original video resolution</span><span>Sequential disk writes</span><span>No base64 pipeline</span><span>Maximum {MAX_FRAMES.toLocaleString()} frames per job</span>
+            <span>Original video resolution</span><span>Sequential disk writes</span><span>No base64 pipeline</span><span>No application frame-count limit</span>
           </div>
         </main>
 
