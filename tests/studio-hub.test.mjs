@@ -180,6 +180,7 @@ test('Dev renders actual projects, A–Z search, 15-studio pages, profiles and g
 test('studio update UI expands long posts, filters types and publishes once through the authorized backend',async()=>{
  seed();await renderUI(Dev);
  try{
+  assert(document.querySelector('.dev-post-body'),document.body.textContent+' '+JSON.stringify(calls));
   assert.equal(document.querySelector('.dev-post-body').getAttribute('data-expanded'),'false');
   await click('Read full update');assert.equal(document.querySelector('.dev-post-body').getAttribute('data-expanded'),'true');
   const filter=document.querySelector('[aria-label="Filter studio updates"]');
