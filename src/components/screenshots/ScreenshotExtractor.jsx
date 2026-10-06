@@ -368,10 +368,6 @@ export default function ScreenshotExtractor() {
     const end = Math.min(safeEnd, Math.max(0, duration - 0.001));
     const step = normalizedInterval;
     const count = Math.floor(Math.max(0, end - start) / step + 1e-8) + 1;
-    if (count > MAX_FRAMES) {
-      setError(`This request would create more than ${MAX_FRAMES.toLocaleString()} frames. Increase the interval or shorten the range.`);
-      return;
-    }
     if (outputMode === 'folder' && !directoryHandle) {
       setError('Choose an output folder, or switch to browser downloads.');
       return;
@@ -395,7 +391,10 @@ export default function ScreenshotExtractor() {
 
     let jobId = '';
     let writtenCount = 0;
+    let lastProgressSync = 0;
     try {
+      video.pause();
+      video.muted = true;
       await waitUntilLoaded(video);
       const width = Number(video.videoWidth || videoSize.width || 0);
       const height = Number(video.videoHeight || videoSize.height || 0);
@@ -406,21 +405,27 @@ export default function ScreenshotExtractor() {
       const context = canvas.getContext('2d', { alpha: false, desynchronized: true });
       if (!context) throw new Error('Canvas rendering is not available in this browser.');
 
-      const started = await invokeJob('start', {
-        file_name: file.name,
-        file_size: file.size,
-        video_duration: duration,
-        interval_seconds: step,
-        start_seconds: start,
-        end_seconds: end,
-        format,
-        quality,
-        expected_frames: count,
-        output_mode: outputMode,
-        output_folder_name: directoryHandle?.name || '',
-      });
-      jobId = started.job?.id || '';
-      jobIdRef.current = jobId;
+      // Job history is optional metadata. A backend outage must never stop local extraction.
+      try {
+        const started = await invokeJob('start', {
+          file_name: file.name,
+          file_size: file.size,
+          video_duration: duration,
+          interval_seconds: step,
+          start_seconds: start,
+          end_seconds: end,
+          format,
+          quality,
+          expected_frames: count,
+          output_mode: outputMode,
+          output_folder_name: directoryHandle?.name || '',
+        });
+        jobId = started.job?.id || '';
+        jobIdRef.current = jobId;
+      } catch {
+        jobId = '';
+        jobIdRef.current = '';
+      }
 
       const base = cleanBaseName(file.name);
       for (let index = 0; index < count; index += 1) {
@@ -441,7 +446,9 @@ export default function ScreenshotExtractor() {
         setCompleted(done);
         setLastWritten(filename);
 
-        if (jobId && (done === count || done % 25 === 0)) {
+        const now = Date.now();
+        if (jobId && (done === count || now - lastProgressSync >= 5000)) {
+          lastProgressSync = now;
           invokeJob('progress', { job_id: jobId, completed_frames: done }).catch(() => {});
         }
         await sleep(0);
