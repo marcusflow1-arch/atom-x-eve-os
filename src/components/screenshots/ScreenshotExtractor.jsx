@@ -392,6 +392,7 @@ export default function ScreenshotExtractor() {
     let jobId = '';
     let writtenCount = 0;
     let lastProgressSync = 0;
+    let jobStartPromise = Promise.resolve(null);
     try {
       video.pause();
       video.muted = true;
@@ -405,27 +406,24 @@ export default function ScreenshotExtractor() {
       const context = canvas.getContext('2d', { alpha: false, desynchronized: true });
       if (!context) throw new Error('Canvas rendering is not available in this browser.');
 
-      // Job history is optional metadata. A backend outage must never stop local extraction.
-      try {
-        const started = await invokeJob('start', {
-          file_name: file.name,
-          file_size: file.size,
-          video_duration: duration,
-          interval_seconds: step,
-          start_seconds: start,
-          end_seconds: end,
-          format,
-          quality,
-          expected_frames: count,
-          output_mode: outputMode,
-          output_folder_name: directoryHandle?.name || '',
-        });
-        jobId = started.job?.id || '';
+      // Job history is optional metadata and runs in parallel. Local extraction never waits on it.
+      jobStartPromise = invokeJob('start', {
+        file_name: file.name,
+        file_size: file.size,
+        video_duration: duration,
+        interval_seconds: step,
+        start_seconds: start,
+        end_seconds: end,
+        format,
+        quality,
+        expected_frames: count,
+        output_mode: outputMode,
+        output_folder_name: directoryHandle?.name || '',
+      }).then((started) => {
+        jobId = started?.job?.id || '';
         jobIdRef.current = jobId;
-      } catch {
-        jobId = '';
-        jobIdRef.current = '';
-      }
+        return started;
+      }).catch(() => null);
 
       const base = cleanBaseName(file.name);
       for (let index = 0; index < count; index += 1) {
@@ -454,18 +452,20 @@ export default function ScreenshotExtractor() {
         await sleep(0);
       }
 
+      await jobStartPromise;
       if (cancelRef.current) {
         setStatus('cancelled');
-        if (jobId) await invokeJob('cancel', { job_id: jobId, completed_frames: writtenCount, output_folder_name: directoryHandle?.name || '' }).catch(() => {});
+        if (jobId) invokeJob('cancel', { job_id: jobId, completed_frames: writtenCount, output_folder_name: directoryHandle?.name || '' }).catch(() => {});
       } else {
         setStatus('completed');
-        if (jobId) await invokeJob('complete', { job_id: jobId, completed_frames: count, output_folder_name: directoryHandle?.name || '' }).catch(() => {});
+        if (jobId) invokeJob('complete', { job_id: jobId, completed_frames: count, output_folder_name: directoryHandle?.name || '' }).catch(() => {});
       }
     } catch (runError) {
       setStatus('failed');
       setError(runError?.message || 'Screenshot extraction failed.');
+      await jobStartPromise.catch(() => null);
       if (jobId) {
-        await invokeJob('fail', {
+        invokeJob('fail', {
           job_id: jobId,
           completed_frames: writtenCount,
           error_message: runError?.message || 'Screenshot extraction failed.',
