@@ -1,6 +1,6 @@
 import PartyPortraitRail from './PartyPortraitRail';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen, Medal } from 'lucide-react';
+import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
@@ -23,6 +23,8 @@ import { inventoryData } from '../profile/mockData';
 import { useEquipment } from '../luna/hooks/useEquipment';
 import { showError } from '@/components/error/ErrorToast';
 import useAvatarCombatStats from '@/components/avatar/useAvatarCombatStats';
+import AIBoxSocialPanel from './AIBoxSocialPanel';
+import { setAIBoxSocialMode, useAIBoxSocialMode } from './aiBoxSocialMode';
 
 const FALLBACK_GENRES = ['Action','RPG','Strategy','Adventure','Shooter','Sci-Fi','Horror','Sports','Racing','Simulation','Puzzle'];
 
@@ -107,6 +109,8 @@ export default function DashboardAvatarOverview() {
   const [avatarFocusMode, setAvatarFocusMode] = useState(false);
   const [activeQuickPanel, setActiveQuickPanel] = useState(null);
   const lastInteractiveRef = useRef(null);
+  const { mode: aiBoxSocialMode } = useAIBoxSocialMode();
+  const socialModeActive = aiBoxSocialMode === 'online' || aiBoxSocialMode === 'friends';
 
   // Observe the always-mounted AI Battle query cache without starting another
   // poller. The parent dashboard owns the popup, so it also owns the final
@@ -153,6 +157,7 @@ export default function DashboardAvatarOverview() {
       setFriendsMode(false);
       setSeasonMode(false);
       setBattleMode(false);
+      setAIBoxSocialMode(null);
     }
   }, [surface]);
 
@@ -171,6 +176,7 @@ export default function DashboardAvatarOverview() {
         setSeasonMode(false);
         setBattleMode(false);
         setAttributeMenuOpen(false);
+        setAIBoxSocialMode(null);
         setInteractionDimmed(false);
       }
     };
@@ -199,6 +205,7 @@ export default function DashboardAvatarOverview() {
         if (friendsMode) setFriendsMode(false);
         if (seasonMode) setSeasonMode(false);
         if (battleMode) setBattleMode(false);
+        setAIBoxSocialMode(null);
         setActiveQuickPanel(null);
         setInteractionDimmed(false);
         lastInteractiveRef.current = null;
