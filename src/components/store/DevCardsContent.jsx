@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
-import {ArrowRight,Building2,ChevronLeft,ChevronRight,Edit3,Search,SlidersHorizontal,X} from 'lucide-react';
+import {ArrowRight,ArrowUpRight,Building2,ChevronLeft,ChevronRight,Edit3,Search,SlidersHorizontal,X} from 'lucide-react';
 import {GameCover} from './redesign/StoreSections';
 import {discoveryOrder,label,normalize} from './redesign/discovery';
 import {useStudioHub} from './devstore/useStudioHub';

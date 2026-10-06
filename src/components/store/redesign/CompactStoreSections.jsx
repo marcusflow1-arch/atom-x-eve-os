@@ -12,6 +12,7 @@ export const isDemo = game => Boolean(demoUrl(game));
 export function CompactGameCard({game,onSelect,reason,demo=false}){
  return <article className="sf-game">
   <button className="sf-game-open" onClick={()=>onSelect(game.id)}><div className="sf-game-image"><GameCover game={game}/>{demo&&<span className="sf-demo-badge"><Play size={10}/>Demo</span>}</div><h3>{game.title}</h3><p>{label(game.genre)}{comingSoon(game)?' · Coming soon':''}</p><strong>{demo?'Try before you buy':priceLabel(game)}</strong>{reason&&<small>{reason}</small>}</button>
+  {demo&&demoUrl(game)&&<a className="sf-demo-link" href={demoUrl(game)} target="_blank" rel="noopener noreferrer"><Play size={10}/>Play demo</a>}
   <WishlistButton game={game} className="sf-wishlist"/>
  </article>;
 }
