@@ -148,6 +148,17 @@ try {
   assert.equal(document.querySelectorAll('[data-pending]').length,0);
   assert.equal(calls.filter(call=>call.action==='equip').length,0);
 
+  let escapedToDashboard = 0;
+  const escapeListener = event => { if (event.key === 'Escape') escapedToDashboard++; };
+  window.addEventListener('keydown',escapeListener);
+  await run(() => card('chidori').click());
+  await run(() => slot('1').dispatchEvent(new window.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true})));
+  assert.equal(document.querySelectorAll('[data-pending]').length,0,'Escape cancels placement before closing');
+  assert.equal(escapedToDashboard,0);
+  await run(() => slot('1').dispatchEvent(new window.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true})));
+  assert.equal(escapedToDashboard,1,'Escape can close the book from a focused slot');
+  window.removeEventListener('keydown',escapeListener);
+
   // Use the real Panel -> HTML drag payload -> docked HUD -> query mutation -> store path.
   const transfer = drag(card('chidori')).payload;
   assert.equal(JSON.parse(transfer['application/json']).user_card_id, 'owned-chidori');

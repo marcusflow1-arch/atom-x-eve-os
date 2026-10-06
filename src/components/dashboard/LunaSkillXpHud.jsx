@@ -138,7 +138,8 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
         if (embedded && event.key === 'Escape' && pendingCard) {
           event.preventDefault(); event.stopPropagation(); cancelPlacement(); return;
         }
-        if (!/^[0-9]$/.test(event.key)) event.stopPropagation();
+        // Escape still reaches the dashboard's close handler when no placement is pending.
+        if (embedded ? event.key !== 'Escape' : !/^[0-9]$/.test(event.key)) event.stopPropagation();
       }}>
       {embedded && <header className="luna-hotbar-book-heading">
         <div><h3>Your skill slots</h3><p>{pendingCard
