@@ -166,6 +166,7 @@ export default function ScreenshotExtractor() {
   const [format, setFormat] = useState('jpeg');
   const [quality, setQuality] = useState(0.92);
   const [directoryHandle, setDirectoryHandle] = useState(null);
+  const [folderState, setFolderState] = useState('idle'); // idle | opening | verifying | ready | error
   const [outputMode, setOutputMode] = useState('downloads');
   const [status, setStatus] = useState('idle');
   const [completed, setCompleted] = useState(0);
@@ -173,6 +174,9 @@ export default function ScreenshotExtractor() {
   const [error, setError] = useState('');
   const [lastWritten, setLastWritten] = useState('');
   const supportsDirectoryPicker = typeof window !== 'undefined' && typeof window.showDirectoryPicker === 'function';
+  const isSecurePage = typeof window !== 'undefined' ? window.isSecureContext : false;
+  const isEmbeddedFrame = typeof window !== 'undefined' ? window.self !== window.top : false;
+  const directFolderAccessAvailable = supportsDirectoryPicker && isSecurePage && !isEmbeddedFrame;
 
   const { data: recentJobs = [], isLoading: historyLoading } = useQuery({
     queryKey: ['screenshot-extraction-jobs'],
@@ -243,32 +247,91 @@ export default function ScreenshotExtractor() {
     setLastWritten('');
   };
 
+  const openStandaloneScreenshots = () => {
+    try {
+      const url = new URL('/Screenshots?folderAccess=1', window.location.origin).toString();
+      const opened = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!opened) {
+        setError('Your browser blocked the new window. Allow pop-ups for Atom X Eve, then press Open Folder-Enabled Page again.');
+        return false;
+      }
+      setError('Folder access opened in a new tab. Use the Screenshots page there to choose your video and output folder.');
+      return true;
+    } catch {
+      setError('Could not open the folder-enabled Screenshots page. Open Atom X Eve in its own browser tab and try again.');
+      return false;
+    }
+  };
+
+  const ensureDirectoryPermission = async (handle) => {
+    if (!handle) throw new Error('No folder is selected.');
+    const descriptor = { mode: 'readwrite' };
+    let permission = await handle.queryPermission?.(descriptor);
+    if (permission !== 'granted') permission = await handle.requestPermission?.(descriptor);
+    if (permission !== 'granted') throw new Error('Folder write permission was not granted.');
+    return true;
+  };
+
+  const verifyDirectoryWrite = async (handle) => {
+    await ensureDirectoryPermission(handle);
+    const testName = `.atomxe-write-test-${Date.now()}.tmp`;
+    const testHandle = await handle.getFileHandle(testName, { create: true });
+    const writable = await testHandle.createWritable();
+    await writable.write(new Blob(['Atom X Eve screenshot folder write test'], { type: 'text/plain' }));
+    await writable.close();
+    try { await handle.removeEntry?.(testName); } catch { /* harmless if the browser cannot remove it */ }
+    return true;
+  };
+
   const chooseFolder = async () => {
     setError('');
-    if (!supportsDirectoryPicker) {
-      setDirectoryHandle(null);
-      setOutputMode('downloads');
-      setError('Direct folder writing is not available in this browser. Frames can still download one at a time through the browser Downloads system.');
+
+    if (isEmbeddedFrame) {
+      openStandaloneScreenshots();
       return;
     }
+    if (!isSecurePage) {
+      setDirectoryHandle(null);
+      setFolderState('error');
+      setOutputMode('downloads');
+      setError('Direct folder access requires the secure HTTPS version of Atom X Eve. Open this page from the published HTTPS app.');
+      return;
+    }
+    if (!supportsDirectoryPicker) {
+      setDirectoryHandle(null);
+      setFolderState('error');
+      setOutputMode('downloads');
+      setError('This browser does not support selecting a writable folder. Use desktop Chrome, Edge, or another Chromium browser, or use Browser Downloads.');
+      return;
+    }
+
+    setFolderState('opening');
     try {
       const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
-      const permission = await handle.queryPermission?.({ mode: 'readwrite' });
-      if (permission !== 'granted') {
-        const requested = await handle.requestPermission?.({ mode: 'readwrite' });
-        if (requested !== 'granted') throw new Error('Folder write permission was not granted.');
-      }
+      setFolderState('verifying');
+      await verifyDirectoryWrite(handle);
       setDirectoryHandle(handle);
       setOutputMode('folder');
+      setFolderState('ready');
       setError('');
     } catch (folderError) {
-      if (folderError?.name === 'AbortError') return;
-      setError(folderError?.message || 'Could not open that folder.');
+      if (folderError?.name === 'AbortError') {
+        setFolderState(directoryHandle ? 'ready' : 'idle');
+        return;
+      }
+      setDirectoryHandle(null);
+      setOutputMode('downloads');
+      setFolderState('error');
+      const message = folderError?.name === 'SecurityError'
+        ? 'The browser blocked folder access from this embedded page. Open the Screenshots tool in its own tab, then choose the folder there.'
+        : (folderError?.message || 'Could not open or write to that folder.');
+      setError(message);
     }
   };
 
   const writeBlob = async (blob, filename) => {
     if (outputMode === 'folder' && directoryHandle) {
+      await ensureDirectoryPermission(directoryHandle);
       const handle = await directoryHandle.getFileHandle(filename, { create: true });
       const writable = await handle.createWritable();
       await writable.write(blob);
@@ -309,6 +372,15 @@ export default function ScreenshotExtractor() {
     if (outputMode === 'folder' && !directoryHandle) {
       setError('Choose an output folder, or switch to browser downloads.');
       return;
+    }
+    if (outputMode === 'folder' && directoryHandle) {
+      try {
+        await ensureDirectoryPermission(directoryHandle);
+      } catch (permissionError) {
+        setFolderState('error');
+        setError(permissionError?.message || 'The selected folder is no longer writable. Choose it again.');
+        return;
+      }
     }
 
     cancelRef.current = false;
