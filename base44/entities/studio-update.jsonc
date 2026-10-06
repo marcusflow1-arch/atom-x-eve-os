@@ -1,0 +1,78 @@
+{
+  "name": "StudioUpdate",
+  "type": "object",
+  "properties": {
+    "studio_key": {
+      "type": "string"
+    },
+    "studio_name": {
+      "type": "string"
+    },
+    "author_user_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "development",
+        "announcement",
+        "release",
+        "behind_scenes"
+      ]
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "project_title": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published"
+      ],
+      "default": "draft"
+    },
+    "published_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "studio_key",
+    "title",
+    "body",
+    "category",
+    "status",
+    "author_user_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.status": "published"
+        },
+        {
+          "data.author_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": false,
+    "update": false,
+    "delete": false
+  }
+}
