@@ -2,7 +2,7 @@ import {
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
     Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, 
-    Lightbulb, Rocket, Swords, Layers, Crown, Target, Plus, Globe, TrendingUp, Calendar, Award, Cpu
+    Lightbulb, Rocket, Swords, Layers, Crown, Target, Plus, Globe, TrendingUp, Calendar, Award, Cpu, Images
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
@@ -43,6 +43,7 @@ export const NAV_HIERARCHY = [
             { name: 'Aura', icon: Radio, path: createPageUrl('Aura') },
         ]
     },
+    { name: 'Screenshots', icon: Images, path: createPageUrl('Screenshots'), subPages: [] },
     { name: 'Engine', icon: Cpu, path: createPageUrl('Engine'), subPages: [] },
 ];
 
@@ -53,6 +54,7 @@ export const ALL_NAV_ITEMS = [
     { name: 'Clan', icon: Users, path: createPageUrl('Clan') },
     { name: 'Forum', icon: MessageSquare, path: createPageUrl('Community') },
     { name: 'Aura', icon: Radio, path: createPageUrl('Aura') },
+    { name: 'Screenshots', icon: Images, path: createPageUrl('Screenshots') },
 ];
 
 export const NAV_GROUPS = {
