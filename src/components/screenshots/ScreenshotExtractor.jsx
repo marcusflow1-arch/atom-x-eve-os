@@ -260,18 +260,25 @@ export default function ScreenshotExtractor() {
     }
   };
 
-  const ensureDirectoryPermission = async (handle) => {
+  const ensureDirectoryPermission = async (handle, { request = false } = {}) => {
     if (!handle) throw new Error('No folder is selected.');
     const descriptor = { mode: 'readwrite' };
-    let permission = await handle.queryPermission?.(descriptor);
-    if (permission !== 'granted') permission = await handle.requestPermission?.(descriptor);
-    if (permission !== 'granted') throw new Error('Folder write permission was not granted.');
-    return true;
+    if (typeof handle.queryPermission !== 'function') return true;
+
+    let permission = await handle.queryPermission(descriptor);
+    if (permission === 'granted') return true;
+    if (request && permission === 'prompt' && typeof handle.requestPermission === 'function') {
+      permission = await handle.requestPermission(descriptor);
+      if (permission === 'granted') return true;
+    }
+    if (permission === 'denied') throw new Error('Write access to this folder was denied. Choose the folder again and allow access.');
+    if (!request) return true;
+    throw new Error('Folder write permission was not granted. Choose the folder again and allow access.');
   };
 
   const verifyDirectoryWrite = async (handle) => {
-    await ensureDirectoryPermission(handle);
-    const testName = `.atomxe-write-test-${Date.now()}.tmp`;
+    await ensureDirectoryPermission(handle, { request: true });
+    const testName = `atomxe-write-test-${Date.now()}.tmp`;
     const testHandle = await handle.getFileHandle(testName, { create: true });
     const writable = await testHandle.createWritable();
     await writable.write(new Blob(['Atom X Eve screenshot folder write test'], { type: 'text/plain' }));
@@ -328,7 +335,6 @@ export default function ScreenshotExtractor() {
 
   const writeBlob = async (blob, filename) => {
     if (outputMode === 'folder' && directoryHandle) {
-      await ensureDirectoryPermission(directoryHandle);
       const handle = await directoryHandle.getFileHandle(filename, { create: true });
       const writable = await handle.createWritable();
       await writable.write(blob);
@@ -372,7 +378,7 @@ export default function ScreenshotExtractor() {
     }
     if (outputMode === 'folder' && directoryHandle) {
       try {
-        await ensureDirectoryPermission(directoryHandle);
+        await ensureDirectoryPermission(directoryHandle, { request: true });
       } catch (permissionError) {
         setFolderState('error');
         setError(permissionError?.message || 'The selected folder is no longer writable. Choose it again.');
