@@ -173,15 +173,18 @@ export default function ScreenshotExtractor() {
 
   const { data: recentJobs = [], isLoading: historyLoading } = useQuery({
     queryKey: ['screenshot-extraction-jobs'],
-    queryFn: async () => (await invokeJob('list')).jobs || [],
+    queryFn: async () => {
+      try { return (await invokeJob('list')).jobs || []; }
+      catch { return []; }
+    },
     staleTime: 15000,
   });
 
-  const normalizedInterval = clamp(Number(interval) || 1, 0.05, 3600);
+  const normalizedInterval = Math.max(0.01, Number(interval) || 1);
   const safeEnd = duration ? clamp(Number(rangeEnd) || duration, 0, duration) : 0;
   const safeStart = duration ? clamp(Number(rangeStart) || 0, 0, safeEnd) : 0;
   const estimatedFrames = duration
-    ? Math.min(MAX_FRAMES, Math.floor(Math.max(0, safeEnd - safeStart) / normalizedInterval + 1e-8) + 1)
+    ? Math.floor(Math.max(0, safeEnd - safeStart) / normalizedInterval + 1e-8) + 1
     : 0;
   const progress = estimatedFrames ? clamp((completed / estimatedFrames) * 100, 0, 100) : 0;
 
@@ -225,8 +228,8 @@ export default function ScreenshotExtractor() {
 
   const onVideoFile = (nextFile) => {
     if (!nextFile) return;
-    if (!nextFile.type?.startsWith('video/')) {
-      setError('Choose a video file.');
+    if (!isVideoFile(nextFile)) {
+      setError('Choose a video file such as MP4, MOV, WebM, OGG, AVI, or MKV.');
       return;
     }
     if (status === 'running') return;
@@ -243,11 +246,12 @@ export default function ScreenshotExtractor() {
   const openStandaloneScreenshots = () => {
     try {
       const url = new URL('/Screenshots?folderAccess=1', window.location.origin).toString();
-      const opened = window.open(url, '_blank', 'noopener,noreferrer');
+      const opened = window.open(url, '_blank');
       if (!opened) {
         setError('Your browser blocked the new window. Allow pop-ups for Atom X Eve, then press Open Folder-Enabled Page again.');
         return false;
       }
+      try { opened.opener = null; } catch { /* best effort */ }
       setError('Folder access opened in a new tab. Use the Screenshots page there to choose your video and output folder.');
       return true;
     } catch {
