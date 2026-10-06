@@ -1,0 +1,114 @@
+{
+  "name": "ScreenshotExtractionJob",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "file_name": {
+      "type": "string"
+    },
+    "file_size": {
+      "type": "number",
+      "default": 0
+    },
+    "video_duration": {
+      "type": "number",
+      "default": 0
+    },
+    "interval_seconds": {
+      "type": "number",
+      "default": 1
+    },
+    "start_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "end_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "jpeg",
+        "png",
+        "webp"
+      ],
+      "default": "jpeg"
+    },
+    "quality": {
+      "type": "number",
+      "default": 0.92
+    },
+    "expected_frames": {
+      "type": "number",
+      "default": 0
+    },
+    "completed_frames": {
+      "type": "number",
+      "default": 0
+    },
+    "output_mode": {
+      "type": "string",
+      "enum": [
+        "folder",
+        "downloads"
+      ],
+      "default": "downloads"
+    },
+    "output_folder_name": {
+      "type": "string",
+      "default": ""
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "running",
+        "completed",
+        "cancelled",
+        "failed"
+      ],
+      "default": "running"
+    },
+    "error_message": {
+      "type": "string",
+      "default": ""
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id",
+    "file_name",
+    "interval_seconds",
+    "expected_frames",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "data.user_id": "{{user.id}}"
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
