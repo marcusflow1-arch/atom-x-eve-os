@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { skillBookLayout } from '../src/components/dashboard/skillBookLayout.js';
 const rect = (left, right, top, bottom) => ({ left, right, top, bottom, width: right - left, height: bottom - top });
-test('Skill Book follows all four dashboard edges and leaves the real hotkeys clear', () => {
+test('Skill Book follows dashboard edges and the closed-book hotkeys stay centered', () => {
   const layout = skillBookLayout({
     width: 1440, height: 900,
     library: rect(0, 330, 400, 852), attributes: rect(1102, 1440, 190, 852),
@@ -12,7 +12,6 @@ test('Skill Book follows all four dashboard edges and leaves the real hotkeys cl
   assert.equal(layout.workspace.right, '338px');
   assert.equal(layout.workspace.top, '218px');
   assert.equal(layout.workspace.bottom, '48px');
-  assert.ok(parseFloat(layout.workspace['--skill-book-hud-space']) > 212 + 12);
   assert.equal(parseFloat(layout.hud.left) + 348 / 2, (330 + 1102) / 2, 'keys and EXP are centered, without prefab controls skewing them');
   assert.equal(layout.hud.bottom, '60px', 'preserves the original 48px footer + 12px offset');
   assert.equal(layout.hud.width, '440px');

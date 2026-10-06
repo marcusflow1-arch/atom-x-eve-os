@@ -55,7 +55,7 @@ globalThis.skillBookSdk = { functions: { invoke: async (name, request) => {
 } } };
 globalThis.skillBookNotices = notices;
 const built = await build({
-  stdin: { contents: "export { default as Panel } from './src/components/dashboard/LunaCardsPanel.jsx'; export { default as Hud } from './src/components/dashboard/LunaSkillXpHud.jsx'; export { default as store } from './src/components/luna/useLunaStore.jsx';", resolveDir: process.cwd(), loader: 'jsx' },
+  stdin: { contents: "export { default as Panel } from './src/components/dashboard/LunaCardsPanel.jsx'; export { default as Hud } from './src/components/dashboard/LunaSkillXpHud.jsx'; export { default as store } from './src/components/luna/useLunaStore.jsx'; export { useSkills } from './src/components/luna/hooks/useSkills.jsx';", resolveDir: process.cwd(), loader: 'jsx' },
   bundle: true, write: false, format: 'cjs', platform: 'node', packages: 'external',
   jsx: 'automatic', alias: { '@': process.cwd() + '/src' }, loader: { '.css': 'empty' },
   plugins: [{ name: 'skill-book-service-fixture', setup(b) {
@@ -73,14 +73,21 @@ const built = await build({
 const filename = process.cwd() + '/tests/__skill_book_ui_bundle.cjs', module = new Module(filename);
 module.paths = Module._nodeModulePaths(process.cwd());
 module._compile(built.outputFiles[0].text, filename);
-const { Panel, Hud, store } = module.exports;
+const { Panel, Hud, store, useSkills } = module.exports;
 const makeClient = () => new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false, gcTime: 0 } } });
 let client = makeClient(), root = createRoot(document.getElementById('root'));
 const run = async (fn = () => {}) => {
   await act(async () => { fn(); await new Promise(resolve => setTimeout(resolve, 30)); });
 };
+function Workbench({show}) {
+  const [dock,setDock] = React.useState(null);
+  useSkills();
+  return React.createElement(React.Fragment,null,
+    show && React.createElement(Panel,{slotDockRef:setDock}),
+    React.createElement(Hud,{embedded:show,dockTarget:dock,showcaseEditing:show,currentXp:71,nextXp:100,level:3}));
+}
 const render = (show = true) => root.render(React.createElement(QueryClientProvider, { client },
-  React.createElement(React.Fragment, null, show && React.createElement(Panel), React.createElement(Hud))));
+  React.createElement(Workbench,{show})));
 const button = text => [...document.querySelectorAll('button')].find(node => node.textContent.includes(text));
 const search = () => document.querySelector('.luna-skill-book input[type="search"]');
 const card = id => document.querySelector('[data-skill-card="owned-' + id + '"]');
@@ -105,6 +112,12 @@ try {
   await run(render); await run();
   assert.deepEqual([...document.querySelectorAll('.lsb-game strong')].map(n => n.textContent), ['Atom X Eve', 'Zeta Racing']);
   assert.equal(document.querySelectorAll('[data-hotkey]').length, 10, 'there is only one set of slot targets');
+  const dock = document.querySelector('.luna-skill-book .lsb-slot-dock');
+  assert.equal(dock.querySelectorAll('[data-hotkey]').length,10,'every target is inside the book');
+  assert.equal(dock.querySelectorAll('nav button').length,4,'prefabs stay with their slots');
+  assert.equal(dock.querySelector('[role="progressbar"]').getAttribute('aria-valuenow'),'71');
+  assert.equal(document.querySelector('[data-luna-skill-xp-hud]').style.position,'','embedded controls have no viewport offsets');
+  assert(!document.querySelector('.lsb-results').contains(dock),'scrolling results cannot move the dock');
   await run(() => input(document.querySelector('select'), 'RPG'));
   assert.equal(document.querySelectorAll('.lsb-game').length, 1, 'basic RPG filter includes Action RPG');
   await run(() => input(document.querySelector('select'), 'Racing'));
@@ -126,7 +139,16 @@ try {
   assert.ok(notices.some(notice => /female avatar/.test(notice)));
   assert.equal(calls.filter(call => call.action === 'equip').length, 0);
 
-  // Use the real Panel -> HTML drag payload -> HUD -> query mutation -> store path.
+  // Cancellation clears both the book card and the single, docked HUD.
+  await run(() => card('chidori').click());
+  assert.equal(document.querySelectorAll('[data-pending]').length,10);
+  assert.equal(card('chidori').getAttribute('aria-pressed'),'true');
+  await run(() => document.querySelector('[aria-label="Cancel skill placement"]').click());
+  assert.equal(card('chidori').getAttribute('aria-pressed'),'false');
+  assert.equal(document.querySelectorAll('[data-pending]').length,0);
+  assert.equal(calls.filter(call=>call.action==='equip').length,0);
+
+  // Use the real Panel -> HTML drag payload -> docked HUD -> query mutation -> store path.
   const transfer = drag(card('chidori')).payload;
   assert.equal(JSON.parse(transfer['application/json']).user_card_id, 'owned-chidori');
   pauseEquip = new Promise(resolve => { releaseEquip = resolve; });
@@ -148,6 +170,10 @@ try {
   await run(() => slot('0').click()); await run();
   assert.equal(persisted[9], 'owned-getsuga_tensho');
   assert.match(slot('0').getAttribute('aria-label'), /Getsuga/);
+  let keyboardCasts = 0;
+  window.addEventListener('lunaSkillSlotActivated', () => keyboardCasts++);
+  await run(() => window.dispatchEvent(new window.KeyboardEvent('keydown',{key:'0',code:'Digit0',bubbles:true})));
+  assert.equal(keyboardCasts,0,'editing in the Skill Book never casts a combat ability');
   failEquip = true;
   await run(() => drop(slot('0'), transfer)); await run();
   assert.equal(persisted[9], 'owned-getsuga_tensho', 'a failed save preserves the previous loadout');
@@ -181,10 +207,27 @@ try {
   await run(() => button('Atom X Eve').click());
   await run(() => card('chidori').click());
   const beforeClose = calls.filter(call => call.action === 'equip').length;
+  // Closing during a save keeps one HUD instance and lets the save finish.
+  pauseEquip = new Promise(resolve => { releaseEquip = resolve; });
+  await run(() => drop(slot('2'), transfer));
+  const savingBeforeClose = calls.filter(call => call.action === 'equip').length;
   await run(() => render(false));
+  assert.equal(document.querySelector('.luna-skill-book'),null);
+  assert.equal(document.querySelectorAll('[data-hotkey]').length,10);
+  assert.equal(document.querySelector('[data-luna-skill-xp-hud]').dataset.embedded,undefined);
+  assert(slot('2').disabled,'in-flight saving survives undocking');
+  await run(() => { releaseEquip(); pauseEquip = null; }); await run();
+  assert.equal(persisted[1],'owned-chidori');
+  assert.equal(calls.filter(call => call.action === 'equip').length,savingBeforeClose);
   await run(() => slot('1').click());
-  assert.equal(calls.filter(call => call.action === 'equip').length, beforeClose, 'closing the book cancels pending placement');
-  console.log('PASS: owned game/card browser, alphabetical/genre/search filters, compatibility, voice fallback, real drag-to-equip path, shared saving state, rapid-drop guard, moving/replacing cards, save errors, reload restoration and close cleanup.');
+  assert.equal(calls.filter(call => call.action === 'equip').length, beforeClose+1, 'closing cancels pending placement without repeating the completed save');
+  await run(() => window.dispatchEvent(new window.KeyboardEvent('keydown',{key:'0',code:'Digit0',bubbles:true})));
+  assert.equal(keyboardCasts,1,'dashboard casting resumes after the book closes');
+  await run(() => render(true)); await run();
+  assert.equal(document.querySelectorAll('[data-hotkey]').length,10,'reopening never duplicates the hotkeys');
+  assert.equal(document.querySelector('.lsb-slot-dock').querySelectorAll('[data-hotkey]').length,10);
+  assert.match(slot('2').getAttribute('aria-label'),/Chidori/);
+  console.log('PASS: embedded single-instance slot dock, prefab/EXP visibility, cancel selection, in-flight save during close/reopen, cast suppression while editing, owned game/card browser, alphabetical/genre/search filters, compatibility, voice fallback, real drag-to-equip path, shared saving state, rapid-drop guard, moving/replacing cards, save errors, reload restoration and close cleanup.');
 } finally {
   await act(async () => root.unmount()); client.clear(); dom.window.close();
   delete globalThis.skillBookSdk; delete globalThis.skillBookNotices;
