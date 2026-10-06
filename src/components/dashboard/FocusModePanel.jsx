@@ -49,6 +49,7 @@ import BlankGameUI from '@/components/dashboard/gamehub/BlankGameUI';
 
 
 import { useQuery } from '@tanstack/react-query';
+import { toggleAIBoxSocialMode, useAIBoxSocialMode } from '@/components/dashboard/aiBoxSocialMode';
 import { useAIBattleSnapshot } from '@/components/battle/useAIBattleQueue';
 import { rejoinAIBattleArena, useAIBattleSurfaceState } from '@/components/battle/aiBattleSurfaceState';
 
@@ -1653,7 +1654,7 @@ export function LibraryBannerSection({
                 <HomeReference onClick={handleHomeClick} />
               </div>
               <div className="flex-shrink-0 ml-2 flex items-center justify-center">
-                <OnlineUsersDropdown onSelectEnv={onSelectEnv} />
+                <AIBoxSocialModeButtons />
               </div>
             </div>
 
@@ -1764,7 +1765,43 @@ export function LibraryBannerSection({
   );
 }
 
-// Online Users Dropdown
+// AI Attribute social-mode controls. These circles switch the contents of
+// the persistent right-side AI Attribute Box; they do not open a floating menu.
+function AIBoxSocialModeButtons() {
+  const { mode } = useAIBoxSocialMode();
+  const buttons = [
+    { id: 'online', label: 'People Online', icon: UserPlus },
+    { id: 'friends', label: 'Friends Online', icon: Users },
+  ];
+
+  return (
+    <div className="flex items-center gap-1.5" aria-label="AI Attribute social modes">
+      {buttons.map(({ id, label, icon: Icon }) => {
+        const active = mode === id;
+        return (
+          <motion.button
+            key={id}
+            type="button"
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.94 }}
+            onClick={() => toggleAIBoxSocialMode(id)}
+            title={label}
+            aria-label={label}
+            aria-pressed={active}
+            className={`grid h-8 w-8 place-items-center rounded-full border transition-all ${active
+              ? 'border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-100 shadow-[0_0_16px_rgba(103,232,249,.14)]'
+              : 'border-white/[0.10] bg-white/[0.045] text-white/45 hover:border-white/[0.20] hover:bg-white/[0.075] hover:text-white/70'}`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Legacy Find People dropdown retained for now because older layouts may still
+// reference it. The Luna dashboard itself now uses AIBoxSocialModeButtons.
 function OnlineUsersDropdown({ onSelectEnv }) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
