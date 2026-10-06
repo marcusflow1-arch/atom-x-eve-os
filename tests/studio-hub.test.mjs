@@ -104,7 +104,7 @@ test('entity permissions block client-authored posts and self-assigned editor me
  const schema=JSON.parse(readFileSync('base44/entities/studio-update.jsonc','utf8'));
  assert.equal(schema.rls.delete,false);
 });
-test('catalog pagination reads more than 200 records and terminates repeated pages',async()=>{
+test('catalog pagination reads more than 200 records',async()=>{
  seed();for(let i=0;i<210;i++)f.rows('StudioProfile').push({id:'bulk-'+i,developer_name:'Bulk Studio '+i});
  assert.equal((await request('directory')).data.studios.length,232);
 });
@@ -148,6 +148,7 @@ const mod=new Module(process.cwd()+'/tests/__studio_ui.cjs');mod.paths=Module._n
 const {Dev,Store}=mod.exports;
 let root,client,selectedGame;
 const run=fn=>act(async()=>{await fn?.();await new Promise(resolve=>setTimeout(resolve,25));});
+const waitFor=async predicate=>{for(let i=0;i<30;i++){if(predicate())return;await run();}assert(predicate(),'Timed out waiting for UI');};
 const button=(text,scope=document)=>{const found=[...scope.querySelectorAll('button')].find(el=>el.textContent.trim()===text||el.getAttribute('aria-label')===text);assert(found,'Missing button: '+text);return found;};
 const click=value=>run(()=>{const el=typeof value==='string'?button(value):value;assert(el&&!el.disabled,'Expected enabled button');el.click();});
 const input=(el,value)=>run(()=>{const proto=el.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(el,value);el.dispatchEvent(new Event('input',{bubbles:true}));});
@@ -180,7 +181,7 @@ test('Dev renders actual projects, A–Z search, 15-studio pages, profiles and g
 test('studio update UI expands long posts, filters types and publishes once through the authorized backend',async()=>{
  seed();await renderUI(Dev);
  try{
-  assert(document.querySelector('.dev-post-body'),document.body.textContent+' '+JSON.stringify(calls));
+  await waitFor(()=>document.querySelector('.dev-post-body'));
   assert.equal(document.querySelector('.dev-post-body').getAttribute('data-expanded'),'false');
   await click('Read full update');assert.equal(document.querySelector('.dev-post-body').getAttribute('data-expanded'),'true');
   const filter=document.querySelector('[aria-label="Filter studio updates"]');
