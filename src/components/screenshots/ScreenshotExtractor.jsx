@@ -24,9 +24,9 @@ const MIME = {
   webp: 'image/webp',
 };
 const EXT = { jpeg: 'jpg', png: 'png', webp: 'webp' };
-const MAX_FRAMES = 50000;
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const isVideoFile = (file) => Boolean(file) && (file.type?.startsWith('video/') || /\.(mp4|m4v|mov|webm|ogv|ogg|avi|mkv)$/i.test(file.name || ''));
 const sleep = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function formatClock(seconds = 0) {
@@ -75,9 +75,11 @@ async function seekToFrame(video, target) {
   const duration = Number(video.duration || 0);
   const safeTarget = clamp(Number(target) || 0, 0, Math.max(0, duration - 0.001));
 
+  if (Math.abs(Number(video.currentTime || 0) - safeTarget) < 0.0005 && video.readyState >= 2) return;
+
   await new Promise((resolve, reject) => {
     let settled = false;
-    const timer = window.setTimeout(() => finish(new Error(`Timed out seeking to ${formatClock(safeTarget)}.`)), 12000);
+    const timer = window.setTimeout(() => finish(new Error(`Timed out seeking to ${formatClock(safeTarget)}.`)), 20000);
 
     const cleanup = () => {
       window.clearTimeout(timer);
@@ -91,24 +93,15 @@ async function seekToFrame(video, target) {
       if (error) reject(error);
       else resolve();
     };
-    const paint = () => {
-      if (typeof video.requestVideoFrameCallback === 'function') {
-        video.requestVideoFrameCallback(() => finish());
-      } else {
-        window.requestAnimationFrame(() => window.requestAnimationFrame(() => finish()));
-      }
-    };
-    const onSeeked = () => paint();
+    const onSeeked = () => finish();
     const onError = () => finish(new Error('The browser could not decode a frame from this video.'));
 
-    video.addEventListener('seeked', onSeeked);
+    video.addEventListener('seeked', onSeeked, { once: true });
     video.addEventListener('error', onError, { once: true });
-
-    if (Math.abs(Number(video.currentTime || 0) - safeTarget) < 0.0005) {
-      const nudge = Math.min(Math.max(0.0001, safeTarget + 0.0001), Math.max(0.0001, duration - 0.001));
-      video.currentTime = nudge;
-    } else {
+    try {
       video.currentTime = safeTarget;
+    } catch (error) {
+      finish(error);
     }
   });
 }
