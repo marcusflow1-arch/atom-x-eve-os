@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Home, Trophy, Layers, Swords, Rocket, Crown, Users, Gamepad2, Radio } from 'lucide-react';
+import { Home, Trophy, Layers, Swords, Rocket, Crown, Users, Gamepad2, Radio, Images } from 'lucide-react';
 
 export default function MiniLunaNav({ title }) {
   const navigate = useNavigate();
@@ -99,6 +99,14 @@ export default function MiniLunaNav({ title }) {
           >
             <Radio className="w-4 h-4" />
             Aura
+          </button>
+
+          <button
+            onClick={() => navigate(createPageUrl('Screenshots'))}
+            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/70 hover:bg-white/5 hover:text-white flex items-center gap-2"
+          >
+            <Images className="w-4 h-4" />
+            Screenshots
           </button>
 
 
