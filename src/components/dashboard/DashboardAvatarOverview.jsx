@@ -1,6 +1,6 @@
 import PartyPortraitRail from './PartyPortraitRail';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
+import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen, Medal, X, Network } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
@@ -639,6 +639,21 @@ export default function DashboardAvatarOverview() {
                     <div className="truncate text-white font-bold text-base">
                       {aiBoxSocialMode === 'online' ? 'People Online' : aiBoxSocialMode === 'friends' ? 'Friends Online' : (companion?.name || 'AI Avatar')}
                     </div>
+                    {!socialModeActive && (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          window.dispatchEvent(new CustomEvent('toggleSkillTree'));
+                        }}
+                        aria-label="Open Skill Tree"
+                        title="Skill Tree"
+                        className="flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-white/[0.10] bg-white/[0.035] px-2 text-[7px] font-bold uppercase tracking-[.11em] text-white/48 transition hover:border-cyan-200/30 hover:bg-cyan-200/[0.08] hover:text-cyan-100"
+                      >
+                        <Network className="h-3.5 w-3.5" />
+                        <span>Skill Tree</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
