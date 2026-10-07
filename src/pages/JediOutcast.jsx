@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import JediOutcastRuntime from '@/components/jedioutcast/JediOutcastRuntime';
+import ReconstructionRuntime from '@/components/jedioutcast/ReconstructionRuntime';
 import '@/components/jedioutcast/jedi-outcast.css';
 
 export default function JediOutcast() {
   const navigate = useNavigate();
-  return <main className="jko-page"><JediOutcastRuntime onBack={() => navigate(createPageUrl('LunaTemplate'))} /></main>;
+  return <main className="jko-page"><ReconstructionRuntime onBack={() => navigate(createPageUrl('LunaTemplate'))} /></main>;
 }
