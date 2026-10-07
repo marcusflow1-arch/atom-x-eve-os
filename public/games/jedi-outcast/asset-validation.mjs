@@ -92,8 +92,9 @@ async function readHeader(entry) {
 
 export async function inspectGameFiles(selection, progress = () => {}) {
   const paks = [], loose = [], paths = new Set(); let totalBytes = 0;
-  for (const file of Array.from(selection || [])) {
-    const path = selectedPath(file);
+  for (const selected of Array.from(selection || [])) {
+    const file = selected?.file || selected;
+    const path = selected?.path ? safePath(selected.path) : selectedPath(file);
     if (!path || path.startsWith('saves/') || path === 'jk2config.cfg') continue;
     const pak = /^assets\d+\.pk3$/.test(path);
     if (!pak && !CONTENT_ROOTS.has(path.split('/')[0]) && !/^[^/]+\.(cfg|txt|dat)$/.test(path)) continue;
