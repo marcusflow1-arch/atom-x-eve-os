@@ -41,7 +41,7 @@ export default function LibraryBrowser({ selectedGame, onSelectGame, onLongPress
       <button className="ll-full-view" aria-label={cardsView ? 'Full card explorer' : 'Full game library'} aria-pressed={fullView} onClick={onToggleFullView}>{cardsView ? 'Full Cards' : 'Full Library'}</button>
     </header>
     {cardsView ? <LibraryCardExplorer filters={filters} onChange={change} fullViewOpen={fullView} /> : <>
-      <LibraryBrowseControls genres={genres} genre={filters.genre} scope="games" onGenreChange={(genre) => change({ genre })} onScopeChange={(scope) => { if (scope === 'cards') change({ view: 'cards', scope, gameId: null }); }} />
+      <LibraryBrowseControls genres={genres} genre={filters.genre} scope="games" showCardBrowse={false} onGenreChange={(genre) => change({ genre })} onScopeChange={(scope) => { if (scope === 'cards') change({ view: 'cards', scope, gameId: null }); }} />
       {(error || ownership.isError) && <p role="status" className="px-3 text-xs">{error || 'Owned games could not load.'}{ownership.isError && <button className="ml-2 underline" onClick={ownership.refetch}>Retry</button>}</p>}
       {ownership.isLoading && user && <p role="status" className="px-3 text-xs">Loading owned games…</p>}
       <div className="ll-content"><CrossScrollGameMenu games={filtered} selectedGame={selectedGame} onSelectGame={onSelectGame} onLongPressGame={onLongPressGame} onOptionsGame={onOptionsGame} favorites={favorites} onToggleFavorite={toggleFavorite} browsing /></div>
