@@ -1,9 +1,6 @@
 /* Luna Library: compact controls and a single unfolding glass leaf. */
-.ll-browser { position:relative; color:#eff7ff; overflow:hidden; padding-top:1px; }
-.ll-browser::before { content:''; position:absolute; left:0; right:0; top:0; height:1px; z-index:20; pointer-events:none; background:linear-gradient(90deg,rgba(214,230,236,.10),rgba(214,230,236,.22) 50%,rgba(214,230,236,.10)); }
-.ll-library-heading { display:flex; align-items:center; gap:6px; flex:none; padding:10px 12px 4px; color:#b7c8d2; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.14em; }
-.ll-library-heading svg { color:#92aebd; flex:none; }
-.ll-toolbar { display:flex; align-items:center; gap:8px; padding:2px 12px 8px; }
+.ll-browser { color:#eff7ff; overflow:visible; }
+.ll-toolbar { display:flex; align-items:center; gap:8px; padding:0 12px 8px; }
 .ll-voice-search { min-width:0; flex:0 1 calc((100% - 68px)/2); width:calc((100% - 68px)/2); }
 .ll-search-line { display:flex; align-items:center; gap:4px; min-height:32px; border-bottom:1px solid rgba(198,231,243,.52); transition:border-color .2s; }
 .ll-search-line:focus-within { border-color:#91e7f7; }

@@ -57,7 +57,6 @@ import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
 import Mini3DViewerBox from '../components/dashboard/Mini3DViewerBox';
-import AvatarStatCard from '../components/dashboard/AvatarStatCard';
 import DevSpotlightOverlay from '../components/dashboard/DevSpotlightOverlay';
 import CardCollectionBrowser from '../components/dashboard/CardCollectionBrowser';
 import QuestLogBook from '../components/dashboard/QuestLogBook';
@@ -727,19 +726,16 @@ export default function LunaTemplate() {
           {/* Unified card: 3D viewer on top, game list below — one seamless box */}
           {!avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
             <>
-              {/* Keep the old top-left stats/runtime mounted without rendering
-                  the small 3D viewer or its companion card. */}
-              <AvatarStatCard runtimeOnly />
+              {/* Avatar + Stats — taken out of the box, placed directly on the page */}
+              <div className="pointer-events-auto flex-shrink-0" style={{ background: 'transparent' }}>
+                <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} onModelFocus={() => setAvatarFocusMode(true)} />
+              </div>
 
-              {/* Games / Cards now occupy the full left rail directly below the top header. */}
-              <div
-                data-luna-library-rail
-                className="pointer-events-auto flex-1 min-h-0 relative overflow-hidden"
-                style={{
-                  background: 'linear-gradient(180deg, rgba(20,24,29,.985), rgba(15,18,22,.992))',
-                  borderRight: '1px solid rgba(205,220,228,.16)',
-                }}
-              >
+              {/* Gap between the now-separated sections */}
+              <div style={{ height: '12px', flexShrink: 0 }} />
+
+              {/* Games — cross-scroll (XMB-style) menu; no box, vignette "invisible box" only */}
+              <div data-luna-library-rail className="pointer-events-auto flex-1 min-h-0 relative">
                 <LibraryBrowser
                   filters={libraryFilters}
                   onFiltersChange={updateLibraryFilters}
