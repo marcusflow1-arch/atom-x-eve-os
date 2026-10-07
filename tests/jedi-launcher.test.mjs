@@ -13,7 +13,13 @@ function setup() {
   w.HTMLCanvasElement.prototype.getContext = () => ({ getExtension: () => ({ loseContext() {} }) });
   w.inspectGameFiles = inspectGameFiles;
   w.eval(read('engine-shell.js'));
-  w.eval(read('atom-launcher.mjs').replace("import { inspectGameFiles } from './asset-validation.mjs';", ''));
+  const launcher = read('atom-launcher.mjs')
+    .replace("import { inspectGameFiles } from './asset-validation.mjs';", '')
+    .replace(
+      "import { getProjectVaultGameFiles, listProjectVaultPackages } from './project-vault.mjs';",
+      "const getProjectVaultGameFiles = async () => []; const listProjectVaultPackages = async () => [];"
+    );
+  w.eval(launcher);
   return { dom, w, id: name => w.document.getElementById(name) };
 }
 async function waitFor(fn) {
