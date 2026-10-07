@@ -17,18 +17,34 @@ function hex(bytes: ArrayBuffer) {
   return Array.from(new Uint8Array(bytes)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+function sharedDriveUrl(fileId: string) {
+  return `https://drive.usercontent.google.com/download?id=${encodeURIComponent(fileId)}&export=download&confirm=t`;
+}
+
 async function driveMetadata(token: string, fileId: string) {
   const response = await fetch(
     `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?fields=id,name,mimeType,size`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
-  const data = await response.json();
-  if (!response.ok) throw new Error(data?.error?.message || `Drive metadata failed: HTTP ${response.status}`);
-  return data;
+  if (response.ok) return await response.json();
+
+  // The reconstruction sources were explicitly supplied as share links. If the
+  // Base44 Drive connector only has drive.file scope, use the shared file itself.
+  const fallback = await fetch(sharedDriveUrl(fileId), { headers: { Range: 'bytes=0-0' } });
+  if (!fallback.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data?.error?.message || `Drive metadata failed: HTTP ${response.status}`);
+  }
+  const range = fallback.headers.get('content-range') || '';
+  const total = Number(range.split('/').pop() || fallback.headers.get('content-length') || 0);
+  const disposition = fallback.headers.get('content-disposition') || '';
+  const match = /filename="?([^";]+)"?/i.exec(disposition);
+  await fallback.body?.cancel().catch(() => {});
+  return { id: fileId, name: match?.[1] || fileId, mimeType: fallback.headers.get('content-type') || 'application/octet-stream', size: String(total) };
 }
 
 async function driveRange(token: string, fileId: string, start: number, end: number) {
-  const response = await fetch(
+  let response = await fetch(
     `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`,
     {
       headers: {
@@ -37,6 +53,12 @@ async function driveRange(token: string, fileId: string, start: number, end: num
       },
     },
   );
+  if (!response.ok) {
+    response = await fetch(sharedDriveUrl(fileId), {
+      headers: { Range: `bytes=${start}-${end}` },
+      redirect: 'follow',
+    });
+  }
   if (!response.ok) throw new Error(`Drive range read failed: HTTP ${response.status}`);
   const bytes = new Uint8Array(await response.arrayBuffer());
   const expected = end - start + 1;
@@ -54,10 +76,11 @@ async function driveWhole(token: string, fileId: string) {
   const size = Number(meta.size || 0);
   if (size <= 0) throw new Error('Drive file has no readable size.');
   if (size > MAX_IMPORT_BYTES) throw new Error(`Individual asset is too large to import (${Math.ceil(size / 1048576)} MB).`);
-  const response = await fetch(
+  let response = await fetch(
     `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
+  if (!response.ok) response = await fetch(sharedDriveUrl(fileId), { redirect: 'follow' });
   if (!response.ok) throw new Error(`Drive download failed: HTTP ${response.status}`);
   const bytes = new Uint8Array(await response.arrayBuffer());
   if (bytes.byteLength !== size) throw new Error(`Drive download was truncated: ${bytes.byteLength}/${size} bytes.`);
