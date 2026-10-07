@@ -5,17 +5,5 @@ import '@/components/jedioutcast/jedi-outcast.css';
 
 export default function JediOutcast() {
   const navigate = useNavigate();
-
-  return (
-    <main className="jko-page" aria-label="Jedi Outcast reconstruction">
-      <JediOutcastRuntime />
-      <button
-        type="button"
-        className="jko-back-button"
-        onClick={() => navigate(createPageUrl('LunaTemplate'))}
-      >
-        Back to Luna Dashboard
-      </button>
-    </main>
-  );
+  return <main className="jko-page"><JediOutcastRuntime onBack={() => navigate(createPageUrl('LunaTemplate'))} /></main>;
 }

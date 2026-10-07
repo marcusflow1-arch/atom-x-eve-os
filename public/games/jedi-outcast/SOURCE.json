@@ -1,0 +1,18 @@
+{
+  "original_source": "https://github.com/grayj/Jedi-Outcast",
+  "original_commit": "85f58467344d3ccbc6e2501a9af573ff4488a898",
+  "browser_port": "https://github.com/Virtastic/jk2-web/tree/v1.1.0",
+  "browser_port_commit": "3aa6c1daee11cfc491a4f57f8d51dbb1402d67fd",
+  "corresponding_source": "https://github.com/Virtastic/jk2-web/releases/download/v1.1.0/jk2-web-src-v1.1.0.tar.gz",
+  "bundle": "https://github.com/Virtastic/jk2-web/releases/download/v1.1.0/jk2-web-v1.1.0.zip",
+  "bundle_sha256": "c415f53ca19804b21c9c0bffb2d94e493037d7482d1b3c35eee05e8053aad74e",
+  "files_sha256": {
+    "jk2.js": "0a8c6a8ef8ab630cf5e30e9abfdce78bfac9956fd19c6883be430c84a51fe86e",
+    "jk2.wasm": "d95c3f02722d72fa2e8eec0652e6d1e8789b50ce9b6aae3ff738a89de8fb7de4",
+    "qagame.wasm": "9c696cf6f7c8a768cdff4a46270c8f4d31dcd5da3769b4cac02e06dd1b728f3f"
+  },
+  "license": "GPL-2.0",
+  "retail_data_included": false,
+  "engine_binaries_modified": false,
+  "integration": "Local original-data picker, required-file and format checks, iframe lifecycle and launcher. No replacement models, maps, AI, combat, animation or HUD."
+}
