@@ -31,6 +31,15 @@ export const KEJIM_POST_MISSION = Object.freeze({
     navFileId: '1Xq7JktxUkbPTso1WW6W-x376J002k9AT',
     stripFileId: '1Aq0CAMzNCxIr0eQY-hE9U3YnYSQ1yl36',
     objectivesFileId: '1vu2NMmBj1jb5sPgYv7biFNidVHx6BdH9',
+    visualReferenceFolderId: '17jTbFKOpaDZZynh56-CVXglXiECqN8RY',
+    visualReference: Object.freeze({
+      cadenceSeconds: 1,
+      firstFrame: 1,
+      lastVerifiedFrame: 1653,
+      firstTimestamp: '00:00:00',
+      lastVerifiedTimestamp: '00:27:32',
+      sourceLabel: 'Level 1 - Kejim Outpost frame-by-frame walkthrough',
+    }),
   }),
   sourceScripts: Object.freeze([
     'kejim_start.ibi',
