@@ -873,6 +873,8 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.title = "";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
+        } else if (p.includes('/jedioutcast')) {
+          headerConfig.hidden = true;
         } else if (p.includes('/lunatemplate')) {
           headerConfig.title = "ATOM - Marcus | Luna Dashboard";
           headerConfig.showLevel = true;
@@ -1150,6 +1152,16 @@ function LayoutContent({ children, currentPageName }) {
                             </svg>
                             Discord
                           </a>
+
+                          <button
+                            type="button"
+                            onClick={() => navigate(createPageUrl('JediOutcast'))}
+                            className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-amber-500/10 border-amber-300/20 text-amber-100/80 hover:bg-amber-500/20 hover:text-white items-center gap-2"
+                            title="Open isolated Jedi Outcast reconstruction"
+                          >
+                            <Swords className="w-4 h-4" />
+                            Jedi Outcast
+                          </button>
                         </div>
                       </>
                     )}
