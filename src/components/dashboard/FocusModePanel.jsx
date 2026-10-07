@@ -6,8 +6,8 @@ import {
         Calendar as CalendarIcon, Clock, Target, ChevronLeft, ChevronRight,
         Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
         Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
-        Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal, Bot,
-        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv, Swords, Layers, TrendingUp, Globe, UserPlus
+        Radio, Gamepad2, Search, MoreHorizontal, Bot,
+        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv, Swords, Layers, TrendingUp, Globe, UserPlus, Camera
       } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
@@ -1300,8 +1300,8 @@ function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
 
 // ── AI Avatar Home Section (PS5-style) ───────────────────────────────────────
 export function LibraryBannerSection({ 
-  games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown, onQuickChangeToggle,
-  navBoxes, calendarBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment,
+  games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown,
+  navBoxes, calendarBox, intelligenceFeed,
   activeFriend, onActiveFriendChange, selectedFocusGame
 }) {
   const envDropdownRef = useRef(null);
@@ -1576,29 +1576,8 @@ export function LibraryBannerSection({
           {/* ── PS5-style Top Row ── */}
           <div className="flex items-center gap-4 w-full h-24">
 
-            {/* Environment Hub tile */}
-            <div className="w-[247px] h-full flex-shrink-0">
-              <EnvironmentHubTile 
-                isOpen={showEnvDropdown} 
-                onToggle={() => setShowEnvDropdown(v => !v)} 
-                onQuickChangeToggle={onQuickChangeToggle}
-                isEnvironmentActive={isEnvironmentActive}
-                onToggleEnvironment={onToggleEnvironment}
-              />
-            </div>
-
-            {/* ── Presence Bar: Memories | divider | Friend Slots | Home | Globe ── */}
+            {/* ── Presence Bar: Friend Slots | Home | compact dashboard controls ── */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">
-              {/* Memories */}
-              <button
-                onClick={() => setShowMemoriesDrawer(true)}
-                className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider transition-colors flex flex-col items-center justify-center gap-0.5"
-              >
-                <span className="text-xl leading-none">📷</span>
-                <span className="leading-none">Memories</span>
-              </button>
-              <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
-
               {/* Five social slots. PvP rejoin belongs to the match layer, not
                   to party/dashboard presence, so it sits below this group. */}
               <div className="relative flex h-full flex-shrink-0 items-center gap-2">
@@ -1654,7 +1633,10 @@ export function LibraryBannerSection({
                 <HomeReference onClick={handleHomeClick} />
               </div>
               <div className="flex-shrink-0 ml-2 flex items-center justify-center">
-                <AIBoxSocialModeButtons />
+                <AIBoxSocialModeButtons
+                  onEnvironment={() => setShowEnvDropdown((current) => !current)}
+                  onMemories={() => setShowMemoriesDrawer(true)}
+                />
               </div>
             </div>
 
@@ -2145,11 +2127,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                  onBackgroundChange={onBackgroundChange}
                  currentEnvId={currentEnvId}
                  onSelectEnv={onSelectEnv}
-                 showEnvDropdown={false}
-                 setShowEnvDropdown={() => setShowEnvDrawer(true)}
-                 onQuickChangeToggle={() => setShowQuickChangeDrawer(true)}
-                 isEnvironmentActive={isEnvironmentActive}
-                 onToggleEnvironment={onToggleEnvironment}
+                 showEnvDropdown={showEnvDrawer}
+                 setShowEnvDropdown={setShowEnvDrawer}
                  activeFriend={activeFriend}
                  onActiveFriendChange={setActiveFriend}
                  selectedFocusGame={selectedFocusGame}
