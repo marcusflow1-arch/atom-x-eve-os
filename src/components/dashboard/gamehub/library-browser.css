@@ -1,7 +1,8 @@
 /* Luna Library: compact controls and a single unfolding glass leaf. */
-.ll-browser { color:#eff7ff; overflow:visible; }
-.ll-toolbar { display:flex; align-items:center; gap:8px; padding:0 12px 8px; }
-.ll-voice-search { min-width:0; flex:0 1 calc((100% - 68px)/2); width:calc((100% - 68px)/2); }
+.ll-browser { position:relative; color:#eff7ff; overflow:hidden; padding-top:1px; }
+.ll-browser::before { content:''; position:absolute; left:0; right:0; top:0; z-index:30; height:1px; pointer-events:none; background:linear-gradient(90deg,rgba(205,220,228,.10),rgba(205,220,228,.24) 50%,rgba(205,220,228,.10)); }
+.ll-toolbar { display:flex; align-items:center; gap:7px; padding:10px 12px 8px; }
+.ll-voice-search { min-width:0; flex:1 1 auto; width:auto; }
 .ll-search-line { display:flex; align-items:center; gap:4px; min-height:32px; border-bottom:1px solid rgba(198,231,243,.52); transition:border-color .2s; }
 .ll-search-line:focus-within { border-color:#91e7f7; }
 .ll-search-line input { min-width:0; flex:1; width:100%; background:none; padding:7px 0; outline:none; font-size:11px; color:#f0f8ff; }
@@ -10,9 +11,9 @@
 .ll-search-line button { display:grid; place-items:center; flex:none; width:21px; height:28px; color:#c7e5ef; }
 .ll-search-line button[aria-pressed="true"] { color:#71ecff; }
 .ll-search-note { font-size:10px; color:#b5d8e2; padding-top:4px; }
-.ll-view-toggle { width:32px; height:32px; flex:none; display:grid; place-items:center; border-radius:8px; color:#a9c1ce; }
-.ll-view-toggle[aria-pressed="true"] { color:#a1f2ff; background:rgba(74,184,209,.14); box-shadow:inset 0 0 0 1px rgba(106,219,240,.16); }
-.ll-full-view { margin-left:auto; white-space:nowrap; font-size:11px; font-weight:600; min-height:32px; padding:0 2px; color:#e3eef5; }
+.ll-view-toggle,.ll-viewer-toggle { width:32px; height:32px; flex:none; display:grid; place-items:center; border-radius:8px; color:#a9c1ce; }
+.ll-view-toggle[aria-pressed="true"],.ll-viewer-toggle[aria-pressed="true"] { color:#a1f2ff; background:rgba(74,184,209,.14); box-shadow:inset 0 0 0 1px rgba(106,219,240,.16); }
+.ll-full-view { flex:none; white-space:nowrap; font-size:10px; font-weight:600; min-height:32px; padding:0 2px; color:#e3eef5; }
 .ll-filters { display:flex; align-items:center; gap:8px; padding:4px 12px 10px; }
 .ll-genre { display:flex; align-items:center; gap:6px; flex:1; min-width:0; }
 .ll-genre>span { color:#879baa; font-size:9px; text-transform:uppercase; letter-spacing:.12em; }
@@ -20,7 +21,7 @@
 .ll-kind-switch { display:flex; align-items:center; gap:3px; flex:none; }
 .ll-kind-switch button { display:grid; place-items:center; width:29px; height:29px; color:#8099aa; border-radius:6px; }
 .ll-kind-switch button[aria-pressed="true"] { color:#b8f6ff; background:rgba(96,215,240,.12); }
-.ll-kind-switch button:hover,.ll-view-toggle:hover,.ll-full-view:hover { color:white; background:rgba(255,255,255,.06); }
+.ll-kind-switch button:hover,.ll-view-toggle:hover,.ll-viewer-toggle:hover,.ll-full-view:hover { color:white; background:rgba(255,255,255,.06); }
 .ll-browser button:focus-visible,.ll-explorer button:focus-visible,.ll-scroll-leaf button:focus-visible,.ll-card-inspector button:focus-visible { outline:2px solid #9eeeff; outline-offset:3px; }
 .ll-content,.ll-explorer { display:flex; flex-direction:column; min-height:0; flex:1; }
 .ll-explorer { position:relative; }
