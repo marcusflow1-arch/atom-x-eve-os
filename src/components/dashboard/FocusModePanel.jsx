@@ -1522,22 +1522,13 @@ export function LibraryBannerSection({
           {/* ── PS5-style Top Row ── */}
           <div className="flex items-center justify-end gap-3 w-full h-24">
 
-            {/* ── Presence Bar: compact controls | Home | five friend/party slots ── */}
+            {/* ── Presence Bar: Home | five friend/party slots | four dashboard controls ── */}
             <div className="ml-auto flex flex-shrink-0 items-center gap-2 h-full">
-              {/* Four compact dashboard controls now live to the LEFT of Home. */}
-              <div className="flex-shrink-0 mr-2 flex items-center justify-center">
-                <AIBoxSocialModeButtons
-                  environmentOpen={Boolean(showEnvDropdown)}
-                  onEnvironment={() => setShowEnvDropdown((current) => !current)}
-                  onMemories={() => setShowMemoriesDrawer(true)}
-                />
-              </div>
-
               <div className="flex-shrink-0">
                 <HomeReference onClick={handleHomeClick} />
               </div>
 
-              {/* Five social slots now live to the RIGHT of Home.
+              {/* Five social slots remain to the RIGHT of Home.
                   PvP rejoin remains attached to this match/presence group. */}
               <div className="relative ml-2 flex h-full flex-shrink-0 items-center gap-2">
                 {(onlineFriends || []).filter(Boolean).map((friend) => (
@@ -1587,9 +1578,25 @@ export function LibraryBannerSection({
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* Four dashboard controls are one horizontal row after the five slots. */}
+              <div className="ml-2 flex flex-shrink-0 items-center justify-center">
+                <AIBoxSocialModeButtons
+                  environmentOpen={Boolean(showEnvDropdown)}
+                  onEnvironment={() => setShowEnvDropdown((current) => !current)}
+                  onMemories={() => setShowMemoriesDrawer(true)}
+                />
+              </div>
             </div>
 
-            {/* Calendar Box */}
+            {/* Hard visual divider between dashboard controls and status/reminders. */}
+            <div
+              aria-hidden="true"
+              className="h-[68px] w-px flex-none"
+              style={{ background: 'linear-gradient(180deg, transparent, rgba(190,224,238,.28) 18%, rgba(190,224,238,.52) 50%, rgba(190,224,238,.28) 82%, transparent)' }}
+            />
+
+            {/* System notifications / reminders + time and date */}
             <div className="h-full w-[600px] max-w-[42vw] flex-none">
               {calendarBox}
             </div>
