@@ -1519,54 +1519,27 @@ export function LibraryBannerSection({
       <div ref={envDropdownRef} className="w-full h-full">
         <div className="flex flex-col gap-3 w-full h-full relative">
 
-          {/* Shared matte dashboard glass begins directly under this control strip. */}
-          <div
-            data-luna-dashboard-matte-surface
-            aria-hidden="true"
-            className="pointer-events-none absolute left-0 right-0 top-24 bottom-0 z-0"
-            style={{
-              background: 'linear-gradient(180deg, rgba(58,60,64,0.56) 0%, rgba(47,49,53,0.60) 42%, rgba(40,42,46,0.64) 100%)',
-              backdropFilter: 'blur(24px) saturate(72%)',
-              WebkitBackdropFilter: 'blur(24px) saturate(72%)',
-              borderLeft: '1px solid rgba(220,228,232,0.12)',
-              borderRight: '1px solid rgba(220,228,232,0.12)',
-              borderBottom: '1px solid rgba(220,228,232,0.15)',
-              borderTop: '0',
-              boxShadow: 'inset 0 -1px 0 rgba(255,255,255,0.018)',
-            }}
-          />
-
-          {/* ── PS5-style Top Row ── */}
-          <div className="relative z-10 flex items-center justify-end w-full h-24">
+          {/* Full-width top HUD: from Library/Cards edge to far right.
+              Only the hairline underneath is visible; the avatar workspace
+              below remains untouched and free of an extra glass layer. */}
+          <div className="relative z-10 w-full h-24">
             <div
               data-luna-top-status-overlay
-              className="ml-auto flex h-[88px] max-w-full items-center gap-3 px-3 py-2"
+              className="pointer-events-auto flex h-full w-full min-w-0 items-center justify-end gap-3 px-3"
               style={{
-                background: 'linear-gradient(180deg, rgba(54,57,62,0.58) 0%, rgba(42,45,50,0.62) 100%)',
-                backdropFilter: 'blur(22px) saturate(78%)',
-                WebkitBackdropFilter: 'blur(22px) saturate(78%)',
+                background: 'linear-gradient(180deg, rgba(52,54,58,0.60) 0%, rgba(43,45,49,0.64) 100%)',
+                backdropFilter: 'blur(18px) saturate(75%)',
+                WebkitBackdropFilter: 'blur(18px) saturate(75%)',
                 border: '0',
+                borderBottom: '1px solid rgba(223,231,234,0.095)',
                 borderRadius: '0',
                 boxShadow: 'none',
               }}
             >
 
-            {/* ── Presence Bar: four dashboard controls | Home | five friend/party slots ── */}
+            {/* Five party/dashboard slots | Home | four circular actions.
+                Home remains between the groups, but they swap sides. */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">
-              <div className="flex flex-shrink-0 items-center justify-center">
-                <AIBoxSocialModeButtons
-                  environmentOpen={Boolean(showEnvDropdown)}
-                  onEnvironment={() => setShowEnvDropdown((current) => !current)}
-                  onMemories={() => setShowMemoriesDrawer(true)}
-                />
-              </div>
-
-              <div className="mx-2 flex-shrink-0">
-                <HomeReference onClick={handleHomeClick} />
-              </div>
-
-              {/* Five social slots now sit immediately to the RIGHT of Home.
-                  PvP rejoin remains attached to this match/presence group. */}
               <div className="relative flex h-full flex-shrink-0 items-center gap-2">
                 {(onlineFriends || []).filter(Boolean).map((friend) => (
                   <div key={friend.id} className="flex-shrink-0">
@@ -1616,10 +1589,22 @@ export function LibraryBannerSection({
                 </AnimatePresence>
               </div>
 
+              <div className="mx-1 flex-shrink-0">
+                <HomeReference onClick={handleHomeClick} />
+              </div>
+
+              <div className="flex flex-shrink-0 items-center justify-center">
+                <AIBoxSocialModeButtons
+                  environmentOpen={Boolean(showEnvDropdown)}
+                  onEnvironment={() => setShowEnvDropdown((current) => !current)}
+                  onMemories={() => setShowMemoriesDrawer(true)}
+                />
+              </div>
             </div>
 
-            {/* System notifications / reminders + time and date */}
-            <div className="h-full w-[600px] max-w-[42vw] flex-none">
+            {/* Keep notifications/reminders and time/date within the same
+                full-width glass band, without an internal divider. */}
+            <div className="h-full min-w-[280px] flex-1">
               {calendarBox}
             </div>
             </div>
