@@ -1157,10 +1157,10 @@ function LayoutContent({ children, currentPageName }) {
                             type="button"
                             onClick={() => navigate(createPageUrl('JediOutcast'))}
                             className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-amber-500/10 border-amber-300/20 text-amber-100/80 hover:bg-amber-500/20 hover:text-white items-center gap-2"
-                            title="Open Jedi Outcast with original game files"
+                            title="Open Star Wars Jedi Knight II: Jedi Outcast with original game files"
                           >
                             <Swords className="w-4 h-4" />
-                            Jedi Outcast
+                            Star Wars Jedi Knight II: Jedi Outcast
                           </button>
                         </div>
                       </>
