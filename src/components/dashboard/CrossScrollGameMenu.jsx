@@ -57,11 +57,14 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30" style={{ height: '10%', background: 'linear-gradient(to bottom, rgba(0,0,0,0.55), transparent)' }} />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30" style={{ height: '10%', background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)' }} />
 
-      {/* White divider line — sits under the "Full Library" button */}
-      <div
-        className="pointer-events-none absolute left-3 right-3 z-20"
-        style={{ top: browsing ? 0 : 26, height: 1, background: 'rgba(255,255,255,0.55)', boxShadow: '0 0 6px rgba(255,255,255,0.3)' }}
-      />
+      {/* Compact Library mode owns its divider at the top of the
+          Library panel, above Search / Card Explorer / Genre controls. */}
+      {!browsing && (
+        <div
+          className="pointer-events-none absolute left-3 right-3 z-20"
+          style={{ top: 26, height: 1, background: 'rgba(255,255,255,0.55)', boxShadow: '0 0 6px rgba(255,255,255,0.3)' }}
+        />
+      )}
 
       {/* All games — simple flat list below the line */}
       <div ref={listRef} data-testid="library-game-list" tabIndex={0} aria-label="Scrollable game library" onWheel={e => e.stopPropagation()} className="absolute inset-0 overflow-y-auto overscroll-contain" style={{ scrollbarWidth: 'none', paddingTop: browsing ? 8 : 40, paddingBottom: 48 }}>
