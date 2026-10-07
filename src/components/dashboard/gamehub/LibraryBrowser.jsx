@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { GalleryHorizontalEnd, Library } from 'lucide-react';
+import { GalleryHorizontalEnd, Library, Maximize2, Minimize2 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthContext';
 import useOwnedGames from '@/components/store/useOwnedGames';
 import CrossScrollGameMenu from '@/components/dashboard/CrossScrollGameMenu';
@@ -10,7 +10,7 @@ import { filterLibraryGames, genreOptions } from './libraryDiscovery';
 import './library-browser.css';
 
 const defaultFilters = { view: 'library', scope: 'games', search: '', genre: 'all', gameId: null };
-export default function LibraryBrowser({ selectedGame, onSelectGame, onLongPressGame, onOptionsGame, fullView, onToggleFullView, filters: controlledFilters, onFiltersChange }) {
+export default function LibraryBrowser({ selectedGame, onSelectGame, onLongPressGame, onOptionsGame, fullView, onToggleFullView, viewerHidden = false, onToggleViewer, filters: controlledFilters, onFiltersChange }) {
   const { user } = useAuth();
   const ownership = useOwnedGames();
   const [localFilters, setLocalFilters] = useState(defaultFilters);
@@ -37,7 +37,8 @@ export default function LibraryBrowser({ selectedGame, onSelectGame, onLongPress
     <header className="ll-toolbar">
       <LibraryVoiceSearch value={filters.search} onChange={(search) => change({ search, gameId: null })} subject={cardsView && filters.scope === 'cards' ? 'cards' : 'games'} />
       <button className="ll-view-toggle" aria-label={cardsView ? 'Return to game library' : 'Open card explorer'} title={cardsView ? 'Game library' : 'Card explorer'} aria-pressed={cardsView} onClick={() => change({ view: cardsView ? 'library' : 'cards', scope: 'games', gameId: null })}>{cardsView ? <Library size={18} /> : <GalleryHorizontalEnd size={18} />}</button>
-      <button className="ll-full-view" aria-label={cardsView ? 'Full card explorer' : 'Full game library'} aria-pressed={fullView} onClick={onToggleFullView}>Full View</button>
+      <button className="ll-viewer-toggle" aria-label={viewerHidden ? 'Restore avatar viewer and stats' : 'Expand Library and hide avatar viewer'} title={viewerHidden ? 'Restore avatar viewer' : 'Expand Library'} aria-pressed={viewerHidden} onClick={onToggleViewer}>{viewerHidden ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
+      <button className="ll-full-view" aria-label={cardsView ? 'Full card explorer' : 'Full game library'} aria-pressed={fullView} onClick={onToggleFullView}>{cardsView ? 'Full Cards' : 'Full Library'}</button>
     </header>
     {cardsView ? <LibraryCardExplorer filters={filters} onChange={change} fullViewOpen={fullView} /> : <>
       <LibraryBrowseControls genres={genres} genre={filters.genre} scope="games" onGenreChange={(genre) => change({ genre })} onScopeChange={(scope) => { if (scope === 'cards') change({ view: 'cards', scope, gameId: null }); }} />
