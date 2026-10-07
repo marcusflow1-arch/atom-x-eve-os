@@ -84,7 +84,7 @@ function findEocd(tail: Uint8Array, absoluteStart: number, totalSize: number) {
   throw new Error('PK3 end-of-directory record was not found.');
 }
 
-function findCentralEntry(directory: Uint8Array, wantedPath: string, count: number) {
+function findCentralEntry(directory: Uint8Array, wantedPath: string, count: number, optional = false) {
   const view = new DataView(directory.buffer, directory.byteOffset, directory.byteLength);
   let pos = 0;
   const wanted = wantedPath.replace(/\\/g, '/').toLowerCase();
@@ -111,6 +111,7 @@ function findCentralEntry(directory: Uint8Array, wantedPath: string, count: numb
     }
     pos = next;
   }
+  if (optional) return null;
   throw new Error(`${wantedPath}: not found in the canonical retail PK3.`);
 }
 
@@ -119,7 +120,7 @@ async function inflateRaw(bytes: Uint8Array) {
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
-async function readPk3Entry(token: string, fileId: string, entryPath: string) {
+async function locatePk3Entry(token: string, fileId: string, entryPath: string, optional = false) {
   const meta = await driveMetadata(token, fileId);
   const totalSize = Number(meta.size || 0);
   if (!totalSize) throw new Error('Retail PK3 has no readable size.');
@@ -135,8 +136,11 @@ async function readPk3Entry(token: string, fileId: string, entryPath: string) {
     eocd.centralOffset,
     eocd.centralOffset + eocd.centralSize - 1,
   );
-  const entry = findCentralEntry(directory, entryPath, eocd.entries);
+  const entry = findCentralEntry(directory, entryPath, eocd.entries, optional);
+  return { entry, meta };
+}
 
+async function readLocatedPk3Entry(token: string, fileId: string, entryPath: string, entry: any, meta: any) {
   const localHeader = await driveRange(token, fileId, entry.localOffset, entry.localOffset + 29);
   const localView = new DataView(localHeader.buffer, localHeader.byteOffset, localHeader.byteLength);
   if (localView.getUint32(0, true) !== 0x04034b50) throw new Error(`${entryPath}: damaged local PK3 header.`);
@@ -151,7 +155,28 @@ async function readPk3Entry(token: string, fileId: string, entryPath: string) {
   if (bytes.byteLength !== entry.uncompressedSize) {
     throw new Error(`${entryPath}: decompressed size mismatch (${bytes.byteLength}/${entry.uncompressedSize}).`);
   }
-  return { bytes, meta: { name: basename(entryPath), mimeType: 'application/octet-stream', size: String(bytes.byteLength) } };
+  return { bytes, meta: { ...meta, name: basename(entryPath), mimeType: 'application/octet-stream', size: String(bytes.byteLength) } };
+}
+
+async function readPk3Entry(token: string, fileId: string, entryPath: string) {
+  const located = await locatePk3Entry(token, fileId, entryPath, false);
+  return readLocatedPk3Entry(token, fileId, entryPath, located.entry, located.meta);
+}
+
+async function resolveRetailPath(base44: any, token: string, requestedPath: string) {
+  const archives = await base44.asServiceRole.entities.JediSourceAsset.filter(
+    { game_key: 'jedi_outcast', category: 'retail_archive' },
+    'path',
+    20,
+  );
+  let chosen: any = null;
+  for (const archive of archives) {
+    if (!archive.drive_file_id) continue;
+    const located = await locatePk3Entry(token, String(archive.drive_file_id), requestedPath, true);
+    if (located.entry) chosen = { archive, ...located };
+  }
+  if (!chosen) throw new Error(`${requestedPath}: not found in the canonical retail PK3 set.`);
+  return chosen;
 }
 
 function validateOriginalFormat(path: string, bytes: Uint8Array) {
@@ -195,6 +220,69 @@ Deno.serve(async (req) => {
           definitions: definitions.length,
         },
       });
+    }
+
+    if (action === 'importPath') {
+      const requestedPath = String(body.path || '').replace(/\\/g, '/').replace(/^\/+/, '').toLowerCase();
+      if (!requestedPath || requestedPath.includes('..')) return Response.json({ error: 'A safe original game path is required.' }, { status: 400 });
+
+      const existing = await base44.asServiceRole.entities.JediSourceAsset.filter(
+        { game_key: 'jedi_outcast', path: requestedPath },
+        '-updated_date',
+        20,
+      );
+      const cached = existing.find((x: any) => x.storage_url);
+      if (cached) return Response.json({ success: true, asset: cached, reused: true });
+
+      const token = await base44.asServiceRole.connectors.getAccessToken('googledrive');
+      const resolved = await resolveRetailPath(base44, token, requestedPath);
+      const payload = await readLocatedPk3Entry(
+        token,
+        String(resolved.archive.drive_file_id),
+        requestedPath,
+        resolved.entry,
+        resolved.meta,
+      );
+      validateOriginalFormat(requestedPath, payload.bytes);
+
+      const digest = hex(await crypto.subtle.digest('SHA-256', payload.bytes));
+      const file = new File([payload.bytes], basename(requestedPath), { type: 'application/octet-stream' });
+      const uploaded = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+      if (!uploaded?.file_url) throw new Error('Base44 storage upload did not return a file URL.');
+
+      const record = existing[0]
+        ? await base44.asServiceRole.entities.JediSourceAsset.update(existing[0].id, {
+            source_kind: 'pk3_entry',
+            source_root_key: 'retail_game_files',
+            pk3_file_id: resolved.archive.drive_file_id,
+            pk3_name: resolved.archive.path,
+            pk3_entry_path: requestedPath,
+            storage_url: uploaded.file_url,
+            sha256: digest,
+            byte_size: payload.bytes.byteLength,
+            canonical: true,
+            editable: false,
+            status: 'imported',
+          })
+        : await base44.asServiceRole.entities.JediSourceAsset.create({
+            game_key: 'jedi_outcast',
+            path: requestedPath,
+            category: String(body.category || 'runtime_asset'),
+            source_kind: 'pk3_entry',
+            source_root_key: 'retail_game_files',
+            pk3_file_id: resolved.archive.drive_file_id,
+            pk3_name: resolved.archive.path,
+            pk3_entry_path: requestedPath,
+            storage_url: uploaded.file_url,
+            sha256: digest,
+            byte_size: payload.bytes.byteLength,
+            canonical: true,
+            editable: false,
+            status: 'imported',
+            metadata: { resolved_by: 'retail_pk3_precedence' },
+          });
+
+      return Response.json({ success: true, asset: record, reused: false });
     }
 
     if (action === 'importAsset' || action === 'readText') {
