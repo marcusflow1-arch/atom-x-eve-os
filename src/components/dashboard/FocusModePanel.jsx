@@ -1522,11 +1522,24 @@ export function LibraryBannerSection({
           {/* ── PS5-style Top Row ── */}
           <div className="flex items-center justify-end gap-3 w-full h-24">
 
-            {/* ── Presence Bar: Friend Slots | Home | compact dashboard controls ── */}
+            {/* ── Presence Bar: compact controls | Home | five friend/party slots ── */}
             <div className="ml-auto flex flex-shrink-0 items-center gap-2 h-full">
-              {/* Five social slots. PvP rejoin belongs to the match layer, not
-                  to party/dashboard presence, so it sits below this group. */}
-              <div className="relative flex h-full flex-shrink-0 items-center gap-2">
+              {/* Four compact dashboard controls now live to the LEFT of Home. */}
+              <div className="flex-shrink-0 mr-2 flex items-center justify-center">
+                <AIBoxSocialModeButtons
+                  environmentOpen={Boolean(showEnvDropdown)}
+                  onEnvironment={() => setShowEnvDropdown((current) => !current)}
+                  onMemories={() => setShowMemoriesDrawer(true)}
+                />
+              </div>
+
+              <div className="flex-shrink-0">
+                <HomeReference onClick={handleHomeClick} />
+              </div>
+
+              {/* Five social slots now live to the RIGHT of Home.
+                  PvP rejoin remains attached to this match/presence group. */}
+              <div className="relative ml-2 flex h-full flex-shrink-0 items-center gap-2">
                 {(onlineFriends || []).filter(Boolean).map((friend) => (
                   <div key={friend.id} className="flex-shrink-0">
                     <FriendReference 
@@ -1574,21 +1587,10 @@ export function LibraryBannerSection({
                   )}
                 </AnimatePresence>
               </div>
-
-              <div className="flex-shrink-0 ml-2">
-                <HomeReference onClick={handleHomeClick} />
-              </div>
-              <div className="flex-shrink-0 ml-2 flex items-center justify-center">
-                <AIBoxSocialModeButtons
-                  environmentOpen={Boolean(showEnvDropdown)}
-                  onEnvironment={() => setShowEnvDropdown((current) => !current)}
-                  onMemories={() => setShowMemoriesDrawer(true)}
-                />
-              </div>
             </div>
 
             {/* Calendar Box */}
-            <div className="h-full w-[430px] max-w-[34vw] flex-none">
+            <div className="h-full w-[600px] max-w-[42vw] flex-none">
               {calendarBox}
             </div>
           </div>
