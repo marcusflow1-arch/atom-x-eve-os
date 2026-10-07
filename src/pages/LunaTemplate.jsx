@@ -719,10 +719,25 @@ export default function LunaTemplate() {
 
       {/* Mini 3D Viewer Box + Game Library — unified left column, flush to left edge */}
       {!showConsoleMode && !showAchievements &&
-              <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
-              style={uiVisible ? {
-                left: '0px', top: '64px', bottom: '0px', width: '388px', gap: '0px'
-              } : { left: '0px', top: '64px', bottom: '0px', width: '330px', gap: '0px' }}>
+              <div
+                data-luna-library-side-panel
+                className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
+                style={{
+                  ...(uiVisible
+                    ? { left: '0px', top: '64px', bottom: '0px', width: '388px', gap: '0px' }
+                    : { left: '0px', top: '64px', bottom: '0px', width: '330px', gap: '0px' }),
+                  background: 'linear-gradient(180deg, rgba(31,34,39,0.985) 0%, rgba(22,25,30,0.992) 48%, rgba(18,21,25,0.995) 100%)',
+                  backdropFilter: 'blur(28px) saturate(118%)',
+                  WebkitBackdropFilter: 'blur(28px) saturate(118%)',
+                  borderTop: '0',
+                  borderLeft: '0',
+                  borderBottom: '0',
+                  borderRight: '1px solid rgba(194,214,224,0.24)',
+                  borderRadius: '0',
+                  boxShadow: '14px 0 34px rgba(0,0,0,0.34), inset -1px 0 0 rgba(255,255,255,0.025)',
+                  isolation: 'isolate',
+                }}
+              >
 
           {/* Unified card: 3D viewer on top, game list below — one seamless box */}
           {!avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
