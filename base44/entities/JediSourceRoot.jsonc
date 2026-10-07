@@ -1,0 +1,65 @@
+{
+  "name": "JediSourceRoot",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "github",
+        "google_drive",
+        "reference_frames"
+      ]
+    },
+    "locator": {
+      "type": "string"
+    },
+    "canonical": {
+      "type": "boolean",
+      "default": true
+    },
+    "purpose": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "required": [
+    "key",
+    "label",
+    "source_type",
+    "locator"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

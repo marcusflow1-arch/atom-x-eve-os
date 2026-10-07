@@ -1,0 +1,92 @@
+{
+  "name": "JediContentDefinition",
+  "type": "object",
+  "properties": {
+    "game_key": {
+      "type": "string",
+      "default": "jedi_outcast"
+    },
+    "content_key": {
+      "type": "string"
+    },
+    "content_type": {
+      "type": "string",
+      "enum": [
+        "mission",
+        "map",
+        "npc",
+        "weapon",
+        "force_power",
+        "animation",
+        "script",
+        "shader",
+        "ui",
+        "system"
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "source_path": {
+      "type": "string"
+    },
+    "source_asset_id": {
+      "type": "string"
+    },
+    "original_data": {
+      "type": "object",
+      "default": {}
+    },
+    "override_data": {
+      "type": "object",
+      "default": {}
+    },
+    "effective_data": {
+      "type": "object",
+      "default": {}
+    },
+    "original": {
+      "type": "boolean",
+      "default": true
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "version": {
+      "type": "number",
+      "default": 1
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "game_key",
+    "content_key",
+    "content_type",
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

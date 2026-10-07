@@ -1,0 +1,106 @@
+{
+  "name": "JediSourceAsset",
+  "type": "object",
+  "properties": {
+    "game_key": {
+      "type": "string",
+      "default": "jedi_outcast"
+    },
+    "path": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "source_kind": {
+      "type": "string",
+      "enum": [
+        "drive_file",
+        "pk3_entry",
+        "source_code",
+        "reference_frame"
+      ]
+    },
+    "source_root_key": {
+      "type": "string"
+    },
+    "drive_file_id": {
+      "type": "string"
+    },
+    "drive_parent_id": {
+      "type": "string"
+    },
+    "pk3_file_id": {
+      "type": "string"
+    },
+    "pk3_name": {
+      "type": "string"
+    },
+    "pk3_entry_path": {
+      "type": "string"
+    },
+    "mime_type": {
+      "type": "string"
+    },
+    "byte_size": {
+      "type": "number",
+      "default": 0
+    },
+    "storage_url": {
+      "type": "string"
+    },
+    "sha256": {
+      "type": "string"
+    },
+    "canonical": {
+      "type": "boolean",
+      "default": true
+    },
+    "editable": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "catalogued",
+        "verified",
+        "imported",
+        "missing"
+      ],
+      "default": "catalogued"
+    },
+    "metadata": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "required": [
+    "game_key",
+    "path",
+    "source_kind",
+    "source_root_key"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
