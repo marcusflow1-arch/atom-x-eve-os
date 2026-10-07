@@ -7,7 +7,7 @@ import {
         Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
         Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
         Radio, Gamepad2, Search, MoreHorizontal, Bot,
-        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv, Swords, Layers, TrendingUp, Globe, UserPlus, Camera
+        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv, Swords, Layers, TrendingUp, Globe, UserPlus, Camera, Library as LibraryIcon
       } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
@@ -1059,6 +1059,31 @@ function Large3DCard({ card, isActive }) {
   );
 }
 
+// Environment Hub Tile Component - collapsed by environment-rollout.css
+// into the older V / upside-down-V Luna rail.
+function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironmentActive, onToggleEnvironment }) {
+  return (
+    <div data-luna-environment-hub className="w-full h-full rounded-xl overflow-hidden relative group">
+      <button className="absolute inset-0 w-full h-full cursor-pointer" onClick={onToggle}>
+        <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80" alt="Environment Hub" className="w-full h-full object-cover opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <button onClick={(e) => { e.stopPropagation(); onToggleEnvironment?.(); }} className="absolute top-2 left-2 z-10">
+          <span className={isEnvironmentActive ? "text-cyan-300" : "text-white/40"}>Luna Dashboard</span>
+        </button>
+        <div className="absolute bottom-3 left-3 right-3 text-left">
+          <h4 className="text-white font-bold text-sm truncate flex items-center gap-2">
+            <Globe className="w-4 h-4 text-cyan-400" />Environment Hub
+          </h4>
+          <p className="text-white/50 text-[10px]">Change your 3D world</p>
+        </div>
+      </button>
+      <button onClick={(e) => { e.stopPropagation(); onQuickChangeToggle?.(); }} className="absolute top-2 right-2 z-10" title="Quick Change Environments">
+        <LibraryIcon className="w-3.5 h-3.5 text-white" />
+      </button>
+    </div>
+  );
+}
+
 // Friend Reference - clickable friends that show join/invite options
 function FriendReference({ friend, isActive, isFriend, requestState, dashboardInviteState, partyInviteState, duelState, joining, onClick, onAddFriend, onMessage, onJoin, onInvite, onPartyInvite, onDuel, onTrade }) {
   const anchorRef = useRef(null);
@@ -1246,8 +1271,8 @@ function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
 
 // ── AI Avatar Home Section (PS5-style) ───────────────────────────────────────
 export function LibraryBannerSection({ 
-  games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown,
-  navBoxes, calendarBox, intelligenceFeed,
+  games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown, onQuickChangeToggle,
+  navBoxes, calendarBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment,
   activeFriend, onActiveFriendChange, selectedFocusGame
 }) {
   const envDropdownRef = useRef(null);
