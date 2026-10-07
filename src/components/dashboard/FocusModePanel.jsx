@@ -1715,7 +1715,7 @@ function AIBoxSocialModeButtons({ environmentOpen = false, onEnvironment, onMemo
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-1.5" aria-label="Dashboard social and environment controls">
+    <div className="flex items-center gap-2" aria-label="Dashboard social and environment controls">
       {buttons.map(({ id, label, icon: Icon, onClick, active }) => (
         <motion.button
           key={id}
@@ -1727,11 +1727,11 @@ function AIBoxSocialModeButtons({ environmentOpen = false, onEnvironment, onMemo
           aria-label={label}
           aria-pressed={id === 'online' || id === 'friends' ? active : undefined}
           data-luna-environment-hub={id === 'environment' ? true : undefined}
-          className={`group relative grid h-8 w-8 place-items-center rounded-full border transition-all ${active
+          className={`group relative grid h-10 w-10 place-items-center rounded-full border transition-all ${active
             ? 'border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-100 shadow-[0_0_16px_rgba(103,232,249,.14)]'
             : 'border-white/[0.10] bg-white/[0.045] text-white/45 hover:border-white/[0.20] hover:bg-white/[0.075] hover:text-white/70'}`}
         >
-          <Icon className="h-3.5 w-3.5" />
+          <Icon className="h-4 w-4" />
           <span className="pointer-events-none absolute left-1/2 top-[calc(100%+5px)] z-[100] hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-white/[0.08] bg-slate-950/95 px-2 py-1 text-[7px] font-bold uppercase tracking-[.10em] text-white/72 shadow-xl group-hover:block">{label}</span>
         </motion.button>
       ))}
