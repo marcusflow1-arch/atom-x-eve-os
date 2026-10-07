@@ -86,6 +86,7 @@ try{
   assert.equal(calls.length,0,'normal library does not fetch the card catalog');
   assert.equal(document.querySelectorAll('.ll-search-line').length,1);
   assert.ok(![...document.querySelectorAll('button')].some(b=>['All','Favorites'].includes(b.textContent.trim())));
+  assert.equal([...document.querySelectorAll('button')].some(b=>b.getAttribute('aria-label')==='Browse by card'),false,'Browse by card is hidden in Library mode');
   await search('brav');
   assert.equal(document.querySelector('[data-testid="owned-rail"]').textContent,'Bravo');
   await run(()=>label('Full game library').click());
@@ -93,6 +94,7 @@ try{
   await run(()=>label('Close full library').click());
   await search('');
   await run(()=>label('Open card explorer').click());await run();
+  assert.ok(label('Browse by card'),'Browse by card is available in Card Explorer');
   assert.deepEqual(shownGames(),['AdamXE','Alpha','Bravo','Charlie','Delta','Echo','Zulu']);
   assert.equal(calls.filter(x=>x==='cardCollection').length,1);
   assert.equal(calls.filter(x=>x==='games').length,1);
