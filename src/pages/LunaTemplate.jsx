@@ -724,7 +724,7 @@ export default function LunaTemplate() {
                 className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
                 style={{
                   ...(uiVisible
-                    ? { left: '0px', top: '64px', bottom: '0px', width: '281px', gap: '0px' }
+                    ? { left: '0px', top: '64px', bottom: '0px', width: '330px', gap: '0px' }
                     : { left: '0px', top: '64px', bottom: '0px', width: '281px', gap: '0px' }),
                   background: 'linear-gradient(180deg, rgba(31,34,39,0.985) 0%, rgba(22,25,30,0.992) 48%, rgba(18,21,25,0.995) 100%)',
                   backdropFilter: 'blur(28px) saturate(118%)',
