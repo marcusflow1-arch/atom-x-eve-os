@@ -1520,10 +1520,21 @@ export function LibraryBannerSection({
         <div className="flex flex-col gap-3 w-full h-full relative">
 
           {/* ── PS5-style Top Row ── */}
-          <div className="flex items-center justify-end gap-3 w-full h-24">
+          <div className="flex items-center justify-end w-full h-24">
+            <div
+              data-luna-top-status-overlay
+              className="ml-auto flex h-[88px] max-w-full items-center gap-3 rounded-[18px] px-3 py-2"
+              style={{
+                background: 'linear-gradient(180deg, rgba(54,57,62,0.72) 0%, rgba(42,45,50,0.76) 100%)',
+                backdropFilter: 'blur(22px) saturate(82%)',
+                WebkitBackdropFilter: 'blur(22px) saturate(82%)',
+                border: '1px solid rgba(255,255,255,0.065)',
+                boxShadow: '0 14px 38px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.025)',
+              }}
+            >
 
             {/* ── Presence Bar: Home | five friend/party slots | four dashboard controls ── */}
-            <div className="ml-auto flex flex-shrink-0 items-center gap-2 h-full">
+            <div className="flex flex-shrink-0 items-center gap-2 h-full">
               <div className="flex-shrink-0">
                 <HomeReference onClick={handleHomeClick} />
               </div>
@@ -1599,6 +1610,7 @@ export function LibraryBannerSection({
             {/* System notifications / reminders + time and date */}
             <div className="h-full w-[600px] max-w-[42vw] flex-none">
               {calendarBox}
+            </div>
             </div>
           </div>
 
