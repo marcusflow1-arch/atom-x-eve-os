@@ -1519,29 +1519,55 @@ export function LibraryBannerSection({
       <div ref={envDropdownRef} className="w-full h-full">
         <div className="flex flex-col gap-3 w-full h-full relative">
 
+          {/* Shared matte dashboard glass begins directly under this control strip. */}
+          <div
+            data-luna-dashboard-matte-surface
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 right-0 top-24 bottom-0 z-0"
+            style={{
+              background: 'linear-gradient(180deg, rgba(58,60,64,0.56) 0%, rgba(47,49,53,0.60) 42%, rgba(40,42,46,0.64) 100%)',
+              backdropFilter: 'blur(24px) saturate(72%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(72%)',
+              borderLeft: '1px solid rgba(220,228,232,0.12)',
+              borderRight: '1px solid rgba(220,228,232,0.12)',
+              borderBottom: '1px solid rgba(220,228,232,0.15)',
+              borderTop: '0',
+              boxShadow: 'inset 0 -1px 0 rgba(255,255,255,0.018)',
+            }}
+          />
+
           {/* ── PS5-style Top Row ── */}
-          <div className="flex items-center justify-end w-full h-24">
+          <div className="relative z-10 flex items-center justify-end w-full h-24">
             <div
               data-luna-top-status-overlay
-              className="ml-auto flex h-[88px] max-w-full items-center gap-3 rounded-[18px] px-3 py-2"
+              className="ml-auto flex h-[88px] max-w-full items-center gap-3 px-3 py-2"
               style={{
-                background: 'linear-gradient(180deg, rgba(54,57,62,0.72) 0%, rgba(42,45,50,0.76) 100%)',
-                backdropFilter: 'blur(22px) saturate(82%)',
-                WebkitBackdropFilter: 'blur(22px) saturate(82%)',
-                border: '1px solid rgba(255,255,255,0.065)',
-                boxShadow: '0 14px 38px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.025)',
+                background: 'linear-gradient(180deg, rgba(54,57,62,0.58) 0%, rgba(42,45,50,0.62) 100%)',
+                backdropFilter: 'blur(22px) saturate(78%)',
+                WebkitBackdropFilter: 'blur(22px) saturate(78%)',
+                border: '0',
+                borderRadius: '0',
+                boxShadow: 'none',
               }}
             >
 
-            {/* ── Presence Bar: Home | five friend/party slots | four dashboard controls ── */}
+            {/* ── Presence Bar: four dashboard controls | Home | five friend/party slots ── */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">
-              <div className="flex-shrink-0">
+              <div className="flex flex-shrink-0 items-center justify-center">
+                <AIBoxSocialModeButtons
+                  environmentOpen={Boolean(showEnvDropdown)}
+                  onEnvironment={() => setShowEnvDropdown((current) => !current)}
+                  onMemories={() => setShowMemoriesDrawer(true)}
+                />
+              </div>
+
+              <div className="mx-2 flex-shrink-0">
                 <HomeReference onClick={handleHomeClick} />
               </div>
 
-              {/* Five social slots remain to the RIGHT of Home.
+              {/* Five social slots now sit immediately to the RIGHT of Home.
                   PvP rejoin remains attached to this match/presence group. */}
-              <div className="relative ml-2 flex h-full flex-shrink-0 items-center gap-2">
+              <div className="relative flex h-full flex-shrink-0 items-center gap-2">
                 {(onlineFriends || []).filter(Boolean).map((friend) => (
                   <div key={friend.id} className="flex-shrink-0">
                     <FriendReference 
