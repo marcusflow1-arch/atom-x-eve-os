@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { buildRavenBspGroup, loadRavenBspFromUrl, parseRavenBsp } from './RavenBspLoader';
+import { buildKejimPostVisualReferenceBlockout } from './KejimPostVisualReferenceBlockout';
 
 const MAP_URL='/starwars/kejim_post/kejim_post.bsp';
 
@@ -43,7 +44,15 @@ export default function KejimPostMapRuntime(){
         const {parsed,group}=await loadRavenBspFromUrl(MAP_URL,{scale:.0254,patchSubdivisions:6});
         install(group,parsed.stats,'Kejim Post RBSP loaded');
       }catch(err){
-        setState({status:'missing',message:'Kejim Post BSP is not installed in the runtime pack yet.',stats:null});
+        const group=buildKejimPostVisualReferenceBlockout();
+        install(group,{
+          renderedSurfaces:group.children.length,
+          shaderCount:0,
+          vertCount:0,
+          entityCount:0,
+          visualReferenceZones:group.userData.zones?.length||0,
+        },'Screenshot-driven Kejim Post visual blockout loaded');
+        setState(s=>({...s,status:'reference',message:'Using the frame-by-frame Kejim Outpost walkthrough as a visual reconstruction source. This is an active map blockout, not the final BSP-accurate mission.'}));
       }
     };
     loadDefault();
@@ -101,9 +110,10 @@ export default function KejimPostMapRuntime(){
         <span>Shaders</span><span className="text-right text-white/80">{state.stats.shaderCount}</span>
         <span>Vertices</span><span className="text-right text-white/80">{state.stats.vertCount}</span>
         <span>Entities</span><span className="text-right text-white/80">{state.stats.entityCount}</span>
+        {state.stats.visualReferenceZones!=null&&<><span>Reference zones</span><span className="text-right text-white/80">{state.stats.visualReferenceZones}</span></>}
       </div>}
-      {state.status==='missing'&&<div className="mt-4">
-        <div className="mb-2 text-[10px] text-amber-100/70">The Drive pack contains <b>kejim_post.nav</b>, scripts, textures, models and mission data, but no <b>kejim_post.bsp</b>. The actual level geometry cannot be reconstructed exactly from the NAV file alone.</div>
+      {(state.status==='missing'||state.status==='reference')&&<div className="mt-4">
+        <div className="mb-2 text-[10px] text-amber-100/70">The browser is now showing a screenshot-derived Kejim Post route blockout using the 00:03:30–00:27:32 walkthrough evidence. It includes the opening exterior, interior transition spaces, patterned room, circular chamber, industrial catwalk section, bright corridor, and final control room. Exact hidden geometry still waits on <b>kejim_post.bsp</b>.</div>
         <button type="button" onClick={()=>fileRef.current?.click()} className="border border-cyan-300/20 bg-cyan-400/10 px-3 py-2 text-[10px] font-semibold text-cyan-100 hover:bg-cyan-400/20">Load Kejim Post .BSP</button>
         <input ref={fileRef} type="file" accept=".bsp,application/octet-stream" className="hidden" onChange={chooseFile}/>
       </div>}
