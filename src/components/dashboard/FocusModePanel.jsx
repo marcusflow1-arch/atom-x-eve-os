@@ -1717,6 +1717,7 @@ function AIBoxSocialModeButtons({ environmentOpen = false, onEnvironment, onMemo
           title={label}
           aria-label={label}
           aria-pressed={id === 'online' || id === 'friends' ? active : undefined}
+          data-luna-environment-hub={id === 'environment' ? true : undefined}
           className={`group relative grid h-8 w-8 place-items-center rounded-full border transition-all ${active
             ? 'border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-100 shadow-[0_0_16px_rgba(103,232,249,.14)]'
             : 'border-white/[0.10] bg-white/[0.045] text-white/45 hover:border-white/[0.20] hover:bg-white/[0.075] hover:text-white/70'}`}
