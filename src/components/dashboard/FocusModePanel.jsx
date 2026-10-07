@@ -1544,31 +1544,44 @@ export function LibraryBannerSection({
       <div ref={envDropdownRef} className="w-full h-full">
         <div className="flex flex-col gap-3 w-full h-full relative">
 
-          {/* Full-width top HUD: from Library/Cards edge to far right.
-              Only the hairline underneath is visible; the avatar workspace
-              below remains untouched and free of an extra glass layer. */}
-          <div className="relative z-10 w-full h-24">
-            <div
-              data-luna-top-status-overlay
-              className="pointer-events-auto flex h-full w-full min-w-0 items-center justify-end gap-3 px-3"
-              style={{
-                background: 'linear-gradient(180deg, rgba(52,54,58,0.60) 0%, rgba(43,45,49,0.64) 100%)',
-                backdropFilter: 'blur(18px) saturate(75%)',
-                WebkitBackdropFilter: 'blur(18px) saturate(75%)',
-                border: '0',
-                borderBottom: '1px solid rgba(223,231,234,0.095)',
-                borderRadius: '0',
-                boxShadow: 'none',
-              }}
-            >
+          {/* Old Luna composition restored inside a light glass overlay. */}
+          <div
+            data-luna-top-status-overlay
+            className="relative z-10 flex h-24 w-full items-center gap-4 px-3"
+            style={{
+              background: 'linear-gradient(180deg, rgba(138,144,152,0.15) 0%, rgba(106,112,120,0.13) 100%)',
+              backdropFilter: 'blur(18px) saturate(88%)',
+              WebkitBackdropFilter: 'blur(18px) saturate(88%)',
+              border: '0',
+              borderBottom: '1px solid rgba(220,232,238,0.07)',
+              borderRadius: '0',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+            }}
+          >
+            <div className="w-[247px] h-full flex-shrink-0">
+              <EnvironmentHubTile
+                isOpen={showEnvDropdown}
+                onToggle={() => setShowEnvDropdown((current) => !current)}
+                onQuickChangeToggle={onQuickChangeToggle}
+                isEnvironmentActive={isEnvironmentActive}
+                onToggleEnvironment={onToggleEnvironment}
+              />
+            </div>
 
-            {/* Five party/dashboard slots | Home | four circular actions.
-                Home remains between the groups, but they swap sides. */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">
+              <button
+                onClick={() => setShowMemoriesDrawer(true)}
+                className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider transition-colors flex flex-col items-center justify-center gap-0.5"
+              >
+                <span className="text-xl leading-none">📷</span>
+                <span className="leading-none">Memories</span>
+              </button>
+              <div className="w-px h-8 bg-white/[0.04] mx-1 flex-shrink-0" />
+
               <div className="relative flex h-full flex-shrink-0 items-center gap-2">
                 {(onlineFriends || []).filter(Boolean).map((friend) => (
                   <div key={friend.id} className="flex-shrink-0">
-                    <FriendReference 
+                    <FriendReference
                       friend={friend}
                       isFriend={friendIds.has(String(friend.id))}
                       requestState={friendRequestUsers[friend.id]}
@@ -1590,8 +1603,8 @@ export function LibraryBannerSection({
 
                 {[...Array(emptySlots)].map((_, i) => (
                   <div key={`empty-${i}`} className="flex flex-col items-center gap-1 flex-shrink-0">
-                    <Plus className="w-3.5 h-3.5 text-white" />
-                    <div className="w-16 h-16 rounded-lg bg-transparent border border-white/5" />
+                    <Plus className="w-3.5 h-3.5 text-white/80" />
+                    <div className="w-16 h-16 rounded-lg bg-white/[0.012] border border-white/[0.045]" />
                   </div>
                 ))}
 
@@ -1614,24 +1627,17 @@ export function LibraryBannerSection({
                 </AnimatePresence>
               </div>
 
-              <div className="mx-1 flex-shrink-0">
+              <div className="flex-shrink-0 ml-2">
                 <HomeReference onClick={handleHomeClick} />
               </div>
 
-              <div className="flex flex-shrink-0 items-center justify-center">
-                <AIBoxSocialModeButtons
-                  environmentOpen={Boolean(showEnvDropdown)}
-                  onEnvironment={() => setShowEnvDropdown((current) => !current)}
-                  onMemories={() => setShowMemoriesDrawer(true)}
-                />
+              <div className="flex-shrink-0 ml-2 flex items-center justify-center">
+                <AIBoxSocialModeButtons />
               </div>
             </div>
 
-            {/* Keep notifications/reminders and time/date within the same
-                full-width glass band, without an internal divider. */}
-            <div className="h-full min-w-[280px] flex-1">
+            <div className="flex-1 min-w-[400px] h-full">
               {calendarBox}
-            </div>
             </div>
           </div>
 
