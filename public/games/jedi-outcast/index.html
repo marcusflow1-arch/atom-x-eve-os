@@ -30,6 +30,16 @@
             <button type="button" id="choose-paks">Choose .pk3 files</button>
             <button type="button" id="choose-folder">Choose extracted folder</button>
           </div>
+          <div id="vault-panel" class="vault-panel" hidden>
+            <div class="vault-copy">
+              <strong>Project Vault</strong>
+              <span>Use an original installation stored from the Admin page.</span>
+            </div>
+            <div class="vault-controls">
+              <select id="vault-package" aria-label="Stored Jedi Outcast installation"></select>
+              <button type="button" id="choose-vault" disabled>Use Project Vault</button>
+            </div>
+          </div>
           <input type="file" id="own-files" multiple accept=".pk3" hidden>
           <input type="file" id="folder-files" multiple webkitdirectory hidden>
           <p class="privacy">Files stay on this device. Saves and settings use this browser's storage.</p>
