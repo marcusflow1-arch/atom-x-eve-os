@@ -101,8 +101,34 @@ Do not invent geometry, spawn locations, dialogue, mover timing, or mission even
 7. Then add movers, ICARUS mission scripting, objectives, checkpoints, sound/music, mission completion, and final validation.
 8. Do not start Kejim Base or any later level until Kejim Post is accepted.
 
-### Current asset blocker
+### Frame-by-frame visual reference now available
 
-The connected Drive `maps` folder contains `kejim_post.nav` but **does not contain `kejim_post.bsp`**. The NAV file is navigation data and is not enough to reproduce exact world geometry.
+A second private Drive folder is registered as the visual reconstruction reference:
 
-The released source confirms the retail map format is Raven `RBSP` version 1, and the browser loader for that format is now implemented. To complete Milestone 1 exactly, the retail `kejim_post.bsp` must be present in the private runtime pack or loaded locally into the viewer.
+- folder ID: `17jTbFKOpaDZZynh56-CVXglXiECqN8RY`
+- mission: Level 1 / Kejim Outpost
+- cadence: approximately 1 screenshot per second
+- verified range: frame 000001 at 00:00:00 through frame 001653 at 00:27:32
+
+The frames can now be used as a chronological picture-book of the entire playthrough. They are useful for reconstructing and validating:
+
+- room shape and visual proportions;
+- corridor/door placement;
+- vertical connections and overlooks;
+- lighting fixtures and emissive panels;
+- wall/floor/ceiling material families;
+- props and pickups;
+- weapon progression visible in the walkthrough;
+- enemy encounter locations and visible timing;
+- route order and player-facing landmarks;
+- end-of-level presentation.
+
+Representative checks already show the mission moving from the opening sequence into dark Imperial interiors, brighter segmented floor/column spaces, control/terminal rooms, multi-level industrial sections with Imperial markings and red light strips, pickup/weapon areas, and the final level-stat room.
+
+### Remaining geometry-source limitation
+
+The connected Drive `maps` folder still contains `kejim_post.nav` but **does not contain `kejim_post.bsp`**. The NAV file is navigation data and does not encode the complete rendered level mesh.
+
+That no longer leaves us visually blind: the screenshot sequence + NAV + retail scripts + released source + retail models/textures/shaders can be triangulated to reconstruct the mission one zone at a time. However, the screenshots should be treated as visual/gameplay evidence, not as exact hidden geometry or trigger-volume measurements.
+
+The Raven `RBSP` browser loader remains ready. If the real `kejim_post.bsp` becomes available later, it should supersede manual geometric inference and become the exact structural source of truth.
