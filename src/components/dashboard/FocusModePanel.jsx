@@ -7,7 +7,7 @@ import {
         Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
         Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
         Radio, Gamepad2, Search, MoreHorizontal, Bot,
-        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv, Swords, Layers, TrendingUp, Globe, UserPlus, Camera, Library as LibraryIcon
+        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv, Swords, Layers, TrendingUp, Globe, UserPlus, Camera
       } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
@@ -1059,31 +1059,6 @@ function Large3DCard({ card, isActive }) {
   );
 }
 
-// Environment Hub Tile Component - collapsed by environment-rollout.css
-// into the older V / upside-down-V Luna rail.
-function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironmentActive, onToggleEnvironment }) {
-  return (
-    <div data-luna-environment-hub className="w-full h-full rounded-xl overflow-hidden relative group">
-      <button className="absolute inset-0 w-full h-full cursor-pointer" onClick={onToggle}>
-        <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80" alt="Environment Hub" className="w-full h-full object-cover opacity-50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        <button onClick={(e) => { e.stopPropagation(); onToggleEnvironment?.(); }} className="absolute top-2 left-2 z-10">
-          <span className={isEnvironmentActive ? "text-cyan-300" : "text-white/40"}>Luna Dashboard</span>
-        </button>
-        <div className="absolute bottom-3 left-3 right-3 text-left">
-          <h4 className="text-white font-bold text-sm truncate flex items-center gap-2">
-            <Globe className="w-4 h-4 text-cyan-400" />Environment Hub
-          </h4>
-          <p className="text-white/50 text-[10px]">Change your 3D world</p>
-        </div>
-      </button>
-      <button onClick={(e) => { e.stopPropagation(); onQuickChangeToggle?.(); }} className="absolute top-2 right-2 z-10" title="Quick Change Environments">
-        <LibraryIcon className="w-3.5 h-3.5 text-white" />
-      </button>
-    </div>
-  );
-}
-
 // Friend Reference - clickable friends that show join/invite options
 function FriendReference({ friend, isActive, isFriend, requestState, dashboardInviteState, partyInviteState, duelState, joining, onClick, onAddFriend, onMessage, onJoin, onInvite, onPartyInvite, onDuel, onTrade }) {
   const anchorRef = useRef(null);
@@ -1271,8 +1246,8 @@ function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
 
 // ── AI Avatar Home Section (PS5-style) ───────────────────────────────────────
 export function LibraryBannerSection({ 
-  games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown, onQuickChangeToggle,
-  navBoxes, calendarBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment,
+  games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown,
+  navBoxes, calendarBox, intelligenceFeed,
   activeFriend, onActiveFriendChange, selectedFocusGame
 }) {
   const envDropdownRef = useRef(null);
@@ -1544,44 +1519,17 @@ export function LibraryBannerSection({
       <div ref={envDropdownRef} className="w-full h-full">
         <div className="flex flex-col gap-3 w-full h-full relative">
 
-          {/* Old Luna composition restored inside a light glass overlay. */}
-          <div
-            data-luna-top-status-overlay
-            className="relative z-10 flex h-24 w-full items-center gap-4 px-3"
-            style={{
-              background: 'linear-gradient(180deg, rgba(138,144,152,0.15) 0%, rgba(106,112,120,0.13) 100%)',
-              backdropFilter: 'blur(18px) saturate(88%)',
-              WebkitBackdropFilter: 'blur(18px) saturate(88%)',
-              border: '0',
-              borderBottom: '1px solid rgba(220,232,238,0.07)',
-              borderRadius: '0',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-            }}
-          >
-            <div className="w-[247px] h-full flex-shrink-0">
-              <EnvironmentHubTile
-                isOpen={showEnvDropdown}
-                onToggle={() => setShowEnvDropdown((current) => !current)}
-                onQuickChangeToggle={onQuickChangeToggle}
-                isEnvironmentActive={isEnvironmentActive}
-                onToggleEnvironment={onToggleEnvironment}
-              />
-            </div>
+          {/* ── PS5-style Top Row ── */}
+          <div className="flex items-center gap-4 w-full h-24">
 
+            {/* ── Presence Bar: Friend Slots | Home | compact dashboard controls ── */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">
-              <button
-                onClick={() => setShowMemoriesDrawer(true)}
-                className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider transition-colors flex flex-col items-center justify-center gap-0.5"
-              >
-                <span className="text-xl leading-none">📷</span>
-                <span className="leading-none">Memories</span>
-              </button>
-              <div className="w-px h-8 bg-white/[0.04] mx-1 flex-shrink-0" />
-
+              {/* Five social slots. PvP rejoin belongs to the match layer, not
+                  to party/dashboard presence, so it sits below this group. */}
               <div className="relative flex h-full flex-shrink-0 items-center gap-2">
                 {(onlineFriends || []).filter(Boolean).map((friend) => (
                   <div key={friend.id} className="flex-shrink-0">
-                    <FriendReference
+                    <FriendReference 
                       friend={friend}
                       isFriend={friendIds.has(String(friend.id))}
                       requestState={friendRequestUsers[friend.id]}
@@ -1603,8 +1551,8 @@ export function LibraryBannerSection({
 
                 {[...Array(emptySlots)].map((_, i) => (
                   <div key={`empty-${i}`} className="flex flex-col items-center gap-1 flex-shrink-0">
-                    <Plus className="w-3.5 h-3.5 text-white/80" />
-                    <div className="w-16 h-16 rounded-lg bg-white/[0.012] border border-white/[0.045]" />
+                    <Plus className="w-3.5 h-3.5 text-white" />
+                    <div className="w-16 h-16 rounded-lg bg-transparent border border-white/5" />
                   </div>
                 ))}
 
@@ -1630,19 +1578,23 @@ export function LibraryBannerSection({
               <div className="flex-shrink-0 ml-2">
                 <HomeReference onClick={handleHomeClick} />
               </div>
-
               <div className="flex-shrink-0 ml-2 flex items-center justify-center">
-                <AIBoxSocialModeButtons />
+                <AIBoxSocialModeButtons
+                  environmentOpen={Boolean(showEnvDropdown)}
+                  onEnvironment={() => setShowEnvDropdown((current) => !current)}
+                  onMemories={() => setShowMemoriesDrawer(true)}
+                />
               </div>
             </div>
 
+            {/* Calendar Box */}
             <div className="flex-1 min-w-[400px] h-full">
               {calendarBox}
             </div>
           </div>
 
           {/* Bottom Row: Nav Boxes + Intelligence Feed */}
-          <div className="relative z-10 flex justify-between items-start w-full">
+          <div className="flex justify-between items-start w-full">
             <div className="w-[330px] flex justify-center">
               {navBoxes}
             </div>
@@ -1744,35 +1696,36 @@ export function LibraryBannerSection({
 
 // AI Attribute social-mode controls. These circles switch the contents of
 // the persistent right-side AI Attribute Box; they do not open a floating menu.
-function AIBoxSocialModeButtons() {
+function AIBoxSocialModeButtons({ environmentOpen = false, onEnvironment, onMemories }) {
   const { mode } = useAIBoxSocialMode();
   const buttons = [
-    { id: 'online', label: 'People Online', icon: UserPlus },
-    { id: 'friends', label: 'Friends Online', icon: Users },
+    { id: 'online', label: 'People Online', icon: UserPlus, onClick: () => toggleAIBoxSocialMode('online'), active: mode === 'online' },
+    { id: 'friends', label: 'Friends Online', icon: Users, onClick: () => toggleAIBoxSocialMode('friends'), active: mode === 'friends' },
+    { id: 'environment', label: 'Environment Hub', icon: Globe, onClick: onEnvironment, active: environmentOpen },
+    { id: 'memories', label: 'Memories', icon: Camera, onClick: onMemories, active: false },
   ];
 
   return (
-    <div className="flex items-center gap-1.5" aria-label="AI Attribute social modes">
-      {buttons.map(({ id, label, icon: Icon }) => {
-        const active = mode === id;
-        return (
-          <motion.button
-            key={id}
-            type="button"
-            whileHover={{ scale: 1.06 }}
-            whileTap={{ scale: 0.94 }}
-            onClick={() => toggleAIBoxSocialMode(id)}
-            title={label}
-            aria-label={label}
-            aria-pressed={active}
-            className={`grid h-8 w-8 place-items-center rounded-full border transition-all ${active
-              ? 'border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-100 shadow-[0_0_16px_rgba(103,232,249,.14)]'
-              : 'border-white/[0.10] bg-white/[0.045] text-white/45 hover:border-white/[0.20] hover:bg-white/[0.075] hover:text-white/70'}`}
-          >
-            <Icon className="h-3.5 w-3.5" />
-          </motion.button>
-        );
-      })}
+    <div className="grid grid-cols-2 gap-1.5" aria-label="Dashboard social and environment controls">
+      {buttons.map(({ id, label, icon: Icon, onClick, active }) => (
+        <motion.button
+          key={id}
+          type="button"
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.94 }}
+          onClick={onClick}
+          title={label}
+          aria-label={label}
+          aria-pressed={id === 'online' || id === 'friends' ? active : undefined}
+          data-luna-environment-hub={id === 'environment' ? true : undefined}
+          className={`group relative grid h-8 w-8 place-items-center rounded-full border transition-all ${active
+            ? 'border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-100 shadow-[0_0_16px_rgba(103,232,249,.14)]'
+            : 'border-white/[0.10] bg-white/[0.045] text-white/45 hover:border-white/[0.20] hover:bg-white/[0.075] hover:text-white/70'}`}
+        >
+          <Icon className="h-3.5 w-3.5" />
+          <span className="pointer-events-none absolute left-1/2 top-[calc(100%+5px)] z-[100] hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-white/[0.08] bg-slate-950/95 px-2 py-1 text-[7px] font-bold uppercase tracking-[.10em] text-white/72 shadow-xl group-hover:block">{label}</span>
+        </motion.button>
+      ))}
     </div>
   );
 }
@@ -2124,9 +2077,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                  onSelectEnv={onSelectEnv}
                  showEnvDropdown={showEnvDrawer}
                  setShowEnvDropdown={setShowEnvDrawer}
-                 onQuickChangeToggle={() => setShowQuickChangeDrawer(true)}
-                 isEnvironmentActive={isEnvironmentActive}
-                 onToggleEnvironment={onToggleEnvironment}
                  activeFriend={activeFriend}
                  onActiveFriendChange={setActiveFriend}
                  selectedFocusGame={selectedFocusGame}

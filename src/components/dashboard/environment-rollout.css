@@ -23,12 +23,12 @@
   z-index:4;
   pointer-events:none;
   background:url('/ui/luna/environment-roll-rail.svg') center/100% 100% no-repeat;
-  opacity:.34;
+  opacity:.9;
   transition:filter .22s ease,opacity .22s ease;
 }
 body[data-luna-environment-open="true"] [data-luna-environment-hub]::after{
-  opacity:.48;
-  filter:drop-shadow(0 0 6px rgba(185,243,255,.10));
+  opacity:1;
+  filter:drop-shadow(0 0 6px rgba(185,243,255,.16));
 }
 
 /* Environment Hub occupies the left half of the long lower rail.

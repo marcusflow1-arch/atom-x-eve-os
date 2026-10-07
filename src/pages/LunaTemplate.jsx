@@ -706,7 +706,7 @@ export default function LunaTemplate() {
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
               className="absolute z-30 pointer-events-auto overflow-hidden"
-              style={{ left: '391px', top: '88px', right: '60px', bottom: '160px' }}>
+              style={{ left: '440px', top: '88px', right: '60px', bottom: '160px' }}>
               {homeSection === 'developer' && <DeveloperSpotlightSection onOpenOverlay={() => setShowDevSpotlight(true)} />}
               {homeSection === 'discover' && <WhatsNewSection />}
             </motion.div>
@@ -719,25 +719,10 @@ export default function LunaTemplate() {
 
       {/* Mini 3D Viewer Box + Game Library — unified left column, flush to left edge */}
       {!showConsoleMode && !showAchievements &&
-              <div
-                data-luna-library-side-panel
-                className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
-                style={{
-                  ...(uiVisible
-                    ? { left: '0px', top: '64px', bottom: '0px', width: '330px', gap: '0px' }
-                    : { left: '0px', top: '64px', bottom: '0px', width: '281px', gap: '0px' }),
-                  background: 'linear-gradient(180deg, rgba(31,34,39,0.985) 0%, rgba(22,25,30,0.992) 48%, rgba(18,21,25,0.995) 100%)',
-                  backdropFilter: 'blur(28px) saturate(118%)',
-                  WebkitBackdropFilter: 'blur(28px) saturate(118%)',
-                  borderTop: '0',
-                  borderLeft: '0',
-                  borderBottom: '0',
-                  borderRight: '1px solid rgba(194,214,224,0.24)',
-                  borderRadius: '0',
-                  boxShadow: '14px 0 34px rgba(0,0,0,0.34), inset -1px 0 0 rgba(255,255,255,0.025)',
-                  isolation: 'isolate',
-                }}
-              >
+              <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
+              style={uiVisible ? {
+                left: '0px', top: '64px', bottom: '0px', width: '388px', gap: '0px'
+              } : { left: '0px', top: '64px', bottom: '0px', width: '330px', gap: '0px' }}>
 
           {/* Unified card: 3D viewer on top, game list below — one seamless box */}
           {!avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
@@ -841,7 +826,7 @@ export default function LunaTemplate() {
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
             className="absolute z-30 pointer-events-auto overflow-hidden"
-            style={{ left: '281px', top: '64px', right: '8px', bottom: '32px', background: 'transparent' }}
+            style={{ left: '330px', top: '64px', right: '8px', bottom: '32px', background: 'transparent' }}
           >
             {libraryFilters.view === 'cards'
               ? <LibraryCardExplorer full filters={libraryFilters} onChange={updateLibraryFilters} onClose={() => setShowLibraryLanding(false)} />
@@ -860,7 +845,7 @@ export default function LunaTemplate() {
                   transition={{ duration: 0.4, ease: 'easeOut' }}
                   className="absolute right-0 z-30 pointer-events-none"
                   style={{
-                    left: '281px',
+                    left: '330px',
                     top: '64px',
                     bottom: '32px'
                   }}>
@@ -1245,7 +1230,7 @@ export default function LunaTemplate() {
             {/* LEFT COLUMN GAME LIST — sits under the 3D viewer book */}
             <div
               className={`absolute pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-              style={{ left: '0px', top: '320px', width: '281px', bottom: '32px', overflow: 'hidden', borderRadius: '0 14px 14px 0', borderLeft: 'none', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)' }}
+              style={{ left: '0px', top: '320px', width: '330px', bottom: '32px', overflow: 'hidden', borderRadius: '0 14px 14px 0', borderLeft: 'none', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.07)' }}
             >
               <GameList
                 games={[
@@ -1502,7 +1487,7 @@ export default function LunaTemplate() {
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.5 }}
                       className="absolute inset-0 z-10 pointer-events-none"
-                      style={{ paddingLeft: '330px', paddingTop: '64px', paddingBottom: '32px' }}>
+                      style={{ paddingLeft: '388px', paddingTop: '64px', paddingBottom: '32px' }}>
 
                   <AnimatePresence mode="wait">
                   {expandedGenre ?
