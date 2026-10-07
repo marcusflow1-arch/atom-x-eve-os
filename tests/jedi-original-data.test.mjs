@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { deflateRawSync } from 'node:zlib';
 import { File } from 'node:buffer';
-import { inspectGameFiles, readPakDirectory, REQUIRED_FILES } from '../public/games/jedi-outcast/asset-validation.mjs';
+import { inspectGameFiles, readPakDirectory, REQUIRED_FILES, RETAIL_PAKS } from '../public/games/jedi-outcast/asset-validation.mjs';
 
 // Tiny, nonplayable format fixtures only. No game models or maps are generated.
 function formatHeader(magic, version) {
@@ -20,7 +20,7 @@ function crc32(bytes) {
   for (const byte of bytes) { crc ^= byte; for (let i = 0; i < 8; i++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1)); }
   return (crc ^ 0xffffffff) >>> 0;
 }
-function makePak(entries, compressed = false) {
+function makePak(entries, compressed = false, fileName = 'assets0.pk3') {
   const local = [], central = []; let offset = 0;
   for (const [path, original] of Object.entries(entries)) {
     const name = Buffer.from(path), data = Buffer.from(original), packed = compressed ? deflateRawSync(data) : data;
@@ -32,14 +32,26 @@ function makePak(entries, compressed = false) {
   }
   const directory = Buffer.concat(central), end = Buffer.alloc(22);
   end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(central.length / 2, 8); end.writeUInt16LE(central.length / 2, 10); end.writeUInt32LE(directory.length, 12); end.writeUInt32LE(offset, 16);
-  return new File([Buffer.concat([...local, directory, end])], 'assets0.pk3');
+  return new File([Buffer.concat([...local, directory, end])], fileName);
 }
 
-test('complete ordinary and deflated PK3 entries pass format inspection', async () => {
+function retailPakSet(entries, compressed = false) {
+  return RETAIL_PAKS.map(([name], index) =>
+    makePak(index === 0 ? entries : {}, index === 0 ? compressed : false, name)
+  );
+}
+
+test('complete ordinary and deflated retail PK3 sets pass format inspection', async () => {
   for (const compressed of [false, true]) {
-    const report = await inspectGameFiles([makePak(coreEntries(), compressed)]);
+    const report = await inspectGameFiles(retailPakSet(coreEntries(), compressed));
     assert.equal(report.ready, true); assert.equal(report.entryCount, 14);
   }
+});
+
+test('partial packed installs cannot masquerade as the whole original game', async () => {
+  const report = await inspectGameFiles([makePak(coreEntries())]);
+  assert.equal(report.ready, false);
+  for (const [path] of RETAIL_PAKS.slice(1)) assert.ok(report.missing.includes(path));
 });
 test('NAV, scripts and reference images cannot masquerade as a playable level', async () => {
   const file = new File(['navigation fixture'], 'kejim_post.nav');
@@ -60,9 +72,9 @@ test('extracted GameData/base folder mounts original paths and omits user saves'
 });
 test('wrong engine formats and empty original-file names are rejected', async () => {
   const wrong = coreEntries(); wrong['maps/kejim_post.bsp'] = formatHeader('IBSP', 46);
-  await assert.rejects(inspectGameFiles([makePak(wrong)]), /not the original Jedi Outcast format/);
+  await assert.rejects(inspectGameFiles(retailPakSet(wrong)), /not the original Jedi Outcast format/);
   const empty = coreEntries(); empty['models/players/kyle/model.glm'] = Buffer.alloc(0);
-  assert.ok((await inspectGameFiles([makePak(empty)])).missing.includes('models/players/kyle/model.glm'));
+  assert.ok((await inspectGameFiles(retailPakSet(empty))).missing.includes('models/players/kyle/model.glm'));
 });
 test('truncated ZIP, path traversal and duplicate selected archives are rejected', async () => {
   const pak = makePak(coreEntries());
