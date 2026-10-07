@@ -1520,10 +1520,10 @@ export function LibraryBannerSection({
         <div className="flex flex-col gap-3 w-full h-full relative">
 
           {/* ── PS5-style Top Row ── */}
-          <div className="flex items-center gap-4 w-full h-24">
+          <div className="flex items-center justify-end gap-3 w-full h-24">
 
             {/* ── Presence Bar: Friend Slots | Home | compact dashboard controls ── */}
-            <div className="flex flex-shrink-0 items-center gap-2 h-full">
+            <div className="ml-auto flex flex-shrink-0 items-center gap-2 h-full">
               {/* Five social slots. PvP rejoin belongs to the match layer, not
                   to party/dashboard presence, so it sits below this group. */}
               <div className="relative flex h-full flex-shrink-0 items-center gap-2">
@@ -1588,7 +1588,7 @@ export function LibraryBannerSection({
             </div>
 
             {/* Calendar Box */}
-            <div className="flex-1 min-w-[400px] h-full">
+            <div className="h-full w-[430px] max-w-[34vw] flex-none">
               {calendarBox}
             </div>
           </div>
