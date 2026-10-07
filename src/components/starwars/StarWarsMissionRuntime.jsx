@@ -12,7 +12,7 @@ const pickClip=(clips,state)=>{
 
 function makeHumanoid(color=0xffffff){
   const g=new THREE.Group();
-  const body=new THREE.Mesh(new THREE.CapsuleGeometry(.42,.9,5,10),new THREE.MeshStandardMaterial({color,roughness:.72,metalness:.08}));
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,1.45,12),new THREE.MeshStandardMaterial({color,roughness:.72,metalness:.08}));
   body.position.y=1.05; body.castShadow=true; body.receiveShadow=true; g.add(body);
   const head=new THREE.Mesh(new THREE.SphereGeometry(.28,16,12),new THREE.MeshStandardMaterial({color:0xd8c2a6,roughness:.85}));
   head.position.y=1.95; head.castShadow=true; g.add(head);
