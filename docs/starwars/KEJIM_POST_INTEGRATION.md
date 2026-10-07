@@ -57,25 +57,24 @@ Actor GLBs should contain the original/converted animation clips where available
 
 The mission automatically switches to the converted retail scene when `/starwars/kejim_post/kejim_post.glb` is present. Until then, it uses a procedural combat harness so the route, controls, AI, weapon loop, Jan follow/combat behavior, and mission page can be developed without blocking on asset conversion.
 
-## Current gameplay slice
+## Current milestone: MAP FIRST
 
-The branch currently includes:
+Per project direction, this branch is now intentionally sequenced one mission at a time.
 
-- Star Wars button in the Atom XE header
-- full-screen `/StarWars` route
-- restart + return-to-dashboard controls
-- third-person Kyle test character
-- WASD movement + sprint
-- pointer-lock camera
-- blaster firing and damage
-- Jan follower / ally combat
-- Imperial patrol → alert → chase → fire behavior
-- stormtrooper/officer test encounters
-- health and hostile-count HUD
-- source-derived Kejim Post objective text
-- mission completion state
-- optional GLTF actor animation playback
-- fallback environment/actors when private retail pack is absent
+**Milestone 1 is only Kejim Post map reconstruction in the browser.** Combat, character movement, enemy AI, animation hookup, and mission scripting stay parked until the real Kejim Post level geometry is visibly loading and can be inspected in-browser.
+
+The active `/StarWars` route now mounts `KejimPostMapRuntime`, which:
+
+- loads Raven `RBSP v1` directly in the browser;
+- supports planar surfaces, triangle soup, and quadratic patch surfaces;
+- converts JK2 Z-up coordinates to Three.js Y-up coordinates;
+- uses BSP vertex lighting for a neutral geometry preview;
+- skips source `SURF_NODRAW` surfaces;
+- exposes a fly-camera inspection mode only;
+- attempts to load `/starwars/kejim_post/kejim_post.bsp`;
+- can load a local `.bsp` file for validation without committing proprietary retail data.
+
+The previously-created combat harness remains in the branch as parked work, but it is no longer the active Star Wars page and should not be developed further until the map milestone passes.
 
 ## Fidelity rule
 
@@ -91,12 +90,19 @@ When exact retail data is available, it must replace fallback assumptions. In pa
 
 Do not invent geometry, spawn locations, dialogue, mover timing, or mission events when source evidence exists.
 
-## Next integration pass
+## Locked implementation order
 
-1. Convert Kejim Post map geometry to GLB/glTF while preserving material names and world scale.
-2. Convert required GHOUL2/MD3 character assets and animation clips.
-3. Rebuild shader/material mappings from the retail shader + texture folders.
-4. Recover retail entity coordinates and scripted encounter activation.
-5. Port doors, lifts, dish movement, triggers, objectives, and mission finish conditions.
-6. Add the original mission sound/music hooks from a private runtime asset host.
-7. Compare the complete playthrough against the retail mission before removing the fallback harness.
+1. **Kejim Post map geometry into the browser first.**
+2. Verify the complete first mission layout, scale, patch surfaces, rooms, exterior/interior connectivity, doors/lifts/static props, and material/shader mapping.
+3. Only after the map is complete and inspectable: add Kyle movement and camera.
+4. Then add original character models and animation playback.
+5. Then add combat/weapons/damage.
+6. Then add enemy AI, Jan ally AI, patrols, awareness, and spawn behavior from retail entities/scripts.
+7. Then add movers, ICARUS mission scripting, objectives, checkpoints, sound/music, mission completion, and final validation.
+8. Do not start Kejim Base or any later level until Kejim Post is accepted.
+
+### Current asset blocker
+
+The connected Drive `maps` folder contains `kejim_post.nav` but **does not contain `kejim_post.bsp`**. The NAV file is navigation data and is not enough to reproduce exact world geometry.
+
+The released source confirms the retail map format is Raven `RBSP` version 1, and the browser loader for that format is now implemented. To complete Milestone 1 exactly, the retail `kejim_post.bsp` must be present in the private runtime pack or loaded locally into the viewer.
