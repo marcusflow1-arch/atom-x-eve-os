@@ -114,7 +114,7 @@ export default function StarWarsMissionRuntime({onMissionComplete}){
     upgradeActor(loader,jan,KEJIM_POST_MISSION.actorAssets.jan,scene);
     enemies.forEach(e=>upgradeActor(loader,e,KEJIM_POST_MISSION.actorAssets[e.type],scene));
 
-    const keys=new Set(), tracers=[];let yaw=Math.PI, pitch=-.14, locked=false, lastHud=0, started=false, objective=0;
+    const keys=new Set(), tracers=[];let yaw=Math.PI, pitch=-.14, locked=false, lastHud=0, started=false, objective=0, reportedComplete=false;
     const forward=new THREE.Vector3(),right=new THREE.Vector3(),wish=new THREE.Vector3(),tmp=new THREE.Vector3();
     const aliveEnemies=()=>enemies.filter(e=>e.hp>0);
 
@@ -182,7 +182,7 @@ export default function StarWarsMissionRuntime({onMissionComplete}){
 
       if(started&&objective===0&&player.group.position.z<-18)objective=1;
       if(objective<2&&aliveEnemies().length===0)objective=2;
-      if(objective===2&&!missionDone){setMissionDone(true);onMissionComplete?.();}
+      if(objective===2&&!reportedComplete){reportedComplete=true;setMissionDone(true);onMissionComplete?.();}
 
       actors.forEach(a=>a.mixer?.update(dt));for(let i=tracers.length-1;i>=0;i--)if(!tracers[i].update())tracers.splice(i,1);
       const camBack=new THREE.Vector3(Math.sin(yaw)*5.4,3.6,Math.cos(yaw)*5.4);camera.position.copy(player.group.position).add(camBack);
@@ -192,7 +192,7 @@ export default function StarWarsMissionRuntime({onMissionComplete}){
     };loop();
 
     return()=>{cancelAnimationFrame(raf);window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onKey);window.removeEventListener('mousemove',onMove);document.removeEventListener('pointerlockchange',onPointer);window.removeEventListener('resize',resize);renderer.domElement.removeEventListener('mousedown',onCanvasClick);if(document.pointerLockElement===renderer.domElement)document.exitPointerLock?.();renderer.dispose();renderer.domElement.remove();scene.traverse(o=>{o.geometry?.dispose?.();if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose?.());}});};
-  },[onMissionComplete,missionDone]);
+  },[onMissionComplete]);
 
   const active=Math.min(hud.objective,KEJIM_POST_MISSION.retailObjectives.length-1);
   return <div className="relative h-full w-full overflow-hidden bg-black text-white">
