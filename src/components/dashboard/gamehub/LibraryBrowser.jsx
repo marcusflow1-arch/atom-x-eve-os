@@ -34,6 +34,7 @@ export default function LibraryBrowser({ selectedGame, onSelectGame, onLongPress
     catch { setError('Favorites could not be saved on this device.'); }
   };
   return <section data-testid="library-browser" className="library-surface ll-browser h-full min-h-0 flex flex-col" onWheel={(event) => event.stopPropagation()}>
+    <div className="ll-library-heading"><Library size={13} aria-hidden="true" /><span>Library</span></div>
     <header className="ll-toolbar">
       <LibraryVoiceSearch value={filters.search} onChange={(search) => change({ search, gameId: null })} subject={cardsView && filters.scope === 'cards' ? 'cards' : 'games'} />
       <button className="ll-view-toggle" aria-label={cardsView ? 'Return to game library' : 'Open card explorer'} title={cardsView ? 'Game library' : 'Card explorer'} aria-pressed={cardsView} onClick={() => change({ view: cardsView ? 'library' : 'cards', scope: 'games', gameId: null })}>{cardsView ? <Library size={18} /> : <GalleryHorizontalEnd size={18} />}</button>
