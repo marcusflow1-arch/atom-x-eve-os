@@ -1138,6 +1138,15 @@ function LayoutContent({ children, currentPageName }) {
                             Game
                           </button>
 
+                          {/* Star Wars — Jedi Outcast mission runtime */}
+                          <button
+                            onClick={() => navigate(createPageUrl('StarWars'))}
+                            className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-indigo-500/20 border-indigo-300/30 text-indigo-200 hover:bg-indigo-500/30 hover:text-white items-center gap-2"
+                          >
+                            <Gamepad2 className="w-4 h-4" />
+                            Star Wars
+                          </button>
+
                           {/* Discord */}
                           <a
                             href="https://discord.gg/H8ZYrBPt3"
