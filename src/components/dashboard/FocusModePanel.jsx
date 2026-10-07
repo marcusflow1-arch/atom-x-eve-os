@@ -1580,6 +1580,7 @@ export function LibraryBannerSection({
               </div>
               <div className="flex-shrink-0 ml-2 flex items-center justify-center">
                 <AIBoxSocialModeButtons
+                  environmentOpen={Boolean(showEnvDropdown)}
                   onEnvironment={() => setShowEnvDropdown((current) => !current)}
                   onMemories={() => setShowMemoriesDrawer(true)}
                 />
@@ -1695,12 +1696,12 @@ export function LibraryBannerSection({
 
 // AI Attribute social-mode controls. These circles switch the contents of
 // the persistent right-side AI Attribute Box; they do not open a floating menu.
-function AIBoxSocialModeButtons({ onEnvironment, onMemories }) {
+function AIBoxSocialModeButtons({ environmentOpen = false, onEnvironment, onMemories }) {
   const { mode } = useAIBoxSocialMode();
   const buttons = [
     { id: 'online', label: 'People Online', icon: UserPlus, onClick: () => toggleAIBoxSocialMode('online'), active: mode === 'online' },
     { id: 'friends', label: 'Friends Online', icon: Users, onClick: () => toggleAIBoxSocialMode('friends'), active: mode === 'friends' },
-    { id: 'environment', label: 'Environment Hub', icon: Globe, onClick: onEnvironment, active: false },
+    { id: 'environment', label: 'Environment Hub', icon: Globe, onClick: onEnvironment, active: environmentOpen },
     { id: 'memories', label: 'Memories', icon: Camera, onClick: onMemories, active: false },
   ];
 
