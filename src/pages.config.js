@@ -16,6 +16,7 @@ import AdminArtemis3D from './pages/AdminArtemis3D';
 import AdminUIBuilder from './pages/AdminUIBuilder';
 import Aura from './pages/Aura';
 import Screenshots from './pages/Screenshots';
+import JediOutcast from './pages/JediOutcast';
 import AvatarHome from './pages/AvatarHome';
 import AvatarStudio from './pages/AvatarStudio';
 import BlankTransition from './pages/BlankTransition';
@@ -80,6 +81,7 @@ export const PAGES = {
     "AdminUIBuilder": AdminUIBuilder,
     "Aura": Aura,
     "Screenshots": Screenshots,
+    "JediOutcast": JediOutcast,
     "AvatarHome": AvatarHome,
     "AvatarStudio": AvatarStudio,
     "BlankTransition": BlankTransition,
