@@ -1129,22 +1129,13 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-                          {/* Game — opens 3D viewer page */}
+                          {/* Game — opens the existing 3D World viewer */}
                           <button
                             onClick={() => navigate(createPageUrl('GameView'))}
                             className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-cyan-500/20 border-cyan-400/30 text-cyan-300 hover:bg-cyan-500/30 hover:text-white items-center gap-2"
                           >
                             <Gamepad2 className="w-4 h-4" />
                             Game
-                          </button>
-
-                          {/* Star Wars — Jedi Outcast mission runtime */}
-                          <button
-                            onClick={() => navigate(createPageUrl('StarWars'))}
-                            className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-indigo-500/20 border-indigo-300/30 text-indigo-200 hover:bg-indigo-500/30 hover:text-white items-center gap-2"
-                          >
-                            <Gamepad2 className="w-4 h-4" />
-                            Star Wars
                           </button>
 
                           {/* Discord */}
@@ -1159,6 +1150,15 @@ function LayoutContent({ children, currentPageName }) {
                             </svg>
                             Discord
                           </a>
+
+                          {/* Star Wars — separate full-screen 3D game viewer */}
+                          <button
+                            onClick={() => navigate(createPageUrl('StarWars'))}
+                            className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-indigo-500/20 border-indigo-300/30 text-indigo-200 hover:bg-indigo-500/30 hover:text-white items-center gap-2"
+                          >
+                            <Gamepad2 className="w-4 h-4" />
+                            Star Wars
+                          </button>
                         </div>
                       </>
                     )}
