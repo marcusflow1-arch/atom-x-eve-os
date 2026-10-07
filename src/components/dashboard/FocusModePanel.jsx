@@ -1616,22 +1616,7 @@ export function LibraryBannerSection({
                 </AnimatePresence>
               </div>
 
-              {/* Four dashboard controls are one horizontal row after the five slots. */}
-              <div className="ml-2 flex flex-shrink-0 items-center justify-center">
-                <AIBoxSocialModeButtons
-                  environmentOpen={Boolean(showEnvDropdown)}
-                  onEnvironment={() => setShowEnvDropdown((current) => !current)}
-                  onMemories={() => setShowMemoriesDrawer(true)}
-                />
-              </div>
             </div>
-
-            {/* Hard visual divider between dashboard controls and status/reminders. */}
-            <div
-              aria-hidden="true"
-              className="h-[68px] w-px flex-none"
-              style={{ background: 'linear-gradient(180deg, transparent, rgba(190,224,238,.28) 18%, rgba(190,224,238,.52) 50%, rgba(190,224,238,.28) 82%, transparent)' }}
-            />
 
             {/* System notifications / reminders + time and date */}
             <div className="h-full w-[600px] max-w-[42vw] flex-none">
@@ -1641,7 +1626,7 @@ export function LibraryBannerSection({
           </div>
 
           {/* Bottom Row: Nav Boxes + Intelligence Feed */}
-          <div className="flex justify-between items-start w-full">
+          <div className="relative z-10 flex justify-between items-start w-full">
             <div className="w-[330px] flex justify-center">
               {navBoxes}
             </div>
