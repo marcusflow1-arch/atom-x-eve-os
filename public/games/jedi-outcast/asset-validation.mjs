@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0
 // Reads original game files. It never creates substitute game content.
+export const RETAIL_PAKS = Object.freeze([
+  ['assets0.pk3', 'Original base-game archive'],
+  ['assets1.pk3', 'Original retail archive 1'],
+  ['assets2.pk3', 'Original retail archive 2'],
+  ['assets5.pk3', 'Original 1.04 patch archive'],
+]);
+
 export const REQUIRED_FILES = Object.freeze([
   ['productid.txt', 'Full-game data'],
   ['default.cfg', 'Original configuration'],
@@ -114,6 +121,18 @@ export async function inspectGameFiles(selection, progress = () => {}) {
   }
   for (const item of loose) if (!entries.has(item.path)) entries.set(item.path, { ...item, loose: true, size: item.file.size });
   const checks = REQUIRED_FILES.map(([path, label]) => ({ path, label, present: Number(entries.get(path)?.size) > 0 }));
+
+  // When the admin/player supplies the canonical packed installation, require the
+  // complete archive set from the provided PC/GOG install. A single PK3 containing
+  // Kejim is not enough to call the whole original game ready. Fully extracted
+  // GameData/base folders remain supported and are validated by their actual content.
+  if (paks.length) {
+    const selectedPaks = new Set(paks.map(item => item.path));
+    for (const [path, label] of RETAIL_PAKS) {
+      checks.push({ path, label, present: selectedPaks.has(path) });
+    }
+  }
+
   const families = [
     ['Textures', path => /^(textures|models)\/.*\.(jpg|jpeg|tga|png)$/.test(path)],
     ['Shader definitions', path => /^shaders\/.*\.shader$/.test(path)],
