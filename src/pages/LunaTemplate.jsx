@@ -57,7 +57,6 @@ import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
 import Mini3DViewerBox from '../components/dashboard/Mini3DViewerBox';
-import AvatarStatCard from '../components/dashboard/AvatarStatCard';
 import DevSpotlightOverlay from '../components/dashboard/DevSpotlightOverlay';
 import CardCollectionBrowser from '../components/dashboard/CardCollectionBrowser';
 import QuestLogBook from '../components/dashboard/QuestLogBook';
@@ -727,10 +726,13 @@ export default function LunaTemplate() {
           {/* Unified card: 3D viewer on top, game list below — one seamless box */}
           {!avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
             <>
-              {/* The old top-left mini viewer and stat card are intentionally hidden.
-                  AvatarStatCard remains mounted in runtime-only mode because its data
-                  and dashboard runtime will be reused by a future surface. */}
-              <AvatarStatCard runtimeOnly />
+              {/* Avatar + Stats — taken out of the box, placed directly on the page */}
+              <div className="pointer-events-auto flex-shrink-0" style={{ background: 'transparent' }}>
+                <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} onModelFocus={() => setAvatarFocusMode(true)} />
+              </div>
+
+              {/* Gap between the now-separated sections */}
+              <div style={{ height: '12px', flexShrink: 0 }} />
 
               {/* Games — cross-scroll (XMB-style) menu; no box, vignette "invisible box" only */}
               <div data-luna-library-rail className="pointer-events-auto flex-1 min-h-0 relative">

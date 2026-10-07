@@ -1,6 +1,6 @@
 import PartyPortraitRail from './PartyPortraitRail';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen, Medal, X, Network } from 'lucide-react';
+import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
@@ -639,21 +639,6 @@ export default function DashboardAvatarOverview() {
                     <div className="truncate text-white font-bold text-base">
                       {aiBoxSocialMode === 'online' ? 'People Online' : aiBoxSocialMode === 'friends' ? 'Friends Online' : (companion?.name || 'AI Avatar')}
                     </div>
-                    {!socialModeActive && (
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          window.dispatchEvent(new CustomEvent('toggleSkillTree'));
-                        }}
-                        title="Skill Tree"
-                        aria-label="Open Skill Tree"
-                        className="group relative grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/[0.10] bg-white/[0.035] text-white/45 transition hover:border-cyan-200/30 hover:bg-cyan-200/[0.08] hover:text-cyan-100"
-                      >
-                        <Network className="h-3.5 w-3.5" />
-                        <span className="pointer-events-none absolute left-1/2 top-[calc(100%+6px)] z-50 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-white/[0.08] bg-slate-950/95 px-2 py-1 text-[7px] font-bold uppercase tracking-[.11em] text-white/72 shadow-xl group-hover:block">Skill Tree</span>
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
