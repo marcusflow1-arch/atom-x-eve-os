@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 
 const REQUIRED_PAKS = ['assets0.pk3', 'assets1.pk3', 'assets2.pk3', 'assets5.pk3'];
-const CACHE_WORKERS = 3;
+const CACHE_RETRIES = 3;
 
 const LABELS = {
   'awaiting-source': 'Connecting original game data',
@@ -63,38 +63,75 @@ export default function JediOutcastRuntime({ onBack }) {
 
       const jobs = [];
       const chunksByArchive = new Map();
+      const statusChunks = Array.isArray(result.pak_chunks) ? result.pak_chunks : [];
 
       for (const name of REQUIRED_PAKS) {
         const archive = byName.get(name);
         const size = Number(archive.byte_size);
         const count = Math.ceil(size / chunkBytes);
-        chunksByArchive.set(name, new Array(count));
+        const slots = new Array(count);
+        chunksByArchive.set(name, slots);
+
+        for (const row of statusChunks) {
+          if (row.archive_asset_id !== archive.id && String(row.archive_name || '').toLowerCase() !== name) continue;
+          const chunkIndex = Number(row.chunk_index);
+          if (!Number.isInteger(chunkIndex) || chunkIndex < 0 || chunkIndex >= count) continue;
+
+          const expectedOffset = chunkIndex * chunkBytes;
+          const expectedSize = Math.min(chunkBytes, size - expectedOffset);
+          if (
+            row.status !== 'cached' ||
+            !row.storage_url ||
+            Number(row.offset) !== expectedOffset ||
+            Number(row.byte_size) !== expectedSize ||
+            Number(row.source_size) !== size
+          ) {
+            continue;
+          }
+
+          slots[chunkIndex] = {
+            index: chunkIndex,
+            offset: expectedOffset,
+            size: expectedSize,
+            url: row.storage_url,
+            sha256: row.sha256 || '',
+          };
+        }
 
         for (let chunkIndex = 0; chunkIndex < count; chunkIndex++) {
-          jobs.push({ name, archive, size, chunkIndex, count });
+          if (!slots[chunkIndex]) jobs.push({ name, archive, size, chunkIndex });
         }
       }
 
-      setState('caching');
-      let completed = 0;
-      const total = jobs.length;
-      setProgress(`Preparing 0 / ${total} archive chunks`);
+      if (jobs.length) {
+        setState('caching');
+        setProgress(`Repairing 0 / ${jobs.length} missing archive chunks`);
 
-      let nextJob = 0;
-      async function worker() {
-        while (true) {
-          const jobIndex = nextJob++;
-          if (jobIndex >= jobs.length) return;
+        for (let jobIndex = 0; jobIndex < jobs.length; jobIndex++) {
           const job = jobs[jobIndex];
+          let response = null;
+          let lastError = null;
 
-          const response = unwrap(await base44.functions.invoke('jediOutcastSource', {
-            action: 'cachePakChunk',
-            archiveAssetId: job.archive.id,
-            chunkIndex: job.chunkIndex,
-          }));
+          for (let attempt = 1; attempt <= CACHE_RETRIES; attempt++) {
+            try {
+              response = unwrap(await base44.functions.invoke('jediOutcastSource', {
+                action: 'cachePakChunk',
+                archiveAssetId: job.archive.id,
+                chunkIndex: job.chunkIndex,
+              }));
+              if (response?.success && response?.chunk?.storage_url) break;
+              lastError = new Error(response?.error || `${job.name}: chunk ${job.chunkIndex + 1} cache attempt ${attempt} failed.`);
+            } catch (error) {
+              lastError = error;
+            }
+
+            if (attempt < CACHE_RETRIES) {
+              await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+            }
+          }
 
           if (!response?.success || !response?.chunk?.storage_url) {
-            throw new Error(response?.error || `${job.name}: Base44 failed to cache chunk ${job.chunkIndex + 1}.`);
+            throw lastError || new Error(`${job.name}: Base44 failed to repair chunk ${job.chunkIndex + 1}.`);
           }
 
           const chunk = response.chunk;
@@ -107,7 +144,7 @@ export default function JediOutcastRuntime({ onBack }) {
             Number(chunk.byte_size) !== expectedSize ||
             Number(chunk.source_size) !== job.size
           ) {
-            throw new Error(`${job.name}: cached chunk ${job.chunkIndex + 1} did not match the canonical archive layout.`);
+            throw new Error(`${job.name}: repaired chunk ${job.chunkIndex + 1} did not match the canonical archive layout.`);
           }
 
           chunksByArchive.get(job.name)[job.chunkIndex] = {
@@ -118,12 +155,9 @@ export default function JediOutcastRuntime({ onBack }) {
             sha256: chunk.sha256 || '',
           };
 
-          completed += 1;
-          setProgress(`Preparing ${completed} / ${total} archive chunks`);
+          setProgress(`Repairing ${jobIndex + 1} / ${jobs.length} missing archive chunks`);
         }
       }
-
-      await Promise.all(Array.from({ length: Math.min(CACHE_WORKERS, jobs.length) }, () => worker()));
 
       const paks = REQUIRED_PAKS.map(name => {
         const archive = byName.get(name);
