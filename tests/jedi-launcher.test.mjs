@@ -72,7 +72,7 @@ test('complete canonical source boots Raven engine with no injected gameplay com
 
     assert.equal(calls.length, 1);
     assert.equal(calls[0].length, 0);
-    assert.deepEqual(w.__JK2_REMOTE_PAKS.map(item => item.name), names);
+    assert.equal(w.__JK2_REMOTE_PAKS.map(item => item.name).join(','), names.join(','));
     assert.equal(w.__JK2_PAKS.length, 0);
   } finally {
     dom.window.close();
