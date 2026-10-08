@@ -417,6 +417,7 @@ export default function MultiplayerSystem({ envUrl, surface = 'dashboard' }) {
               env_url: envUrlCurrent,
               last_update: now,
               status: 'online',
+              preferred_genres: Array.isArray(user.preferred_genres) ? user.preferred_genres : [],
               // We omit x,y,z,yaw,anim from DB to save payload size, but we keep them just in case
               x: state.x,
               y: state.y,
