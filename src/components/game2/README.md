@@ -15,12 +15,21 @@ The duel is a small WebGL2 engine in `engine/` (plain ES modules, loaded lazily 
 
 ## Controls
 
-Move `WASD` (Shift walk) · look mouse · jump `Space` (hold = Force Jump) · crouch / roll `C` · saber `R`,
-styles `1 2 3`, attack left mouse, throw right mouse.
-**Force powers:** switch with the mouse wheel or `[` `]`, use the highlighted power with `Z` or middle mouse
-(hold for Grip / Lightning / Heal / Drain). Direct keys still work: `F` Push · `G` Pull · `E` Grip · `Q` Lightning ·
-`H` Heal · `T` Speed · `Y` Mind Trick · `U` Rage · `X` Protect · `V` Absorb · `B` Drain · `N` Sight.
-`Tab` shows the controls, `Enter` starts a rematch, `Ctrl` + wheel or `-` `=` zooms the camera.
+Move with WASD, hold Shift to walk, Space to jump (hold for Force Jump), C to crouch/roll,
+R to draw/holster saber, and press Tab to cycle Fast / Medium / Strong lightsaber stances.
+Left mouse attacks; right mouse throws the saber.
+
+**Force quick-cast (hold a key for channeled abilities):**
+1 Push, 2 Pull, 3 Grip, 4 Lightning, 5 Heal, 6 Speed, 7 Mind Trick,
+8 Rage, 9 Protect, 0 Absorb. The numeric keypad also works.
+
+**Force selection menu:** Scroll the mouse wheel (or use [ / ]) to choose any available
+Force power and press F to use the highlighted ability. Hold F for Grip, Lightning,
+Heal, or Drain. Drain and Force Sight are available through the selector even though
+they are beyond the ten direct-cast slots.
+
+F1 shows/hides the controls; Enter rematches; Ctrl + mouse wheel or - / = zooms.
+Mouse movement looks around, including a fallback when the browser rejects pointer lock.
 
 ## Push, pull, grip and lightning rules
 

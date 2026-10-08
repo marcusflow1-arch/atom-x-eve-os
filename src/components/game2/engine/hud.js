@@ -1,6 +1,6 @@
 /* eslint-disable */
 // 2D overlay: health / force bars, power chips, saber style, live animation names, messages, enemy bars, help.
-import { POWERS, POWER_BY_ID, FORCE_DUR } from './force.js';
+import { POWERS, POWER_BY_ID, FORCE_DUR, FORCE_HOTKEY_LABELS } from './force.js';
 import { STYLE_NAMES } from './saber.js';
 
 const STYLE_COL = ['', '#7fd3ff', '#b6ff8a', '#ff9a6a'];
@@ -8,16 +8,16 @@ const rr = (x, a, b, c, d, r) => { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a 
 export const HELP = [
   ['Move', 'W A S D  (Shift = walk)'], ['Look / camera', 'Mouse (click to lock; hover-look if blocked) · arrows if needed · wheel zoom'], ['Crouch', 'Hold C'], ['Roll', 'C while running'],
   ['Jump / Force Jump', 'Space  (hold Space = Force Jump, J = jump level 1-3)'], ['Saber on / off', 'R  (draw from thigh, ignite)'], ['Saber attack', 'Left mouse  (+ W/A/S/D picks the swing)'],
-  ['Saber style', '1 Fast · 2 Medium · 3 Strong'], ['Saber throw', 'Right mouse (hold)'], ['Push / Pull', 'F / G'], ['Grip / Lightning / Heal', 'E / Q / H  (hold)'], ['Speed / Mind Trick', 'T / Y'],
-  ['Rage / Protect / Absorb', 'U / X / V'], ['Drain (hold) / Sight', 'B / N'], ['Team Heal / Energize', 'K / L  (stand next to the ally)'], ['Respawn · Controls · Debug · Mute', 'Enter · Tab · F3 · M'],
+  ['Saber stance', 'Tab cycles Fast / Medium / Strong'], ['Saber throw', 'Right mouse (hold)'], ['Quick cast', '1 Push · 2 Pull · 3 Grip · 4 Lightning · 5 Heal'], ['More quick casts', '6 Speed · 7 Mind Trick · 8 Rage · 9 Protect · 0 Absorb'],
+  ['Force selector', 'Mouse wheel chooses · F uses highlighted ability (hold to channel)'], ['More Force', 'Drain · Sight · Team Heal · Team Energize via selector'], ['Respawn · Controls · Debug · Mute', 'Enter · F1 · F3 · M'],
 ];
 export const HELP_DUEL = [
   ['Move · look', 'W A S D (Shift = walk)  ·  mouse  ·  C crouch / roll'], ['Jump / Force Jump', 'Space  (hold Space = Force Jump)'],
-  ['Saber on / off · style', 'R  ·  1 Fast · 2 Medium · 3 Strong'], ['Saber attack · throw', 'Left mouse (+ W/A/S/D picks the swing)  ·  Right mouse (hold) = throw'],
-  ['Switch Force power', 'Mouse wheel  or  [ ]  (the highlighted power)'], ['Use selected power', 'Z  or  middle mouse  (hold for Grip / Lightning / Heal / Drain)'],
-  ['Push / Pull', 'F / G   (a defender can block it, see below)'], ['Grip · Lightning · Heal', 'E · Q · H  (hold)'], ['Speed · Mind Trick · Rage', 'T · Y · U'], ['Protect · Absorb · Drain · Sight', 'X · V · B · N'],
-  ['Break a Grip', 'while gripped press F or G (push / pull), or V (Absorb)'], ['Block a push / pull', 'stand still on the ground with Force left, not mid-swing; moving = weaker'],
-  ['Zoom · rematch · controls · mute', 'Ctrl + wheel or - = · Enter · Tab · M'],
+  ['Saber on / off · stance', 'R toggles saber  ·  Tab cycles Fast / Medium / Strong'], ['Saber attack · throw', 'Left mouse (+ W/A/S/D picks the swing)  ·  Right mouse (hold) = throw'],
+  ['Force menu', 'Mouse wheel or [ ] selects highlighted Force power'], ['Cast highlighted Force', 'F to cast  ·  hold F for Grip / Lightning / Heal / Drain'],
+  ['Quick cast 1–5', '1 Push · 2 Pull · 3 Grip · 4 Lightning · 5 Heal'], ['Quick cast 6–0', '6 Speed · 7 Mind Trick · 8 Rage · 9 Protect · 0 Absorb'], ['Other Force powers', 'Drain and Sight available with wheel + F'],
+  ['Break a Grip', 'press 1 (Push), 2 (Pull), 0 (Absorb) or select one with wheel + F'], ['Block a push / pull', 'stand still on the ground with Force left, not mid-swing; moving = weaker'],
+  ['Zoom · rematch · controls · mute', 'Ctrl + wheel or - = · Enter · F1 · M'],
 ];
 export class HUD {
   constructor(canvas) { this.c = canvas; this.x = canvas.getContext('2d'); this.msgs = []; this.help = true; this.debug = true; this.dmg = 0; this.heal = 0; this.W = 1; this.H = 1; this.dpr = 1; this.hint = 1; this.flash = 0; this.banners = []; this.helpW = 640; this.helpList = HELP; this.title = 'JEDI OUTCAST · EXPLORER'; this.subtitle = 'Ghoul2 _humanoid rig  ·  original Jedi Outcast animations  ·  click to play'; }
@@ -62,17 +62,32 @@ export class HUD {
     chips.forEach((pw, i) => {
       const r = Math.floor(i / perRow), c = i % perRow; const X = x0 + c * (chip + gap), Y = y0 + r * (46 + gap); const act = F.active[pw.id], hold = F.holding === pw.id, afford = F.fp >= pw.cost;
       x.fillStyle = hold ? 'rgba(60,110,200,0.85)' : act ? 'rgba(40,120,110,0.8)' : 'rgba(8,10,22,0.62)'; rr(x, X, Y, chip, 46, 7); x.fill(); x.strokeStyle = hold || act ? '#9fe8ff' : afford ? 'rgba(160,190,255,0.38)' : 'rgba(255,90,90,0.4)'; x.lineWidth = hold || act ? 2 : 1; rr(x, X + .5, Y + .5, chip - 1, 45, 7); x.stroke();
-      x.fillStyle = afford ? '#fff' : '#ff9b9b'; x.font = '700 15px system-ui,sans-serif'; x.textBaseline = 'top'; x.fillText(pw.key.replace('Key', ''), X + 7, Y + 5);
+      x.fillStyle = afford ? '#fff' : '#ff9b9b'; x.font = '700 15px system-ui,sans-serif'; x.textBaseline = 'top'; x.fillText(FORCE_HOTKEY_LABELS[pw.id] ?? '↕', X + 7, Y + 5);
       x.font = '10.5px system-ui,sans-serif'; x.fillStyle = afford ? '#cfe0ff' : '#e99'; x.fillText(pw.name.replace('Force ', ''), X + 7, Y + 25); x.textAlign = 'right'; x.fillStyle = '#8fb4ff'; x.font = '10px system-ui,sans-serif'; x.fillText(pw.hold ? pw.cost + '/s' : String(pw.cost), X + chip - 6, Y + 7); x.textAlign = 'left';
       if (act) { const t = (F.active[pw.id].until - g.t) / (FORCE_DUR[pw.id] || 10); x.fillStyle = '#9fe8ff'; x.fillRect(X + 5, Y + 41, (chip - 10) * Math.max(0, t), 2); }
       if (pw.id === selId) { x.strokeStyle = '#ffd76a'; x.lineWidth = 2.5; rr(x, X - 1, Y - 1, chip + 2, 48, 8); x.stroke(); x.fillStyle = 'rgba(255,215,106,0.14)'; rr(x, X, Y, chip, 46, 7); x.fill(); }
     });
-    if (g.duel) { const sp = POWER_BY_ID[selId]; x.textAlign = 'center'; x.font = '600 12px system-ui,sans-serif'; x.textBaseline = 'bottom'; x.fillStyle = F.selShow > 0 ? '#ffe9a8' : '#9fb4e0'; x.fillText(sp.name.toUpperCase() + (sp.hold ? '  (hold)' : '') + '   ·   Z / middle mouse = use   ·   wheel or [ ] = switch power', x0 + totalW / 2, y0 - 6); x.textAlign = 'left'; }
+    if (g.duel) { const sp = POWER_BY_ID[selId]; x.textAlign = 'center'; x.font = '600 12px system-ui,sans-serif'; x.textBaseline = 'bottom'; x.fillStyle = F.selShow > 0 ? '#ffe9a8' : '#9fb4e0'; x.fillText(sp.name.toUpperCase() + (sp.hold ? '  (hold)' : '') + '   ·   F = use   ·   wheel or [ ] = switch power', x0 + totalW / 2, y0 - 6); x.textAlign = 'left'; }
+    // A temporary, readable Force selector shows the highlighted power after each wheel movement.
+    if (g.duel && F.selShow > 0 && !this.help && selId) {
+      const n = F.list.length, prev = POWER_BY_ID[F.list[(F.sel + n - 1) % n]], next = POWER_BY_ID[F.list[(F.sel + 1) % n]], current = POWER_BY_ID[selId];
+      const boxW = Math.min(500, W - 32), boxX = (W - boxW) / 2, boxY = Math.max(106, H * 0.70 - 22);
+      x.save(); x.globalAlpha = Math.min(1, F.selShow * 1.9);
+      x.fillStyle = 'rgba(6,15,31,0.90)'; rr(x, boxX, boxY, boxW, 56, 12); x.fill();
+      x.strokeStyle = '#9bdafa'; x.lineWidth = 1.5; rr(x, boxX + .5, boxY + .5, boxW - 1, 55, 12); x.stroke();
+      x.textAlign = 'center'; x.textBaseline = 'top';
+      x.fillStyle = '#899fbe'; x.font = '11px system-ui,sans-serif';
+      x.fillText('‹ ' + prev.name.replace('Force ', ''), boxX + boxW * 0.18, boxY + 22);
+      x.fillText(next.name.replace('Force ', '') + ' ›', boxX + boxW * 0.82, boxY + 22);
+      x.fillStyle = '#fff'; x.font = '700 14px system-ui,sans-serif'; x.fillText(current.name.toUpperCase(), boxX + boxW / 2, boxY + 10);
+      x.fillStyle = '#ffd479'; x.font = '700 11px system-ui,sans-serif'; x.fillText('F TO CAST' + (current.hold ? ' · HOLD F' : ''), boxX + boxW / 2, boxY + 33);
+      x.textAlign = 'left'; x.restore();
+    }
     // saber / style panel (top-left)
     const S = P.saber; x.font = '600 12px system-ui,sans-serif'; x.textBaseline = 'top'; let ty = 16;
     x.fillStyle = 'rgba(8,10,22,0.6)'; rr(x, 14, 10, 330, this.debug ? 118 : 44, 9); x.fill();
     x.fillStyle = S.holstered ? '#9aa6c8' : '#fff'; x.fillText(S.holstered ? 'SABER  holstered   [R] draw' : 'SABER  ignited   [R] holster', 26, ty); ty += 18;
-    x.fillStyle = STYLE_COL[S.level]; x.fillText('STYLE  ' + STYLE_NAMES[S.level] + '   [1] fast  [2] medium  [3] strong', 26, ty); ty += 18;
+    x.fillStyle = STYLE_COL[S.level]; x.fillText('STYLE  ' + STYLE_NAMES[S.level] + '   [Tab] change stance', 26, ty); ty += 18;
     if (this.debug) {
       x.font = '11px ui-monospace,Menlo,Consolas,monospace'; x.fillStyle = '#9fd0ff'; const a = P.actor; const tn = a.torsoFollow || !a.torso.cur ? '(follows legs)' : a.torso.name;
       x.fillText('legs   ' + a.legs.name, 26, ty); ty += 15; x.fillText('torso  ' + tn, 26, ty); ty += 15; x.fillText('move   ' + g.saberData.moves[S.move].ls + '   chain ' + S.chain + '   jump lvl ' + P.jumpLevel, 26, ty); ty += 15; x.fillText('state  ' + P.status + (P.ducked ? ' · crouched' : '') + '   ' + g.fps.toFixed(0) + ' fps', 26, ty);
@@ -80,7 +95,7 @@ export class HUD {
     // messages
     x.textAlign = 'center'; x.font = '600 14px system-ui,sans-serif'; this.msgs.forEach((m, i) => { const a = Math.min(1, m.life); x.globalAlpha = a; x.fillStyle = 'rgba(8,10,22,0.55)'; const tw = x.measureText(m.t).width + 24; const my = g.duel ? 92 : 58; rr(x, W / 2 - tw / 2, my + i * 28, tw, 24, 12); x.fill(); x.fillStyle = '#e6f0ff'; x.textBaseline = 'middle'; x.fillText(m.t, W / 2, my + 12 + i * 28); }); x.globalAlpha = 1; x.textAlign = 'left';
     // kills
-    x.textAlign = 'right'; x.fillStyle = '#9aa6c8'; x.font = '12px system-ui,sans-serif'; x.textBaseline = 'top'; x.fillText(g.duel ? 'reflected ' + g.combat.reflected + '   ·   Tab = controls' : 'defeated ' + g.combat.kills + ' · reflected ' + g.combat.reflected + '   ·   Tab = controls', W - 18, 16); x.textAlign = 'left';
+    x.textAlign = 'right'; x.fillStyle = '#9aa6c8'; x.font = '12px system-ui,sans-serif'; x.textBaseline = 'top'; x.fillText(g.duel ? 'reflected ' + g.combat.reflected + '   ·   F1 = controls' : 'defeated ' + g.combat.kills + ' · reflected ' + g.combat.reflected + '   ·   F1 = controls', W - 18, 16); x.textAlign = 'left';
     // pointer lock hint
     if (!g.input.locked && !this.help && g.started) { x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '600 13px system-ui,sans-serif'; const tw = x.measureText('Click to capture the mouse').width + 28; x.fillStyle = 'rgba(8,10,22,0.72)'; rr(x, W / 2 - tw / 2, H * 0.62 + 20, tw, 26, 13); x.fill(); x.fillStyle = '#dfeaff'; x.fillText('Click to capture the mouse', W / 2, H * 0.62 + 33); x.textAlign = 'left'; }
     if (g.duel) this.drawDuel(g, x, W, H, dt);
@@ -109,7 +124,7 @@ export class HUD {
       x.lineWidth = 5; x.strokeStyle = 'rgba(0,0,0,0.55)'; x.strokeText(b.t, 0, 0); x.fillStyle = `rgb(${b.col.map(v => Math.round(v * 255)).join(',')})`; x.fillText(b.t, 0, 0); x.restore();
     });
     x.textAlign = 'left';
-    if (P.status === 'gripped') { x.textAlign = 'center'; x.font = '700 15px system-ui,sans-serif'; x.fillStyle = 'rgba(255,200,170,' + (0.75 + 0.25 * Math.sin(g.t * 9)) + ')'; x.textBaseline = 'bottom'; x.fillText('GRIPPED!  F / G (push · pull) breaks free  ·  V (absorb) cancels the grip', W / 2, H * 0.62); x.textAlign = 'left'; }
+    if (P.status === 'gripped') { x.textAlign = 'center'; x.font = '700 15px system-ui,sans-serif'; x.fillStyle = 'rgba(255,200,170,' + (0.75 + 0.25 * Math.sin(g.t * 9)) + ')'; x.textBaseline = 'bottom'; x.fillText('GRIPPED!  1 Push · 2 Pull · 0 Absorb (or select with wheel + F)', W / 2, H * 0.62); x.textAlign = 'left'; }
     if (R.state === 'intro' && !this.help) { const k = Math.max(0, 1 - R.t / 2.2); if (k > 0) { x.save(); x.globalAlpha = Math.min(1, k * 1.6); x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '800 44px system-ui,sans-serif'; x.lineWidth = 6; x.strokeStyle = 'rgba(0,0,0,0.6)'; x.strokeText('DARK JEDI', W / 2, H * 0.34); x.fillStyle = '#ff6a58'; x.fillText('DARK JEDI', W / 2, H * 0.34); x.font = '600 16px system-ui,sans-serif'; x.fillStyle = '#e8d8ff'; x.fillText('Same Force powers · same rules · break his Grip, answer his Push', W / 2, H * 0.34 + 38); x.restore(); } }
     if (R.state === 'won' || R.state === 'lost') {
       const won = R.state === 'won', a = Math.min(1, R.t / 0.8); x.fillStyle = won ? `rgba(0,20,10,${0.35 * a})` : `rgba(30,0,0,${0.5 * a})`; x.fillRect(0, 0, W, H);

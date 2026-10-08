@@ -10,17 +10,26 @@ import { GRIP_MAX_DIST, gripBlocker, gripPhase, gripEffectiveLevel, gripBroken, 
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 export const POWERS = [
-  { id: 'push', key: 'KeyF', name: 'Force Push', cost: 20 }, { id: 'pull', key: 'KeyG', name: 'Force Pull', cost: 20 },
-  { id: 'grip', key: 'KeyE', name: 'Force Grip', cost: 12, hold: true }, { id: 'lightning', key: 'KeyQ', name: 'Force Lightning', cost: 8, hold: true },
-  { id: 'heal', key: 'KeyH', name: 'Force Heal', cost: 10, hold: true }, { id: 'speed', key: 'KeyT', name: 'Force Speed', cost: 50 },
-  { id: 'mind', key: 'KeyY', name: 'Mind Trick', cost: 20 }, { id: 'rage', key: 'KeyU', name: 'Force Rage', cost: 50 },
-  { id: 'protect', key: 'KeyX', name: 'Force Protect', cost: 25 }, { id: 'absorb', key: 'KeyV', name: 'Force Absorb', cost: 25 },
-  { id: 'drain', key: 'KeyB', name: 'Force Drain', cost: 10, hold: true }, { id: 'see', key: 'KeyN', name: 'Force Sight', cost: 20 },
-  { id: 'teamheal', key: 'KeyK', name: 'Team Heal', cost: 25 }, { id: 'teamforce', key: 'KeyL', name: 'Team Energize', cost: 25 },
+  { id: 'push', name: 'Force Push', cost: 20 }, { id: 'pull', name: 'Force Pull', cost: 20 },
+  { id: 'grip', name: 'Force Grip', cost: 12, hold: true }, { id: 'lightning', name: 'Force Lightning', cost: 8, hold: true },
+  { id: 'heal', name: 'Force Heal', cost: 10, hold: true }, { id: 'speed', name: 'Force Speed', cost: 50 },
+  { id: 'mind', name: 'Mind Trick', cost: 20 }, { id: 'rage', name: 'Force Rage', cost: 50 },
+  { id: 'protect', name: 'Force Protect', cost: 25 }, { id: 'absorb', name: 'Force Absorb', cost: 25 },
+  { id: 'drain', name: 'Force Drain', cost: 10, hold: true }, { id: 'see', name: 'Force Sight', cost: 20 },
+  { id: 'teamheal', name: 'Team Heal', cost: 25 }, { id: 'teamforce', name: 'Team Energize', cost: 25 },
 ];
 export const POWER_BY_ID = Object.fromEntries(POWERS.map(p => [p.id, p]));
-// Power-selector order (same sequence as the retail Force wheel: heal, speed, push, pull, mind trick, grip, lightning, then the MP extras)
-export const SELECT_ORDER = ['heal', 'speed', 'push', 'pull', 'mind', 'grip', 'lightning', 'rage', 'protect', 'absorb', 'drain', 'see'];
+// Ten direct-cast slots. Remaining powers stay reachable in the mouse-wheel selector.
+export const FORCE_QUICK_SLOTS = Object.freeze([
+  ['1', 'push'], ['2', 'pull'], ['3', 'grip'], ['4', 'lightning'], ['5', 'heal'],
+  ['6', 'speed'], ['7', 'mind'], ['8', 'rage'], ['9', 'protect'], ['0', 'absorb'],
+]);
+export const FORCE_QUICK_BINDINGS = Object.freeze(FORCE_QUICK_SLOTS.flatMap(([digit, id]) => [
+  { code: 'Digit' + digit, id }, { code: 'Numpad' + digit, id },
+]));
+export const FORCE_HOTKEY_LABELS = Object.freeze(Object.fromEntries(FORCE_QUICK_SLOTS.map(([digit, id]) => [id, digit])));
+// Scrollable force menu: all 10 quick-slot abilities plus Drain and Sight.
+export const SELECT_ORDER = [...FORCE_QUICK_SLOTS.map(([, id]) => id), 'drain', 'see'];
 export const SELECT_ALL = [...SELECT_ORDER, 'teamheal', 'teamforce'];
 export const FORCE_DUR = { speed: 10, rage: 12, protect: 15, absorb: 12, see: 15 };
 const DUR = FORCE_DUR;
@@ -72,16 +81,16 @@ export class Force {
     const free = p.status === 'normal' || p.status === 'roll', gripped = p.status === 'gripped';
     if (!this.npc && input) {
       if (this.gcd <= 0 && !this.holding && (free || gripped)) {
-        let done = false;
-        for (const pw of POWERS) if (input.pressed(pw.key) && this.list.includes(pw.id)) { this.tryCast(pw.id, 'key'); done = true; break; }
-        if (!done && (input.pressed('KeyZ') || input.pressed('Mouse1'))) this.tryCast(this.selId(), 'sel');
+        const shortcut = FORCE_QUICK_BINDINGS.find(({ code, id }) => this.list.includes(id) && input.pressed(code));
+        if (shortcut) this.tryCast(shortcut.id, shortcut.code);
+        else if (input.pressed('KeyF')) this.tryCast(this.selId(), 'KeyF');
       }
       if (input.pressed('KeyJ')) { p.jumpLevel = p.jumpLevel % 3 + 1; g.hud.msg('Force Jump level ' + p.jumpLevel); }
     }
     // held powers
     if (this.holding) {
       const pw = POW(this.holding); let down;
-      if (this.npc) down = !!this.want[pw.id]; else down = this.holdVia === 'sel' ? !!(input && (input.held('KeyZ') || input.held('Mouse1'))) : !!(input && input.held(pw.key));
+      if (this.npc) down = !!this.want[pw.id]; else down = !!(input && input.held(this.holdVia));
       if (!down || p.status !== 'normal') this.release(); else this.tickHold(this.holding, dt);
     }
     // timed powers

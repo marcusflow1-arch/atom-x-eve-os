@@ -79,16 +79,19 @@ test('push and pull outcomes come from the shared rules, not ad-hoc damage in th
   assert.match(force, /lightningMul\(/);
 });
 
-test('the Force power selector cycles with the wheel and brackets and uses the selection with Z / middle mouse', () => {
+test('the Force menu uses wheel / brackets, F casts and Tab changes the saber stance', () => {
   const force = read('src/components/game2/engine/force.js');
-  assert.match(force, /select\(d\)/);
-  assert.match(force, /input\.pressed\('KeyZ'\) \|\| input\.pressed\('Mouse1'\)/);
+  assert.match(force, /FORCE_QUICK_BINDINGS\.find/);
+  assert.match(force, /input\.pressed\('KeyF'\)/);
+  assert.doesNotMatch(force, /input\.pressed\('KeyZ'\)/);
   const game = read('src/components/game2/engine/game.js');
   assert.match(game, /BracketRight/);
   assert.match(game, /BracketLeft/);
   assert.match(game, /force\.select\(Math\.max\(-3, Math\.min\(3, i\.wheel\)\)\)/);
+  assert.match(game, /p\.setStyle\(p\.saber\.level % 3 \+ 1\)/);
   const hud = read('src/components/game2/engine/hud.js');
-  assert.match(hud, /Z \/ middle mouse = use/);
+  assert.match(hud, /F = use/);
+  assert.match(hud, /\[Tab\] change stance/);
   assert.match(hud, /HEALTH /);
   assert.match(hud, /FORCE /);
 });
