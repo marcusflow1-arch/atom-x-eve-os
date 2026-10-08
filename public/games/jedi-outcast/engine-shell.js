@@ -461,12 +461,12 @@ function __tuneArgs(){
     '+set', 'cl_freelook', '1',
     '+set', 'm_pitch', '0.022',
     '+set', 'm_yaw', '0.022',
-    '+set', 'cg_thirdPersonRange', '135',
-    '+set', 'cg_thirdPersonMaxRange', '220',
+    '+set', 'cg_thirdPersonRange', '165',
+    '+set', 'cg_thirdPersonMaxRange', '260',
     '+set', 'cg_thirdPersonAngle', '0',
-    '+set', 'cg_thirdPersonPitchOffset', '-3',
-    '+set', 'cg_thirdPersonVertOffset', '22',
-    '+set', 'cg_thirdPersonHorzOffset', '-18',
+    '+set', 'cg_thirdPersonPitchOffset', '-4',
+    '+set', 'cg_thirdPersonVertOffset', '24',
+    '+set', 'cg_thirdPersonHorzOffset', '-22',
     '+set', 'cg_thirdPersonCameraDamp', '0.22',
     '+set', 'cg_thirdPersonTargetDamp', '0.4'
   ];
