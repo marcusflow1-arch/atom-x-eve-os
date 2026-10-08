@@ -1163,6 +1163,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
               <Globe aria-hidden="true" /><span>Environments</span>
             </button>
           )}
+          {onEnvironmentToggle && <div className="w-px h-5 bg-white/10 mx-2" />}
           <button
             onClick={() => handleTabClick('home')}
             className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
@@ -1178,10 +1179,8 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             <span>Home</span>
           </button>
 
-          <div className="w-px h-5 bg-white/10 mx-2" />
-
-
           {!onEnvironmentToggle && (<>
+          <div className="w-px h-5 bg-white/10 mx-2" />
           <button
             onClick={() => handleTabClick('environment')}
             className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
