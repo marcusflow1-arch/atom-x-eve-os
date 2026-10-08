@@ -41,6 +41,13 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
     refetchIntervalInBackground: false,
   });
 
+  const { data: clanMemberships = [] } = useQuery({
+    queryKey: ['luna-recruiter-clans', user?.id],
+    queryFn: () => base44.entities.ClanMember.filter({ user_id: user.id }),
+    enabled: !!user?.id && mode === 'online',
+    staleTime: 30000,
+  });
+  const recruitingClan = (clanMemberships || []).find(row => ['leader', 'officer'].includes(row.role));
   const friendIds = useMemo(
     () => new Set((friendRows || []).map((row) => String(row.friend_id || '')).filter(Boolean)),
     [friendRows],
@@ -126,6 +133,23 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
     `Party invite sent to ${player.name}. They will appear in the five boxes after accepting.`,
   );
 
+  const inviteClan = (player) => {
+    if (!recruitingClan?.clan_id) return;
+    return run(
+      player,
+      'clan',
+      async () => {
+        const response = await base44.functions.invoke('clanSystem', {
+          action: 'invite_member_by_id',
+          data: { divisionId: recruitingClan.clan_id, inviteeId: player.id },
+        });
+        const body = response?.data ?? response ?? {};
+        if (body.error || body.success === false) throw new Error(body.error || 'Clan invitation failed');
+      },
+      `Clan invitation sent to ${player.name}.`,
+    );
+  };
+
   const inviteDashboard = (player) => run(
     player,
     'dashboard-invite',
@@ -209,6 +233,7 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
           const partyState = actionState[actionKey(player.id, 'party')];
           const inviteState = actionState[actionKey(player.id, 'dashboard-invite')];
           const joinState = actionState[actionKey(player.id, 'join')];
+          const clanState = actionState[actionKey(player.id, 'clan')];
           return (
             <div key={player.id} className="overflow-hidden rounded-xl border border-white/[0.07] bg-black/20 backdrop-blur-xl">
               <button
@@ -248,6 +273,12 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
                     <LogIn className="h-3 w-3" />
                     {joinState === 'working' ? 'Joining…' : joinState === 'error' ? 'Retry Join' : 'Join Dashboard'}
                   </button>}
+                  {mode === 'online' && recruitingClan && (
+                    <button type="button" disabled={clanState === 'working' || clanState === 'done'} onClick={() => inviteClan(player)} className="col-span-2 flex min-h-8 items-center justify-center gap-1 rounded-lg bg-cyan-200/[0.06] px-2 text-[8px] font-bold uppercase tracking-[.08em] text-cyan-100/80 hover:bg-cyan-200/[0.12] disabled:opacity-45">
+                      <UserPlus className="h-3 w-3" />
+                      {clanState === 'working' ? 'Recruiting…' : clanState === 'done' ? 'Clan Invite Sent' : clanState === 'error' ? 'Retry Clan Invite' : 'Invite to Clan'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
