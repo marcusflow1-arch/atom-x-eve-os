@@ -164,7 +164,7 @@ var Module = {
     var __files = (__remote.length
       ? __remote
       : (window.__JK2_PAKS || []).map(function(n){ return ['' + __gd + '/' + n, '/jk2/' + __gd, n, 0, null]; }))
-      .concat([['qagame.wasm', '/jk2', 'qagame.wasm', 0, null]]);
+      .concat([[__runtimeFile('qagame.wasm'), '/jk2', 'qagame.wasm', 0, null]]);
     var __MB = function(b){ return (b / 1048576).toFixed(1); };
     // Every pak is fetched CONCURRENTLY, so a per-file percentage makes the bar jump backwards
     // each time another file reports. Accumulate across all of them and show one honest total.
@@ -314,7 +314,7 @@ window.addEventListener('pagehide', sync);
 // The engine only starts when a card is chosen: the launcher is removed, the themed loading
 // screen appears, and the engine script is injected. The PREVIEW plaque stays.
 var __q = new URLSearchParams(location.search);
-var __STAMP = 'atom-jk2-v1.1.0';
+var __ENGINE_FILES = null;
 
 // ── Console hygiene: engine output → in-memory ring, console stays clean ───
 // Engine warnings (demo-data gaps etc.) used to spam console.warn on every run. They now land
@@ -448,12 +448,51 @@ function __tuneArgs(){
     '+set', 'r_mode', '-1',
     '+set', 'r_customwidth', String(__RENDER_WIDTH),
     '+set', 'r_customheight', String(__RENDER_HEIGHT),
-    '+set', 'r_customaspect', String(__RENDER_WIDTH / __RENDER_HEIGHT)
+    '+set', 'r_customaspect', String(__RENDER_WIDTH / __RENDER_HEIGHT),
+    // Raven's cg_main.cpp defaults. Repair only projection and camera offsets;
+    // the engine still owns first/third-person switching, spawn angles and cinematics.
+    '+set', 'cg_fov', '80',
+    '+set', 'cg_thirdPersonRange', '80',
+    '+set', 'cg_thirdPersonMaxRange', '150',
+    '+set', 'cg_thirdPersonAngle', '0',
+    '+set', 'cg_thirdPersonPitchOffset', '0',
+    '+set', 'cg_thirdPersonVertOffset', '16',
+    '+set', 'cg_thirdPersonHorzOffset', '0',
+    '+set', 'cg_thirdPersonCameraDamp', '0.3',
+    '+set', 'cg_thirdPersonTargetDamp', '0.5'
   ];
   __q.forEach(function(v, k){
     if (/^(r|cg|com|s|cl)_[A-Za-z0-9_]+$/.test(k)) a.push('+set', k, v);
   });
   return a;
+}
+
+function __runtimeFile(name, prefix){
+  var hash = __ENGINE_FILES && __ENGINE_FILES[name];
+  if (!hash) throw new Error('Engine version is missing for ' + name);
+  return (prefix || '') + name + '?v=' + hash;
+}
+
+async function __loadVersionedEngine(){
+  // Always read the current build metadata. A constant v1.1.0 cache key kept
+  // older JS/WASM after rebuilds, even when the UI shell had been refreshed.
+  var response = await fetch('SOURCE.json', {cache:'no-store'});
+  if (!response.ok) throw new Error('Engine version metadata could not be loaded (HTTP ' + response.status + ').');
+  var manifest = await response.json();
+  var hashes = manifest.files_sha256 || {};
+  var names = ['jk2.js', 'jk2.wasm', 'qagame.wasm'];
+  names.forEach(function(name){
+    if (!/^[a-f0-9]{64}$/.test(hashes[name] || '')) throw new Error('Invalid engine version for ' + name);
+  });
+  __ENGINE_FILES = Object.freeze(Object.fromEntries(names.map(function(name){ return [name, hashes[name]]; })));
+  Module.locateFile = function(path, prefix){
+    return Object.prototype.hasOwnProperty.call(__ENGINE_FILES, path)
+      ? __runtimeFile(path, prefix) : (prefix || '') + path;
+  };
+  var script = document.createElement('script');
+  script.src = __runtimeFile('jk2.js');
+  script.onerror = function(){ Module.onFatal('The original engine download failed. Reload and try again.'); };
+  document.body.appendChild(script);
 }
 
 function boot(args, relay){
@@ -473,15 +512,9 @@ function boot(args, relay){
   document.body.classList.add('launching');
   document.getElementById('load').style.display = 'flex';
   window.__idt3_booting = true;
-  // Cache-bust the engine: the .js/.wasm are served immutable, so stale CF/browser copies
-  // from an earlier deploy would otherwise keep loading. Stamp both the script URL and every
-  // .wasm fetch (main engine + side modules) with this page generation's version.
-  var of = window.fetch;
-  window.fetch = function(u, o) {
-    if (typeof u === 'string' && /\.wasm$/.test(u)) u += '?v=' + __STAMP + '';
-    return of.call(window, u, o);
-  };
-  var s = document.createElement('script'); s.src = 'jk2.js?v=' + __STAMP; s.onerror = function(){ Module.onFatal('The original engine download failed. Reload and try again.'); }; document.body.appendChild(s);
+  __loadVersionedEngine().catch(function(error){
+    Module.onFatal(error.message || String(error));
+  });
 }
 // ── Lifecycle ───────────────────────────────────────────────────────────────
 // Saves/config live in IDBFS — ask the browser not to LRU-evict them.

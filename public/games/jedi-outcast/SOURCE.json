@@ -1,28 +1,28 @@
 {
   "original_source": "https://github.com/grayj/Jedi-Outcast",
   "original_commit": "85f58467344d3ccbc6e2501a9af573ff4488a898",
-  "browser_port": "https://github.com/Virtastic/jk2-web/tree/v1.1.0",
-  "browser_port_commit": "3aa6c1daee11cfc491a4f57f8d51dbb1402d67fd",
-  "corresponding_source": "https://github.com/Virtastic/jk2-web/releases/download/v1.1.0/jk2-web-src-v1.1.0.tar.gz",
+  "browser_port": "https://github.com/Virtastic/jk2-web/tree/4dba3508db2df52f089e7f7f71f7deace53aaded",
+  "browser_port_commit": "4dba3508db2df52f089e7f7f71f7deace53aaded",
+  "corresponding_source": "https://github.com/Virtastic/jk2-web/tree/4dba3508db2df52f089e7f7f71f7deace53aaded",
   "bundle": "https://github.com/Virtastic/jk2-web/releases/download/v1.1.0/jk2-web-v1.1.0.zip",
   "bundle_sha256": "c415f53ca19804b21c9c0bffb2d94e493037d7482d1b3c35eee05e8053aad74e",
   "files_sha256": {
-    "jk2.js": "0a8c6a8ef8ab630cf5e30e9abfdce78bfac9956fd19c6883be430c84a51fe86e",
-    "jk2.wasm": "d95c3f02722d72fa2e8eec0652e6d1e8789b50ce9b6aae3ff738a89de8fb7de4",
-    "qagame.wasm": "9c696cf6f7c8a768cdff4a46270c8f4d31dcd5da3769b4cac02e06dd1b728f3f"
+    "jk2.js": "54a6b105a7dcc22e475339bb6a3ae598236b1be97adca5b301702e7d6fa4eafa",
+    "jk2.wasm": "fd688e5ae4f0099aaa6f53e32d16abf7ea2a0b3921feb7224f7e53cdfd97ca7d",
+    "qagame.wasm": "342e027a6c7eb0d9cc33a8b029b0a0bce4144959e82a715b835995ce1c9deb61"
   },
   "license": "GPL-2.0",
   "retail_data_included": false,
-  "engine_binaries_modified": false,
-  "integration": "Local original-data picker, required-file and format checks, iframe lifecycle and launcher. No replacement models, maps, AI, combat, animation or HUD.",
+  "engine_binaries_modified": true,
+  "integration": "Original Raven browser engine with the documented Atom XE video-mode patch, native camera defaults, canonical Base44 PK3 cache, and iframe presentation.",
   "browserPortPatch": {
     "base": "Virtastic/jk2-web commit 4dba3508db2df52f089e7f7f71f7deace53aaded",
     "patch": "tools/jedi-outcast/patch-browser-port.py",
     "purpose": "Honor Raven r_mode/r_custom video settings and prevent browser resize from overriding them."
   },
-  "sha256": {
-    "jk2.js": "54a6b105a7dcc22e475339bb6a3ae598236b1be97adca5b301702e7d6fa4eafa",
-    "jk2.wasm": "fd688e5ae4f0099aaa6f53e32d16abf7ea2a0b3921feb7224f7e53cdfd97ca7d",
-    "qagame.wasm": "342e027a6c7eb0d9cc33a8b029b0a0bce4144959e82a715b835995ce1c9deb61"
+  "upstream_release_files_sha256": {
+    "jk2.js": "0a8c6a8ef8ab630cf5e30e9abfdce78bfac9956fd19c6883be430c84a51fe86e",
+    "jk2.wasm": "d95c3f02722d72fa2e8eec0652e6d1e8789b50ce9b6aae3ff738a89de8fb7de4",
+    "qagame.wasm": "9c696cf6f7c8a768cdff4a46270c8f4d31dcd5da3769b4cac02e06dd1b728f3f"
   }
 }
