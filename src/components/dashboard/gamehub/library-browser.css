@@ -1,5 +1,6 @@
 /* Luna Library: compact controls and a single unfolding glass leaf. */
-.ll-browser { position:relative; color:#eff7ff; overflow:hidden; padding-top:1px; }
+/* One continuous glass surface in both Games and Cards mode, flush to the footer. */
+.ll-browser { position:relative; color:#eff7ff; overflow:hidden; padding-top:1px; box-sizing:border-box; background:linear-gradient(180deg,rgba(17,30,46,.96),rgba(10,20,34,.96)); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:inset -1px 0 rgba(165,207,225,.12); }
 .ll-browser::before { content:''; position:absolute; left:0; right:0; top:0; z-index:30; height:1px; pointer-events:none; background:linear-gradient(90deg,rgba(205,220,228,.10),rgba(205,220,228,.24) 50%,rgba(205,220,228,.10)); }
 .ll-toolbar { display:flex; align-items:center; gap:7px; padding:10px 12px 8px; }
 .ll-voice-search { min-width:0; flex:1 1 auto; width:auto; }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { GalleryHorizontalEnd, Library, Maximize2, Minimize2 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthContext';
 import useOwnedGames from '@/components/store/useOwnedGames';
@@ -12,6 +12,25 @@ import './library-browser.css';
 const defaultFilters = { view: 'library', scope: 'games', search: '', genre: 'all', gameId: null };
 export default function LibraryBrowser({ selectedGame, onSelectGame, onLongPressGame, onOptionsGame, fullView, onToggleFullView, viewerHidden = false, onToggleViewer, filters: controlledFilters, onFiltersChange }) {
   const { user } = useAuth();
+  const surfaceRef = useRef(null);
+  const [surfaceHeight, setSurfaceHeight] = useState(null);
+  useLayoutEffect(() => {
+    const surface = surfaceRef.current;
+    const footer = document.querySelector('.glass-page-bottom-bar');
+    if (!surface || !footer) return;
+    const measure = () => {
+      const top = surface.getBoundingClientRect().top;
+      const bottom = footer.getBoundingClientRect().top;
+      setSurfaceHeight(Math.max(0, Math.floor(bottom - top)));
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(footer);
+    if (surface.parentElement) observer.observe(surface.parentElement);
+    window.addEventListener('resize', measure);
+    measure();
+    return () => { observer.disconnect(); window.removeEventListener('resize', measure); };
+  }, [viewerHidden]);
+
   const ownership = useOwnedGames();
   const [localFilters, setLocalFilters] = useState(defaultFilters);
   const filters = controlledFilters || localFilters;
@@ -33,7 +52,7 @@ export default function LibraryBrowser({ selectedGame, onSelectGame, onLongPress
     try { localStorage.setItem(key, JSON.stringify(ids)); setSaved({ key, ids }); setError(''); }
     catch { setError('Favorites could not be saved on this device.'); }
   };
-  return <section data-testid="library-browser" className="library-surface ll-browser h-full min-h-0 flex flex-col" onWheel={(event) => event.stopPropagation()}>
+  return <section ref={surfaceRef} style={surfaceHeight === null ? undefined : { height: surfaceHeight }} data-testid="library-browser" className="library-surface ll-browser h-full min-h-0 flex flex-col" onWheel={(event) => event.stopPropagation()}>
     <header className="ll-toolbar">
       <LibraryVoiceSearch value={filters.search} onChange={(search) => change({ search, gameId: null })} subject={cardsView && filters.scope === 'cards' ? 'cards' : 'games'} />
       <button className="ll-view-toggle" aria-label={cardsView ? 'Return to game library' : 'Open card explorer'} title={cardsView ? 'Game library' : 'Card explorer'} aria-pressed={cardsView} onClick={() => change({ view: cardsView ? 'library' : 'cards', scope: 'games', gameId: null })}>{cardsView ? <Library size={18} /> : <GalleryHorizontalEnd size={18} />}</button>
