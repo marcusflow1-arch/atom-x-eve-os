@@ -391,12 +391,12 @@ test('Jedi camera uses a pulled-back over-shoulder framing with native mouse fre
     assert.equal(sets.get('cl_freelook'), '1');
     assert.equal(sets.get('m_pitch'), '0.022');
     assert.equal(sets.get('m_yaw'), '0.022');
-    assert.equal(sets.get('cg_thirdPersonRange'), '135');
-    assert.equal(sets.get('cg_thirdPersonMaxRange'), '220');
+    assert.equal(sets.get('cg_thirdPersonRange'), '165');
+    assert.equal(sets.get('cg_thirdPersonMaxRange'), '260');
     assert.equal(sets.get('cg_thirdPersonAngle'), '0');
-    assert.equal(sets.get('cg_thirdPersonPitchOffset'), '-3');
-    assert.equal(sets.get('cg_thirdPersonVertOffset'), '22');
-    assert.equal(sets.get('cg_thirdPersonHorzOffset'), '-18');
+    assert.equal(sets.get('cg_thirdPersonPitchOffset'), '-4');
+    assert.equal(sets.get('cg_thirdPersonVertOffset'), '24');
+    assert.equal(sets.get('cg_thirdPersonHorzOffset'), '-22');
     assert.equal(sets.get('cg_thirdPersonCameraDamp'), '0.22');
     assert.equal(sets.get('cg_thirdPersonTargetDamp'), '0.4');
     assert.equal(sets.has('model'), false, 'Raven still chooses the canonical player model');
