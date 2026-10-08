@@ -48,6 +48,13 @@
     "bio": {
       "type": "string"
     },
+    "preferred_genres": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Player-selected genres to share in the People Online discovery list."
+    },
     "avatar_url": {
       "type": "string"
     },
