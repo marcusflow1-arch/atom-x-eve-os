@@ -1,4 +1,6 @@
 import { joinDashboard, isLivePlayer } from '@/components/social/dashboardSession';
+import { usePartySession } from '@/components/social/partySession';
+import { setAIBoxSocialMode } from '@/components/dashboard/aiBoxSocialMode';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1252,6 +1254,7 @@ export function LibraryBannerSection({
   const [showMemoriesDrawer, setShowMemoriesDrawer] = useState(false);
   const [memoriesExpanded, setMemoriesExpanded] = useState(false);
   const { user } = useAuth();
+  const partyState = usePartySession();
   const [invitedUsers, setInvitedUsers] = useState({});
   const [partyInviteUsers, setPartyInviteUsers] = useState({});
   const [friendRequestUsers, setFriendRequestUsers] = useState({});
@@ -1516,7 +1519,8 @@ export function LibraryBannerSection({
     window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' } }));
   };
 
-  const emptySlots = Math.max(0, 5 - onlineFriends.length);
+  // Five slots reflect confirmed party membership only, never nearby or online players.
+  const partySlots = Array.from({ length: 5 }, (_, index) => (partyState.members || [])[index] || null);
 
   return (
     <div className="flex flex-col items-start w-full h-full">
@@ -1531,37 +1535,40 @@ export function LibraryBannerSection({
               <SkillTreeTile />
             </div>
 
-            {/* ── Presence Bar: Five Friend Slots ── */}
+            {/* ── Party Bar: Five confirmed member slots ── */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">
-              {/* Five social slots. PvP rejoin belongs to the match layer, not
-                  to party/dashboard presence, so it sits below this group. */}
+              {/* Only accepted party members fill slots; any plus opens the
+                  friend-to-party picker in the AI Attribute box. */}
               <div className="relative flex h-full flex-shrink-0 items-center gap-2">
-                {(onlineFriends || []).filter(Boolean).map((friend) => (
-                  <div key={friend.id} className="flex-shrink-0">
-                    <FriendReference 
-                      friend={friend}
-                      isFriend={friendIds.has(String(friend.id))}
-                      requestState={friendRequestUsers[friend.id]}
-                      dashboardInviteState={invitedUsers[friend.id]}
-                      partyInviteState={partyInviteUsers[friend.id]}
-                      joining={!!joiningUsers[friend.id]}
-                      onClick={handleFriendClick}
-                      onAddFriend={handleAddFriend}
-                      onMessage={handleMessage}
-                      onJoin={handleJoin}
-                      onInvite={handleInvite}
-                      onPartyInvite={handlePartyInvite}
-                      onDuel={handleDuel}
-                      onTrade={handleTrade}
-                      isActive={activeFriend?.id === friend.id}
-                    />
-                  </div>
-                ))}
-
-                {[...Array(emptySlots)].map((_, i) => (
-                  <div key={`empty-${i}`} className="flex flex-col items-center gap-1 flex-shrink-0">
-                    <Plus className="w-3.5 h-3.5 text-white" />
-                    <div className="w-16 h-16 rounded-lg bg-transparent border border-white/5" />
+                {partySlots.map((member, index) => (
+                  <div key={`party-slot-${index}`} className="flex flex-col items-center gap-1 flex-shrink-0">
+                    <button
+                      type="button"
+                      title="Invite online friends to your party"
+                      aria-label={`Invite a friend to party slot ${index + 1}`}
+                      onClick={() => setAIBoxSocialMode('party')}
+                      className="grid h-3.5 w-6 place-items-center text-white/65 transition hover:text-cyan-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      title={member ? `Party member: ${member.user_name || 'Player'} · Open party` : 'Open party invitations'}
+                      aria-label={member ? `Party member ${member.user_name || 'Player'}` : `Empty party slot ${index + 1} · Invite friends`}
+                      onClick={() => member ? window.dispatchEvent(new Event('openLunaParty')) : setAIBoxSocialMode('party')}
+                      className="relative h-16 w-16 overflow-hidden rounded-lg border border-white/[0.09] bg-white/[0.025] transition hover:border-cyan-300/30"
+                    >
+                      {member && (
+                        <>
+                          {member.user_avatar
+                            ? <img src={member.user_avatar} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                            : <span className="absolute inset-0 grid place-items-center text-base font-semibold text-cyan-100/65">{(member.user_name || 'P').slice(0, 1)}</span>}
+                          <span className="absolute inset-x-0 bottom-0 truncate bg-black/70 px-1 py-0.5 text-center text-[8px] text-white/85">
+                            {String(member.user_id) === String(user?.id) ? 'You' : member.user_name || 'Party member'}
+                          </span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 ))}
 
