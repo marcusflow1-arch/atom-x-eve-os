@@ -196,10 +196,17 @@ var Module = {
   onRuntimeInitialized: function(){
     // Engine drives its own frame loop via emscripten_set_main_loop.
     booted = true;
+    var c = Module.canvas || document.getElementById('canvas');
+    if (c) {
+      c.style.setProperty('width', '100vw', 'important');
+      c.style.setProperty('height', '100vh', 'important');
+      c.style.setProperty('object-fit', 'contain', 'important');
+      try { c.focus({ preventScroll: true }); } catch (_) { try { c.focus(); } catch (_) {} }
+    }
     if (parent !== window) parent.postMessage({type:'atom-jedi-status', state:'engine-ready'}, location.origin);
     setTimeout(hideLoading, 300);
     // Fullscreen is the game's native presentation and is not discoverable otherwise.
-    setTimeout(function(){ __toast('Alt+Enter for fullscreen', 4000); }, 1800);
+    setTimeout(function(){ __toast('Click the game for mouse look · WASD to move · Alt+Enter fullscreen', 5000); }, 1800);
   }
 };
 
@@ -370,8 +377,31 @@ if (__q.has('debug')) document.addEventListener('DOMContentLoaded', function(){
 // pre-first-map). Widescreen: the backing store follows the viewport, so give the 3D view a
 // Hor+ fov (90° vertical-equivalent at 4:3). Any ?r_*/cg_*/com_*/s_*/cl_*=v query param
 // becomes a trailing +set (wins over the baseline) for A/B tuning without redeploys.
-// Preserve the original game defaults; use the in-game settings menu.
-function __tuneArgs(){ return []; }
+// Keep Raven's stock controls while applying the browser port's verified
+// viewport projection. default.cfg is the original retail binding file from assets0.pk3.
+function __tuneArgs(){
+  var vw = innerWidth || (screen && screen.width) || 1280;
+  var vh = innerHeight || (screen && screen.height) || 720;
+  var aspect = Math.min(Math.max(vw / Math.max(vh, 1), 4/3), 21/9);
+  var fov = Math.round(2 * Math.atan(Math.tan(73.74 * Math.PI / 360) * aspect) * 360 / Math.PI);
+  fov = Math.min(Math.max(fov, 90), 121);
+
+  // The user's canonical retail config and default.cfg both use the stock bindings
+  // (W/A/S/D, Space, Mouse1, etc.). Re-exec the retail default binding file after
+  // browser-persisted config so an earlier broken session cannot leave movement unbound.
+  var a = [
+    '+exec', 'default.cfg',
+    '+set', 'r_mode', '3',
+    '+set', 'cg_fov', String(fov),
+    '+set', 'cg_draw2D', '1',
+    '+set', 'cl_freelook', '1'
+  ];
+
+  __q.forEach(function(v, k){
+    if (/^(r|cg|com|s|cl)_[A-Za-z0-9_]+$/.test(k)) a.push('+set', k, v);
+  });
+  return a;
+}
 
 function boot(args, relay){
   if (relay) window.__IDT3_NET_RELAY = relay;
@@ -443,6 +473,38 @@ function __toast(text, ms){
   document.body.appendChild(d);
   setTimeout(function(){ d.remove(); }, ms || 2600);
 }
+// Always hand keyboard focus to the game before the C++ mouse handler requests
+// pointer lock. This matters inside the Base44 editor/preview shell, where clicking the
+// nested iframe does not reliably leave its canvas as the active keyboard target.
+var __gameCanvas = document.getElementById('canvas');
+if (__gameCanvas) {
+  __gameCanvas.addEventListener('mousedown', function(){
+    try { __gameCanvas.focus({ preventScroll: true }); } catch (_) { try { __gameCanvas.focus(); } catch (_) {} }
+  }, true);
+  __gameCanvas.addEventListener('click', function(){
+    try { __gameCanvas.focus({ preventScroll: true }); } catch (_) { try { __gameCanvas.focus(); } catch (_) {} }
+  }, true);
+}
+
+// Keyboard fallback for the Base44 parent shell. Native iframe key events remain the
+// primary path; this only handles keys that the outer preview receives instead.
+window.addEventListener('message', function(ev){
+  if (ev.source !== parent || ev.origin !== location.origin || ev.data?.type !== 'atom-jedi-key') return;
+  var d = ev.data || {};
+  var event = new KeyboardEvent(d.eventType === 'keyup' ? 'keyup' : 'keydown', {
+    key: d.key || '',
+    code: d.code || '',
+    repeat: !!d.repeat,
+    altKey: !!d.altKey,
+    ctrlKey: !!d.ctrlKey,
+    shiftKey: !!d.shiftKey,
+    metaKey: !!d.metaKey,
+    bubbles: true,
+    cancelable: true
+  });
+  window.dispatchEvent(event);
+});
+
 // Esc drops pointer lock; hint how to get the mouse back (the engine re-requests on click).
 document.addEventListener('pointerlockchange', function(){
   var had = window.__idt3_hadlock;
