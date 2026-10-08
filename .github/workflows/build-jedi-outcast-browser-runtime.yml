@@ -88,4 +88,11 @@ jobs:
                   public/games/jedi-outcast/qagame.wasm \
                   public/games/jedi-outcast/SOURCE.json
           git commit -m "build: rebuild Jedi Outcast browser runtime"
-          git push
+
+          # The branch can advance while the ~2 minute Emscripten build is running
+          # (for example when tests/docs are fixed). Rebase the generated runtime
+          # commit onto the current branch tip rather than losing the build to a
+          # non-fast-forward push.
+          git fetch origin "${GITHUB_REF_NAME}"
+          git rebase "origin/${GITHUB_REF_NAME}"
+          git push origin HEAD:"${GITHUB_REF_NAME}"
