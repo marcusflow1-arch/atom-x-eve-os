@@ -350,11 +350,38 @@ export default function LunaTemplate() {
 
   // Combined scene + user env loader (merged to avoid duplicate API calls)
   useEffect(() => {
-    if (sceneLoadedRef.current) return;
+    if (sceneLoadedRef.current || !user?.id) return;
     // Stagger by 500ms to avoid rate-limiting collision with model loader
     const loadScene = async () => {
       sceneLoadedRef.current = true;
       try {
+        // A player's collected environment takes precedence over the admin default.
+        if (user?.id) {
+          const states = await base44.entities.AvatarHomeState.filter({ avatarId: user.id });
+          const savedId = states?.[0]?.currentEnvironmentId;
+          if (savedId === 'default_room') {
+            setCurrentEnvId(savedId);
+            setActiveScene(null);
+            setRoomModelUrl(GAME1_ENV_URL);
+            return;
+          }
+          if (savedId && !savedId.startsWith('joined_')) {
+            const owned = await base44.entities.EnvironmentInstance.filter({ id: savedId, owner_id: user.id });
+            const env = owned?.[0];
+            if (env) {
+              const layouts = env.scene_layout_id ? await base44.entities.SceneLayout.filter({ id: env.scene_layout_id }) : [];
+              const layout = layouts?.[0];
+              if (layout || env.model_url) {
+                setCurrentEnvId(env.id);
+                setActiveScene(layout || null);
+                setRoomModelUrl(layout?.environment_url || env.model_url || GAME1_ENV_URL);
+                setPlayerSpawn(layout?.player_spawn || { x: 0, y: -0.5, z: 0 });
+                setUseMeshCollision(!!layout?.use_mesh_collision);
+                return;
+              }
+            }
+          }
+        }
         // 1. Try active SceneLayout first
         const layouts = await base44.entities.SceneLayout.filter({ is_active: true });
         if (layouts.length > 0) {
