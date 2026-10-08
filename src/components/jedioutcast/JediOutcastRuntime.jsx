@@ -25,6 +25,7 @@ export default function JediOutcastRuntime({ onBack }) {
   const { user } = useAuth();
   const frame = useRef(null);
   const shell = useRef(null);
+  const stage = useRef(null);
   const leaving = useRef(false);
   const sourceSent = useRef(false);
   const sourcePreparing = useRef(false);
@@ -34,6 +35,7 @@ export default function JediOutcastRuntime({ onBack }) {
   const [notice, setNotice] = useState('');
   const [progress, setProgress] = useState('');
   const [videoInfo, setVideoInfo] = useState(null);
+  const [viewerSize, setViewerSize] = useState({ width: 0, height: 0 });
   const [exiting, setExiting] = useState(false);
   const [revision, setRevision] = useState(0);
 
@@ -246,6 +248,43 @@ export default function JediOutcastRuntime({ onBack }) {
   }, [sendCanonicalSource]);
 
   useEffect(() => {
+    const host = stage.current;
+    if (!host) return;
+
+    const ORIGINAL_ASPECT = 4 / 3;
+    const updateViewer = () => {
+      const availableWidth = Math.max(1, host.clientWidth);
+      const availableHeight = Math.max(1, host.clientHeight);
+
+      let width = availableWidth;
+      let height = Math.floor(width / ORIGINAL_ASPECT);
+      if (height > availableHeight) {
+        height = availableHeight;
+        width = Math.floor(height * ORIGINAL_ASPECT);
+      }
+
+      width = Math.max(320, Math.floor(width));
+      height = Math.max(240, Math.floor(height));
+
+      setViewerSize(previous =>
+        previous.width === width && previous.height === height
+          ? previous
+          : { width, height }
+      );
+    };
+
+    updateViewer();
+    const observer = new ResizeObserver(updateViewer);
+    observer.observe(host);
+    window.addEventListener('resize', updateViewer);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateViewer);
+    };
+  }, []);
+
+  useEffect(() => {
     const forwardKey = event => {
       if (!frame.current?.contentWindow || state === 'error') return;
       const target = event.target;
@@ -335,8 +374,8 @@ export default function JediOutcastRuntime({ onBack }) {
               ? 'Saving…'
               : (progress ||
                 (videoInfo?.canvasWidth && videoInfo?.canvasHeight
-                  ? `${LABELS[state] || state} · ${videoInfo.canvasWidth}×${videoInfo.canvasHeight}`
-                  : (LABELS[state] || state)))}
+                  ? `${LABELS[state] || state} · canvas ${videoInfo.canvasWidth}×${videoInfo.canvasHeight} · viewer ${viewerSize.width || '—'}×${viewerSize.height || '—'}`
+                  : `${LABELS[state] || state} · viewer ${viewerSize.width || '—'}×${viewerSize.height || '—'}`))}
           </small>
         </span>
 
@@ -359,21 +398,27 @@ export default function JediOutcastRuntime({ onBack }) {
         </div>
       )}
 
-      <iframe
-        key={revision}
-        ref={frame}
-        src="/games/jedi-outcast/index.html?runtime=base44-resolution-v6"
-        title="Star Wars Jedi Knight II: Jedi Outcast"
-        className="jko-engine-frame"
-        tabIndex={0}
-        allow="autoplay; fullscreen; gamepad"
-        allowFullScreen
-        onLoad={() => {
-          sourceSent.current = false;
-          sourcePreparing.current = false;
-          setTimeout(sendCanonicalSource, 0);
-        }}
-      />
+      <div className="jko-engine-stage" ref={stage}>
+        <iframe
+          key={revision}
+          ref={frame}
+          src="/games/jedi-outcast/index.html?runtime=viewer-4x3-v7"
+          title="Star Wars Jedi Knight II: Jedi Outcast"
+          className="jko-engine-frame"
+          style={viewerSize.width && viewerSize.height ? {
+            width: `${viewerSize.width}px`,
+            height: `${viewerSize.height}px`,
+          } : undefined}
+          tabIndex={0}
+          allow="autoplay; fullscreen; gamepad"
+          allowFullScreen
+          onLoad={() => {
+            sourceSent.current = false;
+            sourcePreparing.current = false;
+            setTimeout(sendCanonicalSource, 0);
+          }}
+        />
+      </div>
     </section>
   );
 }
