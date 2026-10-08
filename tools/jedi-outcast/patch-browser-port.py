@@ -18,7 +18,7 @@ end = text.find(end_anchor, start)
 if end < 0:
     raise SystemExit("viewport override end not found")
 
-replacement = """\t// Atom XE: force the gameplay framebuffer to the reconstruction contract.\n\t// The browser port can otherwise fall back to the HTML canvas default (300x150)\n\t// during a renderer re-init / cinematic-to-game transition. That changes the\n\t// projection and makes the third-person framing look as if the camera is inside\n\t// the player even though the camera cvars themselves are valid.\n\twidth = 1024;\n\theight = 768;\n\temscripten_set_canvas_element_size( \"#canvas\", width, height );\n\n\t// Preserve Raven's selected mode semantics, but never replace this fixed native\n\t// gameplay buffer with browser viewport dimensions. CSS may scale presentation.\n"""
+replacement = """\t// Atom XE: force the gameplay framebuffer to the reconstruction contract.\n\t// The browser port can otherwise fall back to the HTML canvas default (300x150)\n\t// during a renderer re-init / cinematic-to-game transition. That changes the\n\t// projection and makes the third-person framing look as if the camera is inside\n\t// the player even though the camera cvars themselves are valid.\n\twidth = 1024;\n\theight = 768;\n\t// Preserve Raven's selected mode semantics, but never replace this fixed native\n\t// gameplay buffer with browser viewport dimensions. CSS may scale presentation.\n"""
 text = text[:start] + replacement + text[end:]
 
 start = text.find("void IN_Frame( void ) {")
