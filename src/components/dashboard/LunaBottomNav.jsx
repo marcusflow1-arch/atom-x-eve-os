@@ -232,7 +232,7 @@ function LunaSearchBar({ isLibraryActive, onFocus, onOpen, value, onChange }) {
   );
 }
 
-export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, hideSearch = false, searchTerm, onSearchChange, games: propGames }) {
+export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, hideSearch = false, searchTerm, onSearchChange, games: propGames, onEnvironmentToggle, environmentOpen = false }) {
   const [activeTab, setActiveTab] = useState(forceLibraryOpen ? 'library' : 'home');
   // Sync forced open state
   useEffect(() => {
@@ -294,6 +294,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
     setSelectedItem(null);
     setSelectedGame(null);
     if (tab === 'home') {
+      if (onEnvironmentToggle && environmentOpen) onEnvironmentToggle();
       if (!hideNav) navigate(createPageUrl('LunaTemplate'));
     } else {
       // If clicking the same tab that's already active, close it (go home)
@@ -1156,6 +1157,12 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
 
       {!hideNav && <div className="flex items-center justify-center w-full h-full relative">
         <div className="flex items-center">
+          {onEnvironmentToggle && (
+            <button type="button" data-luna-environment-trigger className="luna-environment-trigger"
+              aria-expanded={environmentOpen} aria-controls="luna-environment-collection" onClick={onEnvironmentToggle}>
+              <Globe aria-hidden="true" /><span>Environments</span>
+            </button>
+          )}
           <button
             onClick={() => handleTabClick('home')}
             className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
@@ -1173,6 +1180,8 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
 
           <div className="w-px h-5 bg-white/10 mx-2" />
 
+
+          {!onEnvironmentToggle && (<>
           <button
             onClick={() => handleTabClick('environment')}
             className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
@@ -1187,6 +1196,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             <Globe className="w-4 h-4" />
             <span>Environment Hubs</span>
           </button>
+          </>)}
 
           {!hideSearch && (
             <>

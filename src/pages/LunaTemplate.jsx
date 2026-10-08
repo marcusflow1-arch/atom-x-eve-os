@@ -83,6 +83,7 @@ import LunaInventoryItemPreview from '../components/dashboard/LunaInventoryItemP
 import LunaEquipmentUpgradeWorkspace from '../components/dashboard/LunaEquipmentUpgradeWorkspace';
 import TransparentModel3DViewer from '../components/dashboard/TransparentModel3DViewer';
 import LunaBottomNav from '../components/dashboard/LunaBottomNav';
+import EnvHubDrawer from '@/components/dashboard/EnvHubDrawer';
 import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOfflineView';
 import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
 import SidebarOverlays from '../components/dashboard/SidebarOverlays';
@@ -196,6 +197,18 @@ export default function LunaTemplate() {
   const [slot2Content, setSlot2Content] = useState('cardCollection');
   const [currentHostName, setCurrentHostName] = useState(null);
   const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
+  const [showEnvironmentCollection, setShowEnvironmentCollection] = useState(false);
+  useEffect(() => {
+    const toggle = () => setShowEnvironmentCollection(value => !value);
+    const close = () => setShowEnvironmentCollection(false);
+    window.addEventListener('toggleLunaEnvironmentCollection', toggle);
+    window.addEventListener('closeEnvironmentHub', close);
+    return () => {
+      window.removeEventListener('toggleLunaEnvironmentCollection', toggle);
+      window.removeEventListener('closeEnvironmentHub', close);
+    };
+  }, []);
+
   const [isEnvironmentActive, setIsEnvironmentActive] = useState(true);
   const [selectedConsoleGame, setSelectedConsoleGame] = useState(null);
   const [openedGame, setOpenedGame] = useState(null);
@@ -287,7 +300,7 @@ export default function LunaTemplate() {
   }, [avatarFocusMode]);
 
   useEffect(() => {
-    const handleSkillTree = () => setShowSkillTreeBlankUI(true);
+    const handleSkillTree = () => { setShowEnvironmentCollection(false); setShowSkillTreeBlankUI(true); };
     window.addEventListener('toggleSkillTree', handleSkillTree);
     return () => window.removeEventListener('toggleSkillTree', handleSkillTree);
   }, []);
@@ -668,8 +681,10 @@ export default function LunaTemplate() {
       sidebarVisible={sidebarVisible}
       onSidebarToggle={toggleSidebar}
       chromeHidden={avatarFocusMode}
-      bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} hideSearch />}
+      bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} hideSearch environmentOpen={showEnvironmentCollection} onEnvironmentToggle={() => setShowEnvironmentCollection(value => !value)} />}
     >
+    <EnvHubDrawer open={showEnvironmentCollection} onClose={() => setShowEnvironmentCollection(false)}
+      currentEnvId={currentEnvId} onSelectEnv={handleEnvSelect} defaultModelUrl={GAME1_ENV_URL} />
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} surface="dashboard" />

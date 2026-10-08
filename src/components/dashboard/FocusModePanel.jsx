@@ -7,7 +7,7 @@ import {
         Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
         Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
         Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal, Bot,
-        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv, Swords, Layers, TrendingUp, Globe, UserPlus
+        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv, Swords, Layers, TrendingUp, Globe, UserPlus, Network
       } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
@@ -30,7 +30,6 @@ import IntelligentCalendarOverlay from '@/components/calendar/IntelligentCalenda
 import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
 import EnvironmentHub from '@/components/environment/EnvironmentHub';
 import MemoriesDrawer from '@/components/dashboard/MemoriesDrawer';
-import EnvHubDrawer from '@/components/dashboard/EnvHubDrawer';
 import QuickChangeEnvDrawer from '@/components/dashboard/QuickChangeEnvDrawer';
 import DateTimeTile from '@/components/dashboard/DateTimeTile';
 import SystemUpdatesBox from '@/components/dashboard/SystemUpdatesBox';
@@ -1059,55 +1058,13 @@ function Large3DCard({ card, isActive }) {
   );
 }
 
-// Environment Hub Tile Component - now a dropdown trigger
-function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironmentActive, onToggleEnvironment }) {
+// Shared measured rail anchor for library and skill-book layout.
+function SkillTreeTile() {
   return (
-    <div data-luna-environment-hub
-      className="w-full h-full rounded-xl overflow-hidden relative group"
-      style={{
-        background: isOpen
-          ? 'linear-gradient(145deg, rgba(18,32,52,0.98) 0%, rgba(10,20,36,0.99) 100%)'
-          : 'linear-gradient(145deg, rgba(14,24,40,0.95) 0%, rgba(8,16,28,0.97) 100%)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: isOpen ? '1px solid rgba(125,211,252,0.35)' : '1px solid rgba(125,211,252,0.12)',
-        boxShadow: isOpen ? '0 0 16px rgba(125,211,252,0.12), inset 0 1px 0 rgba(125,211,252,0.1)' : 'inset 0 1px 0 rgba(125,211,252,0.05)',
-        transition: 'all 0.3s ease'
-      }}
-    >
-      <button className="absolute inset-0 w-full h-full cursor-pointer" onClick={onToggle}>
-        <img 
-          src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80" 
-          alt="Environment Hub"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-50"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
-        <button 
-          onClick={(e) => { e.stopPropagation(); onToggleEnvironment?.(); }}
-          className="absolute top-2 left-2 px-3 py-1.5 rounded-lg bg-black/50 hover:bg-black/70 border border-white/10 text-white text-[10px] font-bold tracking-wider uppercase backdrop-blur-md transition-all z-10 flex items-center gap-1.5 group-hover:border-cyan-400/50 cursor-pointer"
-        >
-          {isEnvironmentActive ? (
-            <><div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" /> Luna Dashboard</>
-          ) : (
-            <><div className="w-1.5 h-1.5 rounded-full bg-white/40" /> Luna Dashboard</>
-          )}
-        </button>
-        <div className="absolute bottom-3 left-3 right-3 text-left">
-          <h4 className="text-white font-bold text-sm truncate flex items-center gap-2">
-            <Globe className="w-4 h-4 text-cyan-400" />
-            Environment Hub
-          </h4>
-          <p className="text-white/50 text-[10px]">Change your 3D world</p>
-        </div>
-      </button>
-      
-      <button 
-        onClick={(e) => { e.stopPropagation(); onQuickChangeToggle(); }}
-        className="absolute top-2 right-2 w-7 h-7 rounded-md bg-white/10 hover:bg-cyan-500/30 border border-white/20 flex items-center justify-center z-10 transition-colors cursor-pointer group-hover:bg-white/20"
-        title="Quick Change Environments"
-      >
-        <LibraryIcon className="w-3.5 h-3.5 text-white" />
+    <div data-luna-environment-hub data-luna-skill-tree-launcher className="luna-skill-tree-launcher">
+      <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('toggleSkillTree'))}
+        aria-label="Open Skill Tree" className="luna-skill-tree-launcher__button">
+        <Network aria-hidden="true" /><span>Skill Tree</span><small>Avatar progression</small>
       </button>
     </div>
   );
@@ -1282,6 +1239,7 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
 function HomeReference({ onClick }) {
   return (
     <motion.button
+      data-luna-home-tile
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
@@ -1585,13 +1543,7 @@ export function LibraryBannerSection({
 
             {/* Environment Hub tile */}
             <div className="w-[247px] h-full flex-shrink-0">
-              <EnvironmentHubTile 
-                isOpen={showEnvDropdown} 
-                onToggle={() => setShowEnvDropdown(v => !v)} 
-                onQuickChangeToggle={onQuickChangeToggle}
-                isEnvironmentActive={isEnvironmentActive}
-                onToggleEnvironment={onToggleEnvironment}
-              />
+              <SkillTreeTile />
             </div>
 
             {/* ── Presence Bar: Friend Slots | Home ── */}
@@ -2010,7 +1962,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   const [showStreamSettings, setShowStreamSettings] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const openCalendar = () => setShowCalendar(true);
-  const [showEnvDrawer, setShowEnvDrawer] = useState(false);
   const [showQuickChangeDrawer, setShowQuickChangeDrawer] = useState(false);
   const [envDrawerExpanded, setEnvDrawerExpanded] = useState(false);
 
@@ -2105,7 +2056,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                  currentEnvId={currentEnvId}
                  onSelectEnv={onSelectEnv}
                  showEnvDropdown={false}
-                 setShowEnvDropdown={() => setShowEnvDrawer(true)}
+                 setShowEnvDropdown={() => window.dispatchEvent(new Event('toggleLunaEnvironmentCollection'))}
                  onQuickChangeToggle={() => setShowQuickChangeDrawer(true)}
                  isEnvironmentActive={isEnvironmentActive}
                  onToggleEnvironment={onToggleEnvironment}
@@ -2231,13 +2182,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
       {/* Inventory Equip Overlay - opens when any inventory slot is clicked */}
       <InventoryEquipOverlay />
 
-      {/* Environment Hub — slide-in drawer from the right */}
-      <EnvHubDrawer
-        open={showEnvDrawer}
-        onClose={() => setShowEnvDrawer(false)}
-        currentEnvId={currentEnvId}
-        onSelectEnv={onSelectEnv}
-      />
       <QuickChangeEnvDrawer
         open={showQuickChangeDrawer}
         onClose={() => setShowQuickChangeDrawer(false)}
