@@ -7,12 +7,17 @@ const read = (path) => readFileSync(new URL('../' + path, import.meta.url), 'utf
 test('Game 2 swaps the Admin Y Bot into a Raven-source player controller', () => {
   const viewer = read('src/components/jedioutcast/game2/Game2ThreeViewer.jsx');
   const controller = read('src/components/jedioutcast/game2/JediOutcastYBotController.js');
+  const resolver = read('src/components/jedioutcast/game2/YBotModelResolver.js');
   const constants = read('src/components/jedioutcast/game2/jediSourceConstants.js');
 
-  assert.match(constants, /c6b99bc5a_ybot\.fbx/);
-  assert.match(viewer, /loader\.loadAsync\(YBOT_MODEL_URL\)/);
+  assert.match(resolver, /base44\.entities\.Model3D/);
+  assert.match(resolver, /Y Bot \(1\)\.fbx/);
+  assert.match(viewer, /resolveYBotModelAsset\(\)/);
+  assert.match(viewer, /loader\.loadAsync\(yBotAsset\.file_url\)/);
   assert.match(viewer, /JediOutcastYBotController/);
   assert.match(controller, /sourceMovementPath = 'code\/game\/bg_pmove\.cpp'/);
+  assert.doesNotMatch(viewer, /YBOT_MODEL_URL/);
+  assert.doesNotMatch(viewer + constants, /qtrypzzcjebvfcihiynt\.supabase\.co/);
   assert.doesNotMatch(viewer, /PlayerMovementSystem/);
   assert.doesNotMatch(viewer, /PlayerRotationSystem/);
   assert.doesNotMatch(viewer, /useGameAvatar/);
