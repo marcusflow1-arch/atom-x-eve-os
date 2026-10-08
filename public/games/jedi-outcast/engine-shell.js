@@ -449,10 +449,16 @@ function __tuneArgs(){
     '+set', 'r_customwidth', String(__RENDER_WIDTH),
     '+set', 'r_customheight', String(__RENDER_HEIGHT),
     '+set', 'r_customaspect', String(__RENDER_WIDTH / __RENDER_HEIGHT),
-    // Raven's cg_main.cpp defaults. Repair only projection and camera offsets;
-    // the engine still owns first/third-person switching, spawn angles and cinematics.
+    // Retribution gameplay camera: keep Raven's original projection, vertical
+    // framing, collision ceiling and damping, but keep the controllable Kyle
+    // model visible instead of letting gunAutoFirst place the camera inside him.
+    // Range 100 is a modest pullback (Raven also uses 100 for third-person reset
+    // in the MP client) while remaining below the original 150 max range.
     '+set', 'cg_fov', '80',
-    '+set', 'cg_thirdPersonRange', '80',
+    '+set', 'cg_thirdPerson', '1',
+    '+set', 'cg_gunAutoFirst', '0',
+    '+set', 'cg_saberAutoThird', '1',
+    '+set', 'cg_thirdPersonRange', '100',
     '+set', 'cg_thirdPersonMaxRange', '150',
     '+set', 'cg_thirdPersonAngle', '0',
     '+set', 'cg_thirdPersonPitchOffset', '0',

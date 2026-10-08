@@ -363,7 +363,7 @@ test('renderer diagnostics do not mark a fatal or lost-context game as running',
   }
 });
 
-test('camera recovery uses Raven defaults without forcing player model or view mode', () => {
+test('Retribution camera keeps Kyle visible with Raven framing and a modest pullback', () => {
   const { dom, w } = setup();
   try {
     const args = w.__tuneArgs();
@@ -372,15 +372,18 @@ test('camera recovery uses Raven defaults without forcing player model or view m
       if (args[i] === '+set') sets.set(args[i + 1], args[i + 2]);
     }
     assert.equal(sets.get('cg_fov'), '80');
-    assert.equal(sets.get('cg_thirdPersonRange'), '80');
+    assert.equal(sets.get('cg_thirdPerson'), '1');
+    assert.equal(sets.get('cg_gunAutoFirst'), '0');
+    assert.equal(sets.get('cg_saberAutoThird'), '1');
+    assert.equal(sets.get('cg_thirdPersonRange'), '100');
+    assert.equal(sets.get('cg_thirdPersonMaxRange'), '150');
     assert.equal(sets.get('cg_thirdPersonAngle'), '0');
     assert.equal(sets.get('cg_thirdPersonPitchOffset'), '0');
     assert.equal(sets.get('cg_thirdPersonVertOffset'), '16');
     assert.equal(sets.get('cg_thirdPersonHorzOffset'), '0');
     assert.equal(sets.get('cg_thirdPersonCameraDamp'), '0.3');
     assert.equal(sets.get('cg_thirdPersonTargetDamp'), '0.5');
-    assert.equal(sets.has('cg_thirdPerson'), false);
-    assert.equal(sets.has('model'), false);
+    assert.equal(sets.has('model'), false, 'Raven still chooses the canonical player model');
     assert.equal(args.includes('+load'), false);
     assert.equal(args.includes('+map'), false);
   } finally { dom.window.close(); }

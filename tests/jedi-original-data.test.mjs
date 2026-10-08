@@ -48,6 +48,14 @@ test('complete ordinary and deflated retail PK3 sets pass format inspection', as
   }
 });
 
+test('canonical playable data requires Kyle model, skin and humanoid animation set', () => {
+  const required = new Set(REQUIRED_FILES.map(([path]) => path));
+  assert.ok(required.has('models/players/kyle/model.glm'));
+  assert.ok(required.has('models/players/kyle/model_default.skin'));
+  assert.ok(required.has('models/players/_humanoid/_humanoid.gla'));
+  assert.ok(required.has('models/players/_humanoid/animation.cfg'));
+});
+
 test('partial packed installs cannot masquerade as the whole original game', async () => {
   const report = await inspectGameFiles([makePak(coreEntries())]);
   assert.equal(report.ready, false);
