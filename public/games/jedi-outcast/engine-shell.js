@@ -198,9 +198,10 @@ var Module = {
     booted = true;
     var c = Module.canvas || document.getElementById('canvas');
     if (c) {
-      c.style.setProperty('width', '100vw', 'important');
-      c.style.setProperty('height', '100vh', 'important');
-      c.style.setProperty('object-fit', 'contain', 'important');
+      c.style.setProperty('width', 'auto', 'important');
+      c.style.setProperty('height', 'auto', 'important');
+      c.style.setProperty('max-width', '100vw', 'important');
+      c.style.setProperty('max-height', '100vh', 'important');
       try { c.focus({ preventScroll: true }); } catch (_) { try { c.focus(); } catch (_) {} }
     }
     if (parent !== window) {
