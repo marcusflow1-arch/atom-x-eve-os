@@ -90,6 +90,23 @@ function startCanonicalGame(records) {
   notify('files-ready');
   notify('starting');
 
+  const params = new URLSearchParams(location.search);
+  if (params.get('lab') === 'character') {
+    // Character systems lab: boot the original single-player engine into the
+    // first mission with cheats enabled, then unlock the retail player's complete
+    // weapon/inventory set and every Force power at level 3. These are Raven
+    // console/game commands from the released source; the normal campaign path
+    // remains untouched when lab=character is absent.
+    window.boot([
+      '+devmap', 'kejim_post',
+      '+wait', '120',
+      '+give', 'all',
+      '+setForceAll', '3',
+      '+weapon', '1',
+    ]);
+    return;
+  }
+
   // Empty arguments preserve Raven's original boot/menu/campaign flow.
   window.boot([]);
 }
