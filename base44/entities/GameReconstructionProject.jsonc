@@ -1,0 +1,75 @@
+{
+  "name": "GameReconstructionProject",
+  "type": "object",
+  "properties": {
+    "game_key": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "foundation",
+        "rebuilding",
+        "playable_slice",
+        "complete"
+      ],
+      "default": "foundation"
+    },
+    "description": {
+      "type": "string"
+    },
+    "source_repository": {
+      "type": "string"
+    },
+    "source_commit": {
+      "type": "string"
+    },
+    "asset_source_label": {
+      "type": "string"
+    },
+    "runtime_policy": {
+      "type": "string"
+    },
+    "admin_only": {
+      "type": "boolean",
+      "default": true
+    },
+    "metadata": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "required": [
+    "game_key",
+    "title",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

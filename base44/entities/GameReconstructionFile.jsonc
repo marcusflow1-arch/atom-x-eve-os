@@ -1,0 +1,99 @@
+{
+  "name": "GameReconstructionFile",
+  "type": "object",
+  "properties": {
+    "game_key": {
+      "type": "string"
+    },
+    "area": {
+      "type": "string",
+      "enum": [
+        "original_asset",
+        "source_code",
+        "rebuilt_output",
+        "reference"
+      ]
+    },
+    "path": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string"
+    },
+    "source_origin": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "source_commit": {
+      "type": "string"
+    },
+    "storage_url": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "byte_size": {
+      "type": "number",
+      "default": 0
+    },
+    "sha256": {
+      "type": "string"
+    },
+    "canonical": {
+      "type": "boolean",
+      "default": false
+    },
+    "editable": {
+      "type": "boolean",
+      "default": true
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "catalogued",
+        "stored",
+        "generated",
+        "superseded"
+      ],
+      "default": "catalogued"
+    },
+    "metadata": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "required": [
+    "game_key",
+    "area",
+    "path",
+    "display_name"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
