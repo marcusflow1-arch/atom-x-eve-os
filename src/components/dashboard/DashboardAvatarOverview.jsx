@@ -654,9 +654,9 @@ export default function DashboardAvatarOverview() {
                             title={label}
                             aria-label={label}
                             aria-pressed={active}
-                            className={\`grid h-6 w-6 place-items-center rounded-full border transition-all \${active
+                            className={`grid h-6 w-6 place-items-center rounded-full border transition-all ${active
                               ? 'border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-100 shadow-[0_0_12px_rgba(103,232,249,.12)]'
-                              : 'border-white/[0.10] bg-white/[0.035] text-white/40 hover:border-white/[0.18] hover:bg-white/[0.07] hover:text-white/70'}\`}
+                              : 'border-white/[0.10] bg-white/[0.035] text-white/40 hover:border-white/[0.18] hover:bg-white/[0.07] hover:text-white/70'}`}
                           >
                             <Icon className="h-3 w-3" />
                           </button>
