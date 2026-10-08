@@ -27,7 +27,6 @@ const STOP_SPEED = 100;
 const PLAYER_RADIUS = 15;
 const CAPSULE_BOTTOM = -9;
 const CAPSULE_TOP = 25;
-const VIEW_HEIGHT = 36;
 
 function unwrap(value) {
   return value?.data ?? value;
