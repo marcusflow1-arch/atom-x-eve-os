@@ -95,7 +95,7 @@ test('canonical source gate rejects gaps in the Base44 chunk layout', () => {
   }
 });
 
-test('browser launch uses a real 1024x768 render target without resetting controls', () => {
+test('browser launch requests the native 1024x768 mode without resetting controls', () => {
   const { dom, w, id } = setup();
   try {
     const args = w.__tuneArgs();
@@ -268,6 +268,95 @@ test('only the embedding app can request a save flush', () => {
     assert.equal(flushes, 1);
     assert.equal(replies[0].data.requestId, 'ok');
     assert.equal(replies[0].data.error, '');
+  } finally {
+    dom.window.close();
+  }
+});
+test('render status waits for native renderer initialization instead of reporting the default canvas', async () => {
+  const { dom, w, id } = setup();
+  try {
+    const messages = [];
+    Object.defineProperty(w, 'parent', { value: { postMessage: value => messages.push(value) } });
+    const canvas = id('canvas');
+    canvas.width = 300;
+    canvas.height = 150;
+
+    w.Module.onRuntimeInitialized();
+    assert.equal(messages.some(value => value.type === 'atom-jedi-video'), false);
+    assert.equal(messages.some(value => value.state === 'engine-ready'), false);
+    // The shell must not clear/resize a buffer behind the renderer's back.
+    assert.equal(canvas.width, 300);
+
+    canvas.width = 1024;
+    canvas.height = 768;
+    const gl = { canvas, drawingBufferWidth: 1024, drawingBufferHeight: 768, isContextLost: () => false };
+    w.GL = { currentContext: { GLctx: gl } };
+    w.Module.postRun.forEach(fn => fn());
+    await waitFor(() => messages.some(value => value.state === 'engine-ready'));
+
+    const video = messages.find(value => value.type === 'atom-jedi-video');
+    assert.equal(video.renderWidth, 1024);
+    assert.equal(video.renderHeight, 768);
+    assert.equal(id('load').classList.contains('hide'), true);
+    assert.equal(messages.filter(value => value.state === 'engine-ready').length, 1);
+  } finally {
+    dom.window.close();
+  }
+});
+
+test('render status uses actual GPU dimensions and updates after video changes without resizing the buffer', async () => {
+  const { dom, w, id } = setup();
+  try {
+    const messages = [];
+    Object.defineProperty(w, 'parent', { value: { postMessage: value => messages.push(value) } });
+    const canvas = id('canvas');
+    // Simulate a device/context whose actual buffer differs from the requested attributes.
+    const gl = { canvas, drawingBufferWidth: 800, drawingBufferHeight: 600, isContextLost: () => false };
+    w.GL = { currentContext: { GLctx: gl } };
+    w.Module.postRun.forEach(fn => fn());
+    await waitFor(() => messages.some(value => value.type === 'atom-jedi-video'));
+    assert.equal(messages.find(value => value.type === 'atom-jedi-video').renderWidth, 800);
+    assert.equal(canvas.width, 1024);
+    assert.equal(canvas.height, 768);
+
+    // The native renderer changes the target; the observer must read the new size.
+    gl.drawingBufferWidth = 1024;
+    gl.drawingBufferHeight = 768;
+    canvas.width = 1024;
+    canvas.height = 768;
+    await waitFor(() => messages.some(value => value.renderWidth === 1024 && value.renderHeight === 768));
+
+    Object.defineProperty(canvas, 'clientWidth', { value: 640, configurable: true });
+    Object.defineProperty(canvas, 'clientHeight', { value: 480, configurable: true });
+    w.dispatchEvent(new w.Event('resize'));
+    await waitFor(() => messages.some(value => value.clientWidth === 640));
+    const last = messages.filter(value => value.type === 'atom-jedi-video').at(-1);
+    assert.equal(last.renderWidth, 1024);
+    assert.equal(last.renderHeight, 768);
+    assert.equal(last.clientWidth, 640);
+    assert.equal(canvas.width, 1024);
+    assert.equal(canvas.height, 768);
+    assert.equal(messages.filter(value => value.state === 'engine-ready').length, 1);
+  } finally {
+    dom.window.close();
+  }
+});
+
+test('renderer diagnostics do not mark a fatal or lost-context game as running', () => {
+  const { dom, w, id } = setup();
+  try {
+    const messages = [];
+    Object.defineProperty(w, 'parent', { value: { postMessage: value => messages.push(value) } });
+    const gl = { canvas: id('canvas'), drawingBufferWidth: 1024, drawingBufferHeight: 768, isContextLost: () => true };
+    w.GL = { currentContext: { GLctx: gl } };
+    w.__reportVideo();
+    assert.equal(messages.length, 0);
+
+    gl.isContextLost = () => false;
+    w.Module.onFatal('Renderer failed');
+    w.__reportVideo();
+    assert.equal(messages.some(value => value.state === 'engine-ready'), false);
+    assert.equal(id('runtime-error').hidden, false);
   } finally {
     dom.window.close();
   }

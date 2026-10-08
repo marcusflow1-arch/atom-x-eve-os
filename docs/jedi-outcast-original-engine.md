@@ -42,3 +42,13 @@ The loader supports ordinary retail ZIP/PK3, not multipart or ZIP64 repacks, wit
 Repository checks cover the pinned binary hashes and valid WebAssembly modules, required-file validation, corrupt/traversal ZIP rejection, loose-folder paths, format mismatch rejection, launcher states and source-based routing. The application build is also checked.
 
 **The full original campaign and screenshot parity are not verified.** Required retail assets are absent from the accessible supplied copy. A headless Chromium installation was attempted but its browser download was invalid in the current environment, so no successful live-engine rendering test is claimed. Complete original files and a real browser playthrough remain the acceptance gate. Do not label the game finished, replace missing files with generated content, or use a reference image as gameplay.
+
+## Viewer resolution correction — 2026-10-08
+
+- Startup requests the original engine's custom mode `r_mode=-1`, `r_customwidth=1024`, `r_customheight=768`, and 4:3 aspect. The pinned v1.1.0 platform already honors this mode and skips viewport-triggered renderer restarts in it.
+- Report resolution only after native renderer initialization, through Emscripten `postRun`. `onRuntimeInitialized` precedes `callMain`/GLimp_Init and cannot establish that the game is running or that its render size is final.
+- The toolbar reads the existing WebGL context's actual `drawingBufferWidth/Height`. It does not substitute requested dimensions or enlarge the backing canvas after rendering has started.
+- The iframe fills the available stage. Its canvas fits the actual render aspect into that space, including small previews and fullscreen, without stretching or clipping. Resizing presentation does not lower the 1024×768 native render target.
+- Attribute/size observers refresh the measured label after native video-setting or presentation changes. Fatal/lost-context states cannot be overwritten by a late running notification.
+- The canvas and iframe changes do not replace engine binaries, data-loading/cache code, controls, saved configuration, or original game content.
+- Verification: launcher lifecycle regression coverage simulates startup ordering, real-vs-requested drawing-buffer dimensions, viewport resizing, and fatal/context-loss status. It is not a live GPU/gameplay test; the authenticated preview must still be visually checked.
