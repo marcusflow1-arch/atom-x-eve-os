@@ -86,12 +86,12 @@ var Module = {
     // instead of copying. Streaming also yields real byte progress for the loading screen.
     var __gd = window.__JK2_GAMEDIR || 'base';
     var __remote = (window.__JK2_REMOTE_PAKS || []).map(function(p){
-      return [p.url, '/jk2/' + __gd, p.name, Number(p.size || 0)];
+      return [null, '/jk2/' + __gd, p.name, Number(p.size || 0), p.chunks || []];
     });
     var __files = (__remote.length
       ? __remote
-      : (window.__JK2_PAKS || []).map(function(n){ return ['' + __gd + '/' + n, '/jk2/' + __gd, n, 0]; }))
-      .concat([['qagame.wasm', '/jk2', 'qagame.wasm', 0]]);
+      : (window.__JK2_PAKS || []).map(function(n){ return ['' + __gd + '/' + n, '/jk2/' + __gd, n, 0, null]; }))
+      .concat([['qagame.wasm', '/jk2', 'qagame.wasm', 0, null]]);
     var __MB = function(b){ return (b / 1048576).toFixed(1); };
     // Every pak is fetched CONCURRENTLY, so a per-file percentage makes the bar jump backwards
     // each time another file reports. Accumulate across all of them and show one honest total.
@@ -104,38 +104,87 @@ var Module = {
       setProgress(done, total, 'Loading game data',
         __MB(done) + ' / ' + __MB(total) + ' MB · ' + n + ' file' + (n === 1 ? '' : 's'));
     }
-    async function __stage(url, dstDir, name, idx, expectedSize){
-      var r = await fetch(url, { redirect: 'follow' });
-      if (!r.ok) throw new Error(name + ': HTTP ' + r.status);
-      var len = parseInt(r.headers.get('Content-Length') || '0', 10) || Number(expectedSize || 0);
-      if (expectedSize > 0 && len > 0 && len !== expectedSize) {
-        throw new Error(name + ': source size changed (' + len + ' vs expected ' + expectedSize + ')');
-      }
+    async function __stage(url, dstDir, name, idx, expectedSize, chunks){
       var label = name + ' (' + (idx + 1) + ' of ' + __files.length + ')';
       var buf;
-      if (len > 0 && r.body && r.body.getReader) {
-        __need[name] = len; __got[name] = 0; __reportProgress();
-        buf = new Uint8Array(len);
-        var rd = r.body.getReader(), off = 0, c;
-        while (!(c = await rd.read()).done) {
-          if (off + c.value.length > len) { off = -1; break; }
-          buf.set(c.value, off); off += c.value.length;
-          __got[name] = off; __reportProgress();
+
+      if (chunks && chunks.length) {
+        var total = Number(expectedSize || 0);
+        if (!(total > 0)) throw new Error(name + ': canonical archive size is missing');
+        __need[name] = total; __got[name] = 0; __reportProgress();
+        buf = new Uint8Array(total);
+
+        for (var ci = 0; ci < chunks.length; ci++) {
+          var chunk = chunks[ci];
+          var chunkOffset = Number(chunk.offset || 0);
+          var chunkSize = Number(chunk.size || 0);
+          if (!(chunkSize > 0) || chunkOffset < 0 || chunkOffset + chunkSize > total) {
+            throw new Error(name + ': invalid cached chunk ' + ci);
+          }
+
+          var cr = await fetch(chunk.url, { redirect: 'follow' });
+          if (!cr.ok) throw new Error(name + ' chunk ' + (ci + 1) + ': HTTP ' + cr.status);
+
+          var local = 0;
+          if (cr.body && cr.body.getReader) {
+            var rd = cr.body.getReader(), c;
+            while (!(c = await rd.read()).done) {
+              if (local + c.value.length > chunkSize) {
+                throw new Error(name + ' chunk ' + (ci + 1) + ': response exceeds cached chunk size');
+              }
+              buf.set(c.value, chunkOffset + local);
+              local += c.value.length;
+              __got[name] = Math.max(__got[name] || 0, chunkOffset + local);
+              __reportProgress();
+            }
+          } else {
+            var part = new Uint8Array(await cr.arrayBuffer());
+            local = part.byteLength;
+            if (local > chunkSize) throw new Error(name + ' chunk ' + (ci + 1) + ': response exceeds cached chunk size');
+            buf.set(part, chunkOffset);
+            __got[name] = Math.max(__got[name] || 0, chunkOffset + local);
+            __reportProgress();
+          }
+
+          if (local !== chunkSize) {
+            throw new Error(name + ' chunk ' + (ci + 1) + ': short read (' + local + ' of ' + chunkSize + ')');
+          }
         }
-        // A truncated body would otherwise reach the engine as a silently zero-padded pak,
-        // i.e. a bogus checksum and an unexplained "Corrupted pk3" much later.
-        if (off !== len) throw new Error(url + ': short read (' + off + ' of ' + len + ')');
+
+        if ((__got[name] || 0) !== total) {
+          throw new Error(name + ': reconstructed archive is incomplete (' + (__got[name] || 0) + ' of ' + total + ')');
+        }
       } else {
-        setLoading('loading ' + label + '…');
-        buf = new Uint8Array(await r.arrayBuffer());
+        var r = await fetch(url, { redirect: 'follow' });
+        if (!r.ok) throw new Error(name + ': HTTP ' + r.status);
+        var len = parseInt(r.headers.get('Content-Length') || '0', 10) || Number(expectedSize || 0);
+        if (expectedSize > 0 && len > 0 && len !== expectedSize) {
+          throw new Error(name + ': source size changed (' + len + ' vs expected ' + expectedSize + ')');
+        }
+
+        if (len > 0 && r.body && r.body.getReader) {
+          __need[name] = len; __got[name] = 0; __reportProgress();
+          buf = new Uint8Array(len);
+          var reader = r.body.getReader(), off = 0, packet;
+          while (!(packet = await reader.read()).done) {
+            if (off + packet.value.length > len) { off = -1; break; }
+            buf.set(packet.value, off); off += packet.value.length;
+            __got[name] = off; __reportProgress();
+          }
+          if (off !== len) throw new Error(name + ': short read (' + off + ' of ' + len + ')');
+        } else {
+          setLoading('loading ' + label + '…');
+          buf = new Uint8Array(await r.arrayBuffer());
+        }
       }
+
       FS.createDataFile(dstDir, name, buf, true, false, true);
     }
     __files.forEach(function(f, i){
-      var url = f[0];
-      addRunDependency('pre:' + url);
-      __stage(url, f[1], f[2], i, f[3]).then(function(){
-        removeRunDependency('pre:' + url);
+      var url = f[0], name = f[2], dependency = 'pre:' + name;
+      addRunDependency(dependency);
+      __stage(url, f[1], name, i, f[3], f[4]).then(function(){
+        removeRunDependency(dependency);
       }).catch(function(e){
         // Staging failures used to warn and drop the dependency, so the engine booted on top
         // of missing data and died later somewhere unrelated. Fail loudly, here.
