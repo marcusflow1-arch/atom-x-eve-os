@@ -1,5 +1,8 @@
 .jko-page{position:fixed;inset:0;z-index:1000;overflow:hidden;background:#080d14;color:#edf4fa;font-family:Inter,system-ui,sans-serif}
-.jko-session{height:100%;display:flex;flex-direction:column;background:#080d14}.jko-session:fullscreen{height:100vh}
+.jko-session{height:100%;display:flex;flex-direction:column;background:#080d14;position:relative}.jko-session:fullscreen{height:100vh}
+.jko-session-minimal{background:#000}
+.jko-lab-back{position:absolute;top:16px;left:16px;z-index:30;display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid #ffffff20;border-radius:8px;background:#071019d9;color:#e8f4ff;font-size:12px;font-weight:600;backdrop-filter:blur(12px);box-shadow:0 8px 24px #0008}
+.jko-lab-back:hover{background:#102233;color:#fff}.jko-lab-back:disabled{opacity:.45}
 .jko-session-bar{min-height:52px;display:flex;align-items:center;gap:12px;padding:8px 18px;background:#0d141e;border-bottom:1px solid #ffffff12;flex-shrink:0}
 .jko-session-bar button{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:6px;color:#b9cad7;font-size:12px;white-space:nowrap}.jko-session-bar button:hover{background:#ffffff09;color:white}.jko-session-bar button:disabled{opacity:.4}
 .jko-session-bar button:focus-visible,.jko-session-notice button:focus-visible{outline:2px solid #b9e7ff;outline-offset:2px}
