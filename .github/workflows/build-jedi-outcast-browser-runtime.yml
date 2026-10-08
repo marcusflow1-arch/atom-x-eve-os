@@ -1,0 +1,82 @@
+name: Build Jedi Outcast browser runtime
+
+on:
+  push:
+    paths:
+      - 'tools/jedi-outcast/patch-browser-port.py'
+      - '.github/workflows/build-jedi-outcast-browser-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout Atom XE
+        uses: actions/checkout@v4
+
+      - name: Fetch pinned jk2-web source
+        run: |
+          git clone --depth 1 --branch v1.1.0 https://github.com/Virtastic/jk2-web.git /tmp/jk2-web
+
+      - name: Apply Atom XE browser-platform patch
+        run: |
+          python3 tools/jedi-outcast/patch-browser-port.py /tmp/jk2-web
+          grep -n "Atom XE: preserve Raven's selected video mode" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
+          grep -n "browser/window resize must not silently replace" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
+
+      - name: Build Raven engine and SP module
+        run: |
+          docker run --rm \
+            -v /tmp/jk2-web:/src \
+            -w /src \
+            emscripten/emsdk:6.0.1 \
+            sh -lc 'bash shared/wasm-build/build-jk2.sh && bash shared/wasm-build/build-jk2-modules.sh'
+
+      - name: Verify artifacts
+        run: |
+          test -s /tmp/jk2-web/play/jk2/jk2.js
+          test -s /tmp/jk2-web/play/jk2/jk2.wasm
+          test -s /tmp/jk2-web/play/jk2/qagame.wasm
+          test "$(stat -c%s /tmp/jk2-web/play/jk2/jk2.wasm)" -gt 1000000
+          test "$(stat -c%s /tmp/jk2-web/play/jk2/qagame.wasm)" -gt 262144
+
+      - name: Install rebuilt browser runtime
+        run: |
+          cp /tmp/jk2-web/play/jk2/jk2.js public/games/jedi-outcast/jk2.js
+          cp /tmp/jk2-web/play/jk2/jk2.wasm public/games/jedi-outcast/jk2.wasm
+          cp /tmp/jk2-web/play/jk2/qagame.wasm public/games/jedi-outcast/qagame.wasm
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root = Path('public/games/jedi-outcast')
+          source = root / 'SOURCE.json'
+          data = json.loads(source.read_text())
+          data['browserPortPatch'] = {
+              'base': 'Virtastic/jk2-web v1.1.0',
+              'patch': 'tools/jedi-outcast/patch-browser-port.py',
+              'purpose': 'Honor Raven r_mode/r_custom video settings and prevent browser resize from overriding them.'
+          }
+          hashes = data.setdefault('sha256', {})
+          for name in ('jk2.js','jk2.wasm','qagame.wasm'):
+              hashes[name] = hashlib.sha256((root / name).read_bytes()).hexdigest()
+          source.write_text(json.dumps(data, indent=2) + '\n')
+          PY
+
+      - name: Commit rebuilt runtime
+        run: |
+          if git diff --quiet -- public/games/jedi-outcast/jk2.js public/games/jedi-outcast/jk2.wasm public/games/jedi-outcast/qagame.wasm public/games/jedi-outcast/SOURCE.json; then
+            echo "Runtime already matches patched build."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/games/jedi-outcast/jk2.js \
+                  public/games/jedi-outcast/jk2.wasm \
+                  public/games/jedi-outcast/qagame.wasm \
+                  public/games/jedi-outcast/SOURCE.json
+          git commit -m "build: rebuild Jedi Outcast browser runtime"
+          git push
