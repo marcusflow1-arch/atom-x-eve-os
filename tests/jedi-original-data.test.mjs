@@ -82,7 +82,7 @@ test('truncated ZIP, path traversal and duplicate selected archives are rejected
   await assert.rejects(readPakDirectory(makePak({ '../models/kyle': Buffer.from('bad') })), /Invalid game-file path/);
   await assert.rejects(inspectGameFiles([pak, pak]), /Duplicate file/);
 });
-test('runtime bytes match the pinned GPL release and both modules are valid WASM', () => {
+test('runtime bytes match the active documented GPL build and both modules are valid WASM', () => {
   const root = new URL('../public/games/jedi-outcast/', import.meta.url);
   const manifest = JSON.parse(readFileSync(new URL('SOURCE.json', root)));
   for (const [name, sha] of Object.entries(manifest.files_sha256)) {

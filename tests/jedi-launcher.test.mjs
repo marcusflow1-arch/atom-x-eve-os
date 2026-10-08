@@ -16,6 +16,7 @@ function setup() {
   const w = dom.window;
   w.HTMLCanvasElement.prototype.getContext = () => ({ getExtension: () => ({ loseContext() {} }) });
   w.eval(read('engine-shell.js'));
+  w.__ENGINE_FILES = JSON.parse(read('SOURCE.json')).files_sha256;
   w.eval(read('atom-launcher.mjs'));
   return { dom, w, id: name => w.document.getElementById(name) };
 }
@@ -177,7 +178,7 @@ test('engine preRun reconstructs cached Base44 chunks into exact /jk2/base PK3 b
         );
       });
     });
-    payloadByUrl.set('qagame.wasm', new Uint8Array([0, 97, 115, 109]));
+    payloadByUrl.set(w.__runtimeFile('qagame.wasm'), new Uint8Array([0, 97, 115, 109]));
 
     w.fetch = async url => {
       const payload = payloadByUrl.get(String(url));
@@ -360,4 +361,60 @@ test('renderer diagnostics do not mark a fatal or lost-context game as running',
   } finally {
     dom.window.close();
   }
+});
+
+test('camera recovery uses Raven defaults without forcing player model or view mode', () => {
+  const { dom, w } = setup();
+  try {
+    const args = w.__tuneArgs();
+    const sets = new Map();
+    for (let i = 0; i < args.length - 2; i++) {
+      if (args[i] === '+set') sets.set(args[i + 1], args[i + 2]);
+    }
+    assert.equal(sets.get('cg_fov'), '80');
+    assert.equal(sets.get('cg_thirdPersonRange'), '80');
+    assert.equal(sets.get('cg_thirdPersonAngle'), '0');
+    assert.equal(sets.get('cg_thirdPersonPitchOffset'), '0');
+    assert.equal(sets.get('cg_thirdPersonVertOffset'), '16');
+    assert.equal(sets.get('cg_thirdPersonHorzOffset'), '0');
+    assert.equal(sets.get('cg_thirdPersonCameraDamp'), '0.3');
+    assert.equal(sets.get('cg_thirdPersonTargetDamp'), '0.5');
+    assert.equal(sets.has('cg_thirdPerson'), false);
+    assert.equal(sets.has('model'), false);
+    assert.equal(args.includes('+load'), false);
+    assert.equal(args.includes('+map'), false);
+  } finally { dom.window.close(); }
+});
+
+test('rebuilt JS and both WASM modules use the current per-file build hashes', async () => {
+  const { dom, w } = setup();
+  try {
+    const hashes = { 'jk2.js': 'a'.repeat(64), 'jk2.wasm': 'b'.repeat(64), 'qagame.wasm': 'c'.repeat(64) };
+    const calls = [];
+    const fetch = async (url, options) => {
+      calls.push({ url, options });
+      return { ok: true, json: async () => ({ files_sha256: hashes }) };
+    };
+    w.fetch = fetch;
+    await w.__loadVersionedEngine();
+
+    assert.equal(calls[0].url, 'SOURCE.json');
+    assert.equal(calls[0].options.cache, 'no-store');
+    assert.equal(w.document.querySelector('script[src*="jk2.js?v="]').getAttribute('src'), 'jk2.js?v=' + hashes['jk2.js']);
+    assert.equal(w.Module.locateFile('jk2.wasm', '/games/jedi-outcast/'), '/games/jedi-outcast/jk2.wasm?v=' + hashes['jk2.wasm']);
+    assert.equal(w.__runtimeFile('qagame.wasm'), 'qagame.wasm?v=' + hashes['qagame.wasm']);
+    assert.equal(w.Module.locateFile('other.data', '/games/jedi-outcast/'), '/games/jedi-outcast/other.data');
+    assert.equal(w.fetch, fetch, 'do not globally rewrite canonical asset URLs');
+  } finally { dom.window.close(); }
+});
+
+test('invalid engine build metadata stops before mixing old and new runtime artifacts', async () => {
+  const { dom, w, id } = setup();
+  try {
+    w.fetch = async () => ({ ok: true, json: async () => ({ files_sha256: { 'jk2.js': 'old-release' } }) });
+    w.boot([]);
+    await waitFor(() => !id('runtime-error').hidden);
+    assert.match(id('runtime-error-detail').textContent, /Invalid engine version/);
+    assert.equal(w.document.querySelector('script[src*="jk2.js?v="]'), null);
+  } finally { dom.window.close(); }
 });

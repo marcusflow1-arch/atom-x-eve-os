@@ -52,3 +52,18 @@ Repository checks cover the pinned binary hashes and valid WebAssembly modules, 
 - Attribute/size observers refresh the measured label after native video-setting or presentation changes. Fatal/lost-context states cannot be overwritten by a late running notification.
 - The canvas and iframe changes do not replace engine binaries, data-loading/cache code, controls, saved configuration, or original game content.
 - Verification: launcher lifecycle regression coverage simulates startup ordering, real-vs-requested drawing-buffer dimensions, viewport resizing, and fatal/context-loss status. It is not a live GPU/gameplay test; the authenticated preview must still be visually checked.
+
+## Kyle model and camera audit — 2026-10-08
+
+The active Base44 retail-archive chunks were read without changing them. Each fetched chunk matched its recorded SHA-256; ZIP extraction verified the selected entries' CRCs. Archive precedence resolves Kyle's model, skins, and humanoid animation to assets0.pk3.
+
+- Kyle GLM: 394,988 bytes, format 2LGM v6, 72 bones, 4 LODs, 82 surfaces. Its animation reference is `models/players/_humanoid/_humanoid`.
+- Humanoid GLA: 9,983,644 bytes, format 2LGA v6, matching 72 bones and 17,278 frames.
+- The normal skin and both original first-person saber skins exist. The first-person skin mappings intentionally hide the head, avoiding rendering Kyle's own head over the camera.
+- No substitute model, root transform, model scale, custom camera attachment, or animation retargeting is introduced by this correction.
+
+The original `code/cgame/cg_main.cpp` defines FOV 80, third-person range 80/max 150, angle/pitch/horizontal offsets 0, vertical offset 16, and camera/target damping 0.3/0.5. The launcher now applies those values at startup. First/third-person switching, view direction, collision avoidance, zoom, and mission cinematics remain native-engine behavior. Earlier launcher versions applied a 90–121 degree viewport-derived FOV; this change removes that projection as a possible cause. The user's live browser camera state was not directly observed.
+
+A separate verified defect affected build freshness: the loader reused a constant v1.1.0 cache key after the engine was rebuilt. It now reads current build metadata with `cache: no-store` and uses the exact current JS/WASM hashes in artifact URLs. The rebuild workflow updates that same active hash set; the original release hashes remain recorded separately. No global fetch rewriting is needed.
+
+This validates asset structure and startup configuration; it does not establish visual camera correctness in the authenticated gameplay session.
