@@ -50,6 +50,36 @@ var __videoLastReport = '';
 var __videoMonitorStarted = false;
 var __videoReady = false;
 var __videoFailed = false;
+var __videoRepairCount = 0;
+
+// Atom XE uses one fixed native gameplay buffer. The browser's default canvas is
+// 300x150; a context/renderer re-init at the cinematic -> mission handoff must
+// never be allowed to fall back to that size. CSS may scale the 4:3 image on screen,
+// but the engine projection and drawing buffer stay 1024x768.
+function __ensureNativeVideoSize(reason){
+  var c = (typeof Module !== 'undefined' && Module.canvas) || __renderCanvas;
+  if (!c) return false;
+  var gl = typeof GL !== 'undefined' && GL.currentContext && GL.currentContext.GLctx;
+  var canvasWrong = c.width !== __RENDER_WIDTH || c.height !== __RENDER_HEIGHT;
+  var bufferWrong = !!(gl && (!gl.isContextLost || !gl.isContextLost()) &&
+    (Number(gl.drawingBufferWidth) !== __RENDER_WIDTH || Number(gl.drawingBufferHeight) !== __RENDER_HEIGHT));
+  if (!canvasWrong && !bufferWrong) return false;
+
+  // Assigning width/height reallocates the WebGL drawing buffer. This is deliberate:
+  // a wrong-sized game buffer also means a wrong projection/aspect contract.
+  c.width = __RENDER_WIDTH;
+  c.height = __RENDER_HEIGHT;
+  c.style.setProperty('--jedi-aspect', String(__RENDER_WIDTH / __RENDER_HEIGHT));
+  if (gl && (!gl.isContextLost || !gl.isContextLost())) {
+    try { gl.viewport(0, 0, __RENDER_WIDTH, __RENDER_HEIGHT); } catch (_) {}
+  }
+  __videoRepairCount++;
+  try {
+    __idt3_print('[Atom XE video] restored 1024x768 after ' + (reason || 'size change') +
+      ' (repair ' + __videoRepairCount + ')');
+  } catch (_) {}
+  return true;
+}
 
 // Read the existing engine context, never create another one just to measure it.
 // onRuntimeInitialized runs BEFORE callMain/GLimp_Init, when a canvas can still
@@ -62,9 +92,15 @@ function __reportVideo(){
   var w = Number(gl.drawingBufferWidth), h = Number(gl.drawingBufferHeight);
   if (!(w > 0 && h > 0)) return;
 
-  // Fit presentation to the frame; only the native engine writes the backing
-  // dimensions once it has started. Resizing them here would clear a live frame.
-  var aspect = String(w / h);
+  // Do not accept 300x150 (or any other fallback) as a valid running game.
+  // Repair the backing buffer first, then wait for the next frame/report.
+  if (w !== __RENDER_WIDTH || h !== __RENDER_HEIGHT ||
+      c.width !== __RENDER_WIDTH || c.height !== __RENDER_HEIGHT) {
+    __ensureNativeVideoSize('renderer report ' + w + 'x' + h);
+    return;
+  }
+
+  var aspect = String(__RENDER_WIDTH / __RENDER_HEIGHT);
   if (c.style.getPropertyValue('--jedi-aspect') !== aspect) {
     c.style.setProperty('--jedi-aspect', aspect);
   }
@@ -102,12 +138,23 @@ function __startVideoReporting(){
   }
   // Video-menu changes update width/height; browser/fullscreen changes only
   // affect the displayed size. Keep both measurements current without polling.
-  new MutationObserver(schedule).observe(Module.canvas, {
+  new MutationObserver(function(){
+    __ensureNativeVideoSize('canvas attribute mutation');
+    schedule();
+  }).observe(Module.canvas, {
     attributes: true, attributeFilter: ['width', 'height']
   });
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(schedule).observe(Module.canvas);
   window.addEventListener('resize', schedule);
   document.addEventListener('fullscreenchange', schedule);
+
+  // Cutscenes/map loads can rebuild the graphics context without a browser resize.
+  // Watch the actual drawing buffer so that transition can never strand gameplay
+  // on the browser's 300x150 default.
+  setInterval(function(){
+    if (!booted || __videoFailed) return;
+    if (__ensureNativeVideoSize('runtime watchdog')) schedule();
+  }, 500);
   schedule();
 }
 

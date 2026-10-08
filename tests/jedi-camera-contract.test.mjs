@@ -28,8 +28,8 @@ test('playable reconstruction uses one follow camera instead of an eye camera pl
 });
 
 test('native Jedi runtime uses the new camera cache generation', () => {
-  assert.match(runtime, /native-camera-v11/);
-  assert.match(index, /native-camera-v11/);
-  assert.doesNotMatch(runtime, /native-camera-v10/);
-  assert.doesNotMatch(index, /native-camera-v10/);
+  assert.match(runtime, /native-resolution-v12/);
+  assert.match(index, /native-resolution-v12/);
+  assert.doesNotMatch(runtime, /native-camera-v11/);
+  assert.doesNotMatch(index, /native-camera-v11/);
 });

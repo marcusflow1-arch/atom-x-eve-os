@@ -18,7 +18,7 @@ end = text.find(end_anchor, start)
 if end < 0:
     raise SystemExit("viewport override end not found")
 
-replacement = """\t// Atom XE: preserve Raven's selected video mode.\n\t// R_GetModeInfo above already resolved r_mode (or r_customwidth/r_customheight\n\t// for r_mode -1). Do not replace it with browser viewport dimensions.\n"""
+replacement = """\t// Atom XE: force the gameplay framebuffer to the reconstruction contract.\n\t// The browser port can otherwise fall back to the HTML canvas default (300x150)\n\t// during a renderer re-init / cinematic-to-game transition. That changes the\n\t// projection and makes the third-person framing look as if the camera is inside\n\t// the player even though the camera cvars themselves are valid.\n\tw = 1024;\n\th = 768;\n\taspect = (float)w / (float)h;\n\t// Preserve Raven's selected mode semantics, but never replace this fixed native\n\t// gameplay buffer with browser viewport dimensions. CSS may scale presentation.\n"""
 text = text[:start] + replacement + text[end:]
 
 start = text.find("void IN_Frame( void ) {")

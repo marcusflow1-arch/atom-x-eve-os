@@ -26,7 +26,9 @@ jobs:
       - name: Apply Atom XE browser-platform patch
         run: |
           python3 tools/jedi-outcast/patch-browser-port.py /tmp/jk2-web
-          grep -n "Atom XE: preserve Raven's selected video mode" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
+          grep -n "Atom XE: force the gameplay framebuffer to the reconstruction contract" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
+          grep -n "w = 1024" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
+          grep -n "h = 768" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
           grep -n "Browser/window resize changes presentation only" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
 
       - name: Build Raven engine and SP module
@@ -86,4 +88,11 @@ jobs:
                   public/games/jedi-outcast/qagame.wasm \
                   public/games/jedi-outcast/SOURCE.json
           git commit -m "build: rebuild Jedi Outcast browser runtime"
-          git push
+
+          # The branch can advance while the ~2 minute Emscripten build is running
+          # (for example when tests/docs are fixed). Rebase the generated runtime
+          # commit onto the current branch tip rather than losing the build to a
+          # non-fast-forward push.
+          git fetch origin "${GITHUB_REF_NAME}"
+          git rebase "origin/${GITHUB_REF_NAME}"
+          git push origin HEAD:"${GITHUB_REF_NAME}"
