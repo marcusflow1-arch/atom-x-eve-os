@@ -586,7 +586,7 @@ function __mouseLockDenied(error) {
   if (document.pointerLockElement === __gameCanvas) return;
   if (Date.now() - __mouseLockWarningTime < 1500) return;
   __mouseLockWarningTime = Date.now();
-  __toast('Mouse capture blocked. Open the game in a new tab, then click the game.', 6500);
+  __toast('Mouse capture blocked by this frame. Try the published app outside the editor preview.', 6500);
   if (parent !== window) parent.postMessage({
     type: 'atom-jedi-mouse-lock-error',
     detail: error && error.message ? String(error.message) : 'Pointer lock was denied by the browser or embedding frame.'
