@@ -3,6 +3,8 @@
 // 4:3, so keeping the editable viewers on the same projection contract prevents
 // camera framing from drifting just because the Base44 preview is widescreen.
 
+const THREE_PI = Math.PI;
+
 export const JEDI_CAMERA_CONTRACT = Object.freeze({
   renderWidth: 1024,
   renderHeight: 768,
@@ -20,8 +22,6 @@ export const JEDI_CAMERA_CONTRACT = Object.freeze({
   maxPitch: THREE_PI * 0.30,
   mouseSensitivity: 0.0022,
 });
-
-const THREE_PI = Math.PI;
 
 export function jediViewportStyle() {
   return {
