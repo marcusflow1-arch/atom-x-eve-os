@@ -6,7 +6,7 @@ import { STYLE_NAMES } from './saber.js';
 const STYLE_COL = ['', '#7fd3ff', '#b6ff8a', '#ff9a6a'];
 const rr = (x, a, b, c, d, r) => { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + c, b, a + c, b + d, r); x.arcTo(a + c, b + d, a, b + d, r); x.arcTo(a, b + d, a, b, r); x.arcTo(a, b, a + c, b, r); x.closePath(); };
 export const HELP = [
-  ['Move', 'W A S D  (Shift = walk)'], ['Look / camera', 'Mouse  (arrow keys if pointer lock is off)  ·  wheel = zoom'], ['Crouch', 'Hold C'], ['Roll', 'C while running'],
+  ['Move', 'W A S D  (Shift = walk)'], ['Look / camera', 'Mouse (click to lock; hover-look if blocked) · arrows if needed · wheel zoom'], ['Crouch', 'Hold C'], ['Roll', 'C while running'],
   ['Jump / Force Jump', 'Space  (hold Space = Force Jump, J = jump level 1-3)'], ['Saber on / off', 'R  (draw from thigh, ignite)'], ['Saber attack', 'Left mouse  (+ W/A/S/D picks the swing)'],
   ['Saber style', '1 Fast · 2 Medium · 3 Strong'], ['Saber throw', 'Right mouse (hold)'], ['Push / Pull', 'F / G'], ['Grip / Lightning / Heal', 'E / Q / H  (hold)'], ['Speed / Mind Trick', 'T / Y'],
   ['Rage / Protect / Absorb', 'U / X / V'], ['Drain (hold) / Sight', 'B / N'], ['Team Heal / Energize', 'K / L  (stand next to the ally)'], ['Respawn · Controls · Debug · Mute', 'Enter · Tab · F3 · M'],

@@ -192,7 +192,7 @@ export class Game {
     if (i.pressed('Tab')) h.help = !h.help; if (i.pressed('F3')) h.debug = !h.debug; if (i.pressed('KeyM')) { this.sfx.muted = !this.sfx.muted; h.msg(this.sfx.muted ? 'Sound off' : 'Sound on'); }
     if (h.help && (i.btnPressed[0]) && !i.pressedSet.has('Tab')) { h.help = false; this.started = true; }
     if (!h.help) this.started = true;
-    if (i.locked || i.btn[1]) { c.yaw -= i.dx * i.sens; c.pitch += i.dy * i.sens; }
+    if (i.dx || i.dy) { c.yaw -= i.dx * i.sens; c.pitch += i.dy * i.sens; }
     const ar = 2.2 * dt; if (i.held('ArrowLeft')) c.yaw += ar; if (i.held('ArrowRight')) c.yaw -= ar; if (i.held('ArrowUp')) c.pitch -= ar * 0.7; if (i.held('ArrowDown')) c.pitch += ar * 0.7;
     c.pitch = clamp(c.pitch, -0.5, 1.3);
     if (this.duel) { // wheel / [ ] cycle the selected Force power; Ctrl+wheel or - = zoom

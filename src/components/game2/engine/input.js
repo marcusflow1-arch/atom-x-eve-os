@@ -14,7 +14,10 @@ export class Input {
     on(canvas, 'mousedown', e => { e.preventDefault(); this.btn[e.button] = true; this.btnPressed[e.button] = true; this.gesture(); if (!this.locked && e.button === 0) this.lock(); });
     on(window, 'mouseup', e => { this.btn[e.button] = false; });
     on(canvas, 'contextmenu', e => e.preventDefault());
-    on(window, 'mousemove', e => { if (this.locked) { this.dx += e.movementX; this.dy += e.movementY; } else if (this.btn[1]) { this.dx += e.movementX; this.dy += e.movementY; } });
+    on(window, 'mousemove', e => { if (this.locked || this.btn[1]) { this.dx += e.movementX || 0; this.dy += e.movementY || 0; } });
+    // Browser editor iframes may deny pointer lock. Keep camera look functional while the mouse is over the game canvas.
+    // Locked events bubble to window and must not be added twice.
+    on(canvas, 'mousemove', e => { if (!this.locked && !this.btn[1]) { this.dx += e.movementX || 0; this.dy += e.movementY || 0; } });
     on(canvas, 'wheel', e => { e.preventDefault(); const s = Math.sign(e.deltaY); if (e.ctrlKey) { this.zoom += s; return; } if (this.wheelThrottle && e.timeStamp - this.lastWheel < this.wheelThrottle) return; this.lastWheel = e.timeStamp; this.wheel += s; }, { passive: false }); // wheelThrottle: one step per notch even on trackpads
     on(document, 'pointerlockchange', () => { this.locked = document.pointerLockElement === canvas; });
   }
