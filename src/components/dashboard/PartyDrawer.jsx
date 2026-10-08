@@ -32,7 +32,7 @@ export default function PartyDrawer({ user }) {
       const hasNew = incoming.some(item => !seenIncomingRef.current.has(item.id));
       incoming.forEach(item => seenIncomingRef.current.add(item.id));
       if (!quiet && hasNew && incoming.length) setOpen(true);
-      return true;
+      return next.party ? 'active' : 'idle';
     } catch (error) {
       console.error('[PartyDrawer] state load failed', error);
       return false;
@@ -44,8 +44,10 @@ export default function PartyDrawer({ user }) {
     let cancelled = false;
     let timer;
     const poll = async () => {
-      const succeeded = await load({ quiet: true });
-      if (!cancelled) timer = setTimeout(poll, succeeded ? 30000 : 120000);
+      const status = await load({ quiet: true });
+      // Refresh an active party more often so newly accepted members appear
+      // in the dashboard's five slots without a long delay.
+      if (!cancelled) timer = setTimeout(poll, status === 'active' ? 10000 : status === 'idle' ? 30000 : 120000);
     };
     poll();
     base44.entities.Friend.filter({ user_id: user.id }).then(setFriends).catch(() => setFriends([]));
