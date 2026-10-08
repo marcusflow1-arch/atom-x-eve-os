@@ -23,6 +23,7 @@ import ReactorEditor from '../components/admin/ReactorEditor';
 import AttachmentEditor from '../components/admin/AttachmentEditor';
 import AssetFilesManager from '../components/admin/AssetFilesManager';
 import ProjectFileVault from '../components/admin/ProjectFileVault';
+import GameReconstructionManager from '../components/admin/GameReconstructionManager';
 import VideoAnalyzer from '../components/admin/VideoAnalyzer';
 import VideoIntelligence from '../components/admin/videoIntelligence/VideoIntelligence';
 import AttachmentVisualValidator from '../components/admin/attachmentValidator/AttachmentVisualValidator';
@@ -482,6 +483,7 @@ export default function Admin() {
             <TabsTrigger value="attachment-editor">Attachment Editor</TabsTrigger>
             <TabsTrigger value="asset-files">Asset Files</TabsTrigger>
             <TabsTrigger value="project-vault">Project Vault</TabsTrigger>
+            <TabsTrigger value="game-rebuilds">Game Rebuilds</TabsTrigger>
             <TabsTrigger value="video-analyzer">Video Analyzer</TabsTrigger>
             <TabsTrigger value="video-intel">Video Intelligence</TabsTrigger>
             <TabsTrigger value="attachment-validator">Attachment Validator</TabsTrigger>
@@ -993,6 +995,10 @@ export default function Admin() {
 
           <TabsContent value="project-vault" forceMount className="data-[state=inactive]:hidden">
             <ProjectFileVault />
+          </TabsContent>
+
+          <TabsContent value="game-rebuilds" forceMount className="data-[state=inactive]:hidden">
+            <GameReconstructionManager />
           </TabsContent>
 
           <TabsContent value="video-analyzer">
