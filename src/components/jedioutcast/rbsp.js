@@ -34,10 +34,32 @@ function cString(bytes) {
   return decoder.decode(end >= 0 ? bytes.subarray(0, end) : bytes).trim();
 }
 
-function convertPoint(x, y, z) {
+export function convertJkPoint(x, y, z) {
   // Jedi Outcast / id Tech 3 is Z-up. Three.js is Y-up.
   // X,Z,-Y preserves a right-handed coordinate system without inventing geometry.
   return [x, z, -y];
+}
+
+function convertPoint(x, y, z) {
+  return convertJkPoint(x, y, z);
+}
+
+export function parseJediEntityLump(text) {
+  const entities = [];
+  for (const block of String(text || '').matchAll(/\{([\s\S]*?)\}/g)) {
+    const entity = {};
+    for (const pair of block[1].matchAll(/"([^"]*)"\s+"([^"]*)"/g)) {
+      entity[pair[1]] = pair[2];
+    }
+    if (Object.keys(entity).length) entities.push(entity);
+  }
+  return entities;
+}
+
+export function parseJediVector(value) {
+  const parts = String(value || '').trim().split(/\s+/).map(Number);
+  if (parts.length < 3 || parts.some(v => !Number.isFinite(v))) return null;
+  return parts.slice(0, 3);
 }
 
 function readVert(view, offset) {
@@ -257,6 +279,23 @@ export function parseJediOutcastRbsp(arrayBuffer) {
 
   const entityLump = lumps[LUMP_ENTITIES];
   const entitiesText = decoder.decode(bytes.subarray(entityLump.offset, entityLump.offset + entityLump.length)).replace(/\0+$/, '');
+  const entities = parseJediEntityLump(entitiesText);
+  const playerEntity = entities.find(entity => entity.classname === 'info_player_start') || null;
+  let playerStart = null;
+  if (playerEntity) {
+    const origin = parseJediVector(playerEntity.origin);
+    if (origin) {
+      const point = convertJkPoint(origin[0], origin[1], origin[2]);
+      const yaw = Number(playerEntity.angle || 0);
+      playerStart = {
+        position: point,
+        yaw: Number.isFinite(yaw) ? yaw : 0,
+        target: playerEntity.target || '',
+        spawnflags: Number(playerEntity.spawnflags || 0) || 0,
+        source: playerEntity,
+      };
+    }
+  }
 
   return {
     magic,
@@ -266,6 +305,8 @@ export function parseJediOutcastRbsp(arrayBuffer) {
     surfaces,
     models,
     entitiesText,
+    entities,
+    playerStart,
     stats: {
       fileBytes: bytes.byteLength,
       shaders: shaders.length,
@@ -277,6 +318,7 @@ export function parseJediOutcastRbsp(arrayBuffer) {
       patches,
       flares,
       skipped,
+      entities: entities.length,
       renderVertices: out.positions.length / 3,
       renderTriangles: out.indices.length / 3,
     },
