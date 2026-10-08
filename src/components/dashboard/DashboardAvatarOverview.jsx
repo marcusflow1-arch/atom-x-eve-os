@@ -111,7 +111,7 @@ export default function DashboardAvatarOverview() {
   const [activeQuickPanel, setActiveQuickPanel] = useState(null);
   const lastInteractiveRef = useRef(null);
   const { mode: aiBoxSocialMode } = useAIBoxSocialMode();
-  const socialModeActive = aiBoxSocialMode === 'online' || aiBoxSocialMode === 'friends';
+  const socialModeActive = ['online', 'friends', 'party'].includes(aiBoxSocialMode);
 
   useEffect(() => {
     if (!socialModeActive) return;
@@ -635,7 +635,7 @@ export default function DashboardAvatarOverview() {
               <div className="flex items-center gap-2 pr-9">
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">{socialModeActive ? 'AI Social' : 'AI Attribute Box'}</div>
+                  <div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">{aiBoxSocialMode === 'party' ? 'Party Invitations' : socialModeActive ? 'AI Social' : 'AI Attribute Box'}</div>
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="truncate text-white font-bold text-base">
                       {companion?.name || 'AI Avatar'}
@@ -730,7 +730,7 @@ export default function DashboardAvatarOverview() {
               )}
             </div>
 
-            {surface === 'dashboard' && (
+            {surface === 'dashboard' && !socialModeActive && (
               <div
                 className="relative z-50 shrink-0 border-t border-white/[0.10] px-3 py-2 pointer-events-auto"
                 data-dashboard-attribute-actions
