@@ -7,7 +7,7 @@ import { createYBotJediAnimationAdapter } from './YBotJediAnimationAdapter';
 import { JediOutcastYBotController } from './JediOutcastYBotController';
 import { JediEnemyAI } from './JediEnemyAI';
 import JediForceSelector from './JediForceSelector';
-import { YBOT_MODEL_URL } from './jediSourceConstants';
+import { resolveYBotModelAsset } from './YBotModelResolver';
 
 function normalizeYBot(model, height = 1.8) {
   const box = new THREE.Box3().setFromObject(model);
@@ -130,7 +130,9 @@ export default function Game2ThreeViewer() {
 
     const boot = async () => {
       try {
-        player = normalizeYBot(await loader.loadAsync(YBOT_MODEL_URL), 1.8);
+        const yBotAsset = await resolveYBotModelAsset();
+        reportStatus(`Loading Admin model · ${yBotAsset.name}`);
+        player = normalizeYBot(await loader.loadAsync(yBotAsset.file_url), 1.8);
         if (disposed) return;
         scene.add(player);
         modelRef.current = player;
@@ -138,7 +140,7 @@ export default function Game2ThreeViewer() {
         playerAnimation = await createYBotJediAnimationAdapter(player);
         if (disposed) return;
 
-        enemyModel = normalizeYBot(await loader.loadAsync(YBOT_MODEL_URL), 1.8);
+        enemyModel = normalizeYBot(await loader.loadAsync(yBotAsset.file_url), 1.8);
         if (disposed) return;
         enemyModel.position.set(0, 0, 6);
         enemyModel.traverse((node) => {
@@ -178,6 +180,7 @@ export default function Game2ThreeViewer() {
         });
         runtimeRef.current = { controller, enemyAI };
         controller.attachCanonicalSaber();
+        reportStatus(`Y Bot loaded from Admin Model3D · ${yBotAsset.name}`);
         setLoading(false);
       } catch (cause) {
         console.error('Game 2 Y Bot Jedi reconstruction failed:', cause);

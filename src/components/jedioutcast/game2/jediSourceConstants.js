@@ -27,8 +27,6 @@ export const RAVEN_PMOVE = Object.freeze({
   forceSpeedTimeScale: Object.freeze([1, 0.75, 0.5, 0.25]),
 });
 
-export const YBOT_MODEL_URL =
-  'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/c6b99bc5a_ybot.fbx';
 
 export const RAVEN_SABER_ASSETS = Object.freeze({
   model: 'models/weapons2/saber/saber_w.md3',
