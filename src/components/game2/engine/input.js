@@ -6,7 +6,7 @@ export class Input {
     this.canvas = canvas; this.down = new Set(); this.pressedSet = new Set(); this.releasedSet = new Set(); this.btn = [false, false, false]; this.btnPressed = [false, false, false];
     this.dx = 0; this.dy = 0; this.wheel = 0; this.zoom = 0; this.wheelThrottle = 0; this.lastWheel = -1e9; this.locked = false; this.sens = 0.0022; this.enabled = true; this.onFirstGesture = null; this.cleanups = [];
     const on = (t, type, fn, o) => { t.addEventListener(type, fn, o); this.cleanups.push(() => t.removeEventListener(type, fn, o)); };
-    const prevent = new Set(['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'F3']);
+    const prevent = new Set(['Space', 'Tab', 'F1', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'F3']);
     const typing = e => { const t = e.target; return !!t && t !== canvas && t.nodeType === 1 && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)); }; // never swallow keys meant for a text field
     on(window, 'keydown', e => { if (typing(e) || e.metaKey || e.ctrlKey || e.altKey) return; if (prevent.has(e.code)) e.preventDefault(); if (!e.repeat) { this.down.add(e.code); this.pressedSet.add(e.code); } this.gesture(); });
     on(window, 'keyup', e => { this.down.delete(e.code); this.releasedSet.add(e.code); });

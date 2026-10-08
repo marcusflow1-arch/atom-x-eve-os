@@ -6,7 +6,8 @@ import { FX } from './fx.js';
 import { Sfx } from './audio.js';
 import { Input } from './input.js';
 import { Fighter } from './fighter.js';
-import { Force, POWERS, SELECT_ORDER, SELECT_ALL } from './force.js';
+import { Force, SELECT_ORDER, SELECT_ALL, FORCE_QUICK_BINDINGS } from './force.js';
+import { STYLE_NAMES } from './saber.js';
 import { resolveThrow } from './forcerules.js';
 import { Combat } from './combat.js';
 import { HUD, HELP_DUEL } from './hud.js';
@@ -36,8 +37,8 @@ export class Game {
     this.populate();
     this.cam = { yaw: 0, pitch: 0.2, dist: 3.7, pos: [SPAWN[0], 1.4, SPAWN[2]], eye: [0, 2, -13], target: [0, 1.4, -9], fov: 62 * Math.PI / 180 };
     this.firstSub = true;
-    const I = this.input; // 'Mouse1' = middle button (use the selected Force power)
-    this.inp = { pressed: c => this.firstSub && (c === 'Mouse1' ? I.btnPressed[1] : I.pressed(c)), held: c => c === 'Mouse1' ? !!I.btn[1] : I.held(c), released: c => I.released(c) };
+    const I = this.input;
+    this.inp = { pressed: c => this.firstSub && I.pressed(c), held: c => I.held(c), released: c => I.released(c) };
     this.fireT = 0;
   }
   populate() {
@@ -189,8 +190,8 @@ export class Game {
   }
   frameInput(dt) {
     const i = this.input, p = this.player, c = this.cam, h = this.hud;
-    if (i.pressed('Tab')) h.help = !h.help; if (i.pressed('F3')) h.debug = !h.debug; if (i.pressed('KeyM')) { this.sfx.muted = !this.sfx.muted; h.msg(this.sfx.muted ? 'Sound off' : 'Sound on'); }
-    if (h.help && (i.btnPressed[0]) && !i.pressedSet.has('Tab')) { h.help = false; this.started = true; }
+    if (i.pressed('F1')) h.help = !h.help; if (i.pressed('F3')) h.debug = !h.debug; if (i.pressed('KeyM')) { this.sfx.muted = !this.sfx.muted; h.msg(this.sfx.muted ? 'Sound off' : 'Sound on'); }
+    if (h.help && (i.btnPressed[0]) && !i.pressedSet.has('F1')) { h.help = false; this.started = true; }
     if (!h.help) this.started = true;
     if (i.dx || i.dy) { c.yaw -= i.dx * i.sens; c.pitch += i.dy * i.sens; }
     const ar = 2.2 * dt; if (i.held('ArrowLeft')) c.yaw += ar; if (i.held('ArrowRight')) c.yaw -= ar; if (i.held('ArrowUp')) c.pitch -= ar * 0.7; if (i.held('ArrowDown')) c.pitch += ar * 0.7;
@@ -202,10 +203,10 @@ export class Game {
     if (h.help) return;
     if (this.duel) { if ((this.round.state === 'won' || this.round.state === 'lost') && this.round.t > 0.8 && i.pressed('Enter')) { this.resetDuel(); return; } if (p.status === 'dead') return; }
     else if (p.status === 'dead') { if (i.pressed('Enter') || this.t - p.deadAt > 12) this.respawnPlayer(); return; }
-    if (i.pressed('KeyR')) p.toggleSaber(); if (i.pressed('Digit1')) { p.setStyle(1); h.msg('Saber style: FAST'); } if (i.pressed('Digit2')) { p.setStyle(2); h.msg('Saber style: MEDIUM'); } if (i.pressed('Digit3')) { p.setStyle(3); h.msg('Saber style: STRONG'); }
+    if (i.pressed('KeyR')) p.toggleSaber();
+    if (i.pressed('Tab')) { p.setStyle(p.saber.level % 3 + 1); h.msg('Saber style: ' + STYLE_NAMES[p.saber.level]); }
     if (i.btnPressed[2] && !p.saber.holstered && p.status === 'normal') { if (p.throwSaber(this.aimDir())) h.msg('Saber throw'); }
-    for (const pw of POWERS) if (i.pressed(pw.key) && p.status === 'normal') p.yaw = p.targetYaw = c.yaw; // snap to the aim before casting
-    if ((i.pressed('KeyZ') || i.btnPressed[1]) && p.status === 'normal') p.yaw = p.targetYaw = c.yaw;
+    if (p.status === 'normal' && (i.pressed('KeyF') || FORCE_QUICK_BINDINGS.some(({ code }) => i.pressed(code)))) p.yaw = p.targetYaw = c.yaw; // snap to aim on either cast path
   }
   respawnPlayer() {
     const p = this.player; this.force.releaseAll(); this.force.fp = this.force.max; p.revive(SPAWN.slice()); p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1; p.blade.set(false); p.blade.len = 0; p.yaw = p.targetYaw = 0; this.cam.yaw = 0; this.cam.pitch = 0.2; this.hud.msg('You rise again');
