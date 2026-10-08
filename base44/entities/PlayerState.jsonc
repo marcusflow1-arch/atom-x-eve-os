@@ -42,6 +42,13 @@
       "type": "string",
       "default": "online"
     },
+    "preferred_genres": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Genres the player chooses to share for online discovery."
+    },
     "appearance": {
       "type": "object"
     },
