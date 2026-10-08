@@ -107,6 +107,34 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ success: true, clanId: newDivision.id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // --- INVITE DISCOVERABLE PLAYER BY ID (no email disclosure needed) ---
+        if (action === 'invite_member_by_id') {
+            const divisionId = String(data?.divisionId || '');
+            const inviteeId = String(data?.inviteeId || '');
+            if (!divisionId || !inviteeId || inviteeId === user.id) {
+                return Response.json({ error: 'Invalid clan or invitee' }, { status: 400, headers: corsHeaders });
+            }
+            const svc = base44.asServiceRole.entities;
+            const actor = await svc.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
+            if (!actor.length || !['leader', 'officer'].includes(actor[0].role)) {
+                return Response.json({ error: 'Not authorized to invite to this clan' }, { status: 403, headers: corsHeaders });
+            }
+            const invitee = await svc.User.get(inviteeId).catch(() => null);
+            if (!invitee) return Response.json({ error: 'User not found' }, { status: 404, headers: corsHeaders });
+            const member = await svc.ClanMember.filter({ clan_id: divisionId, user_id: inviteeId });
+            if (member.length) return Response.json({ error: 'Player is already in the clan' }, { status: 409, headers: corsHeaders });
+            const pending = await svc.ClanInvite.filter({ divisionId, inviteeId, status: 'pending' });
+            if (pending.length) return Response.json({ error: 'Invitation already pending' }, { status: 409, headers: corsHeaders });
+            await svc.ClanInvite.create({
+                divisionId,
+                inviterId: user.id,
+                inviteeId,
+                status: 'pending',
+                createdAt: new Date().toISOString(),
+            });
+            return Response.json({ success: true }, { headers: corsHeaders });
+        }
+
         // --- INVITE MEMBER ---
         if (action === 'invite_member') {
             const { divisionId, inviteeEmail } = data;
