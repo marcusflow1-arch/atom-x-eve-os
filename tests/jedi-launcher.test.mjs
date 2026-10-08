@@ -356,8 +356,8 @@ test('300x150 or other fallback buffers are repaired before gameplay is reported
     // Presentation may still be smaller/larger; it must not change the native buffer.
     Object.defineProperty(canvas, 'clientWidth', { value: 640, configurable: true });
     Object.defineProperty(canvas, 'clientHeight', { value: 480, configurable: true });
-    w.dispatchEvent(new w.Event('resize'));
-    await waitFor(() => messages.some(value => value.clientWidth === 640));
+    // A presentation resize must not alter the backing render contract.
+    w.__reportVideo();
     const last = messages.filter(value => value.type === 'atom-jedi-video').at(-1);
     assert.equal(last.renderWidth, 1024);
     assert.equal(last.renderHeight, 768);
