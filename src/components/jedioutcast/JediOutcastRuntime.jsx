@@ -21,7 +21,7 @@ function unwrap(value) {
   return value?.data ?? value;
 }
 
-export default function JediOutcastRuntime({ onBack }) {
+export default function JediOutcastRuntime({ onBack, mode = 'campaign', minimalUi = false }) {
   const { user } = useAuth();
   const frame = useRef(null);
   const shell = useRef(null);
@@ -324,9 +324,17 @@ export default function JediOutcastRuntime({ onBack }) {
     setRevision(value => value + 1);
   };
 
+  const frameSrc = mode === 'character-lab'
+    ? '/games/jedi-outcast/index.html?runtime=native-camera-v10&lab=character'
+    : '/games/jedi-outcast/index.html?runtime=native-camera-v10';
+
   return (
-    <section className="jko-session" ref={shell} aria-label="Jedi Outcast">
-      <header className="jko-session-bar">
+    <section className={`jko-session ${minimalUi ? 'jko-session-minimal' : ''}`} ref={shell} aria-label={mode === 'character-lab' ? 'Jedi character test viewer' : 'Jedi Outcast'}>
+      {minimalUi ? (
+        <button type="button" className="jko-lab-back" aria-label="Return to dashboard" disabled={exiting} onClick={() => leave(onBack)}>
+          <ArrowLeft size={16} /><span>Return to Dashboard</span>
+        </button>
+      ) : <header className="jko-session-bar">
         <button type="button" aria-label="Back to Luna" disabled={exiting} onClick={() => leave(onBack)}>
           <ArrowLeft size={16} /><span>Back to Luna</span>
         </button>
@@ -355,9 +363,9 @@ export default function JediOutcastRuntime({ onBack }) {
         }}>
           <Maximize2 size={16} /><span>Fullscreen</span>
         </button>
-      </header>
+      </header>}
 
-      {notice && (
+      {notice && !minimalUi && (
         <div className="jko-session-notice" role="alert">
           <span>{notice}</span>
           <button type="button" onClick={onBack}>Return to Luna</button>
@@ -368,8 +376,8 @@ export default function JediOutcastRuntime({ onBack }) {
         <iframe
           key={revision}
           ref={frame}
-          src="/games/jedi-outcast/index.html?runtime=native-camera-v10"
-          title="Star Wars Jedi Knight II: Jedi Outcast"
+          src={frameSrc}
+          title={mode === 'character-lab' ? 'Jedi Outcast character systems test' : 'Star Wars Jedi Knight II: Jedi Outcast'}
           className="jko-engine-frame"
           tabIndex={0}
           allow="autoplay; fullscreen; gamepad"
