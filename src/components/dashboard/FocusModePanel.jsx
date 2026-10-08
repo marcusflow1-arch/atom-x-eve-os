@@ -1236,21 +1236,6 @@ function FriendReference({ friend, isActive, isFriend, requestState, dashboardIn
   );
 }
 
-function HomeReference({ onClick }) {
-  return (
-    <motion.button
-      data-luna-home-tile
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-      className="w-16 h-16 rounded-lg border-2 border-white/20 hover:border-cyan-400/50 flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 transition-all flex-shrink-0"
-    >
-      <Home className="w-6 h-6 text-white/80" />
-      <span className="text-[7px] font-bold text-white/80 uppercase tracking-wider">Home</span>
-    </motion.button>
-  );
-}
-
 // Bottom Nav Header (Replaces Quick Actions)
 function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
   return null;
@@ -1546,7 +1531,7 @@ export function LibraryBannerSection({
               <SkillTreeTile />
             </div>
 
-            {/* ── Presence Bar: Friend Slots | Home ── */}
+            {/* ── Presence Bar: Five Friend Slots ── */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">
               {/* Five social slots. PvP rejoin belongs to the match layer, not
                   to party/dashboard presence, so it sits below this group. */}
@@ -1599,9 +1584,6 @@ export function LibraryBannerSection({
                 </AnimatePresence>
               </div>
 
-              <div className="flex-shrink-0 ml-2">
-                <HomeReference onClick={handleHomeClick} />
-              </div>
             </div>
 
             {/* Calendar Box */}
