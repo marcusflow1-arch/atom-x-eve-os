@@ -79,15 +79,36 @@ export class Fighter {
   swingActive() { const p = this.swingPhase(); return p > 0.12 && p < 0.9 && (this.saber.inAttack(this.saber.move) || this.saber.inStart(this.saber.move) || this.saber.inTransition(this.saber.move)); }
   throwSaber(dir) {
     if (this.thrown || this.saber.holstered || !this.hasSaber) return false;
-    const hp = this.actor.bonePos('rhand'); this.thrown = { pos: hp.slice(), dir: v3.norm(dir), t: 0, phase: 'out', ang: 0, hitT: 0, hit: new Set() };
+    const hp = this.actor.bonePos('rhand'); this.thrown = { pos: hp.slice(), prevPos: hp.slice(), dir: v3.norm(dir), t: 0, phase: 'out', ang: 0, hit: new Map() };
     this.saber.inFlight = true; this.hilt = 'thrown'; this.g.sfxAt('spin', this.pos, 0.8); this.thrownLoop = this.g.sfx.loop && this.g.sfx.loop('spin', { vol: 0.35 }); return true;
   }
   updateThrown(dt) {
-    const T = this.thrown; if (!T) return; T.t += dt; T.ang += 24 * dt;
+    const T = this.thrown; if (!T) return;
+    T.prevPos = T.pos.slice(); T.t += dt; T.ang += 24 * dt;
     const hand = this.actor.bonePos('rhand'); hand[1] += 0.05;
-    if (T.phase === 'out') { T.pos = v3.addS(T.pos, T.dir, 19 * dt); if (T.t > 0.55 && !this.cmd.alt || v3.dist(T.pos, hand) > 11 || T.pos[1] < 0.15) T.phase = 'back'; }
-    else { const d = v3.sub(hand, T.pos), L = v3.len(d); T.pos = v3.addS(T.pos, v3.scale(d, 1 / (L || 1)), Math.min(L, 26 * dt)); T.hit.clear(); if (L < 0.6) { this.catchSaber(); return; } }
-    if (T.pos[1] < 0.15) T.pos[1] = 0.15;
+    const held = !!this.cmd.alt;
+    // A held throw flies out, then tracks the camera direction while spinning at range.
+    // Release sends it home. This also works when either fighter is airborne.
+    if (!held) T.phase = 'back';
+    if (T.phase === 'out') {
+      const aim = this.isPlayer ? this.g.aimDir() : T.dir;
+      T.dir = v3.norm(v3.lerp(T.dir, aim, Math.min(1, dt * 6)));
+      T.pos = v3.addS(T.pos, T.dir, 19 * dt);
+      if (v3.dist(T.pos, hand) >= 10.5 || T.pos[1] <= 0.35) T.phase = 'hover';
+    } else if (T.phase === 'hover') {
+      const aim = this.isPlayer ? this.g.aimDir() : T.dir;
+      T.dir = v3.norm(v3.lerp(T.dir, aim, Math.min(1, dt * 8)));
+      const goal = v3.addS(hand, T.dir, 9.5);
+      goal[1] = Math.max(0.35, goal[1]);
+      T.pos = v3.lerp(T.pos, goal, Math.min(1, dt * 8));
+    } else {
+      const d = v3.sub(hand, T.pos), L = v3.len(d);
+      T.pos = v3.addS(T.pos, v3.scale(d, 1 / (L || 1)), Math.min(L, 26 * dt));
+      if (L < 0.6) { this.catchSaber(); return; }
+    }
+    T.pos[1] = Math.max(0.35, T.pos[1]);
+    // Reset per-target hit cooldowns only after they expire, not every return frame.
+    for (const [target, next] of T.hit) if (next < this.now - 1) T.hit.delete(target);
   }
   catchSaber() { this.thrown = null; this.saber.inFlight = false; this.hilt = 'hand'; this.g.sfxAt('catch', this.pos, 0.8); if (this.thrownLoop) { this.thrownLoop.stop(0.05); this.thrownLoop = null; } this.saber.setMove(this.saber.I.LS_READY, this.now); this.saber.weaponTime = 150; }
   // ---------- state transitions (reactions)
@@ -142,7 +163,7 @@ export class Fighter {
     if (!wasFlung) this.playWhole(opts.deathAnim || DEATHS[Math.floor(Math.random() * DEATHS.length)], { blend: 0.08 }); else this.playWhole('BOTH_KNOCKDOWN1', { blend: 0.05 });
     this.g.onDeath && this.g.onDeath(this);
   }
-  revive(at) { this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
+  revive(at) { this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
   chest() { const y = this.status === 'down' || this.status === 'dead' ? 0.3 : this.ducked ? 0.75 : 1.15; return [this.pos[0], this.pos[1] + y, this.pos[2]]; }
   headPos() { return this.actor.bonePos('cranium', [0, 0, 0]); }
   // ---------- per-frame update
@@ -288,7 +309,7 @@ export class Fighter {
     if (!S.holstered) {
       const cmdAttack = c.attack, move = S.move;
       const pos = this.ctxInfo();
-      S.update(dt * 1000, { attack: cmdAttack && !this.thrown, alt: c.alt, fwd: Math.sign(Math.round(c.fwd * 2) / 2), right: Math.sign(Math.round(c.right * 2) / 2), up: c.up, ducked: this.ducked, velZ: this.vel[1], groundDist: this.pos[1], enemyFront: pos.front, enemyBehind: pos.behind, busy }, now);
+      S.update(dt * 1000, { attack: cmdAttack && !this.thrown, alt: c.alt, aimPitch: c.aimPitch || 0, fwd: Math.sign(Math.round(c.fwd * 2) / 2), right: Math.sign(Math.round(c.right * 2) / 2), up: c.up, ducked: this.ducked, velZ: this.vel[1], groundDist: this.pos[1], enemyFront: pos.front, enemyBehind: pos.behind, busy }, now);
       if (S.move !== this.prevMove) { this.onMoveChanged(S.move); this.prevMove = S.move; }
       // idle torso: re-evaluate stance vs follow-legs each frame when nothing is playing
       if (S.move === S.I.LS_READY && S.torsoTimer <= 0 && !busy && !this.thrown) {
@@ -326,7 +347,17 @@ export class Fighter {
       const T = this.thrown, d = [Math.cos(T.ang), 0, Math.sin(T.ang)]; const Y = v3.scale(d, -1), X = v3.norm(v3.cross([0, 1, 0], Y)), Z = v3.cross(X, Y);
       M.fill(0); M[0] = X[0]; M[1] = X[1]; M[2] = X[2]; M[4] = Y[0]; M[5] = Y[1]; M[6] = Y[2]; M[8] = Z[0]; M[9] = Z[1]; M[10] = Z[2]; M[12] = T.pos[0]; M[13] = T.pos[1]; M[14] = T.pos[2]; M[15] = 1; this.hiltScaleY = 1;
     }
-    this.blade.update(dt, M, this.g.attach.hiltLen * (this.hiltScaleY || 1), 1, this.now);
+    // Aim the visible blade in pitch as well as yaw so the hit test and the rendered
+    // down-slash/up-slash occupy the same 3D path (including crouched or airborne targets).
+    let bladeDir;
+    if (this.isPlayer && this.hilt === 'hand' && this.swingActive()) {
+      const pitch = clamp(this.g.cam.pitch, -0.6, 1.1) * 0.85;
+      const axis = [Math.cos(this.yaw), 0, -Math.sin(this.yaw)];
+      const original = v3.norm([-M[4], -M[5], -M[6]]);
+      const cross = v3.cross(axis, original), dot = v3.dot(axis, original);
+      bladeDir = v3.norm(v3.add(v3.add(v3.scale(original, Math.cos(pitch)), v3.scale(cross, Math.sin(pitch))), v3.scale(axis, dot * (1 - Math.cos(pitch)))));
+    }
+    this.blade.update(dt, M, this.g.attach.hiltLen * (this.hiltScaleY || 1), 1, this.now, bladeDir);
     this.blade.trailOn = (this.swingActive() || (this.thrown ? 0 : 0)) ? 1 : Math.max(0, this.blade.trailOn - dt * 6);
     if (this.swingActive()) this.blade.trailOn = 1;
   }

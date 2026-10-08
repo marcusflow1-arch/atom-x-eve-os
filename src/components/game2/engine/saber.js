@@ -75,6 +75,10 @@ export class SaberLogic {
   // PM_SaberAttackForMovement: c.right>0 means moving right (D key)
   attackForMovement(cur, c) {
     const I = this.I; let nm = -1;
+    // Player camera pitch chooses the vertical attack animation, regardless of
+    // WASD movement; neutral aim retains the original movement-driven saber chains.
+    if (c.aimPitch > 0.4 && !c.enemyBehind) return I.LS_A_T2B;
+    if (c.aimPitch < -0.32 && !c.enemyBehind) return I.LS_A_BL2TR;
     if (c.right > 0) nm = c.fwd > 0 ? I.LS_A_TL2BR : c.fwd < 0 ? I.LS_A_BL2TR : I.LS_A_L2R;
     else if (c.right < 0) nm = c.fwd > 0 ? I.LS_A_TR2BL : c.fwd < 0 ? I.LS_A_BR2TL : I.LS_A_R2L;
     else if (c.fwd > 0) {

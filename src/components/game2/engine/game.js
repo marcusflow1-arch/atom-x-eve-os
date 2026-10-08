@@ -184,7 +184,7 @@ export class Game {
   buildPlayerCmd() {
     const i = this.input, p = this.player, c = p.cmd; if (this.hud.help) { c.fwd = c.right = 0; c.attack = c.alt = c.jump = c.crouch = c.walk = false; c.jumpPressed = c.crouchPressed = false; return; }
     c.fwd = (i.held('KeyW') ? 1 : 0) - (i.held('KeyS') ? 1 : 0); c.right = (i.held('KeyD') ? 1 : 0) - (i.held('KeyA') ? 1 : 0);
-    c.walk = i.held('ShiftLeft') || i.held('ShiftRight'); c.crouch = i.held('KeyC'); c.attack = !!i.btn[0]; c.alt = !!i.btn[2]; c.jump = i.held('Space');
+    c.aimPitch = this.cam.pitch; c.walk = i.held('ShiftLeft') || i.held('ShiftRight'); c.crouch = i.held('KeyC'); c.attack = !!i.btn[0]; c.alt = !!i.btn[2]; c.jump = i.held('Space');
     c.up = c.jump ? 1 : c.crouch ? -1 : 0; c.jumpPressed = this.firstSub && i.pressed('Space'); c.crouchPressed = this.firstSub && i.pressed('KeyC');
     if (p.status === 'normal' || p.status === 'roll') p.targetYaw = this.cam.yaw;
   }

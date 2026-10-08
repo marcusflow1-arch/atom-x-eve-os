@@ -17,7 +17,11 @@ The duel is a small WebGL2 engine in `engine/` (plain ES modules, loaded lazily 
 
 Move with WASD, hold Shift to walk, Space to jump (hold for Force Jump), C to crouch/roll,
 R to draw/holster saber, and press Tab to cycle Fast / Medium / Strong lightsaber stances.
-Left mouse attacks; right mouse throws the saber.
+Left mouse attacks; aiming the camera up or down during a slash selects an upward or downward animation
+and aims the displayed blade and collision in that direction. Slashes sample the full blade sweep
+and the opponent's movement between frames, including crouched and grounded targets.
+Hold right mouse to send the saber out and keep it spinning at range, steering toward the camera aim;
+release right mouse to recall it. This works while jumping or Force-jumping as well.
 
 **Force quick-cast (hold a key for channeled abilities):**
 1 Push, 2 Pull, 3 Grip, 4 Lightning, 5 Heal, 6 Speed, 7 Mind Trick,

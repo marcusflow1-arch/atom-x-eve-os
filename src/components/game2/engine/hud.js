@@ -13,7 +13,7 @@ export const HELP = [
 ];
 export const HELP_DUEL = [
   ['Move · look', 'W A S D (Shift = walk)  ·  mouse  ·  C crouch / roll'], ['Jump / Force Jump', 'Space  (hold Space = Force Jump)'],
-  ['Saber on / off · stance', 'R toggles saber  ·  Tab cycles Fast / Medium / Strong'], ['Saber attack · throw', 'Left mouse (+ W/A/S/D picks the swing)  ·  Right mouse (hold) = throw'],
+  ['Saber on / off · stance', 'R toggles saber  ·  Tab cycles Fast / Medium / Strong'], ['Saber attack · throw', 'Left mouse (look up/down to direct slash) · hold right mouse to guide throw'],
   ['Force menu', 'Mouse wheel or [ ] selects highlighted Force power'], ['Cast highlighted Force', 'F to cast  ·  hold F for Grip / Lightning / Heal / Drain'],
   ['Quick cast 1–5', '1 Push · 2 Pull · 3 Grip · 4 Lightning · 5 Heal'], ['Quick cast 6–0', '6 Speed · 7 Mind Trick · 8 Rage · 9 Protect · 0 Absorb'], ['Other Force powers', 'Drain and Sight available with wheel + F'],
   ['Break a Grip', 'press 1 (Push), 2 (Pull), 0 (Absorb) or select one with wheel + F'], ['Block a push / pull', 'stand still on the ground with Force left, not mid-swing; moving = weaker'],

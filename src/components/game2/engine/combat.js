@@ -24,6 +24,29 @@ export function segSeg(p1, q1, p2, q2) { // closest points between two segments
   }
   const c1 = v3.addS(p1, d1, s), c2 = v3.addS(p2, d2, t); return { d: v3.dist(c1, c2), a: c1, b: c2, s, t };
 }
+// Continuous contact along the moving blade AND the moving target. Subframe sampling
+// stops a fast strafe, crouch or jump from passing between three discrete hit tests.
+// Both combat and visual effects use exactly the same weapon base/tip.
+export function sweptBladeContact(fromBlade, toBlade, fromBody, toBody, extraRadius = 0.04) {
+  if (!toBlade || !toBody) return null;
+  const beforeBlade = fromBlade || toBlade;
+  const beforeBody = fromBody && v3.dist(fromBody.a, toBody.a) < 3.5 ? fromBody : toBody;
+  const movement = Math.max(
+    v3.dist(beforeBlade[0], toBlade[0]), v3.dist(beforeBlade[1], toBlade[1]),
+    v3.dist(beforeBody.a, toBody.a), v3.dist(beforeBody.b, toBody.b),
+  );
+  const steps = Math.min(24, Math.max(4, Math.ceil(movement / 0.13)));
+  for (let j = 0; j <= steps; j++) {
+    const t = j / steps;
+    const base = v3.lerp(beforeBlade[0], toBlade[0], t);
+    const tip = v3.lerp(beforeBlade[1], toBlade[1], t);
+    const ca = v3.lerp(beforeBody.a, toBody.a, t);
+    const cb = v3.lerp(beforeBody.b, toBody.b, t);
+    const contact = segSeg(base, tip, ca, cb);
+    if (contact.d <= toBody.r + extraRadius) return contact;
+  }
+  return null;
+}
 export const hostile = (a, b) => (a.team === 'player' && b.team === 'enemy') || (a.team === 'enemy' && b.team === 'player');
 
 export class Combat {
@@ -51,18 +74,21 @@ export class Combat {
   canBlock(T, from) {
     if (!T.hasSaber || T.saber.holstered || T.status !== 'normal' || T.thrown || T.blade.len < 0.8) return false;
     const fwd = [Math.sin(T.yaw), Math.cos(T.yaw)]; const d = v3.norm([from[0] - T.pos[0], 0, from[2] - T.pos[2]]);
-    return fwd[0] * d[0] + fwd[1] * d[2] > -0.35; // not directly behind
+    return fwd[0] * d[0] + fwd[1] * d[2] > 0.25; // parry requires facing the attacking blade
   }
   blockProb(T) {
     const S = T.saber; let p;
     if (S.inParry(S.move) || S.inReflect(S.move)) p = 0.96; else if (S.isActiveSwing()) p = 0.3; else p = T.isPlayer ? 0.68 : (T.blockSkill ?? 0.5);
     if (T.isPlayer) p += S.level === 1 ? 0.15 : S.level === 3 ? -0.06 : 0;
+    // Sprinting or rapidly strafing does not grant a stationary perfect parry.
+    if (Math.hypot(T.vel?.[0] || 0, T.vel?.[2] || 0) > 2) p *= 0.45;
     return clamp(p, 0, 0.97);
   }
   bladeDamage(A) { const S = A.saber; let d = [0, 12, 18, 28][S.level]; if (S.inSpecial(S.move)) d *= 1.6; return d * A.damageMul * (A.isPlayer ? 1 : (A.dmgScale ?? 0.55)); }
   // ---------- per-step update
   step(dt) {
     const g = this.g; const F = [g.player, ...g.npcs];
+    const caps = new Map(F.map(f => [f, this.capsule(f)]));
     for (const [k, v] of this.pair) { if (v - dt <= 0) this.pair.delete(k); else this.pair.set(k, v - dt); }
     // blade clashes + body hits
     for (const A of F) {
@@ -81,11 +107,8 @@ export class Combat {
           }
         }
         if (swing && !A.hitSet.has(B)) {
-          const cap = this.capsule(B); const p0 = prev || seg; let hit = null;
-          for (const s of [0.34, 0.67, 1]) {
-            const a = v3.lerp(p0[0], seg[0], s), b = v3.lerp(p0[1], seg[1], s); const r = segSeg(a, b, cap.a, cap.b);
-            if (r.d < cap.r + 0.04) { hit = r; break; }
-          }
+          const cap = caps.get(B);
+          const hit = sweptBladeContact(prev, seg, B._prevCap, cap);
           if (hit) { A.hitSet.add(B); this.bladeHit(A, B, hit.a); }
         }
       }
@@ -95,12 +118,17 @@ export class Combat {
       // thrown saber
       if (A.thrown) {
         const T = A.thrown; for (const B of F) {
-          if (B === A || !hostile(A, B) || B.status === 'dead' || T.hit.has(B)) continue; const cap = this.capsule(B); const r = segSeg(T.pos, T.pos, cap.a, cap.b);
-          if (r.d < cap.r + 0.45) { T.hit.add(B); this.damage(A, B, T.pos, 14 * A.damageMul, { spark: true }); }
+          if (B === A || !hostile(A, B) || B.status === 'dead' || (T.hit.get(B) || 0) > g.t) continue;
+          const contact = sweptBladeContact([T.prevPos || T.pos, T.prevPos || T.pos], [T.pos, T.pos], B._prevCap, caps.get(B), 0.45);
+          if (contact) {
+            T.hit.set(B, g.t + 0.4); // spinning near a moving enemy continues to make contact while held
+            this.damage(A, B, contact.a, 14 * A.damageMul, { spark: true });
+          }
         }
-        if (rm && !rm.dead && A.team === 'player' && v3.dist(T.pos, rm.pos) < 0.7) this.hitRemote(40, rm.pos);
+        if (rm && !rm.dead && A.team === 'player' && segSeg(T.prevPos || T.pos, T.pos, rm.pos, rm.pos).d < 0.7) this.hitRemote(40, rm.pos);
       }
     }
+    for (const f of F) { const cap = caps.get(f); f._prevCap = { a: cap.a.slice(), b: cap.b.slice(), r: cap.r }; }
     this.props(dt); this.updateBolts(dt); this.updateRemote(dt);
   }
   clash(A, B, pt, aSwing, bSwing) {

@@ -65,7 +65,7 @@ export class Blade {
     const sp = this.target > this.len ? 5.5 : 4.5; this.len += Math.sign(this.target - this.len) * Math.min(Math.abs(this.target - this.len), sp * dt);
     // hilt local -Y axis is the blade direction; emitter at local y = -L/2
     const dir = dirOverride ?? v3.norm([-hiltM[4], -hiltM[5], -hiltM[6]]);
-    const base = dirOverride ? this.base : [hiltM[12] + hiltM[4] * (-hiltLen / 2), hiltM[13] + hiltM[5] * (-hiltLen / 2), hiltM[14] + hiltM[6] * (-hiltLen / 2)];
+    const base = [hiltM[12] + hiltM[4] * (-hiltLen / 2), hiltM[13] + hiltM[5] * (-hiltLen / 2), hiltM[14] + hiltM[6] * (-hiltLen / 2)];
     this.base = base; this.dir = dir; this.tip = v3.addS(base, dir, this.maxLen * this.len);
     this.tick = (this.tick || 0) + 1;
     if (this.len > 0.05) { this.trail.push({ b: base.slice(), t: this.tip.slice(), age: 0 }); } 
