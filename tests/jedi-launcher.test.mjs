@@ -7,9 +7,9 @@ const root = new URL('../public/games/jedi-outcast/', import.meta.url);
 const read = name => readFileSync(new URL(name, root), 'utf8');
 const names = ['assets0.pk3', 'assets1.pk3', 'assets2.pk3', 'assets5.pk3'];
 
-function setup() {
+function setup(url = 'https://atom.test/games/jedi-outcast/index.html') {
   const dom = new JSDOM(read('index.html'), {
-    url: 'https://atom.test/games/jedi-outcast/index.html',
+    url,
     runScripts: 'outside-only',
     pretendToBeVisual: true,
   });
@@ -138,6 +138,27 @@ test('normal launch reads the persistent cache without the rate-limited status f
   assert.doesNotMatch(runtime, /jediOutcastSource[^\n]*action:\s*['\"]status['\"]/);
   assert.match(runtime, /base44\.entities\.JediPakChunk\.filter/);
   assert.match(runtime, /base44\.entities\.JediSourceAsset\.filter/);
+});
+
+test('Game 2 boots the original engine into the source-backed Kyle combat sandbox', () => {
+  const { dom, w } = setup('https://atom.test/games/jedi-outcast/index.html?mode=game2');
+  try {
+    const calls = [];
+    w.boot = args => calls.push(args);
+    sendSource(w, sourceRecords());
+
+    assert.equal(calls.length, 1);
+    assert.deepEqual([...calls[0]], [
+      '+devmap', 'pit',
+      '+wait', '10',
+      '+give', 'all',
+      '+setForceAll', '3',
+      '+weapon', '1',
+    ]);
+    assert.equal(w.__ATOM_JEDI_LAUNCH_MODE, 'game2');
+  } finally {
+    dom.window.close();
+  }
 });
 
 test('complete Base44 chunk source boots Raven engine with no injected gameplay commands', () => {

@@ -3,6 +3,25 @@
 // prepared by the Base44 backend. The browser never fetches Google Drive directly.
 
 const REQUIRED_PAKS = ['assets0.pk3', 'assets1.pk3', 'assets2.pk3', 'assets5.pk3'];
+const LAUNCH_MODE = new URLSearchParams(location.search).get('mode') === 'game2' ? 'game2' : 'campaign';
+
+// Source-grounded Game 2 sandbox:
+// - maps/pit.bsp exists in the supplied retail data.
+// - devmap enables cheats in Raven's server code.
+// - give all uses the original inventory path.
+// - setForceAll 3 dispatches Raven's Force/Saber level setters.
+// - weapon 1 selects WP_SABER in the single-player weapon enum.
+const GAME2_BOOT_ARGS = Object.freeze([
+  '+devmap', 'pit',
+  '+wait', '10',
+  '+give', 'all',
+  '+setForceAll', '3',
+  '+weapon', '1',
+]);
+
+window.__ATOM_JEDI_LAUNCH_MODE = LAUNCH_MODE;
+window.__ATOM_JEDI_GAME2_ARGS = GAME2_BOOT_ARGS.slice();
+
 let started = false;
 
 const notify = (state, detail = '') => {
@@ -90,8 +109,13 @@ function startCanonicalGame(records) {
   notify('files-ready');
   notify('starting');
 
-  // Empty arguments preserve Raven's original boot/menu/campaign flow.
-  window.boot([]);
+  if (LAUNCH_MODE === 'game2') {
+    notify('starting', 'Loading Kyle combat sandbox');
+    window.boot(GAME2_BOOT_ARGS.slice());
+  } else {
+    // Empty arguments preserve Raven's original boot/menu/campaign flow.
+    window.boot([]);
+  }
 }
 
 window.addEventListener('message', event => {

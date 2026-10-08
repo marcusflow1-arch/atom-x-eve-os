@@ -17,11 +17,27 @@ const LABELS = {
   error: 'Engine stopped',
 };
 
+const GAME2_LABELS = {
+  'awaiting-source': 'Connecting original Kyle sandbox data',
+  checking: 'Checking canonical Kyle / combat data',
+  caching: 'Caching original game data in Base44',
+  'files-ready': 'Original Kyle / combat data ready',
+  starting: 'Starting Game 2 sandbox',
+  'engine-ready': 'Game 2 sandbox running',
+  error: 'Sandbox engine stopped',
+};
+
 function unwrap(value) {
   return value?.data ?? value;
 }
 
-export default function JediOutcastRuntime({ onBack }) {
+export default function JediOutcastRuntime({ onBack, mode = 'campaign' }) {
+  const isGame2 = mode === 'game2';
+  const activeLabels = isGame2 ? GAME2_LABELS : LABELS;
+  const sessionTitle = isGame2 ? 'Game 2 — Kyle Combat Sandbox' : 'Star Wars Jedi Knight II: Jedi Outcast';
+  const iframeSrc = isGame2
+    ? '/games/jedi-outcast/index.html?runtime=game2-kyle-v1&mode=game2'
+    : '/games/jedi-outcast/index.html?runtime=native-camera-v11';
   const { user } = useAuth();
   const frame = useRef(null);
   const shell = useRef(null);
@@ -211,7 +227,7 @@ export default function JediOutcastRuntime({ onBack }) {
         return;
       }
 
-      if (event.data?.type === 'atom-jedi-status' && LABELS[event.data.state]) {
+      if (event.data?.type === 'atom-jedi-status' && (activeLabels[event.data.state] || LABELS[event.data.state])) {
         setState(event.data.state);
         if (event.data.state === 'error') setNotice(event.data.detail || 'The engine could not start.');
         if (event.data.state === 'engine-ready') {
@@ -245,7 +261,7 @@ export default function JediOutcastRuntime({ onBack }) {
       window.removeEventListener('message', onMessage);
       if (activeFlush.current) clearTimeout(activeFlush.current.timer);
     };
-  }, [sendCanonicalSource]);
+  }, [activeLabels, sendCanonicalSource]);
 
 
   useEffect(() => {
@@ -325,14 +341,14 @@ export default function JediOutcastRuntime({ onBack }) {
   };
 
   return (
-    <section className="jko-session" ref={shell} aria-label="Jedi Outcast">
+    <section className="jko-session" ref={shell} aria-label={sessionTitle}>
       <header className="jko-session-bar">
         <button type="button" aria-label="Back to Luna" disabled={exiting} onClick={() => leave(onBack)}>
           <ArrowLeft size={16} /><span>Back to Luna</span>
         </button>
 
         <span className="jko-session-label">
-          Star Wars Jedi Knight II: Jedi Outcast
+          {sessionTitle}
           <small role="status" title={videoInfo
             ? `Rendered at ${videoInfo.renderWidth}×${videoInfo.renderHeight}; displayed at ${videoInfo.clientWidth}×${videoInfo.clientHeight}`
             : undefined}>
@@ -340,12 +356,12 @@ export default function JediOutcastRuntime({ onBack }) {
               ? 'Saving…'
               : (progress ||
                 (videoInfo
-                  ? `${LABELS[state] || state} · ${videoInfo.renderWidth}×${videoInfo.renderHeight}`
-                  : LABELS[state] || state))}
+                  ? `${activeLabels[state] || state} · ${videoInfo.renderWidth}×${videoInfo.renderHeight}`
+                  : activeLabels[state] || state))}
           </small>
         </span>
 
-        <button type="button" aria-label="Reload game" disabled={exiting} title="Reload Jedi Outcast" onClick={() => leave(restart)}>
+        <button type="button" aria-label="Reload game" disabled={exiting} title={isGame2 ? 'Reload Game 2' : 'Reload Jedi Outcast'} onClick={() => leave(restart)}>
           <RotateCcw size={16} /><span>Reload</span>
         </button>
 
@@ -368,8 +384,8 @@ export default function JediOutcastRuntime({ onBack }) {
         <iframe
           key={revision}
           ref={frame}
-          src="/games/jedi-outcast/index.html?runtime=native-camera-v11"
-          title="Star Wars Jedi Knight II: Jedi Outcast"
+          src={iframeSrc}
+          title={sessionTitle}
           className="jko-engine-frame"
           tabIndex={0}
           allow="autoplay; fullscreen; gamepad"
@@ -380,6 +396,24 @@ export default function JediOutcastRuntime({ onBack }) {
             setTimeout(sendCanonicalSource, 0);
           }}
         />
+        {isGame2 && (
+          <aside
+            aria-label="Game 2 original controls"
+            className="pointer-events-none absolute left-4 bottom-4 z-20 max-w-[560px] rounded-xl border border-white/10 bg-black/70 px-4 py-3 text-white/80 shadow-2xl backdrop-blur-md"
+          >
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200/90">
+              Game 2 · Original Raven controls
+            </div>
+            <div className="mt-2 text-[11px] leading-5 text-white/65">
+              WASD move · Space jump · Shift run · Mouse look · Mouse 1 attack · Mouse 2 alt attack ·
+              L saber style · P third-person · F1 Push · F2 Pull · F3 Speed · F4 Distract ·
+              F5 Heal · F6 Grip · F7 Lightning · Z/X previous/next Force · F use selected Force
+            </div>
+            <div className="mt-1 text-[10px] text-white/35">
+              Kyle, saber combat, Force logic, animations and effects are supplied by the original Jedi Outcast engine and retail PK3 data.
+            </div>
+          </aside>
+        )}
       </div>
     </section>
   );
