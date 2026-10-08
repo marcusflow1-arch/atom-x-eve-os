@@ -95,6 +95,28 @@ test('canonical source gate rejects gaps in the Base44 chunk layout', () => {
   }
 });
 
+test('browser launch pins Raven custom video mode to the Base44 viewport', () => {
+  const { dom, w } = setup();
+  try {
+    Object.defineProperty(w, 'innerWidth', { configurable: true, value: 1366 });
+    Object.defineProperty(w, 'innerHeight', { configurable: true, value: 768 });
+    Object.defineProperty(w, 'devicePixelRatio', { configurable: true, value: 1 });
+
+    const args = w.__tuneArgs();
+    const pairs = new Map();
+    for (let i = 0; i < args.length - 2; i++) {
+      if (args[i] === '+set') pairs.set(args[i + 1], args[i + 2]);
+    }
+
+    assert.equal(pairs.get('r_mode'), '-1');
+    assert.equal(pairs.get('r_customwidth'), '1366');
+    assert.equal(pairs.get('r_customheight'), '768');
+    assert.equal(Number(pairs.get('r_customaspect')).toFixed(4), (1366 / 768).toFixed(4));
+  } finally {
+    dom.window.close();
+  }
+});
+
 test('complete Base44 chunk source boots Raven engine with no injected gameplay commands', () => {
   const { dom, w } = setup();
   try {
