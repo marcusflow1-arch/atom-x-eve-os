@@ -95,26 +95,23 @@ test('canonical source gate rejects gaps in the Base44 chunk layout', () => {
   }
 });
 
-test('browser launch pins Raven custom video mode to the Base44 viewport', () => {
+test('browser launch leaves Raven graphics and keybind configuration untouched', () => {
   const { dom, w } = setup();
   try {
-    Object.defineProperty(w, 'innerWidth', { configurable: true, value: 1366 });
-    Object.defineProperty(w, 'innerHeight', { configurable: true, value: 768 });
-    Object.defineProperty(w, 'devicePixelRatio', { configurable: true, value: 1 });
-
     const args = w.__tuneArgs();
-    const pairs = new Map();
-    for (let i = 0; i < args.length - 2; i++) {
-      if (args[i] === '+set') pairs.set(args[i + 1], args[i + 2]);
-    }
-
-    assert.equal(pairs.get('r_mode'), '-1');
-    assert.equal(pairs.get('r_customwidth'), '1366');
-    assert.equal(pairs.get('r_customheight'), '768');
-    assert.equal(Number(pairs.get('r_customaspect')).toFixed(4), (1366 / 768).toFixed(4));
+    assert.equal(args.length, 0);
+    assert.doesNotMatch(read('engine-shell.js'), /\+exec['\"],?\s*['\"]default\.cfg/);
+    assert.doesNotMatch(read('engine-shell.js'), /['\"]r_mode['\"],\s*['\"]-1['\"]/);
   } finally {
     dom.window.close();
   }
+});
+
+test('normal launch reads the persistent cache without the rate-limited status function', () => {
+  const runtime = readFileSync(new URL('../src/components/jedioutcast/JediOutcastRuntime.jsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(runtime, /jediOutcastSource[^\n]*action:\s*['\"]status['\"]/);
+  assert.match(runtime, /base44\.entities\.JediPakChunk\.filter/);
+  assert.match(runtime, /base44\.entities\.JediSourceAsset\.filter/);
 });
 
 test('complete Base44 chunk source boots Raven engine with no injected gameplay commands', () => {
