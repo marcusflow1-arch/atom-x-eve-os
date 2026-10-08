@@ -634,7 +634,7 @@ export default function DashboardAvatarOverview() {
             <div className="relative shrink-0 px-5 pt-3 pb-2 border-b border-white/[0.12]">
               <div className="flex items-center gap-2 pr-9">
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">{socialModeActive ? 'AI Social' : 'AI Attribute Box'}</div>
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="truncate text-white font-bold text-base">
