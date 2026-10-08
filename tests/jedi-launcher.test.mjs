@@ -23,11 +23,29 @@ function setup() {
 function sourceRecords(missing = []) {
   return names
     .filter(name => !missing.includes(name))
-    .map((name, index) => ({
-      name,
-      size: 4 + index,
-      url: `https://drive.usercontent.google.com/download?id=fixture-${name}&export=download&confirm=t`,
-    }));
+    .map((name, index) => {
+      const first = 3 + index;
+      const second = 2 + index;
+      const size = first + second;
+      return {
+        name,
+        size,
+        chunks: [
+          {
+            index: 0,
+            offset: 0,
+            size: first,
+            url: `https://storage.example.test/${name}.part0`,
+          },
+          {
+            index: 1,
+            offset: first,
+            size: second,
+            url: `https://storage.example.test/${name}.part1`,
+          },
+        ],
+      };
+    });
 }
 
 function sendSource(w, paks) {
@@ -61,7 +79,23 @@ test('canonical source gate refuses an incomplete retail archive set', () => {
   }
 });
 
-test('complete canonical source boots Raven engine with no injected gameplay commands', () => {
+test('canonical source gate rejects gaps in the Base44 chunk layout', () => {
+  const { dom, w, id } = setup();
+  try {
+    const calls = [];
+    w.boot = args => calls.push(args);
+    const records = sourceRecords();
+    records[0].chunks[1].offset += 1;
+    sendSource(w, records);
+    assert.equal(calls.length, 0);
+    assert.equal(id('runtime-error').hidden, false);
+    assert.match(id('runtime-error-detail').textContent, /wrong offset/i);
+  } finally {
+    dom.window.close();
+  }
+});
+
+test('complete Base44 chunk source boots Raven engine with no injected gameplay commands', () => {
   const { dom, w } = setup();
   try {
     const calls = [];
@@ -73,13 +107,14 @@ test('complete canonical source boots Raven engine with no injected gameplay com
     assert.equal(calls.length, 1);
     assert.equal(calls[0].length, 0);
     assert.equal(w.__JK2_REMOTE_PAKS.map(item => item.name).join(','), names.join(','));
+    assert.ok(w.__JK2_REMOTE_PAKS.every(item => item.chunks.length === 2));
     assert.equal(w.__JK2_PAKS.length, 0);
   } finally {
     dom.window.close();
   }
 });
 
-test('engine preRun stages canonical remote PK3s into /jk2/base', async () => {
+test('engine preRun reconstructs cached Base44 chunks into exact /jk2/base PK3 bytes', async () => {
   const { dom, w } = setup();
   try {
     const dependencies = new Set();
@@ -102,10 +137,15 @@ test('engine preRun stages canonical remote PK3s into /jk2/base', async () => {
       },
     };
 
-    const payloadByUrl = new Map(records.map((record, index) => [
-      record.url,
-      new Uint8Array(record.size).fill(index + 1),
-    ]));
+    const payloadByUrl = new Map();
+    records.forEach((record, archiveIndex) => {
+      record.chunks.forEach((chunk, chunkIndex) => {
+        payloadByUrl.set(
+          chunk.url,
+          new Uint8Array(chunk.size).fill((archiveIndex + 1) * 10 + chunkIndex),
+        );
+      });
+    });
     payloadByUrl.set('qagame.wasm', new Uint8Array([0, 97, 115, 109]));
 
     w.fetch = async url => {
@@ -127,18 +167,27 @@ test('engine preRun stages canonical remote PK3s into /jk2/base', async () => {
             };
           },
         },
-        async arrayBuffer() { return payload.buffer.slice(payload.byteOffset, payload.byteOffset + payload.byteLength); },
+        async arrayBuffer() {
+          return payload.buffer.slice(payload.byteOffset, payload.byteOffset + payload.byteLength);
+        },
       };
     };
 
     w.Module.preRun[0]();
     await waitFor(() => dependencies.size === 0);
 
-    for (const name of names) {
-      const row = staged.find(item => item.path === '/jk2/base/' + name);
-      assert.ok(row, name);
+    for (let archiveIndex = 0; archiveIndex < records.length; archiveIndex++) {
+      const record = records[archiveIndex];
+      const row = staged.find(item => item.path === '/jk2/base/' + record.name);
+      assert.ok(row, record.name);
       assert.equal(row.own, true);
+      assert.equal(row.bytes.length, record.size);
+
+      const split = record.chunks[0].size;
+      assert.ok(row.bytes.slice(0, split).every(v => v === (archiveIndex + 1) * 10));
+      assert.ok(row.bytes.slice(split).every(v => v === (archiveIndex + 1) * 10 + 1));
     }
+
     assert.ok(staged.some(item => item.path === '/jk2/qagame.wasm'));
   } finally {
     dom.window.close();
