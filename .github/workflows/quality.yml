@@ -23,7 +23,7 @@ jobs:
       - name: Build application
         run: npm run build
       - name: Run Jedi Outcast loader tests
-        run: node --test tests/jedi-original-data.test.mjs tests/jedi-launcher.test.mjs
+        run: node --test tests/jedi-original-data.test.mjs tests/jedi-launcher.test.mjs tests/jedi-camera-contract.test.mjs
       - name: Check for accidentally committed payment credentials
         shell: bash
         run: |
