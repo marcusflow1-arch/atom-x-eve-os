@@ -1,7 +1,7 @@
-// Shared camera / viewport contract for the editable Jedi Outcast reconstruction
-// and traversal runtimes. The original browser engine also renders at 1024x768 /
-// 4:3, so keeping the editable viewers on the same projection contract prevents
-// camera framing from drifting just because the Base44 preview is widescreen.
+// Shared camera / viewport contract for the editable Jedi Outcast reconstruction.
+// Gameplay values stay grounded in Raven's original SP camera cvars, while the
+// Retribution follow distance is pulled back modestly so the controllable Kyle
+// model remains readable in the browser viewport.
 
 const THREE_PI = Math.PI;
 
@@ -10,17 +10,28 @@ export const JEDI_CAMERA_CONTRACT = Object.freeze({
   renderHeight: 768,
   aspect: 1024 / 768,
   fov: 80,
+  cinematicFov: 90,
   near: 1,
   far: 65536,
 
-  // Third-person follow framing for the editable traversal runtime.
-  distance: 150,
-  shoulderOffset: 22,
+  ravenDefaultDistance: 80,
+  distance: 100,
+  minimumDistance: 48,
+  maxDistance: 150,
   targetHeight: 30,
-  verticalOffset: 18,
+  verticalOffset: 16,
+  shoulderOffset: 0,
+  cameraDamp: 0.3,
+  targetDamp: 0.5,
+  collisionPadding: 8,
+
   minPitch: -THREE_PI * 0.36,
   maxPitch: THREE_PI * 0.30,
   mouseSensitivity: 0.0022,
+
+  maxShakeIntensity: 16,
+  barDurationMs: 1000,
+  barHeight: 48,
 });
 
 export function jediViewportStyle() {

@@ -7,6 +7,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { parseJediOutcastRbsp } from './rbsp';
 import { JEDI_CAMERA_CONTRACT, jediViewportStyle } from './cameraContract';
+import { JediCameraSystem } from './camera/JediCameraSystem';
 
 const KEJIM_PATH = 'maps/kejim_post.bsp';
 
@@ -81,31 +82,21 @@ function KejimPlayer({ geometry, parsed, onLockChange }) {
   const right = useMemo(() => new THREE.Vector3(), []);
   const wishDir = useMemo(() => new THREE.Vector3(), []);
   const up = useMemo(() => new THREE.Vector3(0, 1, 0), []);
-  const cameraTarget = useMemo(() => new THREE.Vector3(), []);
-  const desiredCamera = useMemo(() => new THREE.Vector3(), []);
+  const cameraSystem = useMemo(
+    () => new JediCameraSystem({ camera, collisionGeometry: geometry }),
+    [camera, geometry],
+  );
 
   useEffect(() => {
     origin.current.copy(spawn);
     velocity.current.set(0, 0, 0);
-    camera.near = JEDI_CAMERA_CONTRACT.near;
-    camera.far = JEDI_CAMERA_CONTRACT.far;
-    camera.fov = JEDI_CAMERA_CONTRACT.fov;
-    camera.aspect = JEDI_CAMERA_CONTRACT.aspect;
-    camera.up.set(0, 1, 0);
-    camera.updateProjectionMatrix();
-
-    // One gameplay camera only: start it at the same third-person follow position
-    // used on subsequent frames instead of temporarily placing it inside the player.
-    forward.set(0, 0, -1).applyAxisAngle(up, yaw.current);
-    right.set(1, 0, 0).applyAxisAngle(up, yaw.current);
-    cameraTarget.set(spawn.x, spawn.y + JEDI_CAMERA_CONTRACT.targetHeight, spawn.z);
-    desiredCamera.copy(cameraTarget)
-      .addScaledVector(forward, -JEDI_CAMERA_CONTRACT.distance)
-      .addScaledVector(right, JEDI_CAMERA_CONTRACT.shoulderOffset);
-    desiredCamera.y += JEDI_CAMERA_CONTRACT.verticalOffset;
-    camera.position.copy(desiredCamera);
-    camera.lookAt(cameraTarget);
-  }, [camera, spawn]);
+    // Use the Raven-derived camera system from the first playable frame.
+    cameraSystem.snapGameplay({
+      playerPosition: spawn,
+      yaw: yaw.current,
+      pitch: pitch.current,
+    });
+  }, [cameraSystem, spawn]);
 
   useEffect(() => {
     const canvas = gl.domElement;
@@ -267,18 +258,15 @@ function KejimPlayer({ geometry, parsed, onLockChange }) {
     // speed while standing on a surface.
     if (grounded.current && pos.distanceToSquared(before) < 1e-8) v.y = 0;
 
-    // Single third-person follow camera. Mouse X orbits around the player; mouse Y
-    // raises/lowers the camera on the vertical arc. There is no second viewer camera
-    // fighting this transform.
-    const horizontalDistance = JEDI_CAMERA_CONTRACT.distance * Math.cos(pitch.current);
-    const verticalOrbit = JEDI_CAMERA_CONTRACT.distance * Math.sin(pitch.current);
-    cameraTarget.set(pos.x, pos.y + JEDI_CAMERA_CONTRACT.targetHeight, pos.z);
-    desiredCamera.copy(cameraTarget)
-      .addScaledVector(forward, -horizontalDistance)
-      .addScaledVector(right, JEDI_CAMERA_CONTRACT.shoulderOffset);
-    desiredCamera.y += JEDI_CAMERA_CONTRACT.verticalOffset + verticalOrbit;
-    camera.position.lerp(desiredCamera, Math.min(1, 12 * dt));
-    camera.lookAt(cameraTarget);
+    // Raven-derived gameplay follow camera. It owns framing, damping, collision
+    // pull-in and projection so the player controller no longer has camera math
+    // scattered through the movement loop.
+    cameraSystem.updateGameplay({
+      playerPosition: pos,
+      yaw: yaw.current,
+      pitch: pitch.current,
+      delta: dt,
+    });
   });
 
   return null;
