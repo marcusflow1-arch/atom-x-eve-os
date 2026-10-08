@@ -139,7 +139,8 @@ function findCentralEntry(directory: Uint8Array, wantedPath: string, count: numb
 }
 
 async function inflateRaw(bytes: Uint8Array) {
-  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  const owned = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  const stream = new Blob([owned]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
@@ -218,7 +219,7 @@ function validateOriginalFormat(path: string, bytes: Uint8Array) {
 Deno.serve(async (req) => {
   try {
     if (req.method !== 'POST') return Response.json({ error: 'Not found' }, { status: 404 });
-    const base44 = createClientFromRequest(req);
+    const base44: any = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!adminOnly(user)) return Response.json({ error: 'Admin reconstruction access required.' }, { status: 403 });
 
@@ -257,7 +258,8 @@ Deno.serve(async (req) => {
       const cached = existing.find((x: any) => x.storage_url);
       if (cached) return Response.json({ success: true, asset: cached, reused: true });
 
-      const token = await base44.asServiceRole.connectors.getAccessToken('googledrive');
+      const tokenResult: any = await base44.asServiceRole.connectors.getAccessToken('googledrive');
+      const token = String(tokenResult?.access_token || tokenResult?.token || tokenResult || '');
       const resolved = await resolveRetailPath(base44, token, requestedPath);
       const payload = await readLocatedPk3Entry(
         token,
@@ -318,7 +320,8 @@ Deno.serve(async (req) => {
         return Response.json({ success: true, asset, reused: true });
       }
 
-      const token = await base44.asServiceRole.connectors.getAccessToken('googledrive');
+      const tokenResult: any = await base44.asServiceRole.connectors.getAccessToken('googledrive');
+      const token = String(tokenResult?.access_token || tokenResult?.token || tokenResult || '');
       let payload;
       if (asset.source_kind === 'drive_file' && asset.drive_file_id) {
         payload = await driveWhole(token, String(asset.drive_file_id));
@@ -357,7 +360,7 @@ Deno.serve(async (req) => {
     }
 
     return Response.json({ error: `Unknown action: ${action}` }, { status: 400 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('jediOutcastSource:', error);
     return Response.json({ success: false, error: error?.message || String(error) }, { status: 500 });
   }
