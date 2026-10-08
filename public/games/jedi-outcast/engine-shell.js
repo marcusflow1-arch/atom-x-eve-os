@@ -578,23 +578,40 @@ function __toast(text, ms){
 // pointer lock. This matters inside the Base44 editor/preview shell, where clicking the
 // nested iframe does not reliably leave its canvas as the active keyboard target.
 var __gameCanvas = document.getElementById('canvas');
+var __mouseLockWarningTime = 0;
+function __mouseLockDenied(error) {
+  // Do not obscure the game with a permanent overlay. Report the failure in
+  // both the game canvas and the embedding app, so an iframe policy rejection
+  // cannot masquerade as a broken camera or a working mouse.
+  if (document.pointerLockElement === __gameCanvas) return;
+  if (Date.now() - __mouseLockWarningTime < 1500) return;
+  __mouseLockWarningTime = Date.now();
+  __toast('Mouse capture blocked. Open the game in a new tab, then click the game.', 6500);
+  if (parent !== window) parent.postMessage({
+    type: 'atom-jedi-mouse-lock-error',
+    detail: error && error.message ? String(error.message) : 'Pointer lock was denied by the browser or embedding frame.'
+  }, location.origin);
+}
+document.addEventListener('pointerlockerror', function() { __mouseLockDenied(); });
+
 if (__gameCanvas) {
   __gameCanvas.addEventListener('mousedown', function(){
     try { __gameCanvas.focus({ preventScroll: true }); } catch (_) { try { __gameCanvas.focus(); } catch (_) {} }
   }, true);
   __gameCanvas.addEventListener('click', function(){
     try { __gameCanvas.focus({ preventScroll: true }); } catch (_) { try { __gameCanvas.focus(); } catch (_) {} }
-    // The native engine also requests pointer lock, but Base44 preview iframe focus
-    // can swallow that first request. Re-requesting from the same user gesture makes
-    // mouse X/Y reliably drive Raven's yaw/pitch camera controls.
-    if (!document.pointerLockElement && __gameCanvas.requestPointerLock) {
+    // Request standard pointer lock *synchronously during the real click*.
+    // Raw/unadjusted mouse mode can reject asynchronously in embedded previews;
+    // a retry from its rejection callback may no longer have user activation.
+    // Let the native Raven/Emscripten mouse handler consume locked movement.
+    if (document.pointerLockElement !== __gameCanvas && __gameCanvas.requestPointerLock) {
       try {
-        var p = __gameCanvas.requestPointerLock({ unadjustedMovement: true });
-        if (p && p.catch) p.catch(function(){
-          try { __gameCanvas.requestPointerLock(); } catch (_) {}
+        var p = __gameCanvas.requestPointerLock();
+        if (p && typeof p.catch === 'function') p.catch(function(error) {
+          __mouseLockDenied(error);
         });
-      } catch (_) {
-        try { __gameCanvas.requestPointerLock(); } catch (_) {}
+      } catch (error) {
+        __mouseLockDenied(error);
       }
     }
   }, true);
