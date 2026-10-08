@@ -237,6 +237,10 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign' }) {
         }
       }
 
+      if (event.data?.type === 'atom-jedi-mouse-lock-error') {
+        setNotice('Browser mouse capture was blocked. Open Jedi Outcast in a new tab and click inside the game to enable camera control.');
+      }
+
       if (event.data?.type === 'atom-jedi-video') {
         const renderWidth = Number(event.data.renderWidth);
         const renderHeight = Number(event.data.renderHeight);
@@ -376,6 +380,8 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign' }) {
       {notice && (
         <div className="jko-session-notice" role="alert">
           <span>{notice}</span>
+          <button type="button" onClick={() => setNotice('')}>Dismiss</button>
+          <a href={iframeSrc} target="_blank" rel="noopener noreferrer">Open game in new tab</a>
           <button type="button" onClick={onBack}>Return to Luna</button>
         </div>
       )}
