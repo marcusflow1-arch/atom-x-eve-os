@@ -10,6 +10,7 @@ test('Game 2 is routed beside Jedi Outcast and uses the canonical engine sandbox
   const page = read('src/pages/Game2.jsx');
   const runtime = read('src/components/jedioutcast/JediOutcastRuntime.jsx');
   const launcher = read('public/games/jedi-outcast/atom-launcher.mjs');
+  const camera = read('public/games/jedi-outcast/game2-camera.js');
 
   const jedi = layout.indexOf("createPageUrl('JediOutcast')");
   const game2 = layout.indexOf("createPageUrl('Game2')");
@@ -24,6 +25,10 @@ test('Game 2 is routed beside Jedi Outcast and uses the canonical engine sandbox
   assert.match(launcher, /'\+devmap', 'pit'/);
   assert.match(launcher, /'\+setForceAll', '3'/);
   assert.match(launcher, /'\+weapon', '1'/);
+  assert.match(camera, /range:\s*80/);
+  assert.match(camera, /maxRange:\s*150/);
+  assert.match(camera, /horizontalOffset:\s*0/);
+  assert.doesNotMatch(camera, /horizontalOffset:\s*-22/);
 });
 
 test('Game 2 UI names Kyle rather than hallucinating Cal Kestis', () => {

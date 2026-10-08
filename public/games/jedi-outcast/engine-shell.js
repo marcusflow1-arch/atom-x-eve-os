@@ -442,36 +442,43 @@ if (__q.has('debug')) document.addEventListener('DOMContentLoaded', function(){
 // in that mode. Com_Init reapplies these +set values after the saved config loads.
 // CSS presentation can therefore shrink or grow without reducing render quality.
 function __tuneArgs(){
-  // Explicit Base44 validation target: use Raven's custom mode at a real 1024x768
-  // backing resolution. This changes the renderer, not merely the status text.
+  // Keep renderer resolution independent of presentation size.
   var a = [
     '+set', 'r_mode', '-1',
     '+set', 'r_customwidth', String(__RENDER_WIDTH),
     '+set', 'r_customheight', String(__RENDER_HEIGHT),
-    '+set', 'r_customaspect', String(__RENDER_WIDTH / __RENDER_HEIGHT),
-    // Gameplay camera: the live Base44 preview showed the camera pressed almost
-    // into Kyle's head. Keep Raven's native third-person collision/look code, but
-    // start from a wider over-the-right-shoulder composition instead of a centered
-    // close follow. Mouse freelook remains native; these values only change the
-    // camera's default relationship to the player.
-    '+set', 'cg_fov', '80',
-    '+set', 'cg_thirdPerson', '1',
-    '+set', 'cg_gunAutoFirst', '0',
-    '+set', 'cg_saberAutoThird', '1',
-    '+set', 'cl_freelook', '1',
-    '+set', 'm_pitch', '0.022',
-    '+set', 'm_yaw', '0.022',
-    '+set', 'cg_thirdPersonRange', '165',
-    '+set', 'cg_thirdPersonMaxRange', '260',
-    '+set', 'cg_thirdPersonAngle', '0',
-    '+set', 'cg_thirdPersonPitchOffset', '-4',
-    '+set', 'cg_thirdPersonVertOffset', '24',
-    '+set', 'cg_thirdPersonHorzOffset', '-22',
-    '+set', 'cg_thirdPersonCameraDamp', '0.22',
-    '+set', 'cg_thirdPersonTargetDamp', '0.4'
+    '+set', 'r_customaspect', String(__RENDER_WIDTH / __RENDER_HEIGHT)
   ];
+
+  // Camera settings live in one dedicated script. In particular, horizontal
+  // shoulder offset is kept at zero because Raven applies that offset AFTER its
+  // camera collision trace; non-zero values can push a safe camera into a wall.
+  var cameraProfile = window.__ATOM_JEDI_CAMERA_PROFILE;
+  if (cameraProfile && typeof cameraProfile.appendArgs === 'function') {
+    cameraProfile.appendArgs(a, __q.get('mode') === 'game2' ? 'game2' : 'campaign');
+  } else {
+    // Safe source-grounded fallback if the profile script was blocked.
+    [
+      ['cg_fov', '80'],
+      ['cg_thirdPerson', '1'],
+      ['cg_gunAutoFirst', '0'],
+      ['cg_saberAutoThird', '1'],
+      ['cl_freelook', '1'],
+      ['m_pitch', '0.022'],
+      ['m_yaw', '0.022'],
+      ['cg_thirdPersonRange', '80'],
+      ['cg_thirdPersonMaxRange', '150'],
+      ['cg_thirdPersonAngle', '0'],
+      ['cg_thirdPersonPitchOffset', '0'],
+      ['cg_thirdPersonVertOffset', '16'],
+      ['cg_thirdPersonHorzOffset', '0'],
+      ['cg_thirdPersonCameraDamp', '0.3'],
+      ['cg_thirdPersonTargetDamp', '0.5']
+    ].forEach(function(pair){ a.push('+set', pair[0], pair[1]); });
+  }
+
   __q.forEach(function(v, k){
-    if (/^(r|cg|com|s|cl)_[A-Za-z0-9_]+$/.test(k)) a.push('+set', k, v);
+    if (/^(r|cg|com|s|cl|m)_[A-Za-z0-9_]+$/.test(k)) a.push('+set', k, v);
   });
   return a;
 }

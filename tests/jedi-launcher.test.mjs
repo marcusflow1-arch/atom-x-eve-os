@@ -15,6 +15,7 @@ function setup(url = 'https://atom.test/games/jedi-outcast/index.html') {
   });
   const w = dom.window;
   w.HTMLCanvasElement.prototype.getContext = () => ({ getExtension: () => ({ loseContext() {} }) });
+  w.eval(read('game2-camera.js'));
   w.eval(read('engine-shell.js'));
   w.__ENGINE_FILES = JSON.parse(read('SOURCE.json')).files_sha256;
   w.eval(read('atom-launcher.mjs'));
@@ -115,6 +116,36 @@ test('browser launch requests the native 1024x768 mode without resetting control
     const shell = read('engine-shell.js');
     assert.doesNotMatch(shell, /\+exec['\"],?\s*['\"]default\.cfg/);
     assert.doesNotMatch(shell, /['\"]bind['\"]/i);
+  } finally {
+    dom.window.close();
+  }
+});
+
+test('Game 2 camera uses Raven collision-safe centerline values', () => {
+  const { dom, w } = setup('https://atom.test/games/jedi-outcast/index.html?mode=game2');
+  try {
+    const args = w.__tuneArgs();
+    const sets = new Map();
+    for (let i = 0; i < args.length - 2; i++) {
+      if (args[i] === '+set') sets.set(args[i + 1], args[i + 2]);
+    }
+
+    assert.equal(sets.get('cg_fov'), '80');
+    assert.equal(sets.get('cg_thirdPerson'), '1');
+    assert.equal(sets.get('cg_gunAutoFirst'), '0');
+    assert.equal(sets.get('cg_thirdPersonRange'), '80');
+    assert.equal(sets.get('cg_thirdPersonMaxRange'), '150');
+    assert.equal(sets.get('cg_thirdPersonAngle'), '0');
+    assert.equal(sets.get('cg_thirdPersonPitchOffset'), '0');
+    assert.equal(sets.get('cg_thirdPersonVertOffset'), '16');
+    assert.equal(sets.get('cg_thirdPersonHorzOffset'), '0');
+    assert.equal(sets.get('cg_thirdPersonCameraDamp'), '0.3');
+    assert.equal(sets.get('cg_thirdPersonTargetDamp'), '0.5');
+
+    const shell = read('engine-shell.js');
+    assert.doesNotMatch(shell, /cg_thirdPersonRange', '165/);
+    assert.doesNotMatch(shell, /cg_thirdPersonMaxRange', '260/);
+    assert.doesNotMatch(shell, /cg_thirdPersonHorzOffset', '-22/);
   } finally {
     dom.window.close();
   }
