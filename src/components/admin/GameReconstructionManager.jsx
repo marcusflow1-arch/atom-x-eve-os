@@ -88,6 +88,7 @@ export default function GameReconstructionManager() {
   const [search, setSearch] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [storingSource, setStoringSource] = useState(false);
 
   const { data: projects = [], isLoading: projectsLoading } = useQuery({
     queryKey: ['reconstruction-projects'],
@@ -145,6 +146,21 @@ export default function GameReconstructionManager() {
   const archiveBytes = sourceAssets
     .filter(asset => asset.category === 'retail_archive')
     .reduce((sum, asset) => sum + Number(asset.byte_size || 0), 0);
+
+  const storeFullSourceSnapshot = async () => {
+    setStoringSource(true);
+    try {
+      const response = await base44.functions.invoke('jediOutcastSource', { action: 'cacheSourceArchive' });
+      const data = response?.data ?? response;
+      if (!data?.success) throw new Error(data?.error || 'Could not store the full Raven source snapshot.');
+      await queryClient.invalidateQueries({ queryKey: ['reconstruction-files', selectedGame] });
+      showSuccess(data.reused ? 'Full Raven source snapshot is already stored.' : 'Full Raven source snapshot stored in Base44.');
+    } catch (error) {
+      showError(error, 'Store source snapshot');
+    } finally {
+      setStoringSource(false);
+    }
+  };
 
   const handleUpload = async event => {
     const files = Array.from(event.target.files || []);
@@ -334,9 +350,23 @@ export default function GameReconstructionManager() {
 
               <TabsContent value="source" className="mt-0">
                 <div className="mb-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-                  <div className="flex items-center gap-2 font-medium"><FolderGit2 className="w-4 h-4 text-cyan-300" />Pinned Raven source mirror</div>
-                  <div className="text-xs text-slate-500 mt-2 break-all">
-                    {project.source_repository} @ {project.source_commit}
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 font-medium"><FolderGit2 className="w-4 h-4 text-cyan-300" />Pinned Raven source mirror</div>
+                      <div className="text-xs text-slate-500 mt-2 break-all">
+                        {project.source_repository} @ {project.source_commit}
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={storeFullSourceSnapshot}
+                      disabled={storingSource}
+                      className="border-slate-700 shrink-0"
+                    >
+                      <Archive className="w-4 h-4 mr-2" />
+                      {storingSource ? 'Storing source…' : 'Store Full Source Snapshot'}
+                    </Button>
                   </div>
                 </div>
                 <FileRows rows={sourceFiles} search={search} onSelect={setSelectedFile} />
