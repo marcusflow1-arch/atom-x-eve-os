@@ -32,6 +32,7 @@ export default function JediOutcastRuntime({ onBack }) {
   const [state, setState] = useState('awaiting-source');
   const [notice, setNotice] = useState('');
   const [progress, setProgress] = useState('');
+  const [videoInfo, setVideoInfo] = useState(null);
   const [exiting, setExiting] = useState(false);
   const [revision, setRevision] = useState(0);
 
@@ -208,6 +209,18 @@ export default function JediOutcastRuntime({ onBack }) {
         }
       }
 
+      if (event.data?.type === 'atom-jedi-video') {
+        setVideoInfo({
+          cssWidth: Number(event.data.cssWidth || 0),
+          cssHeight: Number(event.data.cssHeight || 0),
+          canvasWidth: Number(event.data.canvasWidth || 0),
+          canvasHeight: Number(event.data.canvasHeight || 0),
+          clientWidth: Number(event.data.clientWidth || 0),
+          clientHeight: Number(event.data.clientHeight || 0),
+          devicePixelRatio: Number(event.data.devicePixelRatio || 1),
+        });
+      }
+
       if (event.data?.type === 'atom-jedi-flushed' && activeFlush.current?.id === event.data.requestId) {
         activeFlush.current.finish(event.data.error || '');
       }
@@ -291,6 +304,7 @@ export default function JediOutcastRuntime({ onBack }) {
     sourcePreparing.current = false;
     setState('awaiting-source');
     setProgress('');
+    setVideoInfo(null);
     setNotice('');
     setRevision(value => value + 1);
   };
@@ -305,7 +319,12 @@ export default function JediOutcastRuntime({ onBack }) {
         <span className="jko-session-label">
           Star Wars Jedi Knight II: Jedi Outcast
           <small role="status">
-            {exiting ? 'Saving…' : (progress || LABELS[state] || state)}
+            {exiting
+              ? 'Saving…'
+              : (progress ||
+                (videoInfo?.canvasWidth && videoInfo?.canvasHeight
+                  ? `${LABELS[state] || state} · ${videoInfo.canvasWidth}×${videoInfo.canvasHeight}`
+                  : (LABELS[state] || state)))}
           </small>
         </span>
 
