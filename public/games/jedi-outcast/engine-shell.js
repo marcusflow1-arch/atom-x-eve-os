@@ -203,7 +203,19 @@ var Module = {
       c.style.setProperty('object-fit', 'contain', 'important');
       try { c.focus({ preventScroll: true }); } catch (_) { try { c.focus(); } catch (_) {} }
     }
-    if (parent !== window) parent.postMessage({type:'atom-jedi-status', state:'engine-ready'}, location.origin);
+    if (parent !== window) {
+      parent.postMessage({type:'atom-jedi-status', state:'engine-ready'}, location.origin);
+      parent.postMessage({
+        type: 'atom-jedi-video',
+        cssWidth: innerWidth || 0,
+        cssHeight: innerHeight || 0,
+        canvasWidth: c ? c.width : 0,
+        canvasHeight: c ? c.height : 0,
+        clientWidth: c ? c.clientWidth : 0,
+        clientHeight: c ? c.clientHeight : 0,
+        devicePixelRatio: window.devicePixelRatio || 1
+      }, location.origin);
+    }
     setTimeout(hideLoading, 300);
     // Fullscreen is the game's native presentation and is not discoverable otherwise.
     setTimeout(function(){ __toast('Click the game for mouse look · WASD to move · Alt+Enter fullscreen', 5000); }, 1800);
@@ -380,18 +392,37 @@ if (__q.has('debug')) document.addEventListener('DOMContentLoaded', function(){
 // Keep Raven's stock controls while applying the browser port's verified
 // viewport projection. default.cfg is the original retail binding file from assets0.pk3.
 function __tuneArgs(){
-  var vw = innerWidth || (screen && screen.width) || 1280;
-  var vh = innerHeight || (screen && screen.height) || 720;
-  var aspect = Math.min(Math.max(vw / Math.max(vh, 1), 4/3), 21/9);
+  var vw = innerWidth || document.documentElement.clientWidth || 1280;
+  var vh = innerHeight || document.documentElement.clientHeight || 720;
+  var dpr = Math.max(1, window.devicePixelRatio || 1);
+  var rw = Math.max(320, Math.round(vw * dpr));
+  var rh = Math.max(240, Math.round(vh * dpr));
+
+  // Match the browser port's own ~4 MP safety budget, but pin the result into
+  // Raven's genuine custom video mode so R_GetModeInfo, glConfig, viewport and
+  // canvas backing-store all receive the SAME dimensions.
+  var maxPix = 4.0e6;
+  var scale = Math.sqrt(Math.min(1, maxPix / Math.max(1, rw * rh)));
+  rw = Math.max(320, (Math.floor(rw * scale) >> 1) << 1);
+  rh = Math.max(240, (Math.floor(rh * scale) >> 1) << 1);
+
+  var aspect = rw / Math.max(rh, 1);
   var fov = Math.round(2 * Math.atan(Math.tan(73.74 * Math.PI / 360) * aspect) * 360 / Math.PI);
   fov = Math.min(Math.max(fov, 90), 121);
 
   // The user's canonical retail config and default.cfg both use the stock bindings
   // (W/A/S/D, Space, Mouse1, etc.). Re-exec the retail default binding file after
   // browser-persisted config so an earlier broken session cannot leave movement unbound.
+  //
+  // IMPORTANT: r_mode -1 is intentional. The current browser port overrides every
+  // normal r_mode with window.innerWidth/innerHeight, which is why changing the
+  // resolution in Jedi Outcast's menu appeared to do nothing.
   var a = [
     '+exec', 'default.cfg',
-    '+set', 'r_mode', '3',
+    '+set', 'r_mode', '-1',
+    '+set', 'r_customwidth', String(rw),
+    '+set', 'r_customheight', String(rh),
+    '+set', 'r_customaspect', String(aspect),
     '+set', 'cg_fov', String(fov),
     '+set', 'cg_draw2D', '1',
     '+set', 'cl_freelook', '1'
