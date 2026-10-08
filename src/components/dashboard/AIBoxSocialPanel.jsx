@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { usePartySession, partySession } from '@/components/social/partySession';
+import { filterSocialPlayers } from './socialDiscoverySelectors.mjs';
 import { isLivePlayer, joinDashboard } from '@/components/social/dashboardSession';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import { useAIBattleSurfaceState } from '@/components/battle/aiBattleSurfaceState';
@@ -80,12 +81,10 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
 
   const partyMemberIds = useMemo(() => new Set((party.members || []).map(row => String(row.user_id))), [party.members]);
   const partyFull = Boolean(party.party && (party.members || []).length >= (party.party.maxSize || 5));
-  const players = useMemo(() => onlinePlayers
-    .filter(player => mode === 'online' || (player.friend && (mode !== 'party' || !partyMemberIds.has(player.id))))
-    .filter(player => genreFilter === 'all' || mode !== 'online' || player.genres.some(genre => genre.toLowerCase() === genreFilter.toLowerCase()))
-    .filter(player => !search.trim() || player.name.toLowerCase().includes(search.trim().toLowerCase()))
-    .slice(0, 75),
-  [mode, onlinePlayers, partyMemberIds, genreFilter, search]);
+  const players = useMemo(
+    () => filterSocialPlayers(onlinePlayers, { mode, genreFilter, search, partyMemberIds }),
+    [mode, onlinePlayers, partyMemberIds, genreFilter, search],
+  );
 
   const setAction = (id, action, value) => {
     setActionState((current) => ({ ...current, [actionKey(id, action)]: value }));
