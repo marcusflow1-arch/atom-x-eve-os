@@ -1,6 +1,6 @@
 import PartyPortraitRail from './PartyPortraitRail';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
+import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, UserPlus, Camera, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
@@ -24,7 +24,7 @@ import { useEquipment } from '../luna/hooks/useEquipment';
 import { showError } from '@/components/error/ErrorToast';
 import useAvatarCombatStats from '@/components/avatar/useAvatarCombatStats';
 import AIBoxSocialPanel from './AIBoxSocialPanel';
-import { setAIBoxSocialMode, useAIBoxSocialMode } from './aiBoxSocialMode';
+import { setAIBoxSocialMode, toggleAIBoxSocialMode, useAIBoxSocialMode } from './aiBoxSocialMode';
 
 const FALLBACK_GENRES = ['Action','RPG','Strategy','Adventure','Shooter','Sci-Fi','Horror','Sports','Racing','Simulation','Puzzle'];
 
@@ -325,7 +325,7 @@ export default function DashboardAvatarOverview() {
   const backgroundDimmed = !avatarFocusMode && surface !== 'dashboard';
   const slotItems = [
     { id: 'inventory', icon: PackageOpen, label: 'Inventory' },
-    { id: 'friends', icon: Users, label: 'Friends', alert: Number(socialInbox.friend_unread || 0) > 0, badge: Number(socialInbox.friend_unread || 0) },
+    { id: 'memories', icon: Camera, label: 'Memories' },
     { id: 'messages', icon: MessageSquare, label: 'Message', alert: Number(socialInbox.unread_total || 0) > 0, badge: Number(socialInbox.unread_total || 0) },
     { id: 'cards', icon: Trophy, label: 'Cards' },
     { id: 'ai-story', icon: Sparkles, label: 'AI Story' },
@@ -400,7 +400,7 @@ export default function DashboardAvatarOverview() {
       setMessagesMode((current) => !current);
       return;
     }
-    if (item.id === 'friends') {
+    if (item.id === 'memories') {
       setActiveQuickPanel(null);
       setInteractionDimmed(false);
       setInventoryMode(false);
@@ -408,9 +408,10 @@ export default function DashboardAvatarOverview() {
       setCardsMode(false);
       setLeaderboardMode(false);
       setMessagesMode(false);
+      setFriendsMode(false);
       setSeasonMode(false);
       setBattleMode(false);
-      setFriendsMode((current) => !current);
+      window.dispatchEvent(new CustomEvent('openLunaMemories'));
       return;
     }
     if (item.id === 'season') {
@@ -635,9 +636,32 @@ export default function DashboardAvatarOverview() {
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
                 <div className="min-w-0">
                   <div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">{socialModeActive ? 'AI Social' : 'AI Attribute Box'}</div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <div className="truncate text-white font-bold text-base">
-                      {aiBoxSocialMode === 'online' ? 'People Online' : aiBoxSocialMode === 'friends' ? 'Friends Online' : (companion?.name || 'AI Avatar')}
+                      {companion?.name || 'AI Avatar'}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1.5" aria-label="AI Attribute social modes">
+                      {[
+                        { id: 'online', label: 'People Online', icon: UserPlus },
+                        { id: 'friends', label: 'Friends Online', icon: Users },
+                      ].map(({ id, label, icon: Icon }) => {
+                        const active = aiBoxSocialMode === id;
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => toggleAIBoxSocialMode(id)}
+                            title={label}
+                            aria-label={label}
+                            aria-pressed={active}
+                            className={\`grid h-6 w-6 place-items-center rounded-full border transition-all \${active
+                              ? 'border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-100 shadow-[0_0_12px_rgba(103,232,249,.12)]'
+                              : 'border-white/[0.10] bg-white/[0.035] text-white/40 hover:border-white/[0.18] hover:bg-white/[0.07] hover:text-white/70'}\`}
+                          >
+                            <Icon className="h-3 w-3" />
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -717,7 +741,7 @@ export default function DashboardAvatarOverview() {
                       key={item.id}
                       icon={item.icon}
                       label={item.label}
-                      active={item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : item.id === 'friends' ? friendsMode : item.id === 'messages' ? messagesMode : item.id === 'season' ? seasonMode : item.id === 'ai-battle' ? battleMode : item.id === 'leaderboard' ? leaderboardMode : activeQuickPanel === item.id}
+                      active={item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : item.id === 'messages' ? messagesMode : item.id === 'season' ? seasonMode : item.id === 'ai-battle' ? battleMode : item.id === 'leaderboard' ? leaderboardMode : activeQuickPanel === item.id}
                       alert={item.alert}
                       badge={item.badge}
                       compact
