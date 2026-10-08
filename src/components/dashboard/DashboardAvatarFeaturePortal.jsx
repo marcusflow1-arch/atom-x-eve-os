@@ -3,6 +3,9 @@ import { createPortal } from 'react-dom';
 import AvatarFeatureRail from './AvatarFeatureRail';
 
 function findEnvironmentHubTile() {
+  // The rail now launches Skill Tree; its measured position is unchanged.
+  const rail = document.querySelector('[data-luna-skill-tree-launcher]');
+  if (rail) return rail;
   const nodes = Array.from(document.querySelectorAll('h4'));
   const heading = nodes.find(node => node.textContent?.trim() === 'Environment Hub');
   if (!heading) return null;
