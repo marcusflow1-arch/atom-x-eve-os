@@ -5,7 +5,6 @@ import Game2ThreeViewer from '@/components/jedioutcast/game2/Game2ThreeViewer';
 
 export default function Game2() {
   const navigate = useNavigate();
-
   return (
     <main className="flex h-screen min-h-0 flex-col bg-[#05080d] text-white">
       <header className="flex h-12 shrink-0 items-center gap-3 border-b border-white/10 bg-[#08111b] px-4">
@@ -20,7 +19,7 @@ export default function Game2() {
         <div className="h-5 w-px bg-white/10" />
         <div>
           <div className="text-sm font-semibold">Game 2</div>
-          <div className="text-[10px] text-white/35">Active Game 3D avatar · Jedi control layer</div>
+          <div className="text-[10px] text-white/35">Y Bot model · Raven Jedi Outcast player-control reconstruction</div>
         </div>
       </header>
       <section className="min-h-0 flex-1">

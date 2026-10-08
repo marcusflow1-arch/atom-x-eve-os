@@ -4,70 +4,93 @@ import { readFileSync } from 'node:fs';
 
 const read = (path) => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 
-test('Game 2 uses the working Game 3D camera/player stack instead of the Jedi iframe', () => {
-  const page = read('src/pages/Game2.jsx');
+test('Game 2 swaps the Admin Y Bot into a Raven-source player controller', () => {
   const viewer = read('src/components/jedioutcast/game2/Game2ThreeViewer.jsx');
+  const controller = read('src/components/jedioutcast/game2/JediOutcastYBotController.js');
+  const constants = read('src/components/jedioutcast/game2/jediSourceConstants.js');
 
-  assert.match(page, /Game2ThreeViewer/);
-  assert.doesNotMatch(page, /JediOutcastRuntime/);
+  assert.match(constants, /c6b99bc5a_ybot\.fbx/);
+  assert.match(viewer, /loader\.loadAsync\(YBOT_MODEL_URL\)/);
+  assert.match(viewer, /JediOutcastYBotController/);
+  assert.match(controller, /sourceMovementPath = 'code\/game\/bg_pmove\.cpp'/);
+  assert.doesNotMatch(viewer, /PlayerMovementSystem/);
+  assert.doesNotMatch(viewer, /PlayerRotationSystem/);
+  assert.doesNotMatch(viewer, /useGameAvatar/);
+  assert.doesNotMatch(viewer, /loadAvatarModel/);
+});
+
+test('Game 2 leaves the known-good Game 3D camera system as camera authority', () => {
+  const viewer = read('src/components/jedioutcast/game2/Game2ThreeViewer.jsx');
   assert.match(viewer, /PlayerCameraSystem/);
-  assert.match(viewer, /PlayerMovementSystem/);
-  assert.match(viewer, /PlayerRotationSystem/);
-  assert.match(viewer, /new PlayerCameraSystem/);
-  assert.match(viewer, /new PlayerMovementSystem/);
-  assert.match(viewer, /new PlayerRotationSystem/);
-  assert.doesNotMatch(viewer, /<iframe/);
-});
-
-test('Game 2 preserves the working GameWorld3D camera initialization and orbit controls', () => {
-  const viewer = read('src/components/jedioutcast/game2/Game2ThreeViewer.jsx');
-  assert.match(viewer, /PerspectiveCamera\(\s*55/);
+  assert.match(viewer, /PerspectiveCamera\(55/);
   assert.match(viewer, /camera\.position\.set\(0, 3, -5\)/);
-  assert.match(viewer, /yaw:\s*0,\s*pitch:\s*0\.4,\s*distance:\s*4\.5/);
+  assert.match(viewer, /yaw: 0, pitch: 0\.4, distance: 4\.5/);
+  assert.match(viewer, /playerCameraSystem\.update\(delta, cameraIntent\)/);
   assert.match(viewer, /orbit\.current\.yaw -= dx \* 0\.005/);
-  assert.match(viewer, /Math\.max\(2, Math\.min\(12/);
-  assert.match(viewer, /playerCameraSystem\.update\(delta, intent\)/);
 });
 
-test('Game 2 exposes the complete Jedi Outcast single-player Force enum on the active avatar', () => {
-  const controller = read('src/components/jedioutcast/game2/Game2JediController.js');
-  for (const token of [
-    'FP_HEAL',
-    'FP_LEVITATION',
-    'FP_SPEED',
-    'FP_PUSH',
-    'FP_PULL',
-    'FP_TELEPATHY',
-    'FP_GRIP',
-    'FP_LIGHTNING',
-    'FP_SABERTHROW',
-    'FP_SABER_DEFENSE',
-    'FP_SABER_OFFENSE',
-  ]) {
-    assert.match(controller, new RegExp(token));
+test('Raven pmove constants and command scaling are represented explicitly', () => {
+  const constants = read('src/components/jedioutcast/game2/jediSourceConstants.js');
+  assert.match(constants, /speedUnits:\s*250/);
+  assert.match(constants, /stopSpeed:\s*100\s*\/\s*JEDI_SOURCE_UNITS_PER_METER/);
+  assert.match(constants, /acceleration:\s*12/);
+  assert.match(constants, /airAcceleration:\s*4/);
+  assert.match(constants, /friction:\s*6/);
+  assert.match(constants, /gravity:\s*800\s*\/\s*JEDI_SOURCE_UNITS_PER_METER/);
+  assert.match(constants, /jumpVelocity:\s*225\s*\/\s*JEDI_SOURCE_UNITS_PER_METER/);
+  assert.match(constants, /walkCommand:\s*64/);
+  assert.match(constants, /runCommand:\s*127/);
+  assert.match(constants, /forceJumpStrength/);
+  assert.match(constants, /forceJumpHeight/);
+});
+
+test('Force selector matches Raven gameplay showPowers order and seven-slot HUD behavior', () => {
+  const constants = read('src/components/jedioutcast/game2/jediSourceConstants.js');
+  const selector = read('src/components/jedioutcast/game2/JediForceSelector.jsx');
+  const controller = read('src/components/jedioutcast/game2/JediOutcastYBotController.js');
+
+  const ordered = ['FP_HEAL', 'FP_SPEED', 'FP_PUSH', 'FP_PULL', 'FP_TELEPATHY', 'FP_GRIP', 'FP_LIGHTNING'];
+  let cursor = -1;
+  for (const token of ordered) {
+    const next = constants.indexOf(token, cursor + 1);
+    assert.ok(next > cursor, token + ' is in Raven showPowers order');
+    cursor = next;
   }
-  assert.match(controller, /F1:\s*'push'/);
-  assert.match(controller, /F2:\s*'pull'/);
-  assert.match(controller, /F3:\s*'speed'/);
-  assert.match(controller, /F4:\s*'telepathy'/);
-  assert.match(controller, /F5:\s*'heal'/);
-  assert.match(controller, /F6:\s*'grip'/);
-  assert.match(controller, /F7:\s*'lightning'/);
+  assert.match(selector, /\[-3, -2, -1, 0, 1, 2, 3\]/);
+  assert.match(selector, /h-\[60px\] w-\[60px\]/);
+  assert.match(selector, /h-\[30px\] w-\[30px\]/);
+  assert.match(controller, /F1: 'push'/);
+  assert.match(controller, /F7: 'lightning'/);
+  assert.match(controller, /event\.code === 'Space'/);
 });
 
-test('Game 2 gives the active model saber combat, Force Jump, Force UI and animation hooks', () => {
-  const viewer = read('src/components/jedioutcast/game2/Game2ThreeViewer.jsx');
-  const controller = read('src/components/jedioutcast/game2/Game2JediController.js');
+test('original retail saber is loaded privately and parsed instead of committed as a proxy', () => {
+  const constants = read('src/components/jedioutcast/game2/jediSourceConstants.js');
+  const bridge = read('src/components/jedioutcast/game2/JediRetailAssetBridge.js');
+  const md3 = read('src/components/jedioutcast/game2/StaticMd3Loader.js');
+  const controller = read('src/components/jedioutcast/game2/JediOutcastYBotController.js');
 
-  assert.match(viewer, /loadAvatarModel\(avatarConfig, 1\.7\)/);
-  assert.match(viewer, /loadPlayerAnimationClips/);
-  assert.match(viewer, /createPlayerAnimationController/);
-  assert.match(viewer, /event\.code === 'Space'/);
-  assert.match(viewer, /jediController\?\.forceJump/);
-  assert.match(viewer, /GAME2_FORCE_POWERS\.map/);
-  assert.match(controller, /makeSaberVisual/);
-  assert.match(controller, /attack\(\)/);
-  assert.match(controller, /forceJump\(\)/);
-  assert.match(controller, /saberThrow/);
-  assert.match(controller, /lightning/);
+  assert.match(constants, /models\/weapons2\/saber\/saber_w\.md3/);
+  assert.match(constants, /sound\/weapons\/saber\/saberhum1\.wav/);
+  assert.match(bridge, /action: 'importPath'/);
+  assert.match(md3, /IDP3/);
+  assert.match(md3, /version 15/);
+  assert.match(controller, /fetchCanonicalJediAsset\(RAVEN_SABER_ASSETS\.model/);
+  assert.doesNotMatch(controller, /IcosahedronGeometry|BoxGeometry/);
+});
+
+test('Y Bot animation adapter uses stored admin clips and source-driven enemy AI', () => {
+  const animation = read('src/components/jedioutcast/game2/YBotJediAnimationAdapter.js');
+  const ai = read('src/components/jedioutcast/game2/JediEnemyAI.js');
+  assert.match(animation, /base44\.entities\.AnimationFBX\.list/);
+  assert.match(animation, /standing walk forward/);
+  assert.match(animation, /standing run back/);
+  assert.match(animation, /standing block/);
+  assert.match(animation, /standing melee punch/);
+  assert.match(animation, /retargetAvatarClip/);
+  assert.match(ai, /code\/game\/AI_Jedi\.cpp/);
+  assert.match(ai, /aggression/);
+  assert.match(ai, /patrol/);
+  assert.match(ai, /chase/);
+  assert.match(ai, /onForcePush/);
 });
