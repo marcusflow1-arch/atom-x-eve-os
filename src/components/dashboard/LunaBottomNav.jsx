@@ -1156,14 +1156,16 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
       </AnimatePresence>
 
       {!hideNav && <div className="flex items-center justify-center w-full h-full relative">
-        <div className="flex items-center">
-          {onEnvironmentToggle && (
+        {/* Keep the environment hub next to the shared bottom-left sidebar toggle. */}
+        {onEnvironmentToggle && (
+          <div className="absolute left-0 inset-y-0 z-10 flex items-center">
             <button type="button" data-luna-environment-trigger className="luna-environment-trigger"
               aria-expanded={environmentOpen} aria-controls="luna-environment-collection" onClick={onEnvironmentToggle}>
               <Globe aria-hidden="true" /><span>Environments</span>
             </button>
-          )}
-          {onEnvironmentToggle && <div className="w-px h-5 bg-white/10 mx-2" />}
+          </div>
+        )}
+        <div className="flex items-center">
           <button
             onClick={() => handleTabClick('home')}
             className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
