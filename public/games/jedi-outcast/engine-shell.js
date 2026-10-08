@@ -252,7 +252,7 @@ function sync(){
   try { __saveCfg(); } catch(e){}
   try { FS.syncfs(false, function(){}); } catch(e){}
 }
-setInterval(()=>{ if (booted) sync(); }, 15000);
+setInterval(()=>{ if (booted) sync(); }, 3000);
 document.addEventListener('visibilitychange', ()=>{ if (document.hidden) sync(); });
 window.addEventListener('pagehide', sync);
 
@@ -392,42 +392,13 @@ if (__q.has('debug')) document.addEventListener('DOMContentLoaded', function(){
 // Keep Raven's stock controls while applying the browser port's verified
 // viewport projection. default.cfg is the original retail binding file from assets0.pk3.
 function __tuneArgs(){
-  var vw = innerWidth || document.documentElement.clientWidth || 1280;
-  var vh = innerHeight || document.documentElement.clientHeight || 720;
-  var dpr = Math.max(1, window.devicePixelRatio || 1);
-  var rw = Math.max(320, Math.round(vw * dpr));
-  var rh = Math.max(240, Math.round(vh * dpr));
-
-  // Match the browser port's own ~4 MP safety budget, but pin the result into
-  // Raven's genuine custom video mode so R_GetModeInfo, glConfig, viewport and
-  // canvas backing-store all receive the SAME dimensions.
-  var maxPix = 4.0e6;
-  var scale = Math.sqrt(Math.min(1, maxPix / Math.max(1, rw * rh)));
-  rw = Math.max(320, (Math.floor(rw * scale) >> 1) << 1);
-  rh = Math.max(240, (Math.floor(rh * scale) >> 1) << 1);
-
-  var aspect = rw / Math.max(rh, 1);
-  var fov = Math.round(2 * Math.atan(Math.tan(73.74 * Math.PI / 360) * aspect) * 360 / Math.PI);
-  fov = Math.min(Math.max(fov, 90), 121);
-
-  // The user's canonical retail config and default.cfg both use the stock bindings
-  // (W/A/S/D, Space, Mouse1, etc.). Re-exec the retail default binding file after
-  // browser-persisted config so an earlier broken session cannot leave movement unbound.
+  // Raven owns configuration. default.cfg is loaded by the engine on first run,
+  // then jk2config.cfg restores the player's archived graphics settings and keybinds.
+  // Do not execute defaults or force graphics/input cvars here: doing so would make
+  // the in-game Settings menus appear to work, then silently reset them on launch.
   //
-  // IMPORTANT: r_mode -1 is intentional. The current browser port overrides every
-  // normal r_mode with window.innerWidth/innerHeight, which is why changing the
-  // resolution in Jedi Outcast's menu appeared to do nothing.
-  var a = [
-    '+exec', 'default.cfg',
-    '+set', 'r_mode', '-1',
-    '+set', 'r_customwidth', String(rw),
-    '+set', 'r_customheight', String(rh),
-    '+set', 'r_customaspect', String(aspect),
-    '+set', 'cg_fov', String(fov),
-    '+set', 'cg_draw2D', '1',
-    '+set', 'cl_freelook', '1'
-  ];
-
+  // Query-string cvars remain an explicit developer override for diagnostics only.
+  var a = [];
   __q.forEach(function(v, k){
     if (/^(r|cg|com|s|cl)_[A-Za-z0-9_]+$/.test(k)) a.push('+set', k, v);
   });
