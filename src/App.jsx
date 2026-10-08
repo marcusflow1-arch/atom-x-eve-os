@@ -37,10 +37,9 @@ const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
 const LayoutWrapper = ({ children, currentPageName }) => {
-  // GameView is a full-screen immersive surface. Do not wrap it in the
-  // application shell, otherwise the owner/dashboard sidebar and global
-  // navigation controls leak into the game.
-  if (currentPageName === 'GameView') return <>{children}</>;
+  // GameView and JediCharacterLab are full-screen immersive surfaces. Do not wrap
+  // them in the application shell, otherwise dashboard navigation leaks into gameplay.
+  if (currentPageName === 'GameView' || currentPageName === 'JediCharacterLab') return <>{children}</>;
 
   return Layout
     ? <Layout currentPageName={currentPageName}>{children}</Layout>
