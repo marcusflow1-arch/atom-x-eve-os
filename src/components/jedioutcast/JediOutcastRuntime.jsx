@@ -201,6 +201,11 @@ export default function JediOutcastRuntime({ onBack }) {
       if (event.data?.type === 'atom-jedi-status' && LABELS[event.data.state]) {
         setState(event.data.state);
         if (event.data.state === 'error') setNotice(event.data.detail || 'The engine could not start.');
+        if (event.data.state === 'engine-ready') {
+          requestAnimationFrame(() => {
+            try { frame.current?.focus({ preventScroll: true }); } catch (_) { frame.current?.focus?.(); }
+          });
+        }
       }
 
       if (event.data?.type === 'atom-jedi-flushed' && activeFlush.current?.id === event.data.requestId) {
@@ -214,6 +219,41 @@ export default function JediOutcastRuntime({ onBack }) {
       if (activeFlush.current) clearTimeout(activeFlush.current.timer);
     };
   }, [sendCanonicalSource]);
+
+  useEffect(() => {
+    const forwardKey = event => {
+      if (!frame.current?.contentWindow || state === 'error') return;
+      const target = event.target;
+      if (target && /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName || '')) return;
+      if (event.metaKey || (event.ctrlKey && !event.altKey)) return;
+
+      const gameKey = /^(Key[A-Z]|Digit[0-9]|ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Space|ShiftLeft|ShiftRight|ControlLeft|ControlRight|AltLeft|AltRight|Tab|Enter|Escape|PageUp|PageDown|Home|End|Backquote|Minus|Equal|BracketLeft|BracketRight|Backslash|Comma|Period|Slash|F[1-9]|F1[0-2]|Numpad[0-9]|NumpadEnter|NumpadAdd|NumpadSubtract|NumpadDecimal)$/.test(event.code || '');
+      if (!gameKey) return;
+
+      frame.current.contentWindow.postMessage({
+        type: 'atom-jedi-key',
+        eventType: event.type,
+        key: event.key,
+        code: event.code,
+        repeat: event.repeat,
+        altKey: event.altKey,
+        ctrlKey: event.ctrlKey,
+        shiftKey: event.shiftKey,
+        metaKey: event.metaKey,
+      }, window.location.origin);
+
+      if (['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', forwardKey, true);
+    window.addEventListener('keyup', forwardKey, true);
+    return () => {
+      window.removeEventListener('keydown', forwardKey, true);
+      window.removeEventListener('keyup', forwardKey, true);
+    };
+  }, [state]);
 
   const leave = action => {
     if (leaving.current) return;
@@ -294,6 +334,7 @@ export default function JediOutcastRuntime({ onBack }) {
         src="/games/jedi-outcast/index.html?runtime=base44-chunks-v4"
         title="Star Wars Jedi Knight II: Jedi Outcast"
         className="jko-engine-frame"
+        tabIndex={0}
         allow="autoplay; fullscreen; gamepad"
         allowFullScreen
         onLoad={() => {
