@@ -61,7 +61,13 @@ jobs:
               'patch': 'tools/jedi-outcast/patch-browser-port.py',
               'purpose': 'Honor Raven r_mode/r_custom video settings and prevent browser resize from overriding them.'
           }
-          hashes = data.setdefault('sha256', {})
+          data.setdefault('upstream_release_files_sha256', dict(data['files_sha256']))
+          data.pop('sha256', None)
+          data['engine_binaries_modified'] = True
+          data['browser_port_commit'] = '4dba3508db2df52f089e7f7f71f7deace53aaded'
+          data['browser_port'] = 'https://github.com/Virtastic/jk2-web/tree/' + data['browser_port_commit']
+          data['corresponding_source'] = data['browser_port']
+          hashes = data['files_sha256'] = {}
           for name in ('jk2.js','jk2.wasm','qagame.wasm'):
               hashes[name] = hashlib.sha256((root / name).read_bytes()).hexdigest()
           source.write_text(json.dumps(data, indent=2) + '\n')
