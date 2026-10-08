@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-// Atom XE bridge: the embedding app supplies the canonical retail PK3 records
-// from Base44. No local-PC file picker is used by this runtime.
+// Atom XE bridge: the embedding app supplies canonical retail PK3 chunks
+// prepared by the Base44 backend. The browser never fetches Google Drive directly.
 
 const REQUIRED_PAKS = ['assets0.pk3', 'assets1.pk3', 'assets2.pk3', 'assets5.pk3'];
 let started = false;
@@ -28,18 +28,46 @@ window.Module.onAbort = reason => window.Module.onFatal(String(reason || 'The ga
 
 function validateCanonicalPaks(records) {
   const byName = new Map();
+
   for (const record of Array.isArray(records) ? records : []) {
     const name = String(record?.name || '').toLowerCase();
     if (!REQUIRED_PAKS.includes(name) || byName.has(name)) continue;
-    const url = String(record?.url || '');
+
     const size = Number(record?.size || 0);
-    if (!/^https:\/\//i.test(url)) throw new Error(`${name}: canonical source URL is invalid.`);
     if (!(size > 0)) throw new Error(`${name}: canonical source size is missing.`);
-    byName.set(name, { name, url, size });
+
+    const chunks = Array.isArray(record?.chunks)
+      ? [...record.chunks].sort((a, b) => Number(a?.index) - Number(b?.index))
+      : [];
+
+    if (!chunks.length) throw new Error(`${name}: Base44 chunk cache is empty.`);
+
+    let nextOffset = 0;
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const index = Number(chunk?.index);
+      const offset = Number(chunk?.offset);
+      const chunkSize = Number(chunk?.size);
+      const url = String(chunk?.url || '');
+
+      if (index !== i) throw new Error(`${name}: chunk order is invalid at index ${i}.`);
+      if (offset !== nextOffset) throw new Error(`${name}: chunk ${i} starts at the wrong offset.`);
+      if (!(chunkSize > 0)) throw new Error(`${name}: chunk ${i} has no size.`);
+      if (!/^https:\/\//i.test(url)) throw new Error(`${name}: chunk ${i} has no Base44 storage URL.`);
+
+      nextOffset += chunkSize;
+    }
+
+    if (nextOffset !== size) {
+      throw new Error(`${name}: cached chunks total ${nextOffset} bytes, expected ${size}.`);
+    }
+
+    byName.set(name, { name, size, chunks });
   }
 
   const missing = REQUIRED_PAKS.filter(name => !byName.has(name));
   if (missing.length) throw new Error(`Canonical Jedi Outcast archives are incomplete: ${missing.join(', ')}`);
+
   return REQUIRED_PAKS.map(name => byName.get(name));
 }
 
@@ -62,9 +90,7 @@ function startCanonicalGame(records) {
   notify('files-ready');
   notify('starting');
 
-  // Empty arguments preserve Raven's original boot/menu/campaign flow. The
-  // original New Game menu owns difficulty, map start, mission scripts,
-  // objectives, NPC setup and progression.
+  // Empty arguments preserve Raven's original boot/menu/campaign flow.
   window.boot([]);
 }
 
