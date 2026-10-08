@@ -4,10 +4,12 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 
 const REQUIRED_PAKS = ['assets0.pk3', 'assets1.pk3', 'assets2.pk3', 'assets5.pk3'];
+const CACHE_WORKERS = 3;
 
 const LABELS = {
   'awaiting-source': 'Connecting original game data',
   checking: 'Checking canonical game data',
+  caching: 'Caching original game data in Base44',
   'files-ready': 'Original game data ready',
   starting: 'Starting Jedi Outcast',
   'engine-ready': 'Jedi Outcast running',
@@ -24,14 +26,18 @@ export default function JediOutcastRuntime({ onBack }) {
   const shell = useRef(null);
   const leaving = useRef(false);
   const sourceSent = useRef(false);
+  const sourcePreparing = useRef(false);
   const activeFlush = useRef(null);
+
   const [state, setState] = useState('awaiting-source');
   const [notice, setNotice] = useState('');
+  const [progress, setProgress] = useState('');
   const [exiting, setExiting] = useState(false);
   const [revision, setRevision] = useState(0);
 
   const sendCanonicalSource = useCallback(async () => {
-    if (sourceSent.current || !frame.current?.contentWindow) return;
+    if (sourceSent.current || sourcePreparing.current || !frame.current?.contentWindow) return;
+    sourcePreparing.current = true;
 
     try {
       if (user?.role !== 'admin') {
@@ -39,23 +45,97 @@ export default function JediOutcastRuntime({ onBack }) {
       }
 
       setState('checking');
+      setProgress('');
+      setNotice('');
+
       const result = unwrap(await base44.functions.invoke('jediOutcastSource', { action: 'status' }));
       if (!result?.success) throw new Error(result?.error || 'Could not read the Jedi Outcast source manifest.');
 
+      const chunkBytes = Number(result.pak_chunk_bytes || 0);
+      if (!(chunkBytes > 0)) throw new Error('Base44 did not report the retail archive chunk size.');
+
       const archives = (result.assets || []).filter(asset => asset.category === 'retail_archive');
       const byName = new Map(archives.map(asset => [String(asset.path || '').toLowerCase(), asset]));
-      const missing = REQUIRED_PAKS.filter(name => !byName.get(name)?.drive_file_id);
+      const missing = REQUIRED_PAKS.filter(name => !byName.get(name)?.id || !(Number(byName.get(name)?.byte_size) > 0));
       if (missing.length) {
         throw new Error(`Canonical retail archives are missing from Base44: ${missing.join(', ')}`);
       }
 
+      const jobs = [];
+      const chunksByArchive = new Map();
+
+      for (const name of REQUIRED_PAKS) {
+        const archive = byName.get(name);
+        const size = Number(archive.byte_size);
+        const count = Math.ceil(size / chunkBytes);
+        chunksByArchive.set(name, new Array(count));
+
+        for (let chunkIndex = 0; chunkIndex < count; chunkIndex++) {
+          jobs.push({ name, archive, size, chunkIndex, count });
+        }
+      }
+
+      setState('caching');
+      let completed = 0;
+      const total = jobs.length;
+      setProgress(`Preparing 0 / ${total} archive chunks`);
+
+      let nextJob = 0;
+      async function worker() {
+        while (true) {
+          const jobIndex = nextJob++;
+          if (jobIndex >= jobs.length) return;
+          const job = jobs[jobIndex];
+
+          const response = unwrap(await base44.functions.invoke('jediOutcastSource', {
+            action: 'cachePakChunk',
+            archiveAssetId: job.archive.id,
+            chunkIndex: job.chunkIndex,
+          }));
+
+          if (!response?.success || !response?.chunk?.storage_url) {
+            throw new Error(response?.error || `${job.name}: Base44 failed to cache chunk ${job.chunkIndex + 1}.`);
+          }
+
+          const chunk = response.chunk;
+          const expectedOffset = job.chunkIndex * chunkBytes;
+          const expectedSize = Math.min(chunkBytes, job.size - expectedOffset);
+
+          if (
+            Number(chunk.chunk_index) !== job.chunkIndex ||
+            Number(chunk.offset) !== expectedOffset ||
+            Number(chunk.byte_size) !== expectedSize ||
+            Number(chunk.source_size) !== job.size
+          ) {
+            throw new Error(`${job.name}: cached chunk ${job.chunkIndex + 1} did not match the canonical archive layout.`);
+          }
+
+          chunksByArchive.get(job.name)[job.chunkIndex] = {
+            index: job.chunkIndex,
+            offset: expectedOffset,
+            size: expectedSize,
+            url: chunk.storage_url,
+            sha256: chunk.sha256 || '',
+          };
+
+          completed += 1;
+          setProgress(`Preparing ${completed} / ${total} archive chunks`);
+        }
+      }
+
+      await Promise.all(Array.from({ length: Math.min(CACHE_WORKERS, jobs.length) }, () => worker()));
+
       const paks = REQUIRED_PAKS.map(name => {
-        const asset = byName.get(name);
+        const archive = byName.get(name);
+        const chunks = chunksByArchive.get(name);
+        if (!chunks?.length || chunks.some(chunk => !chunk?.url)) {
+          throw new Error(`${name}: Base44 cache is incomplete.`);
+        }
         return {
           name,
-          size: Number(asset.byte_size || 0),
-          url: `https://drive.usercontent.google.com/download?id=${encodeURIComponent(asset.drive_file_id)}&export=download&confirm=t`,
-          sourceAssetId: asset.id,
+          size: Number(archive.byte_size),
+          sourceAssetId: archive.id,
+          chunks,
         };
       });
 
@@ -64,10 +144,14 @@ export default function JediOutcastRuntime({ onBack }) {
         type: 'atom-jedi-canonical-source',
         paks,
       }, window.location.origin);
+
+      setProgress('');
       setState('files-ready');
     } catch (error) {
       setState('error');
       setNotice(error?.message || String(error));
+    } finally {
+      sourcePreparing.current = false;
     }
   }, [user?.role]);
 
@@ -130,7 +214,9 @@ export default function JediOutcastRuntime({ onBack }) {
 
   const restart = () => {
     sourceSent.current = false;
+    sourcePreparing.current = false;
     setState('awaiting-source');
+    setProgress('');
     setNotice('');
     setRevision(value => value + 1);
   };
@@ -144,7 +230,9 @@ export default function JediOutcastRuntime({ onBack }) {
 
         <span className="jko-session-label">
           Star Wars Jedi Knight II: Jedi Outcast
-          <small role="status">{exiting ? 'Saving…' : (LABELS[state] || state)}</small>
+          <small role="status">
+            {exiting ? 'Saving…' : (progress || LABELS[state] || state)}
+          </small>
         </span>
 
         <button type="button" aria-label="Reload game" disabled={exiting} title="Reload Jedi Outcast" onClick={() => leave(restart)}>
@@ -176,6 +264,7 @@ export default function JediOutcastRuntime({ onBack }) {
         allowFullScreen
         onLoad={() => {
           sourceSent.current = false;
+          sourcePreparing.current = false;
           setTimeout(sendCanonicalSource, 0);
         }}
       />
