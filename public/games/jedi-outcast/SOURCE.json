@@ -14,5 +14,15 @@
   "license": "GPL-2.0",
   "retail_data_included": false,
   "engine_binaries_modified": false,
-  "integration": "Local original-data picker, required-file and format checks, iframe lifecycle and launcher. No replacement models, maps, AI, combat, animation or HUD."
+  "integration": "Local original-data picker, required-file and format checks, iframe lifecycle and launcher. No replacement models, maps, AI, combat, animation or HUD.",
+  "browserPortPatch": {
+    "base": "Virtastic/jk2-web commit 4dba3508db2df52f089e7f7f71f7deace53aaded",
+    "patch": "tools/jedi-outcast/patch-browser-port.py",
+    "purpose": "Honor Raven r_mode/r_custom video settings and prevent browser resize from overriding them."
+  },
+  "sha256": {
+    "jk2.js": "54a6b105a7dcc22e475339bb6a3ae598236b1be97adca5b301702e7d6fa4eafa",
+    "jk2.wasm": "fd688e5ae4f0099aaa6f53e32d16abf7ea2a0b3921feb7224f7e53cdfd97ca7d",
+    "qagame.wasm": "342e027a6c7eb0d9cc33a8b029b0a0bce4144959e82a715b835995ce1c9deb61"
+  }
 }

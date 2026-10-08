@@ -34353,24 +34353,10 @@ Module["_glShadeModel"] = _glShadeModel;
 // End JS library exports
 // end include: postlibrary.js
 var ASM_CONSTS = {
-  8926876: $0 => {
+  8926748: $0 => {
     if (typeof Module !== "undefined" && Module.onFatal) Module.onFatal(UTF8ToString($0));
   },
-  8926965: () => {
-    var dpr = window.devicePixelRatio || 1;
-    var de = document.documentElement;
-    var vw = window.innerWidth || (de && de.clientWidth) || 1280;
-    var vh = window.innerHeight || (de && de.clientHeight) || 720;
-    var ss = (typeof Module !== "undefined" && Module.__idt3_ss > 0) ? Module.__idt3_ss : 1;
-    var w = Math.max(320, Math.round(vw * dpr * ss));
-    var h = Math.max(240, Math.round(vh * dpr * ss));
-    var maxPix = Math.min(4e6 * ss * ss, 8e6);
-    var scale = Math.sqrt(Math.min(1, maxPix / (w * h)));
-    w = Math.max(320, (Math.floor(w * scale) >> 1) << 1);
-    h = Math.max(240, (Math.floor(h * scale) >> 1) << 1);
-    return (w << 16) | h;
-  },
-  8927589: () => {
+  8926837: () => {
     if (typeof Browser !== "undefined") Browser.useWebGL = true;
     if (typeof GLImmediate !== "undefined" && !GLImmediate.clientColor) {
       GLImmediate.initted = false;
@@ -34394,7 +34380,7 @@ var ASM_CONSTS = {
       }
     } catch (e) {}
   },
-  8929048: ($0, $1, $2) => {
+  8928296: ($0, $1, $2) => {
     var cv = (Module["canvas"]) || document.getElementById("canvas");
     if (!cv) return;
     var mk = function(p) {
@@ -34428,21 +34414,13 @@ var ASM_CONSTS = {
     svg.querySelector("feFuncB").setAttribute("tableValues", mk($2));
     cv.style.filter = "url(#idt3GammaF)";
   },
-  8930316: () => {
-    var d = window.devicePixelRatio || 1;
-    return Math.round((window.innerWidth || 1280) * d);
-  },
-  8930410: () => {
-    var d = window.devicePixelRatio || 1;
-    return Math.round((window.innerHeight || 720) * d);
-  },
-  8930504: $0 => {
+  8929564: $0 => {
     if (!$0) {
       AL.alcErr = 40964;
       return 1;
     }
   },
-  8930552: $0 => {
+  8929612: $0 => {
     if (!AL.currentCtx) {
       err("alGetProcAddress() called without a valid context");
       return 1;
@@ -34452,40 +34430,40 @@ var ASM_CONSTS = {
       return 1;
     }
   },
-  8930700: () => {
+  8929760: () => {
     out("All memory regions:");
   },
-  8930727: ($0, $1, $2) => {
+  8929787: ($0, $1, $2) => {
     out("Region block " + ptrToString($0) + " - " + ptrToString($1) + " (" + Number($2) + " bytes):");
   },
-  8930814: ($0, $1, $2) => {
+  8929874: ($0, $1, $2) => {
     out("Region " + ptrToString($0) + ", size: " + Number($1) + " (" + ($2 ? "used" : "--FREE--") + ")");
   },
-  8930899: $0 => {
+  8929959: $0 => {
     out("Corrupt region! Size marker at the end of the region does not match: " + Number($0));
   },
-  8930987: () => {
+  8930047: () => {
     out("");
   },
-  8930995: () => {
+  8930055: () => {
     out("Free regions:");
   },
-  8931016: ($0, $1, $2, $3, $4, $5) => {
+  8930076: ($0, $1, $2, $3, $4, $5) => {
     out("In bucket " + $0 + ", free region " + ptrToString($1) + ", size: " + Number($2) + " (size at ceiling: " + Number($3) + "), prev: " + ptrToString($4) + ", next: " + ptrToString($5));
   },
-  8931190: ($0, $1) => {
+  8930250: ($0, $1) => {
     out("Free bucket index map: " + Number($0).toString(2) + " " + Number($1).toString(2));
   },
-  8931277: () => {
+  8930337: () => {
     out("");
   },
-  8931285: ($0, $1, $2) => {
+  8930345: ($0, $1, $2) => {
     err("Used region " + ptrToString($0) + ", size: " + Number($1) + " (" + ($2 ? "used" : "--FREE--") + ") is corrupt (size markers in the beginning and at the end of the region do not match!)");
   },
-  8931461: ($0, $1, $2) => {
+  8930521: ($0, $1, $2) => {
     err("Used region " + ptrToString($0) + ", size: " + Number($1) + " (" + ($2 ? "used" : "--FREE--") + ") is corrupt (size markers in the beginning and at the end of the region do not match!)");
   },
-  8931637: ($0, $1, $2, $3, $4, $5) => {
+  8930697: ($0, $1, $2, $3, $4, $5) => {
     out("In bucket " + $0 + ", free region " + ptrToString($1) + ", size: " + Number($2) + " (size at ceiling: " + Number($3) + "), prev: " + ptrToString($4) + ", next: 0x" + ptrToString($5) + " is corrupt!");
   }
 };
