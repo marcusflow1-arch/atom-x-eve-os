@@ -6,8 +6,6 @@ import { useAuth } from '@/components/auth/AuthContext';
 const REQUIRED_PAKS = ['assets0.pk3', 'assets1.pk3', 'assets2.pk3', 'assets5.pk3'];
 const PAK_CHUNK_BYTES = 16 * 1024 * 1024;
 const CACHE_RETRIES = 3;
-const GAME_VIEW_WIDTH = 1024;
-const GAME_VIEW_HEIGHT = 768;
 
 const LABELS = {
   'awaiting-source': 'Connecting original game data',
@@ -27,7 +25,6 @@ export default function JediOutcastRuntime({ onBack }) {
   const { user } = useAuth();
   const frame = useRef(null);
   const shell = useRef(null);
-  const stage = useRef(null);
   const leaving = useRef(false);
   const sourceSent = useRef(false);
   const sourcePreparing = useRef(false);
@@ -37,7 +34,6 @@ export default function JediOutcastRuntime({ onBack }) {
   const [notice, setNotice] = useState('');
   const [progress, setProgress] = useState('');
   const [videoInfo, setVideoInfo] = useState(null);
-  const viewerSize = { width: GAME_VIEW_WIDTH, height: GAME_VIEW_HEIGHT };
   const [exiting, setExiting] = useState(false);
   const [revision, setRevision] = useState(0);
 
@@ -226,15 +222,17 @@ export default function JediOutcastRuntime({ onBack }) {
       }
 
       if (event.data?.type === 'atom-jedi-video') {
-        setVideoInfo({
-          cssWidth: Number(event.data.cssWidth || 0),
-          cssHeight: Number(event.data.cssHeight || 0),
-          canvasWidth: Number(event.data.canvasWidth || 0),
-          canvasHeight: Number(event.data.canvasHeight || 0),
-          clientWidth: Number(event.data.clientWidth || 0),
-          clientHeight: Number(event.data.clientHeight || 0),
-          devicePixelRatio: Number(event.data.devicePixelRatio || 1),
-        });
+        const renderWidth = Number(event.data.renderWidth);
+        const renderHeight = Number(event.data.renderHeight);
+        if (Number.isInteger(renderWidth) && renderWidth > 0 &&
+            Number.isInteger(renderHeight) && renderHeight > 0) {
+          setVideoInfo({
+            renderWidth,
+            renderHeight,
+            clientWidth: Number(event.data.clientWidth || 0),
+            clientHeight: Number(event.data.clientHeight || 0),
+          });
+        }
       }
 
       if (event.data?.type === 'atom-jedi-flushed' && activeFlush.current?.id === event.data.requestId) {
@@ -335,13 +333,15 @@ export default function JediOutcastRuntime({ onBack }) {
 
         <span className="jko-session-label">
           Star Wars Jedi Knight II: Jedi Outcast
-          <small role="status">
+          <small role="status" title={videoInfo
+            ? `Rendered at ${videoInfo.renderWidth}×${videoInfo.renderHeight}; displayed at ${videoInfo.clientWidth}×${videoInfo.clientHeight}`
+            : undefined}>
             {exiting
               ? 'Saving…'
               : (progress ||
-                (videoInfo?.canvasWidth && videoInfo?.canvasHeight
-                  ? `${LABELS[state] || state} · canvas ${videoInfo.canvasWidth}×${videoInfo.canvasHeight} · viewer ${viewerSize.width || '—'}×${viewerSize.height || '—'}`
-                  : `${LABELS[state] || state} · viewer ${viewerSize.width || '—'}×${viewerSize.height || '—'}`))}
+                (videoInfo
+                  ? `${LABELS[state] || state} · ${videoInfo.renderWidth}×${videoInfo.renderHeight}`
+                  : LABELS[state] || state))}
           </small>
         </span>
 
@@ -364,17 +364,13 @@ export default function JediOutcastRuntime({ onBack }) {
         </div>
       )}
 
-      <div className="jko-engine-stage" ref={stage}>
+      <div className="jko-engine-stage">
         <iframe
           key={revision}
           ref={frame}
-          src="/games/jedi-outcast/index.html?runtime=fixed-1024x768-v8"
+          src="/games/jedi-outcast/index.html?runtime=render-surface-v9"
           title="Star Wars Jedi Knight II: Jedi Outcast"
           className="jko-engine-frame"
-          style={viewerSize.width && viewerSize.height ? {
-            width: `${viewerSize.width}px`,
-            height: `${viewerSize.height}px`,
-          } : undefined}
           tabIndex={0}
           allow="autoplay; fullscreen; gamepad"
           allowFullScreen
