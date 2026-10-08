@@ -255,6 +255,7 @@ Deno.serve(async (req) => {
           imported_assets: assets.filter((x: any) => x.storage_url).length,
           definitions: definitions.length,
         },
+        pak_chunk_bytes: PAK_CHUNK_BYTES,
       });
     }
 
