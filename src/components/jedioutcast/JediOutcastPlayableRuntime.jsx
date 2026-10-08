@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, RotateCcw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { parseJediOutcastRbsp } from './rbsp';
+import { JEDI_CAMERA_CONTRACT, jediViewportStyle } from './cameraContract';
 
 const KEJIM_PATH = 'maps/kejim_post.bsp';
 
@@ -81,16 +82,30 @@ function KejimPlayer({ geometry, parsed, onLockChange }) {
   const right = useMemo(() => new THREE.Vector3(), []);
   const wishDir = useMemo(() => new THREE.Vector3(), []);
   const up = useMemo(() => new THREE.Vector3(0, 1, 0), []);
+  const cameraTarget = useMemo(() => new THREE.Vector3(), []);
+  const desiredCamera = useMemo(() => new THREE.Vector3(), []);
 
   useEffect(() => {
     origin.current.copy(spawn);
     velocity.current.set(0, 0, 0);
-    camera.position.set(spawn.x, spawn.y + VIEW_HEIGHT, spawn.z);
-    camera.rotation.order = 'YXZ';
-    camera.rotation.set(pitch.current, yaw.current, 0);
-    camera.near = 1;
-    camera.far = 65536;
+    camera.near = JEDI_CAMERA_CONTRACT.near;
+    camera.far = JEDI_CAMERA_CONTRACT.far;
+    camera.fov = JEDI_CAMERA_CONTRACT.fov;
+    camera.aspect = JEDI_CAMERA_CONTRACT.aspect;
+    camera.up.set(0, 1, 0);
     camera.updateProjectionMatrix();
+
+    // One gameplay camera only: start it at the same third-person follow position
+    // used on subsequent frames instead of temporarily placing it inside the player.
+    forward.set(0, 0, -1).applyAxisAngle(up, yaw.current);
+    right.set(1, 0, 0).applyAxisAngle(up, yaw.current);
+    cameraTarget.set(spawn.x, spawn.y + JEDI_CAMERA_CONTRACT.targetHeight, spawn.z);
+    desiredCamera.copy(cameraTarget)
+      .addScaledVector(forward, -JEDI_CAMERA_CONTRACT.distance)
+      .addScaledVector(right, JEDI_CAMERA_CONTRACT.shoulderOffset);
+    desiredCamera.y += JEDI_CAMERA_CONTRACT.verticalOffset;
+    camera.position.copy(desiredCamera);
+    camera.lookAt(cameraTarget);
   }, [camera, spawn]);
 
   useEffect(() => {
@@ -103,9 +118,13 @@ function KejimPlayer({ geometry, parsed, onLockChange }) {
     };
     const mouseMove = event => {
       if (document.pointerLockElement !== canvas) return;
-      yaw.current -= event.movementX * 0.0022;
-      pitch.current -= event.movementY * 0.0022;
-      pitch.current = THREE.MathUtils.clamp(pitch.current, -Math.PI * 0.495, Math.PI * 0.495);
+      yaw.current -= event.movementX * JEDI_CAMERA_CONTRACT.mouseSensitivity;
+      pitch.current -= event.movementY * JEDI_CAMERA_CONTRACT.mouseSensitivity;
+      pitch.current = THREE.MathUtils.clamp(
+        pitch.current,
+        JEDI_CAMERA_CONTRACT.minPitch,
+        JEDI_CAMERA_CONTRACT.maxPitch,
+      );
     };
     const keyDown = event => {
       if (document.pointerLockElement !== canvas) return;
@@ -175,8 +194,6 @@ function KejimPlayer({ geometry, parsed, onLockChange }) {
     const dt = Math.min(rawDelta, 1 / 30);
     const v = velocity.current;
     const pos = origin.current;
-
-    camera.rotation.set(pitch.current, yaw.current, 0, 'YXZ');
 
     forward.set(0, 0, -1).applyAxisAngle(up, yaw.current);
     right.set(1, 0, 0).applyAxisAngle(up, yaw.current);
@@ -251,7 +268,18 @@ function KejimPlayer({ geometry, parsed, onLockChange }) {
     // speed while standing on a surface.
     if (grounded.current && pos.distanceToSquared(before) < 1e-8) v.y = 0;
 
-    camera.position.set(pos.x, pos.y + VIEW_HEIGHT, pos.z);
+    // Single third-person follow camera. Mouse X orbits around the player; mouse Y
+    // raises/lowers the camera on the vertical arc. There is no second viewer camera
+    // fighting this transform.
+    const horizontalDistance = JEDI_CAMERA_CONTRACT.distance * Math.cos(pitch.current);
+    const verticalOrbit = JEDI_CAMERA_CONTRACT.distance * Math.sin(pitch.current);
+    cameraTarget.set(pos.x, pos.y + JEDI_CAMERA_CONTRACT.targetHeight, pos.z);
+    desiredCamera.copy(cameraTarget)
+      .addScaledVector(forward, -horizontalDistance)
+      .addScaledVector(right, JEDI_CAMERA_CONTRACT.shoulderOffset);
+    desiredCamera.y += JEDI_CAMERA_CONTRACT.verticalOffset + verticalOrbit;
+    camera.position.lerp(desiredCamera, Math.min(1, 12 * dt));
+    camera.lookAt(cameraTarget);
   });
 
   return null;
@@ -266,17 +294,24 @@ function PlayableCanvas({ parsed, onLockChange }) {
   }, [geometry]);
 
   return (
-    <Canvas
-      gl={{ antialias: true, alpha: false }}
-      camera={{ fov: 80, near: 1, far: 65536 }}
-      style={{ width: '100%', height: '100%', background: '#080b10' }}
-    >
-      <color attach="background" args={['#080b10']} />
-      <ambientLight intensity={1.35} />
-      <directionalLight position={[1200, 2200, 900]} intensity={1.7} />
-      <KejimWorld geometry={geometry} />
-      <KejimPlayer geometry={geometry} parsed={parsed} onLockChange={onLockChange} />
-    </Canvas>
+    <div style={jediViewportStyle()} className="relative overflow-hidden bg-black">
+      <Canvas
+        gl={{ antialias: true, alpha: false }}
+        dpr={1}
+        camera={{
+          fov: JEDI_CAMERA_CONTRACT.fov,
+          near: JEDI_CAMERA_CONTRACT.near,
+          far: JEDI_CAMERA_CONTRACT.far,
+        }}
+        style={{ width: '100%', height: '100%', background: '#080b10' }}
+      >
+        <color attach="background" args={['#080b10']} />
+        <ambientLight intensity={1.35} />
+        <directionalLight position={[1200, 2200, 900]} intensity={1.7} />
+        <KejimWorld geometry={geometry} />
+        <KejimPlayer geometry={geometry} parsed={parsed} onLockChange={onLockChange} />
+      </Canvas>
+    </div>
   );
 }
 
@@ -337,7 +372,11 @@ export default function JediOutcastPlayableRuntime({ onBack }) {
 
   return (
     <section className="relative h-screen w-screen overflow-hidden bg-black text-white select-none">
-      {parsed && <PlayableCanvas parsed={parsed} onLockChange={setLocked} />}
+      {parsed && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black">
+          <PlayableCanvas parsed={parsed} onLockChange={setLocked} />
+        </div>
+      )}
 
       {phase === 'loading' && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black">
