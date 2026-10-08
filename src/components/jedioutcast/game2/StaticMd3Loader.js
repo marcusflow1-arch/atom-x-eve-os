@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 const textDecoder = new TextDecoder();
-const MD3_XYZ_SCALE = 1 / 64;
+// MD3 stores positions as int16 with 1/64 game-unit precision. Convert the decoded\n// Jedi game unit again into the viewer's 64-units-per-meter world scale.\nconst MD3_XYZ_SCALE = 1 / (64 * 64);
 
 function cString(bytes) {
   const end = bytes.indexOf(0);

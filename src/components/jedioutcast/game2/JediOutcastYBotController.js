@@ -47,7 +47,7 @@ function disposeObject(root) {
   });
 }
 
-function makeBlade() {
+function makeBlade(length = RAVEN_SABER_ASSETS.bladeLength) {
   const root = new THREE.Group();
   root.name = 'RavenSaberBladeEffectAdapter';
   const glowMaterial = new THREE.MeshBasicMaterial({
@@ -56,11 +56,11 @@ function makeBlade() {
     opacity: 0.96,
     toneMapped: false,
   });
-  const blade = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 1.05, 12), glowMaterial);
-  blade.position.y = 0.58;
+  const blade = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, length, 12), glowMaterial);
+  blade.position.y = length * 0.5 + 0.055;
   root.add(blade);
   const light = new THREE.PointLight(0x71dfff, 2.4, 3.2);
-  light.position.y = 0.55;
+  light.position.y = length * 0.5;
   root.add(light);
   return root;
 }
@@ -132,11 +132,11 @@ export class JediOutcastYBotController {
       this.saberAnchor = findRightHand(model);
 
       if (this.saberAnchor === model) {
-        hilt.scale.setScalar(0.11);
+        hilt.scale.setScalar(1);
         hilt.position.set(0.28, 1.04, 0.04);
         hilt.rotation.set(0, 0, -Math.PI / 2);
       } else {
-        hilt.scale.setScalar(0.11);
+        hilt.scale.setScalar(1);
         hilt.position.set(0.015, 0.04, 0);
         hilt.rotation.set(0, Math.PI / 2, -Math.PI / 2);
       }
