@@ -27,6 +27,7 @@ function setLoading(t){
 }
 // A fatal must not keep spinning — that reads as "still working" and people wait forever.
 function setFatal(t){
+  __videoFailed = true;
   load.classList.add('err');
   load.classList.remove('indet');
   if (ldStatus) ldStatus.textContent = 'Could not start';
@@ -43,6 +44,71 @@ var __renderCanvas = document.getElementById('canvas');
 if (__renderCanvas) {
   __renderCanvas.width = __RENDER_WIDTH;
   __renderCanvas.height = __RENDER_HEIGHT;
+}
+
+var __videoLastReport = '';
+var __videoMonitorStarted = false;
+var __videoReady = false;
+var __videoFailed = false;
+
+// Read the existing engine context, never create another one just to measure it.
+// onRuntimeInitialized runs BEFORE callMain/GLimp_Init, when a canvas can still
+// have the browser's 300x150 default. postRun runs after the native renderer starts.
+function __reportVideo(){
+  if (__videoFailed) return;
+  var c = Module.canvas;
+  var gl = typeof GL !== 'undefined' && GL.currentContext && GL.currentContext.GLctx;
+  if (!c || !gl || gl.canvas !== c || (gl.isContextLost && gl.isContextLost())) return;
+  var w = Number(gl.drawingBufferWidth), h = Number(gl.drawingBufferHeight);
+  if (!(w > 0 && h > 0)) return;
+
+  // Fit presentation to the frame; only the native engine writes the backing
+  // dimensions once it has started. Resizing them here would clear a live frame.
+  var aspect = String(w / h);
+  if (c.style.getPropertyValue('--jedi-aspect') !== aspect) {
+    c.style.setProperty('--jedi-aspect', aspect);
+  }
+  var info = {
+    type: 'atom-jedi-video',
+    renderWidth: w,
+    renderHeight: h,
+    canvasWidth: c.width,
+    canvasHeight: c.height,
+    clientWidth: c.clientWidth,
+    clientHeight: c.clientHeight,
+    devicePixelRatio: window.devicePixelRatio || 1
+  };
+  var signature = JSON.stringify(info);
+  if (signature !== __videoLastReport) {
+    __videoLastReport = signature;
+    if (parent !== window) parent.postMessage(info, location.origin);
+  }
+  if (!__videoReady) {
+    __videoReady = true;
+    if (parent !== window) parent.postMessage({type:'atom-jedi-status', state:'engine-ready'}, location.origin);
+    hideLoading();
+    setTimeout(function(){ __toast('Click the game for mouse look · WASD to move · Alt+Enter fullscreen', 5000); }, 1800);
+  }
+}
+
+function __startVideoReporting(){
+  if (__videoMonitorStarted) return;
+  __videoMonitorStarted = true;
+  var pending = false;
+  function schedule(){
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(function(){ pending = false; __reportVideo(); });
+  }
+  // Video-menu changes update width/height; browser/fullscreen changes only
+  // affect the displayed size. Keep both measurements current without polling.
+  new MutationObserver(schedule).observe(Module.canvas, {
+    attributes: true, attributeFilter: ['width', 'height']
+  });
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(schedule).observe(Module.canvas);
+  window.addEventListener('resize', schedule);
+  document.addEventListener('fullscreenchange', schedule);
+  schedule();
 }
 
 var Module = {
@@ -201,35 +267,13 @@ var Module = {
     });
   }],
   onRuntimeInitialized: function(){
-    // Engine drives its own frame loop via emscripten_set_main_loop.
     booted = true;
-    var c = Module.canvas || document.getElementById('canvas');
+    var c = Module.canvas;
     if (c) {
-      c.width = __RENDER_WIDTH;
-      c.height = __RENDER_HEIGHT;
-      c.style.setProperty('width', __RENDER_WIDTH + 'px', 'important');
-      c.style.setProperty('height', __RENDER_HEIGHT + 'px', 'important');
-      c.style.setProperty('max-width', 'none', 'important');
-      c.style.setProperty('max-height', 'none', 'important');
       try { c.focus({ preventScroll: true }); } catch (_) { try { c.focus(); } catch (_) {} }
     }
-    if (parent !== window) {
-      parent.postMessage({type:'atom-jedi-status', state:'engine-ready'}, location.origin);
-      parent.postMessage({
-        type: 'atom-jedi-video',
-        cssWidth: innerWidth || 0,
-        cssHeight: innerHeight || 0,
-        canvasWidth: c ? c.width : 0,
-        canvasHeight: c ? c.height : 0,
-        clientWidth: c ? c.clientWidth : 0,
-        clientHeight: c ? c.clientHeight : 0,
-        devicePixelRatio: window.devicePixelRatio || 1
-      }, location.origin);
-    }
-    setTimeout(hideLoading, 300);
-    // Fullscreen is the game's native presentation and is not discoverable otherwise.
-    setTimeout(function(){ __toast('Click the game for mouse look · WASD to move · Alt+Enter fullscreen', 5000); }, 1800);
-  }
+  },
+  postRun: [__startVideoReporting]
 };
 
 // Flush persistence periodically and on tab hide/close.
@@ -393,14 +437,10 @@ if (__q.has('debug')) document.addEventListener('DOMContentLoaded', function(){
   };
 });
 
-// ── Tuned boot config (+ ?cvar= URL overrides) ──────────────────────────────
-// No hardware gamma ramp in the browser, so idTech3's overbright pipeline renders DARK by
-// default: bake the correction into texture/lightmap upload instead (latched cvars, applied
-// pre-first-map). Widescreen: the backing store follows the viewport, so give the 3D view a
-// Hor+ fov (90° vertical-equivalent at 4:3). Any ?r_*/cg_*/com_*/s_*/cl_*=v query param
-// becomes a trailing +set (wins over the baseline) for A/B tuning without redeploys.
-// Keep Raven's stock controls while applying the browser port's verified
-// viewport projection. default.cfg is the original retail binding file from assets0.pk3.
+// ── Native render size ──────────────────────────────────────────────────────
+// The pinned browser port honors r_mode=-1 and skips viewport-driven vid_restart
+// in that mode. Com_Init reapplies these +set values after the saved config loads.
+// CSS presentation can therefore shrink or grow without reducing render quality.
 function __tuneArgs(){
   // Explicit Base44 validation target: use Raven's custom mode at a real 1024x768
   // backing resolution. This changes the renderer, not merely the status text.
@@ -464,9 +504,8 @@ document.getElementById('canvas').addEventListener('webglcontextlost', function(
 // know. Registered in the CAPTURE phase at page load — i.e. before the engine installs its own
 // window key listener at IN_Init — so stopImmediatePropagation() also keeps the engine from
 // seeing a bare Enter and confirming whatever menu item is under the cursor during the
-// transition. Entering or leaving fullscreen changes innerWidth/innerHeight, which the platform
-// layer's debounced resize->vid_restart already turns into a correctly-sized backing store, so
-// the render resolution follows the screen with no extra work here.
+// transition. Fullscreen changes presentation size; r_mode=-1 preserves the
+// requested rendering resolution and the canvas stays fitted to its aspect ratio.
 addEventListener('keydown', function(e){
   if (e.key === 'Enter' && e.altKey) {
     e.preventDefault(); e.stopImmediatePropagation();
