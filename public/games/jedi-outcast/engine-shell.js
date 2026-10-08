@@ -37,9 +37,16 @@ function hideLoading(){ load.classList.add('hide'); setTimeout(function(){ load.
 window.__JK2_GAMEDIR = 'base';
 window.__JK2_PAKS = [];
 var __argParam = null;
+var __RENDER_WIDTH = 1024;
+var __RENDER_HEIGHT = 768;
+var __renderCanvas = document.getElementById('canvas');
+if (__renderCanvas) {
+  __renderCanvas.width = __RENDER_WIDTH;
+  __renderCanvas.height = __RENDER_HEIGHT;
+}
 
 var Module = {
-  canvas: document.getElementById('canvas'),
+  canvas: __renderCanvas,
   arguments: __argParam ? __argParam.split(/\s+/).filter(Boolean) : [],
   // Route through the same hoisted handlers the ring installs below (see "Console
   // hygiene"). They used to differ -- this literal wrote straight to console.log/warn while
@@ -198,10 +205,12 @@ var Module = {
     booted = true;
     var c = Module.canvas || document.getElementById('canvas');
     if (c) {
-      c.style.setProperty('width', 'auto', 'important');
-      c.style.setProperty('height', 'auto', 'important');
-      c.style.setProperty('max-width', '100vw', 'important');
-      c.style.setProperty('max-height', '100vh', 'important');
+      c.width = __RENDER_WIDTH;
+      c.height = __RENDER_HEIGHT;
+      c.style.setProperty('width', __RENDER_WIDTH + 'px', 'important');
+      c.style.setProperty('height', __RENDER_HEIGHT + 'px', 'important');
+      c.style.setProperty('max-width', 'none', 'important');
+      c.style.setProperty('max-height', 'none', 'important');
       try { c.focus({ preventScroll: true }); } catch (_) { try { c.focus(); } catch (_) {} }
     }
     if (parent !== window) {
@@ -393,13 +402,14 @@ if (__q.has('debug')) document.addEventListener('DOMContentLoaded', function(){
 // Keep Raven's stock controls while applying the browser port's verified
 // viewport projection. default.cfg is the original retail binding file from assets0.pk3.
 function __tuneArgs(){
-  // Raven owns configuration. default.cfg is loaded by the engine on first run,
-  // then jk2config.cfg restores the player's archived graphics settings and keybinds.
-  // Do not execute defaults or force graphics/input cvars here: doing so would make
-  // the in-game Settings menus appear to work, then silently reset them on launch.
-  //
-  // Query-string cvars remain an explicit developer override for diagnostics only.
-  var a = [];
+  // Explicit Base44 validation target: use Raven's custom mode at a real 1024x768
+  // backing resolution. This changes the renderer, not merely the status text.
+  var a = [
+    '+set', 'r_mode', '-1',
+    '+set', 'r_customwidth', String(__RENDER_WIDTH),
+    '+set', 'r_customheight', String(__RENDER_HEIGHT),
+    '+set', 'r_customaspect', String(__RENDER_WIDTH / __RENDER_HEIGHT)
+  ];
   __q.forEach(function(v, k){
     if (/^(r|cg|com|s|cl)_[A-Za-z0-9_]+$/.test(k)) a.push('+set', k, v);
   });

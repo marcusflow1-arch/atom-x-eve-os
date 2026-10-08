@@ -6,6 +6,8 @@ import { useAuth } from '@/components/auth/AuthContext';
 const REQUIRED_PAKS = ['assets0.pk3', 'assets1.pk3', 'assets2.pk3', 'assets5.pk3'];
 const PAK_CHUNK_BYTES = 16 * 1024 * 1024;
 const CACHE_RETRIES = 3;
+const GAME_VIEW_WIDTH = 1024;
+const GAME_VIEW_HEIGHT = 768;
 
 const LABELS = {
   'awaiting-source': 'Connecting original game data',
@@ -35,7 +37,7 @@ export default function JediOutcastRuntime({ onBack }) {
   const [notice, setNotice] = useState('');
   const [progress, setProgress] = useState('');
   const [videoInfo, setVideoInfo] = useState(null);
-  const [viewerSize, setViewerSize] = useState({ width: 0, height: 0 });
+  const viewerSize = { width: GAME_VIEW_WIDTH, height: GAME_VIEW_HEIGHT };
   const [exiting, setExiting] = useState(false);
   const [revision, setRevision] = useState(0);
 
@@ -247,42 +249,6 @@ export default function JediOutcastRuntime({ onBack }) {
     };
   }, [sendCanonicalSource]);
 
-  useEffect(() => {
-    const host = stage.current;
-    if (!host) return;
-
-    const ORIGINAL_ASPECT = 4 / 3;
-    const updateViewer = () => {
-      const availableWidth = Math.max(1, host.clientWidth);
-      const availableHeight = Math.max(1, host.clientHeight);
-
-      let width = availableWidth;
-      let height = Math.floor(width / ORIGINAL_ASPECT);
-      if (height > availableHeight) {
-        height = availableHeight;
-        width = Math.floor(height * ORIGINAL_ASPECT);
-      }
-
-      width = Math.max(320, Math.floor(width));
-      height = Math.max(240, Math.floor(height));
-
-      setViewerSize(previous =>
-        previous.width === width && previous.height === height
-          ? previous
-          : { width, height }
-      );
-    };
-
-    updateViewer();
-    const observer = new ResizeObserver(updateViewer);
-    observer.observe(host);
-    window.addEventListener('resize', updateViewer);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', updateViewer);
-    };
-  }, []);
 
   useEffect(() => {
     const forwardKey = event => {
@@ -402,7 +368,7 @@ export default function JediOutcastRuntime({ onBack }) {
         <iframe
           key={revision}
           ref={frame}
-          src="/games/jedi-outcast/index.html?runtime=viewer-4x3-v7"
+          src="/games/jedi-outcast/index.html?runtime=fixed-1024x768-v8"
           title="Star Wars Jedi Knight II: Jedi Outcast"
           className="jko-engine-frame"
           style={viewerSize.width && viewerSize.height ? {
