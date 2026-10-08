@@ -1,8 +1,9 @@
 /* eslint-disable */
-import { loadGLB } from './glb.js';
+import { parseGLB } from './glb.js';
+import { fetchGame2Binary } from './chunked.js';
 import { Skeleton } from './actor.js';
 
-async function fetchBuf(url) { const r = await fetch(url); if (!r.ok) throw new Error('fetch ' + url + ' → ' + r.status); return r.arrayBuffer(); }
+const fetchBuf = fetchGame2Binary;
 async function gunzip(buf) {
   const ds = new DecompressionStream('gzip'); const stream = new Blob([buf]).stream().pipeThrough(ds); return new Response(stream).arrayBuffer();
 }
@@ -16,7 +17,7 @@ export async function loadBank(base, progress = () => { }) {
 export async function loadAll(base = 'assets/', progress = () => { }) {
   progress('rig'); const rigJson = await (await fetch(base + 'rig.json')).json();
   const bank = await loadBank(base, progress);
-  progress('model'); const glb = await loadGLB(base + 'Explorer_G2_Game.glb');
+  progress('model'); const glb = parseGLB(await fetchBuf(base + 'Explorer_G2_Game.glb'));
   const skel = new Skeleton(rigJson, bank.q, bank.pel, glb);
   const J = glb.json, prim = J.meshes[0].primitives[0], A = prim.attributes;
   const body = { pos: glb.accessor(A.POSITION).data, nrm: glb.accessor(A.NORMAL).data, col: glb.accessor(A.COLOR_0).data, joints: glb.accessor(A.JOINTS_0).data, weights: glb.accessor(A.WEIGHTS_0).data, idx: glb.accessor(prim.indices).data };
