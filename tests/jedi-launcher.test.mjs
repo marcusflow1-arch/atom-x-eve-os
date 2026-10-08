@@ -151,16 +151,36 @@ test('Game 2 camera uses Raven collision-safe centerline values', () => {
   }
 });
 
-test('clicking the game canvas explicitly recaptures mouse look in the Base44 iframe', () => {
+test('clicking the game canvas requests standard pointer lock during user activation', () => {
   const { dom, w, id } = setup();
   try {
     const canvas = id('canvas');
-    let calls = 0;
-    canvas.requestPointerLock = () => { calls += 1; };
+    const calls = [];
+    canvas.requestPointerLock = (...args) => { calls.push(args); };
     canvas.dispatchEvent(new w.MouseEvent('click', { bubbles: true, cancelable: true }));
-    assert.equal(calls, 1);
+    assert.deepEqual(calls, [[]], 'do not request raw input before standard pointer lock');
   } finally {
     dom.window.close();
+  }
+});
+
+test('browser pointer lock errors report a recoverable mouse-camera issue', () => {
+  const { dom, w, id } = setup();
+  try {
+    const canvas = id('canvas');
+    const messages = [];
+    Object.defineProperty(w, 'parent', { value: { postMessage: message => messages.push(message) } });
+    canvas.requestPointerLock = () => Promise.reject(new Error('Permission denied'));
+    canvas.dispatchEvent(new w.MouseEvent('click', { bubbles: true, cancelable: true }));
+    return waitFor(() => messages.some(item => item.type === 'atom-jedi-mouse-lock-error'))
+      .then(() => {
+        assert.match(messages[0].detail, /Permission denied/);
+        assert.match(w.document.body.textContent, /Open the game in a new tab/);
+      })
+      .finally(() => dom.window.close());
+  } catch (error) {
+    dom.window.close();
+    throw error;
   }
 });
 
