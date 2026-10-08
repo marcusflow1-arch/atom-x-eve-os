@@ -262,6 +262,57 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === 'cacheSourceArchive') {
+      const sourceCommit = '85f58467344d3ccbc6e2501a9af573ff4488a898';
+      const archivePath = `source/grayj-Jedi-Outcast-${sourceCommit}.zip`;
+      const existing = await base44.asServiceRole.entities.GameReconstructionFile.filter(
+        { game_key: 'jedi_outcast', area: 'source_code', path: archivePath },
+        '-updated_date',
+        10,
+      );
+      const cached = existing.find((row: any) => row.storage_url && row.status === 'stored');
+      if (cached) return Response.json({ success: true, reused: true, file: cached });
+
+      const url = `https://github.com/grayj/Jedi-Outcast/archive/${sourceCommit}.zip`;
+      const response = await fetch(url, { redirect: 'follow' });
+      if (!response.ok) throw new Error(`Raven source archive download failed: HTTP ${response.status}`);
+      const contentLength = Number(response.headers.get('content-length') || 0);
+      if (contentLength > MAX_IMPORT_BYTES) throw new Error('Raven source archive exceeds the Base44 reconstruction import limit.');
+
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      if (!bytes.byteLength || bytes.byteLength > MAX_IMPORT_BYTES) throw new Error('Raven source archive is empty or too large.');
+      const digest = hex(await crypto.subtle.digest('SHA-256', bytes));
+      const owned = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+      const file = new File([owned], `Jedi-Outcast-${sourceCommit}.zip`, { type: 'application/zip' });
+      const uploaded = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+      if (!uploaded?.file_url) throw new Error('Base44 source archive upload did not return a file URL.');
+
+      const data = {
+        game_key: 'jedi_outcast',
+        area: 'source_code',
+        path: archivePath,
+        display_name: `Jedi-Outcast-${sourceCommit}.zip`,
+        language: 'Source archive',
+        source_origin: 'grayj/Jedi-Outcast',
+        source_url: url,
+        source_commit: sourceCommit,
+        storage_url: uploaded.file_url,
+        content: '',
+        byte_size: bytes.byteLength,
+        sha256: digest,
+        canonical: true,
+        editable: false,
+        status: 'stored',
+        metadata: { complete_source_snapshot: true, license: 'GPL-2.0' },
+      };
+
+      const record = existing[0]
+        ? await base44.asServiceRole.entities.GameReconstructionFile.update(existing[0].id, data)
+        : await base44.asServiceRole.entities.GameReconstructionFile.create(data);
+
+      return Response.json({ success: true, reused: false, file: record });
+    }
+
     if (action === 'cachePakChunk') {
       const archiveAssetId = String(body.archiveAssetId || '');
       const chunkIndex = Number(body.chunkIndex);
