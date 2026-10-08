@@ -239,21 +239,24 @@ Deno.serve(async (req) => {
     const action = String(body.action || '');
 
     if (action === 'status') {
-      const [roots, assets, definitions] = await Promise.all([
+      const [roots, assets, definitions, pakChunks] = await Promise.all([
         base44.asServiceRole.entities.JediSourceRoot.list('-created_date', 50),
         base44.asServiceRole.entities.JediSourceAsset.list('path', 500),
         base44.asServiceRole.entities.JediContentDefinition.list('content_key', 500),
+        base44.asServiceRole.entities.JediPakChunk.list('archive_name', 500),
       ]);
       return Response.json({
         success: true,
         roots,
         assets,
         definitions,
+        pak_chunks: pakChunks,
         counts: {
           roots: roots.length,
           assets: assets.length,
           imported_assets: assets.filter((x: any) => x.storage_url).length,
           definitions: definitions.length,
+          pak_chunks: pakChunks.length,
         },
         pak_chunk_bytes: PAK_CHUNK_BYTES,
       });
@@ -451,6 +454,9 @@ Deno.serve(async (req) => {
     return Response.json({ error: `Unknown action: ${action}` }, { status: 400 });
   } catch (error: any) {
     console.error('jediOutcastSource:', error);
-    return Response.json({ success: false, error: error?.message || String(error) }, { status: 500 });
+    // This is an admin-only development bridge. Return the real backend error in
+    // JSON so the reconstruction UI can identify the failing stage instead of
+    // Base44 replacing it with the generic "Request failed with status code 500".
+    return Response.json({ success: false, error: error?.message || String(error) });
   }
 });
