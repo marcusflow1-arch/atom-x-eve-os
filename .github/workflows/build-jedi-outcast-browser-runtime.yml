@@ -27,8 +27,8 @@ jobs:
         run: |
           python3 tools/jedi-outcast/patch-browser-port.py /tmp/jk2-web
           grep -n "Atom XE: force the gameplay framebuffer to the reconstruction contract" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
-          grep -n "width = 1024" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
-          grep -n "height = 768" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
+          grep -n "w = 1024" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
+          grep -n "h = 768" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
           grep -n "Browser/window resize changes presentation only" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
 
       - name: Build Raven engine and SP module
