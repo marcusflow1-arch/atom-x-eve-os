@@ -291,7 +291,7 @@ export default function JediOutcastRuntime({ onBack }) {
       <iframe
         key={revision}
         ref={frame}
-        src="/games/jedi-outcast/index.html"
+        src="/games/jedi-outcast/index.html?runtime=base44-chunks-v4"
         title="Star Wars Jedi Knight II: Jedi Outcast"
         className="jko-engine-frame"
         allow="autoplay; fullscreen; gamepad"
