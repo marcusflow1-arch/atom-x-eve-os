@@ -175,7 +175,7 @@ test('browser pointer lock errors report a recoverable mouse-camera issue', () =
     return waitFor(() => messages.some(item => item.type === 'atom-jedi-mouse-lock-error'))
       .then(() => {
         assert.match(messages[0].detail, /Permission denied/);
-        assert.match(w.document.body.textContent, /Open the game in a new tab/);
+        assert.match(w.document.body.textContent, /Try the published app outside the editor preview/);
       })
       .finally(() => dom.window.close());
   } catch (error) {
