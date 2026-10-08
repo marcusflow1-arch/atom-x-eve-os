@@ -20,13 +20,14 @@ jobs:
 
       - name: Fetch pinned jk2-web source
         run: |
-          git clone --depth 1 --branch v1.1.0 https://github.com/Virtastic/jk2-web.git /tmp/jk2-web
+          git clone https://github.com/Virtastic/jk2-web.git /tmp/jk2-web
+          git -C /tmp/jk2-web checkout 4dba3508db2df52f089e7f7f71f7deace53aaded
 
       - name: Apply Atom XE browser-platform patch
         run: |
           python3 tools/jedi-outcast/patch-browser-port.py /tmp/jk2-web
           grep -n "Atom XE: preserve Raven's selected video mode" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
-          grep -n "browser/window resize must not silently replace" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
+          grep -n "Browser/window resize changes presentation only" /tmp/jk2-web/shared/wasm-build/sys_emscripten_jk/sys_jk_gl.cpp
 
       - name: Build Raven engine and SP module
         run: |
@@ -56,7 +57,7 @@ jobs:
           source = root / 'SOURCE.json'
           data = json.loads(source.read_text())
           data['browserPortPatch'] = {
-              'base': 'Virtastic/jk2-web v1.1.0',
+              'base': 'Virtastic/jk2-web commit 4dba3508db2df52f089e7f7f71f7deace53aaded',
               'patch': 'tools/jedi-outcast/patch-browser-port.py',
               'purpose': 'Honor Raven r_mode/r_custom video settings and prevent browser resize from overriding them.'
           }
