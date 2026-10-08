@@ -368,7 +368,7 @@ export default function JediOutcastRuntime({ onBack }) {
         <iframe
           key={revision}
           ref={frame}
-          src="/games/jedi-outcast/index.html?runtime=native-camera-v11"
+          src="/games/jedi-outcast/index.html?runtime=native-resolution-v12"
           title="Star Wars Jedi Knight II: Jedi Outcast"
           className="jko-engine-frame"
           tabIndex={0}
