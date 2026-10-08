@@ -1,0 +1,78 @@
+{
+  "name": "JediPakChunk",
+  "type": "object",
+  "properties": {
+    "game_key": {
+      "type": "string",
+      "default": "jedi_outcast"
+    },
+    "archive_name": {
+      "type": "string"
+    },
+    "archive_asset_id": {
+      "type": "string"
+    },
+    "chunk_index": {
+      "type": "number"
+    },
+    "offset": {
+      "type": "number"
+    },
+    "byte_size": {
+      "type": "number"
+    },
+    "source_size": {
+      "type": "number"
+    },
+    "storage_url": {
+      "type": "string"
+    },
+    "sha256": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "cached",
+        "invalid"
+      ],
+      "default": "cached"
+    },
+    "metadata": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "required": [
+    "game_key",
+    "archive_name",
+    "archive_asset_id",
+    "chunk_index",
+    "offset",
+    "byte_size",
+    "source_size",
+    "storage_url"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

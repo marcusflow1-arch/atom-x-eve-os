@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const MAX_IMPORT_BYTES = 96 * 1024 * 1024;
+const PAK_CHUNK_BYTES = 16 * 1024 * 1024;
 const ZIP_TAIL_BYTES = 65557;
 const decoder = new TextDecoder();
 
@@ -19,6 +20,17 @@ function hex(bytes: ArrayBuffer) {
 
 function sharedDriveUrl(fileId: string) {
   return `https://drive.usercontent.google.com/download?id=${encodeURIComponent(fileId)}&export=download&confirm=t`;
+}
+
+async function getDriveToken(base44: any) {
+  try {
+    const tokenResult: any = await base44.asServiceRole.connectors.getAccessToken('googledrive');
+    return String(tokenResult?.access_token || tokenResult?.token || tokenResult || '');
+  } catch (_) {
+    // The retail source links are shared with the app. The server-side shared-link
+    // fallback remains usable even when the connector has not granted drive.file access.
+    return '';
+  }
 }
 
 async function driveMetadata(token: string, fileId: string) {
@@ -246,6 +258,84 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === 'cachePakChunk') {
+      const archiveAssetId = String(body.archiveAssetId || '');
+      const chunkIndex = Number(body.chunkIndex);
+      if (!archiveAssetId || !Number.isInteger(chunkIndex) || chunkIndex < 0) {
+        return Response.json({ error: 'archiveAssetId and a non-negative integer chunkIndex are required.' }, { status: 400 });
+      }
+
+      const archive = await base44.asServiceRole.entities.JediSourceAsset.get(archiveAssetId);
+      if (!archive || archive.game_key !== 'jedi_outcast' || archive.category !== 'retail_archive' || !archive.drive_file_id) {
+        return Response.json({ error: 'Canonical Jedi Outcast retail archive not found.' }, { status: 404 });
+      }
+
+      const sourceSize = Number(archive.byte_size || 0);
+      if (!(sourceSize > 0)) return Response.json({ error: `${archive.path}: source size is missing.` }, { status: 400 });
+      const chunkCount = Math.ceil(sourceSize / PAK_CHUNK_BYTES);
+      if (chunkIndex >= chunkCount) return Response.json({ error: `${archive.path}: chunk index ${chunkIndex} is out of range.` }, { status: 400 });
+
+      const offset = chunkIndex * PAK_CHUNK_BYTES;
+      const expectedSize = Math.min(PAK_CHUNK_BYTES, sourceSize - offset);
+      const existing = await base44.asServiceRole.entities.JediPakChunk.filter(
+        { game_key: 'jedi_outcast', archive_asset_id: archive.id, chunk_index: chunkIndex },
+        '-updated_date',
+        10,
+      );
+      const cached = existing.find((row: any) =>
+        row.status === 'cached' &&
+        row.storage_url &&
+        Number(row.offset) === offset &&
+        Number(row.byte_size) === expectedSize &&
+        Number(row.source_size) === sourceSize
+      );
+      if (cached) {
+        return Response.json({
+          success: true,
+          reused: true,
+          chunk: cached,
+          archive: { id: archive.id, name: archive.path, size: sourceSize, chunk_count: chunkCount, chunk_bytes: PAK_CHUNK_BYTES },
+        });
+      }
+
+      const token = await getDriveToken(base44);
+      const bytes = await driveRange(token, String(archive.drive_file_id), offset, offset + expectedSize - 1);
+      if (bytes.byteLength !== expectedSize) throw new Error(`${archive.path}: chunk ${chunkIndex} size mismatch.`);
+
+      const digest = hex(await crypto.subtle.digest('SHA-256', bytes));
+      const owned = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+      const file = new File([owned], `${String(archive.path).replace(/[^a-z0-9_.-]+/gi, '_')}.part${String(chunkIndex).padStart(3, '0')}`, {
+        type: 'application/octet-stream',
+      });
+      const uploaded = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+      if (!uploaded?.file_url) throw new Error(`${archive.path}: Base44 chunk upload did not return a file URL.`);
+
+      const data = {
+        game_key: 'jedi_outcast',
+        archive_name: archive.path,
+        archive_asset_id: archive.id,
+        chunk_index: chunkIndex,
+        offset,
+        byte_size: expectedSize,
+        source_size: sourceSize,
+        storage_url: uploaded.file_url,
+        sha256: digest,
+        status: 'cached',
+        metadata: { source: 'google_drive_range', chunk_bytes: PAK_CHUNK_BYTES },
+      };
+
+      const chunk = existing[0]
+        ? await base44.asServiceRole.entities.JediPakChunk.update(existing[0].id, data)
+        : await base44.asServiceRole.entities.JediPakChunk.create(data);
+
+      return Response.json({
+        success: true,
+        reused: false,
+        chunk,
+        archive: { id: archive.id, name: archive.path, size: sourceSize, chunk_count: chunkCount, chunk_bytes: PAK_CHUNK_BYTES },
+      });
+    }
+
     if (action === 'importPath') {
       const requestedPath = String(body.path || '').replace(/\\/g, '/').replace(/^\/+/, '').toLowerCase();
       if (!requestedPath || requestedPath.includes('..')) return Response.json({ error: 'A safe original game path is required.' }, { status: 400 });
@@ -258,8 +348,7 @@ Deno.serve(async (req) => {
       const cached = existing.find((x: any) => x.storage_url);
       if (cached) return Response.json({ success: true, asset: cached, reused: true });
 
-      const tokenResult: any = await base44.asServiceRole.connectors.getAccessToken('googledrive');
-      const token = String(tokenResult?.access_token || tokenResult?.token || tokenResult || '');
+      const token = await getDriveToken(base44);
       const resolved = await resolveRetailPath(base44, token, requestedPath);
       const payload = await readLocatedPk3Entry(
         token,
@@ -320,8 +409,7 @@ Deno.serve(async (req) => {
         return Response.json({ success: true, asset, reused: true });
       }
 
-      const tokenResult: any = await base44.asServiceRole.connectors.getAccessToken('googledrive');
-      const token = String(tokenResult?.access_token || tokenResult?.token || tokenResult || '');
+      const token = await getDriveToken(base44);
       let payload;
       if (asset.source_kind === 'drive_file' && asset.drive_file_id) {
         payload = await driveWhole(token, String(asset.drive_file_id));
