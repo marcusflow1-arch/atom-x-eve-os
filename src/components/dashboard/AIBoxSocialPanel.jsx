@@ -240,11 +240,11 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
                     <Users className="h-3 w-3" />
                     {partyFull ? 'Party Full' : partyState === 'working' ? 'Inviting…' : partyState === 'done' ? 'Invite Sent' : partyState === 'error' ? 'Retry Party' : 'Invite Party'}
                   </button>
-                  {mode !== 'party' && <button type="button" disabled={inviteState === 'working' || inviteState === 'done'} onClick={() => inviteDashboard(player) className="flex min-h-8 items-center justify-center gap-1 rounded-lg bg-white/[0.045] px-2 text-[7px] font-bold uppercase tracking-[.08em] text-white/62 hover:bg-white/[0.08] disabled:opacity-45">
+                  {mode !== 'party' && <button type="button" disabled={inviteState === 'working' || inviteState === 'done'} onClick={() => inviteDashboard(player)} className="flex min-h-8 items-center justify-center gap-1 rounded-lg bg-white/[0.045] px-2 text-[7px] font-bold uppercase tracking-[.08em] text-white/62 hover:bg-white/[0.08] disabled:opacity-45">
                     <UserPlus className="h-3 w-3" />
                     {inviteState === 'working' ? 'Inviting…' : inviteState === 'done' ? 'Dashboard Sent' : inviteState === 'error' ? 'Retry Invite' : 'Invite Dashboard'}
                   </button>}
-                  {mode !== 'party' && <button type="button" disabled={joinState === 'working'} onClick={() => joinPlayerDashboard(player) className="flex min-h-8 items-center justify-center gap-1 rounded-lg bg-cyan-200/[0.09] px-2 text-[7px] font-black uppercase tracking-[.08em] text-cyan-100 hover:bg-cyan-200/[0.14] disabled:opacity-45">
+                  {mode !== 'party' && <button type="button" disabled={joinState === 'working'} onClick={() => joinPlayerDashboard(player)} className="flex min-h-8 items-center justify-center gap-1 rounded-lg bg-cyan-200/[0.09] px-2 text-[7px] font-black uppercase tracking-[.08em] text-cyan-100 hover:bg-cyan-200/[0.14] disabled:opacity-45">
                     <LogIn className="h-3 w-3" />
                     {joinState === 'working' ? 'Joining…' : joinState === 'error' ? 'Retry Join' : 'Join Dashboard'}
                   </button>}
