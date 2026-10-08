@@ -1,6 +1,7 @@
 import { joinDashboard, isLivePlayer } from '@/components/social/dashboardSession';
 import { usePartySession } from '@/components/social/partySession';
 import { setAIBoxSocialMode } from '@/components/dashboard/aiBoxSocialMode';
+import { buildPartySlots } from '@/components/dashboard/socialDiscoverySelectors.mjs';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1520,7 +1521,7 @@ export function LibraryBannerSection({
   };
 
   // Five slots reflect confirmed party membership only, never nearby or online players.
-  const partySlots = Array.from({ length: 5 }, (_, index) => (partyState.members || [])[index] || null);
+  const partySlots = buildPartySlots(partyState.members);
 
   return (
     <div className="flex flex-col items-start w-full h-full">
