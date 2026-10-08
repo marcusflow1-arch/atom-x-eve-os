@@ -95,13 +95,25 @@ test('canonical source gate rejects gaps in the Base44 chunk layout', () => {
   }
 });
 
-test('browser launch leaves Raven graphics and keybind configuration untouched', () => {
-  const { dom, w } = setup();
+test('browser launch uses a real 1024x768 render target without resetting controls', () => {
+  const { dom, w, id } = setup();
   try {
     const args = w.__tuneArgs();
-    assert.equal(args.length, 0);
-    assert.doesNotMatch(read('engine-shell.js'), /\+exec['\"],?\s*['\"]default\.cfg/);
-    assert.doesNotMatch(read('engine-shell.js'), /['\"]r_mode['\"],\s*['\"]-1['\"]/);
+    const sets = new Map();
+    for (let i = 0; i < args.length - 2; i++) {
+      if (args[i] === '+set') sets.set(args[i + 1], args[i + 2]);
+    }
+
+    assert.equal(id('canvas').width, 1024);
+    assert.equal(id('canvas').height, 768);
+    assert.equal(sets.get('r_mode'), '-1');
+    assert.equal(sets.get('r_customwidth'), '1024');
+    assert.equal(sets.get('r_customheight'), '768');
+    assert.equal(Number(sets.get('r_customaspect')), 1024 / 768);
+
+    const shell = read('engine-shell.js');
+    assert.doesNotMatch(shell, /\+exec['\"],?\s*['\"]default\.cfg/);
+    assert.doesNotMatch(shell, /['\"]bind['\"]/i);
   } finally {
     dom.window.close();
   }
