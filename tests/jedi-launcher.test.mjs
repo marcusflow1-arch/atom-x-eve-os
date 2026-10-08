@@ -120,6 +120,19 @@ test('browser launch requests the native 1024x768 mode without resetting control
   }
 });
 
+test('clicking the game canvas explicitly recaptures mouse look in the Base44 iframe', () => {
+  const { dom, w, id } = setup();
+  try {
+    const canvas = id('canvas');
+    let calls = 0;
+    canvas.requestPointerLock = () => { calls += 1; };
+    canvas.dispatchEvent(new w.MouseEvent('click', { bubbles: true, cancelable: true }));
+    assert.equal(calls, 1);
+  } finally {
+    dom.window.close();
+  }
+});
+
 test('normal launch reads the persistent cache without the rate-limited status function', () => {
   const runtime = readFileSync(new URL('../src/components/jedioutcast/JediOutcastRuntime.jsx', import.meta.url), 'utf8');
   assert.doesNotMatch(runtime, /jediOutcastSource[^\n]*action:\s*['\"]status['\"]/);
