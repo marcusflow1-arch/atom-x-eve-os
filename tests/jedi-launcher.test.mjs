@@ -120,6 +120,19 @@ test('browser launch requests the native 1024x768 mode without resetting control
   }
 });
 
+test('clicking the game canvas explicitly recaptures mouse look in the Base44 iframe', () => {
+  const { dom, w, id } = setup();
+  try {
+    const canvas = id('canvas');
+    let calls = 0;
+    canvas.requestPointerLock = () => { calls += 1; };
+    canvas.dispatchEvent(new w.MouseEvent('click', { bubbles: true, cancelable: true }));
+    assert.equal(calls, 1);
+  } finally {
+    dom.window.close();
+  }
+});
+
 test('normal launch reads the persistent cache without the rate-limited status function', () => {
   const runtime = readFileSync(new URL('../src/components/jedioutcast/JediOutcastRuntime.jsx', import.meta.url), 'utf8');
   assert.doesNotMatch(runtime, /jediOutcastSource[^\n]*action:\s*['\"]status['\"]/);
@@ -363,7 +376,7 @@ test('renderer diagnostics do not mark a fatal or lost-context game as running',
   }
 });
 
-test('Retribution camera keeps Kyle visible with Raven framing and a modest pullback', () => {
+test('Jedi camera uses a pulled-back over-shoulder framing with native mouse freelook', () => {
   const { dom, w } = setup();
   try {
     const args = w.__tuneArgs();
@@ -375,14 +388,17 @@ test('Retribution camera keeps Kyle visible with Raven framing and a modest pull
     assert.equal(sets.get('cg_thirdPerson'), '1');
     assert.equal(sets.get('cg_gunAutoFirst'), '0');
     assert.equal(sets.get('cg_saberAutoThird'), '1');
-    assert.equal(sets.get('cg_thirdPersonRange'), '100');
-    assert.equal(sets.get('cg_thirdPersonMaxRange'), '150');
+    assert.equal(sets.get('cl_freelook'), '1');
+    assert.equal(sets.get('m_pitch'), '0.022');
+    assert.equal(sets.get('m_yaw'), '0.022');
+    assert.equal(sets.get('cg_thirdPersonRange'), '165');
+    assert.equal(sets.get('cg_thirdPersonMaxRange'), '260');
     assert.equal(sets.get('cg_thirdPersonAngle'), '0');
-    assert.equal(sets.get('cg_thirdPersonPitchOffset'), '0');
-    assert.equal(sets.get('cg_thirdPersonVertOffset'), '16');
-    assert.equal(sets.get('cg_thirdPersonHorzOffset'), '0');
-    assert.equal(sets.get('cg_thirdPersonCameraDamp'), '0.3');
-    assert.equal(sets.get('cg_thirdPersonTargetDamp'), '0.5');
+    assert.equal(sets.get('cg_thirdPersonPitchOffset'), '-4');
+    assert.equal(sets.get('cg_thirdPersonVertOffset'), '24');
+    assert.equal(sets.get('cg_thirdPersonHorzOffset'), '-22');
+    assert.equal(sets.get('cg_thirdPersonCameraDamp'), '0.22');
+    assert.equal(sets.get('cg_thirdPersonTargetDamp'), '0.4');
     assert.equal(sets.has('model'), false, 'Raven still chooses the canonical player model');
     assert.equal(args.includes('+load'), false);
     assert.equal(args.includes('+map'), false);

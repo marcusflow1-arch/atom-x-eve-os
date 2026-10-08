@@ -449,23 +449,26 @@ function __tuneArgs(){
     '+set', 'r_customwidth', String(__RENDER_WIDTH),
     '+set', 'r_customheight', String(__RENDER_HEIGHT),
     '+set', 'r_customaspect', String(__RENDER_WIDTH / __RENDER_HEIGHT),
-    // Retribution gameplay camera: keep Raven's original projection, vertical
-    // framing, collision ceiling and damping, but keep the controllable Kyle
-    // model visible instead of letting gunAutoFirst place the camera inside him.
-    // Range 100 is a modest pullback (Raven also uses 100 for third-person reset
-    // in the MP client) while remaining below the original 150 max range.
+    // Gameplay camera: the live Base44 preview showed the camera pressed almost
+    // into Kyle's head. Keep Raven's native third-person collision/look code, but
+    // start from a wider over-the-right-shoulder composition instead of a centered
+    // close follow. Mouse freelook remains native; these values only change the
+    // camera's default relationship to the player.
     '+set', 'cg_fov', '80',
     '+set', 'cg_thirdPerson', '1',
     '+set', 'cg_gunAutoFirst', '0',
     '+set', 'cg_saberAutoThird', '1',
-    '+set', 'cg_thirdPersonRange', '100',
-    '+set', 'cg_thirdPersonMaxRange', '150',
+    '+set', 'cl_freelook', '1',
+    '+set', 'm_pitch', '0.022',
+    '+set', 'm_yaw', '0.022',
+    '+set', 'cg_thirdPersonRange', '165',
+    '+set', 'cg_thirdPersonMaxRange', '260',
     '+set', 'cg_thirdPersonAngle', '0',
-    '+set', 'cg_thirdPersonPitchOffset', '0',
-    '+set', 'cg_thirdPersonVertOffset', '16',
-    '+set', 'cg_thirdPersonHorzOffset', '0',
-    '+set', 'cg_thirdPersonCameraDamp', '0.3',
-    '+set', 'cg_thirdPersonTargetDamp', '0.5'
+    '+set', 'cg_thirdPersonPitchOffset', '-4',
+    '+set', 'cg_thirdPersonVertOffset', '24',
+    '+set', 'cg_thirdPersonHorzOffset', '-22',
+    '+set', 'cg_thirdPersonCameraDamp', '0.22',
+    '+set', 'cg_thirdPersonTargetDamp', '0.4'
   ];
   __q.forEach(function(v, k){
     if (/^(r|cg|com|s|cl)_[A-Za-z0-9_]+$/.test(k)) a.push('+set', k, v);
@@ -574,6 +577,19 @@ if (__gameCanvas) {
   }, true);
   __gameCanvas.addEventListener('click', function(){
     try { __gameCanvas.focus({ preventScroll: true }); } catch (_) { try { __gameCanvas.focus(); } catch (_) {} }
+    // The native engine also requests pointer lock, but Base44 preview iframe focus
+    // can swallow that first request. Re-requesting from the same user gesture makes
+    // mouse X/Y reliably drive Raven's yaw/pitch camera controls.
+    if (!document.pointerLockElement && __gameCanvas.requestPointerLock) {
+      try {
+        var p = __gameCanvas.requestPointerLock({ unadjustedMovement: true });
+        if (p && p.catch) p.catch(function(){
+          try { __gameCanvas.requestPointerLock(); } catch (_) {}
+        });
+      } catch (_) {
+        try { __gameCanvas.requestPointerLock(); } catch (_) {}
+      }
+    }
   }, true);
 }
 

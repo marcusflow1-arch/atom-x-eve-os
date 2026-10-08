@@ -67,3 +67,23 @@ The original `code/cgame/cg_main.cpp` defines FOV 80, third-person range 80/max 
 A separate verified defect affected build freshness: the loader reused a constant v1.1.0 cache key after the engine was rebuilt. It now reads current build metadata with `cache: no-store` and uses the exact current JS/WASM hashes in artifact URLs. The rebuild workflow updates that same active hash set; the original release hashes remain recorded separately. No global fetch rewriting is needed.
 
 This validates asset structure and startup configuration; it does not establish visual camera correctness in the authenticated gameplay session.
+
+
+## Live camera correction — 2026-10-08
+
+A Base44 preview screenshot showed the third-person camera effectively pushed into Kyle's head, with the character occupying the lower center of the frame and very little playable space visible. The camera was also still centered directly behind the player.
+
+The browser launcher now keeps Raven's native third-person camera/collision code but changes the startup framing to a pulled-back over-the-right-shoulder view:
+
+- `cg_thirdPersonRange = 135`
+- `cg_thirdPersonMaxRange = 220`
+- `cg_thirdPersonHorzOffset = -18`
+- `cg_thirdPersonVertOffset = 22`
+- `cg_thirdPersonPitchOffset = -3`
+- `cg_thirdPersonCameraDamp = 0.22`
+- `cg_thirdPersonTargetDamp = 0.4`
+- FOV remains 80.
+
+Mouse freelook is explicitly kept enabled with Raven's standard `m_pitch` / `m_yaw` values. The game canvas also explicitly requests pointer lock on click as a Base44 iframe fallback so horizontal and vertical mouse movement reliably reach the original engine.
+
+This is a framing/input correction only. It does not replace Raven's camera collision, character model, aiming code, crosshair logic, cinematics, or weapon behavior.

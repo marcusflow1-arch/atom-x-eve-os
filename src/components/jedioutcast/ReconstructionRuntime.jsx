@@ -6,6 +6,7 @@ import { ArrowLeft, Database, Loader2, RefreshCw, ShieldCheck, Triangle } from '
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { parseJediOutcastRbsp } from './rbsp';
+import { JEDI_CAMERA_CONTRACT, jediViewportStyle } from './cameraContract';
 
 const KEJIM_PATH = 'maps/kejim_post.bsp';
 
@@ -69,17 +70,24 @@ function OriginalMapMesh({ parsed }) {
 
 function ReconstructionCanvas({ parsed }) {
   return (
-    <Canvas
-      gl={{ antialias: true, alpha: false }}
-      camera={{ fov: 70, near: 0.1, far: 100000 }}
-      style={{ width: '100%', height: '100%', background: '#05080d' }}
-    >
-      <color attach="background" args={['#05080d']} />
-      <Suspense fallback={null}>
-        <OriginalMapMesh parsed={parsed} />
-      </Suspense>
-      <OrbitControls makeDefault enableDamping dampingFactor={0.08} />
-    </Canvas>
+    <div style={jediViewportStyle()} className="relative overflow-hidden bg-black">
+      <Canvas
+        gl={{ antialias: true, alpha: false }}
+        dpr={1}
+        camera={{
+          fov: JEDI_CAMERA_CONTRACT.fov,
+          near: 0.1,
+          far: 100000,
+        }}
+        style={{ width: '100%', height: '100%', background: '#05080d' }}
+      >
+        <color attach="background" args={['#05080d']} />
+        <Suspense fallback={null}>
+          <OriginalMapMesh parsed={parsed} />
+        </Suspense>
+        <OrbitControls makeDefault enableDamping dampingFactor={0.08} />
+      </Canvas>
+    </div>
   );
 }
 
@@ -155,7 +163,7 @@ export default function ReconstructionRuntime({ onBack }) {
 
   return (
     <section className="relative h-screen w-screen overflow-hidden bg-[#05080d] text-white">
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 flex items-center justify-center bg-black">
         {parsed ? (
           <ReconstructionCanvas parsed={parsed} />
         ) : (
