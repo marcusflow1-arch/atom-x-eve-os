@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 
 const REQUIRED_PAKS = ['assets0.pk3', 'assets1.pk3', 'assets2.pk3', 'assets5.pk3'];
+const PAK_CHUNK_BYTES = 16 * 1024 * 1024;
 const CACHE_RETRIES = 3;
 
 const LABELS = {
@@ -49,13 +50,24 @@ export default function JediOutcastRuntime({ onBack }) {
       setProgress('');
       setNotice('');
 
-      const result = unwrap(await base44.functions.invoke('jediOutcastSource', { action: 'status' }));
-      if (!result?.success) throw new Error(result?.error || 'Could not read the Jedi Outcast source manifest.');
+      // Normal launches must not depend on the server function. The four retail
+      // archives and their persistent chunk cache are ordinary admin-readable Base44
+      // entities, so read them directly. The function is reserved only for repairing a
+      // genuinely missing chunk.
+      const [archives, statusChunks] = await Promise.all([
+        base44.entities.JediSourceAsset.filter(
+          { game_key: 'jedi_outcast', category: 'retail_archive' },
+          'path',
+          50,
+        ),
+        base44.entities.JediPakChunk.filter(
+          { game_key: 'jedi_outcast', status: 'cached' },
+          'archive_name',
+          500,
+        ),
+      ]);
 
-      const chunkBytes = Number(result.pak_chunk_bytes || 0);
-      if (!(chunkBytes > 0)) throw new Error('Base44 did not report the retail archive chunk size.');
-
-      const archives = (result.assets || []).filter(asset => asset.category === 'retail_archive');
+      const chunkBytes = PAK_CHUNK_BYTES;
       const byName = new Map(archives.map(asset => [String(asset.path || '').toLowerCase(), asset]));
       const missing = REQUIRED_PAKS.filter(name => !byName.get(name)?.id || !(Number(byName.get(name)?.byte_size) > 0));
       if (missing.length) {
@@ -64,7 +76,7 @@ export default function JediOutcastRuntime({ onBack }) {
 
       const jobs = [];
       const chunksByArchive = new Map();
-      const statusChunks = Array.isArray(result.pak_chunks) ? result.pak_chunks : [];
+      const cachedChunkRows = Array.isArray(statusChunks) ? statusChunks : [];
 
       for (const name of REQUIRED_PAKS) {
         const archive = byName.get(name);
@@ -73,7 +85,7 @@ export default function JediOutcastRuntime({ onBack }) {
         const slots = new Array(count);
         chunksByArchive.set(name, slots);
 
-        for (const row of statusChunks) {
+        for (const row of cachedChunkRows) {
           if (row.archive_asset_id !== archive.id && String(row.archive_name || '').toLowerCase() !== name) continue;
           const chunkIndex = Number(row.chunk_index);
           if (!Number.isInteger(chunkIndex) || chunkIndex < 0 || chunkIndex >= count) continue;
