@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 
 const root = new URL('../', import.meta.url);
 const read = path => readFileSync(new URL(path, root), 'utf8');
@@ -37,7 +38,18 @@ test('wrapper loads the engine lazily, uses fresh canvases and releases everythi
 });
 
 test('every asset the engine loads is shipped under public/game2', () => {
-  for (const f of ['Explorer_G2_Game.glb', 'rig.json', 'bank_q.bin.gz', 'bank_pel.bin', 'sabermoves.json']) assert.ok(exists('public/game2/' + f), f);
+  for (const f of ['rig.json', 'bank_pel.bin', 'sabermoves.json']) assert.ok(exists('public/game2/' + f), f);
+  for (const [f, n, expectedSha] of [
+    ['Explorer_G2_Game.glb', 19, '7b3b28d2a4cfa9883cbc8f8fa817a7d8508328b82764c1934d8b6f1a4513f5fe'],
+    ['bank_q.bin.gz', 5, 'fd4096afe7cb019ecb3bd3b6ab201ece8bc320cf0e5b9a3edc5708c3b92957d7'],
+  ]) {
+    const complete = exists('public/game2/' + f);
+    const parts = Array.from({ length: n }, (_, i) => `public/game2/parts/${f}.${String(i).padStart(3, '0')}`);
+    assert.ok(complete || parts.every(exists), `missing asset ${f} or one of its ${n} binary chunks`);
+    const hash = createHash('sha256');
+    for (const path of complete ? [`public/game2/${f}`] : parts) hash.update(readFileSync(new URL(path, root)));
+    assert.equal(hash.digest('hex'), expectedSha, `corrupted Game 2 binary ${f}`);
+  }
   const audio = read('src/components/game2/engine/audio.js');
   const files = [...audio.matchAll(/'((?:saber|force)\/[a-z0-9_]+\.(?:mp3|wav))'/g)].map(m => m[1]);
   assert.ok(files.length > 50);
