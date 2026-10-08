@@ -34,7 +34,9 @@ export const RAVEN_SABER_ASSETS = Object.freeze({
   model: 'models/weapons2/saber/saber_w.md3',
   icon: 'gfx/hud/w_icon_lightsaber',
   hum: 'sound/weapons/saber/saberhum1.wav',
-  bladeLengthUnits: 40,\n  bladeLength: 40 / JEDI_SOURCE_UNITS_PER_METER,\n  sourcePath: 'code/base/ext_data/weapons.dat',
+  bladeLengthUnits: 40,
+  bladeLength: 40 / JEDI_SOURCE_UNITS_PER_METER,
+  sourcePath: 'code/base/ext_data/weapons.dat',
 });
 
 export const RAVEN_GAMEPLAY_FORCE_POWERS = Object.freeze([
