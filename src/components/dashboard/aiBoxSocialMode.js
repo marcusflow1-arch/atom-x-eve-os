@@ -15,7 +15,7 @@ export const aiBoxSocialModeStore = {
 };
 
 export function setAIBoxSocialMode(mode = null) {
-  const nextMode = mode === 'online' || mode === 'friends' ? mode : null;
+  const nextMode = ['online', 'friends', 'party'].includes(mode) ? mode : null;
   if (state.mode === nextMode) return;
   state = { mode: nextMode };
   emit();
