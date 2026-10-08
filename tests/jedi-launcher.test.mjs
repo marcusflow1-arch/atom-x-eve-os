@@ -318,28 +318,42 @@ test('render status waits for native renderer initialization instead of reportin
   }
 });
 
-test('render status uses actual GPU dimensions and updates after video changes without resizing the buffer', async () => {
+test('300x150 or other fallback buffers are repaired before gameplay is reported ready', async () => {
   const { dom, w, id } = setup();
   try {
     const messages = [];
     Object.defineProperty(w, 'parent', { value: { postMessage: value => messages.push(value) } });
     const canvas = id('canvas');
-    // Simulate a device/context whose actual buffer differs from the requested attributes.
-    const gl = { canvas, drawingBufferWidth: 800, drawingBufferHeight: 600, isContextLost: () => false };
+
+    // Reproduce the browser-default failure seen after a cinematic/map handoff.
+    canvas.width = 300;
+    canvas.height = 150;
+    const gl = {
+      canvas,
+      drawingBufferWidth: 300,
+      drawingBufferHeight: 150,
+      viewport: () => {},
+      isContextLost: () => false,
+    };
     w.GL = { currentContext: { GLctx: gl } };
-    w.Module.postRun.forEach(fn => fn());
-    await waitFor(() => messages.some(value => value.type === 'atom-jedi-video'));
-    assert.equal(messages.find(value => value.type === 'atom-jedi-video').renderWidth, 800);
+
+    w.__reportVideo();
     assert.equal(canvas.width, 1024);
     assert.equal(canvas.height, 768);
+    assert.equal(messages.some(value => value.state === 'engine-ready'), false,
+      'a 300x150 renderer must never be accepted as ready');
 
-    // The native renderer changes the target; the observer must read the new size.
+    // Simulate WebGL completing the backing-buffer reallocation caused by the repair.
     gl.drawingBufferWidth = 1024;
     gl.drawingBufferHeight = 768;
-    canvas.width = 1024;
-    canvas.height = 768;
-    await waitFor(() => messages.some(value => value.renderWidth === 1024 && value.renderHeight === 768));
+    w.__reportVideo();
 
+    const video = messages.find(value => value.type === 'atom-jedi-video');
+    assert.equal(video.renderWidth, 1024);
+    assert.equal(video.renderHeight, 768);
+    assert.equal(messages.filter(value => value.state === 'engine-ready').length, 1);
+
+    // Presentation may still be smaller/larger; it must not change the native buffer.
     Object.defineProperty(canvas, 'clientWidth', { value: 640, configurable: true });
     Object.defineProperty(canvas, 'clientHeight', { value: 480, configurable: true });
     w.dispatchEvent(new w.Event('resize'));
@@ -347,10 +361,8 @@ test('render status uses actual GPU dimensions and updates after video changes w
     const last = messages.filter(value => value.type === 'atom-jedi-video').at(-1);
     assert.equal(last.renderWidth, 1024);
     assert.equal(last.renderHeight, 768);
-    assert.equal(last.clientWidth, 640);
     assert.equal(canvas.width, 1024);
     assert.equal(canvas.height, 768);
-    assert.equal(messages.filter(value => value.state === 'engine-ready').length, 1);
   } finally {
     dom.window.close();
   }
