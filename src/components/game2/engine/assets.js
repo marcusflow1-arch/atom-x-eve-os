@@ -2,6 +2,7 @@
 import { parseGLB } from './glb.js';
 import { fetchGame2Binary } from './chunked.js';
 import { Skeleton } from './actor.js';
+import { parseRBSP } from './rbsp.js';
 
 const fetchBuf = fetchGame2Binary;
 async function gunzip(buf) {
@@ -28,5 +29,28 @@ export async function loadAll(base = 'assets/', progress = () => { }) {
   const holster = node('Saber_Hilt'), grip = node('Saber_Grip_R');
   const attach = { holster: { t: holster.translation, q: holster.rotation, bone: 'rfemurYZ' }, grip: { t: grip.translation, q: grip.rotation, s: grip.extras.hilt_scale, bone: 'rhand' }, hiltLen: holster.extras.length_m };
   progress('saber moves'); const saberData = await (await fetch(base + 'sabermoves.json')).json();
-  return { rigJson, skel, body, lod, hilt, attach, glb, saberData };
+  progress('Lightsaber Training map');
+  const raw = await fetch(base + 'maps/duel_training.bsp');
+  if (!raw.ok) throw new Error('Game 2 Lightsaber Training map missing: HTTP ' + raw.status);
+  const duelMap = parseRBSP(await raw.arrayBuffer());
+  // Fetch only original textures imported from the user's Drive. Other shader
+  // references stay clearly color-shaded until their original assets are supplied.
+  const have = new Set([
+    'ceiling', 'goldblock', 'met_floor01', 'metalrandom1worn', 'metalstockworn',
+    'stone_tile2', 'temple_basicwall3', 'temple_basicwall4',
+    'temple_interiorsmall3', 'temple_stone2', 'tileblock', 'trim_stone06', 'trim_stone10',
+  ]);
+  duelMap.textureBitmaps = new Map();
+  await Promise.all(duelMap.texturedMeshes.map(async ({ shader }) => {
+    const match = /^textures\/yavin\/([a-z0-9_]+)$/.exec(shader);
+    if (!match || !have.has(match[1])) return;
+    const url = base + 'maps/' + shader + '.jpg';
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const bitmap = await createImageBitmap(await res.blob());
+      duelMap.textureBitmaps.set(shader, bitmap);
+    } catch (e) { console.warn('Game 2 texture unavailable:', url, e); }
+  }));
+  return { rigJson, skel, body, lod, hilt, attach, glb, saberData, duelMap };
 }

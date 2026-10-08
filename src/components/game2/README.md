@@ -58,3 +58,23 @@ The HUD tells you why a push landed (moving, mid-swing, in the air, low on Force
 `public/game2/` holds the character GLB, the rig and animation bank, saber move data and the sound effects.
 Any asset change must keep the file names used by `engine/assets.js` and `engine/audio.js`
 (`tests/game2-duel.test.mjs` checks that every referenced file exists).
+
+## Original Lightsaber Training Arena
+
+Game 2 Duel mode now loads the actual duel_training.bsp Raven RBSP v1 binary from
+public/game2/maps (copied from the user's Drive /maps directory). The loader
+reads geometry, texture coordinates, patch tessellation, worldspawn and
+deathmatch spawn entities directly from this BSP. The old round placeholder
+arena is *not* used in Duel mode; all other app pages and Game 1 are untouched.
+
+The arena collision detects walkable triangles, solid-wall segments, floors and
+steps. Combat is the Game 2 single-player duel against a red-saber Reborn opponent.
+The opponent currently reuses the installed Dark Jedi model/rig and AI, not a
+separate original Reborn character mesh. Multiplayer PvP networking and original
+Raven brush/trigger/shader scripting are not implied by this import.
+
+Original texture paths/UVs drive the WebGL2 material batches. Thirteen original
+Yavin JPEG textures from the user's Drive have been included under
+public/game2/maps/textures/yavin. Materials not yet included use a visible
+flat-shaded fallback. This is a native-map geometry import, not a full Jedi
+Outcast game engine port.

@@ -2,11 +2,23 @@
 // Arena: pillars, braziers, physics props (crates / barrels) for the force powers to play with
 import { geo } from './gl.js';
 import { m4, q as Q, clamp } from './math.js';
+import { BSPCollision } from './rbsp.js';
 
 export const ARENA_R = 23.5;
 export class World {
-  constructor(R) {
+  constructor(R, map = null) {
     this.R = R; this.pillars = []; this.bodies = []; this.time = 0; this.braziers = [];
+    this.map = map;
+    if (map) {
+      this.mapCollision = new BSPCollision(map);
+      this.spawns = this.mapCollision.chooseSpawns();
+      this.mapMeshes = map.texturedMeshes.map(({shader,mesh}) => ({
+        shader, mesh: R.uploadStatic(mesh),
+        tex: map.textureBitmaps?.has(shader) && R.uploadTexture ? R.uploadTexture(map.textureBitmaps.get(shader)) : null,
+      }));
+      for (const bitmap of map.textureBitmaps?.values() || []) bitmap.close?.();
+      return; // The actual imported level replaces the procedural circle completely.
+    }
     const stone = [0.30, 0.28, 0.33, 1], dark = [0.16, 0.15, 0.19, 1], metal = [0.35, 0.37, 0.42, 1];
     const g = geo();
     for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 + 0.15, x = Math.cos(a) * 21, z = Math.sin(a) * 21; this.pillars.push({ x, z, r: 0.95 });
@@ -34,13 +46,16 @@ export class World {
     const crate = kind === 'crate'; const h = 1.0;
     return { kind, id, home: [x, 0, z], pos: [x, 0, z], vel: [0, 0, 0], r: crate ? 0.62 : 0.45, h, rot: [0, Math.random() * 6, 0], w: [0, 0, 0], grounded: true, lifted: 0, flash: 0, hp: 100, mass: crate ? 1.3 : 1, center: 0.5, glow: 0 };
   }
-  collide(pos, r) { // push a circle out of pillars and rim; returns true if moved
+  floorAt(x, z, ceiling = Infinity) { return this.mapCollision ? this.mapCollision.floorAt(x, z, ceiling) : 0; }
+  collide(pos, r) { // actual BSP wall triangles when a map is loaded; old arena otherwise
+    if (this.mapCollision) return this.mapCollision.collide(pos, r);
     for (const p of this.pillars) { const dx = pos[0] - p.x, dz = pos[2] - p.z, d = Math.hypot(dx, dz), m = p.r + r; if (d < m && d > 1e-4) { pos[0] = p.x + dx / d * m; pos[2] = p.z + dz / d * m; } }
     const d = Math.hypot(pos[0], pos[2]), m = ARENA_R - r; if (d > m) { pos[0] *= m / d; pos[2] *= m / d; }
   }
   impulse(b, v) { b.vel[0] += v[0] / b.mass; b.vel[1] += v[1] / b.mass; b.vel[2] += v[2] / b.mass; b.grounded = false; b.w = [(Math.random() - 0.5) * 8, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 8]; }
   update(dt) {
     this.time += dt;
+    if (this.mapCollision) return;
     for (const b of this.bodies) {
       b.flash = Math.max(0, b.flash - dt * 3); b.glow = Math.max(0, b.glow - dt * 2);
       if (b.lifted > 0) { b.vel[0] *= 0.9; b.vel[2] *= 0.9; b.vel[1] *= 0.9; b.rot[1] += dt * 1.6; b.rot[0] = Math.sin(this.time * 2 + b.id) * 0.25; b.rot[2] = Math.cos(this.time * 1.7 + b.id) * 0.25; b.pos[0] += b.vel[0] * dt; b.pos[1] += b.vel[1] * dt; b.pos[2] += b.vel[2] * dt; b.lifted -= dt; continue; }
@@ -56,7 +71,13 @@ export class World {
     }
   }
   draw() {
-    const R = this.R; R.drawMesh(this.ground, m4.ident(), { ground: true }); R.drawMesh(this.staticMesh, m4.ident(), { spec: 0.1 });
+    const R = this.R;
+    if (this.mapMeshes) {
+      const identity = m4.ident();
+      for (const part of this.mapMeshes) R.drawMesh(part.mesh, identity, { spec: 0.08, tex: part.tex });
+      return;
+    }
+    R.drawMesh(this.ground, m4.ident(), { ground: true }); R.drawMesh(this.staticMesh, m4.ident(), { spec: 0.1 });
     for (const b of this.bodies) {
       const m = new Float32Array(16); const qy = Q.axisAngle([0, 1, 0], b.rot[1]), qx = Q.axisAngle([1, 0, 0], b.rot[0]), qz = Q.axisAngle([0, 0, 1], b.rot[2]);
       // rotate about the prop centre: translate(pos+centre) * rot * translate(-centre)

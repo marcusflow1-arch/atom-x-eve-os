@@ -46,16 +46,20 @@ void main(){
 }`;
 const MESH_VS = `#version 300 es
 precision highp float;
-in vec3 aPos; in vec3 aNrm; in vec4 aCol;
+layout(location=0) in vec3 aPos; layout(location=1) in vec3 aNrm; layout(location=2) in vec4 aCol; layout(location=3) in vec2 aUV;
 uniform mat4 uVP; uniform mat4 uModel;
-out vec3 vN; out vec4 vC; out vec3 vW;
-void main(){ vec4 wp = uModel * vec4(aPos, 1.0); vN = mat3(uModel) * aNrm; vC = aCol; vW = wp.xyz; gl_Position = uVP * wp; }`;
+out vec3 vN; out vec4 vC; out vec3 vW; out vec2 vUV;
+void main(){ vec4 wp = uModel * vec4(aPos, 1.0); vN = mat3(uModel) * aNrm; vC = aCol; vUV = aUV; vW = wp.xyz; gl_Position = uVP * wp; }`;
 const MESH_FS = `#version 300 es
 precision highp float;
-in vec3 vN; in vec4 vC; in vec3 vW; out vec4 o;
-uniform float uSpec; uniform vec3 uEmis;
+in vec3 vN; in vec4 vC; in vec3 vW; in vec2 vUV; out vec4 o;
+uniform float uSpec; uniform vec3 uEmis; uniform float uUseTex; uniform sampler2D uDiffuse;
 ${LIGHTING}
-void main(){ vec3 c = lightIt(vC.rgb, vN, vW, uSpec) + uEmis; o = vec4(c, vC.a); }`;
+void main(){
+  vec3 albedo = uUseTex > 0.5 ? texture(uDiffuse, vUV).rgb * vC.rgb : vC.rgb;
+  vec3 c = lightIt(albedo, vN, vW, uSpec) + uEmis;
+  o = vec4(c, vC.a);
+}`;
 const GROUND_FS = `#version 300 es
 precision highp float;
 in vec3 vN; in vec4 vC; in vec3 vW; out vec4 o;
@@ -188,6 +192,9 @@ export class Renderer {
     buf(m.pos); gl.enableVertexAttribArray(al('aPos')); gl.vertexAttribPointer(al('aPos'), 3, gl.FLOAT, false, 0, 0);
     buf(m.nrm); gl.enableVertexAttribArray(al('aNrm')); gl.vertexAttribPointer(al('aNrm'), 3, gl.FLOAT, false, 0, 0);
     buf(m.col); gl.enableVertexAttribArray(al('aCol')); gl.vertexAttribPointer(al('aCol'), 4, gl.UNSIGNED_BYTE, true, 0, 0);
+    if (m.uv) {
+      buf(m.uv); gl.enableVertexAttribArray(al('aUV')); gl.vertexAttribPointer(al('aUV'), 2, gl.FLOAT, false, 0, 0);
+    }
     buf(m.idx, gl.ELEMENT_ARRAY_BUFFER);
     // same layout works for the ground program (same attribute names)
     return { vao, count: m.idx.length, type: m.idx instanceof Uint32Array ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT };
@@ -200,9 +207,25 @@ export class Renderer {
     gl.uniform3fv(P.u.uTint, o.tint || actor.tint); gl.uniform1f(P.u.uTintAmt, o.tintAmt ?? actor.tintAmt); gl.uniform1f(P.u.uAlpha, o.alpha ?? 1); gl.uniform1f(P.u.uGlow, o.glow || 0);
     gl.bindVertexArray(mesh.vao); gl.drawElements(gl.TRIANGLES, mesh.count, gl.UNSIGNED_INT, 0);
   }
+  uploadTexture(image) {
+    const gl = this.gl, tex = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    return tex;
+  }
   drawMesh(mesh, model, o = {}) {
     const gl = this.gl, P = this.progs[o.ground ? 'ground' : 'mesh']; gl.useProgram(P.p); this._commonUniforms(P);
     gl.uniformMatrix4fv(P.u.uModel, false, model); if (P.u.uSpec) gl.uniform1f(P.u.uSpec, o.spec ?? 0.2); if (P.u.uEmis) gl.uniform3fv(P.u.uEmis, o.emis || [0, 0, 0]);
+    if (!o.ground && P.u.uUseTex) {
+      gl.uniform1f(P.u.uUseTex, o.tex ? 1 : 0);
+      if (o.tex) { gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, o.tex); gl.uniform1i(P.u.uDiffuse, 1); }
+    }
     gl.bindVertexArray(mesh.vao); gl.drawElements(gl.TRIANGLES, mesh.count, mesh.type, 0);
   }
   // ---- fx batch (mode 0 = additive, 1 = alpha)

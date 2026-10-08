@@ -28,14 +28,17 @@ export class Game {
     this.t = 0; this.dtFrame = STEP; this.fps = 60; this.acc = 0; this.started = false; this.flashes = []; this.lightFlash = 0; this.lightFlashPos = [0, 2, 0]; this.shakeAmt = 0; this.frameNo = 0;
     this.bodyMesh = R.uploadSkinned(A.body); this.hiltMesh = R.uploadStatic(A.hilt); this.lodMesh = A.lod ? R.uploadSkinned(A.lod) : this.bodyMesh;
     const gun = geo(); gun.box(0, 0.03, 0, 0.05, 0.13, 0.06, [0.16, 0.16, 0.19, 1]).box(0, -0.12, 0, 0.045, 0.2, 0.05, [0.32, 0.33, 0.38, 1]).box(0, -0.235, 0, 0.03, 0.05, 0.03, [0.9, 0.25, 0.15, 1]); this.gunMesh = R.uploadStatic(gun.build());
-    this.world = new World(R); this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
+    this.world = new World(R, this.duel ? A.duelMap : null);
+    this.playerSpawn = this.duel ? this.world.spawns.player.slice() : SPAWN.slice();
+    this.enemySpawn = this.duel ? this.world.spawns.enemy.slice() : [0, 0, 8];
+    this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
     this.input.onFirstGesture = () => this.startAudio();
-    if (this.duel) { this.input.wheelThrottle = 90; const h = this.hud; h.helpList = HELP_DUEL; h.helpW = 820; h.title = 'DARK JEDI DUEL'; h.subtitle = 'Jedi Outcast Force rules  ·  click to start'; h.debug = false; }
-    this.player = new Fighter(this, { name: 'player', isPlayer: true, team: 'player', pos: SPAWN, yaw: 0, hp: 100, bladeColor: [0.22, 0.52, 1] }); this.player.label = 'You'; this.player.humId = 0;
+    if (this.duel) { this.input.wheelThrottle = 90; const h = this.hud; h.helpList = HELP_DUEL; h.helpW = 820; h.title = 'LIGHTSABER TRAINING'; h.subtitle = 'Reborn saber duel · original Raven arena · click to start'; h.debug = false; }
+    this.player = new Fighter(this, { name: 'player', isPlayer: true, team: 'player', pos: this.playerSpawn, yaw: 0, hp: 100, bladeColor: [0.22, 0.52, 1] }); this.player.label = 'You'; this.player.humId = 0;
     this.force = new Force(this, this.player, { list: this.duel ? SELECT_ORDER : SELECT_ALL }); this.player.force = this.force; this.combat = new Combat(this);
     this.world.onThud = b => { if (b.vel[1] < -4) this.sfxAt('hit1', b.pos, 0.5); };
     this.populate();
-    this.cam = { yaw: 0, pitch: 0.2, dist: 3.7, pos: [SPAWN[0], 1.4, SPAWN[2]], eye: [0, 2, -13], target: [0, 1.4, -9], fov: 62 * Math.PI / 180 };
+    this.cam = { yaw: 0, pitch: 0.2, dist: 3.7, pos: [this.playerSpawn[0], this.playerSpawn[1] + 1.4, this.playerSpawn[2]], eye: [this.playerSpawn[0], this.playerSpawn[1] + 2, this.playerSpawn[2] - 4], target: [this.playerSpawn[0], this.playerSpawn[1] + 1.4, this.playerSpawn[2]], fov: 62 * Math.PI / 180 };
     this.firstSub = true;
     const I = this.input;
     this.inp = { pressed: c => this.firstSub && I.pressed(c), held: c => I.held(c), released: c => I.released(c) };
@@ -50,8 +53,8 @@ export class Game {
   }
   populateDuel() {
     // one opponent: a Dark Jedi with the same Force powers, costs and rules as the player
-    const b = this.addNpc('darkjedi', 0, 8, { name: 'darkjedi', label: 'Dark Jedi', team: 'enemy', hp: 220, tint: [0.12, 0.09, 0.17], tintAmt: 0.66, saber: true, blade: [1, 0.05, 0.04], yaw: Math.PI, dmgScale: 0.6, blockSkill: 0.55 });
-    b.reaction = 0.7; b.maxHp = 220; b.hp = 220; b.spawn = [0, 0, 8]; b.setStyle(2);
+    const b = this.addNpc('darkjedi', this.enemySpawn[0], this.enemySpawn[2], { name: 'darkjedi', label: 'Reborn', team: 'enemy', hp: 220, tint: [0.12, 0.09, 0.17], tintAmt: 0.66, saber: true, blade: [1, 0.05, 0.04], yaw: Math.PI, dmgScale: 0.6, blockSkill: 0.55 });
+    b.pos[1] = this.enemySpawn[1]; b.reaction = 0.7; b.maxHp = 220; b.hp = 220; b.spawn = this.enemySpawn.slice(); b.setStyle(2);
     b.force = new Force(this, b, { npc: true, fp: 100, regen: 7, dmgScale: 0.75, healRate: 18, speedGain: 1.4, protectMul: 0.4, list: SELECT_ORDER });
     this.boss = b; this.readySaber(this.player);
     this.round = { state: 'intro', t: 0 };
@@ -159,7 +162,7 @@ export class Game {
   }
   resetDuel() {
     const p = this.player, b = this.boss; this.force.reset(); b.force.reset();
-    p.revive(SPAWN.slice()); p.status = 'normal'; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.rageMul = 1; p.yaw = p.targetYaw = 0; p.actor.animSpeed = 1; this.readySaber(p); this.cam.yaw = 0; this.cam.pitch = 0.2;
+    p.revive(this.playerSpawn.slice()); p.status = 'normal'; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.rageMul = 1; p.yaw = p.targetYaw = 0; p.actor.animSpeed = 1; this.readySaber(p); this.cam.yaw = 0; this.cam.pitch = 0.2;
     this.respawnNpc(b); b.force.fp = b.force.max; b.reaction = 0.7;
     for (const w of this.world.bodies) { w.pos = w.home.slice(); w.vel = [0, 0, 0]; w.w = [0, 0, 0]; w.grounded = true; w.lifted = 0; w.rot = [0, Math.random() * 6, 0]; w.hp = 100; }
     this.combat.bolts.length = 0; this.arcs.length = 0; this.hud.msgs.length = 0; this.hud.dmg = 0; this.round = { state: 'intro', t: 0 }; this.hud.msg('Rematch');
@@ -209,7 +212,7 @@ export class Game {
     if (p.status === 'normal' && (i.pressed('KeyF') || FORCE_QUICK_BINDINGS.some(({ code }) => i.pressed(code)))) p.yaw = p.targetYaw = c.yaw; // snap to aim on either cast path
   }
   respawnPlayer() {
-    const p = this.player; this.force.releaseAll(); this.force.fp = this.force.max; p.revive(SPAWN.slice()); p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1; p.blade.set(false); p.blade.len = 0; p.yaw = p.targetYaw = 0; this.cam.yaw = 0; this.cam.pitch = 0.2; this.hud.msg('You rise again');
+    const p = this.player; this.force.releaseAll(); this.force.fp = this.force.max; p.revive(this.playerSpawn.slice()); p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1; p.blade.set(false); p.blade.len = 0; p.yaw = p.targetYaw = 0; this.cam.yaw = 0; this.cam.pitch = 0.2; this.hud.msg('You rise again');
   }
   respawnNpc(n) {
     n.revive(n.spawn.slice()); n.hilt = n.hasSaber ? 'thigh' : 'none'; n.saber.holstered = true; n.blade.len = 0; n.hitSet.clear(); n.ai = null; n.thrown = null; n.energized = 0; n.glow = 0;
@@ -247,7 +250,7 @@ export class Game {
     const cp = Math.cos(c.pitch), d = [Math.sin(c.yaw) * cp, -Math.sin(c.pitch), Math.cos(c.yaw) * cp]; const right = [-Math.cos(c.yaw), 0, Math.sin(c.yaw)];
     const tgt = [c.pos[0] + right[0] * 0.3, c.pos[1], c.pos[2] + right[2] * 0.3]; let eye = v3.addS(tgt, d, -c.dist);
     this.shakeAmt *= Math.exp(-5 * dt); const s = this.shakeAmt * 0.12; eye = [eye[0] + rnd(-s, s), eye[1] + rnd(-s, s), eye[2] + rnd(-s, s)];
-    const rr = Math.hypot(eye[0], eye[2]); if (rr > 24.2) { eye[0] *= 24.2 / rr; eye[2] *= 24.2 / rr; } eye[1] = Math.max(0.25, eye[1]);
+    const rr = Math.hypot(eye[0], eye[2]); if (!this.world.map && rr > 24.2) { eye[0] *= 24.2 / rr; eye[2] *= 24.2 / rr; } eye[1] = Math.max(0.25, eye[1]);
     c.eye = eye; c.target = tgt; const wantFov = (62 + (this.force.active.speed ? 8 : 0) + (this.force.active.rage ? 4 : 0)) * Math.PI / 180; c.fov += (wantFov - c.fov) * Math.min(1, dt * 5);
     this.sfx.listener = eye;
   }

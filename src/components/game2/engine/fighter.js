@@ -191,7 +191,8 @@ export class Fighter {
   physicsFlung(dt) {
     this.vel[1] -= G * dt; this.pos[0] += this.vel[0] * dt; this.pos[1] += this.vel[1] * dt; this.pos[2] += this.vel[2] * dt;
     const before = [this.pos[0], this.pos[2]]; this.g.world.collide(this.pos, this.radius); if (before[0] !== this.pos[0] || before[1] !== this.pos[2]) { this.vel[0] *= -0.2; this.vel[2] *= -0.2; if (!this.hitWall) { this.hitWall = true; this.hurt(8, null, { noFlinch: true }); this.g.fx.sparks([this.pos[0], this.pos[1] + 1, this.pos[2]], [0, 1, 0], 6, [0.8, 0.8, 1, 1]); } }
-    if (this.pos[1] <= 0) { this.pos[1] = 0; if (this.vel[1] < -1.5 && !this.bounced) { this.bounced = true; this.vel[1] = 0; this.g.onThud && this.g.onThud(this); } this.vel[1] = 0; this.onGround = true; const k = Math.max(0, 1 - 4 * dt); this.vel[0] *= k; this.vel[2] *= k;
+    const floor = this.g.world.floorAt(this.pos[0], this.pos[2], this.pos[1] + 0.3);
+    if (floor !== null && this.pos[1] <= floor) { this.pos[1] = floor; if (this.vel[1] < -1.5 && !this.bounced) { this.bounced = true; this.vel[1] = 0; this.g.onThud && this.g.onThud(this); } this.vel[1] = 0; this.onGround = true; const k = Math.max(0, 1 - 4 * dt); this.vel[0] *= k; this.vel[2] *= k;
       if (this.statusT > 0.25 && Math.hypot(this.vel[0], this.vel[2]) < 1.2) { this.status = this.hp <= 0 ? 'dead' : 'down'; this.statusT = 0; this.bounced = false; this.hitWall = false; this.downTime = 1.0 + Math.random() * 0.5; } }
   }
   integrate(dt, gravity = true) {
@@ -233,8 +234,12 @@ export class Fighter {
       if (Math.hypot(this.shoveV[0], this.shoveV[2]) < 0.15) this.shoveV[0] = this.shoveV[2] = 0; this.g.world.collide(this.pos, this.radius); this.g.separate && this.g.separate(this);
     }
     if (this.elecUntil > now) { this.elecTick -= dt; if (this.elecTick <= 0) { this.elecTick = 0.16 + Math.random() * 0.2; this.g.onElecTick && this.g.onElecTick(this); } }
-    if (!this.onGround && this.pos[1] <= 0 && this.vel[1] <= 0) { this.pos[1] = 0; this.land(-this.vel[1]); this.vel[1] = 0; this.onGround = true; }
-    if (this.onGround && this.pos[1] > 0.02) this.onGround = false;
+    const floor = this.g.world.floorAt(this.pos[0], this.pos[2], this.pos[1] + 0.55);
+    if (wasGround && this.onGround && floor !== null && floor >= this.pos[1] - 0.55 && floor <= this.pos[1] + 0.55) {
+      this.pos[1] = floor; // walk up shallow imported BSP steps and ramps
+    } else if (!this.onGround && floor !== null && this.pos[1] <= floor && this.vel[1] <= 0) {
+      this.pos[1] = floor; this.land(-this.vel[1]); this.vel[1] = 0; this.onGround = true;
+    } else if (this.onGround && (floor === null || Math.abs(this.pos[1] - floor) > 0.56)) this.onGround = false;
     this.selectLegs(dt, f, r);
     this.updateSaber(dt);
   }
