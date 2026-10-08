@@ -85,8 +85,13 @@ var Module = {
     // exactly-sized array and hand that array to MEMFS with canOwn=1 so MEMFS adopts it
     // instead of copying. Streaming also yields real byte progress for the loading screen.
     var __gd = window.__JK2_GAMEDIR || 'base';
-    var __files = (window.__JK2_PAKS || []).map(function(n){ return ['' + __gd + '/' + n, '/jk2/' + __gd, n]; })
-      .concat([['qagame.wasm', '/jk2', 'qagame.wasm']]);
+    var __remote = (window.__JK2_REMOTE_PAKS || []).map(function(p){
+      return [p.url, '/jk2/' + __gd, p.name, Number(p.size || 0)];
+    });
+    var __files = (__remote.length
+      ? __remote
+      : (window.__JK2_PAKS || []).map(function(n){ return ['' + __gd + '/' + n, '/jk2/' + __gd, n, 0]; }))
+      .concat([['qagame.wasm', '/jk2', 'qagame.wasm', 0]]);
     var __MB = function(b){ return (b / 1048576).toFixed(1); };
     // Every pak is fetched CONCURRENTLY, so a per-file percentage makes the bar jump backwards
     // each time another file reports. Accumulate across all of them and show one honest total.
@@ -99,10 +104,13 @@ var Module = {
       setProgress(done, total, 'Loading game data',
         __MB(done) + ' / ' + __MB(total) + ' MB · ' + n + ' file' + (n === 1 ? '' : 's'));
     }
-    async function __stage(url, dstDir, name, idx){
-      var r = await fetch(url);
-      if (!r.ok) throw new Error(url + ': HTTP ' + r.status);
-      var len = parseInt(r.headers.get('Content-Length') || '0', 10);
+    async function __stage(url, dstDir, name, idx, expectedSize){
+      var r = await fetch(url, { redirect: 'follow' });
+      if (!r.ok) throw new Error(name + ': HTTP ' + r.status);
+      var len = parseInt(r.headers.get('Content-Length') || '0', 10) || Number(expectedSize || 0);
+      if (expectedSize > 0 && len > 0 && len !== expectedSize) {
+        throw new Error(name + ': source size changed (' + len + ' vs expected ' + expectedSize + ')');
+      }
       var label = name + ' (' + (idx + 1) + ' of ' + __files.length + ')';
       var buf;
       if (len > 0 && r.body && r.body.getReader) {
@@ -126,7 +134,7 @@ var Module = {
     __files.forEach(function(f, i){
       var url = f[0];
       addRunDependency('pre:' + url);
-      __stage(url, f[1], f[2], i).then(function(){
+      __stage(url, f[1], f[2], i, f[3]).then(function(){
         removeRunDependency('pre:' + url);
       }).catch(function(e){
         // Staging failures used to warn and drop the dependency, so the engine booted on top
