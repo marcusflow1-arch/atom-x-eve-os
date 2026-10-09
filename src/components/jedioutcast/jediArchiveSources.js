@@ -15,8 +15,10 @@ export function findRegisteredJediArchives(sourceAssets = [], rebuildFiles = [])
   const byName = new Map();
   for (const asset of sourceAssets) {
     const name = retailArchiveName(asset.path);
-    if (!name || !asset.id || Number(asset.byte_size) <= 0 || !asset.drive_file_id) continue;
-    byName.set(name,{...asset, name,kind:'drive'});
+    if (!name || !asset.id || Number(asset.byte_size) <= 0) continue;
+    if (asset.drive_file_id) byName.set(name,{...asset,name,kind:'drive'});
+    else if (/^https:\/\//i.test(String(asset.storage_url || '')))
+      byName.set(name,{...asset,name,kind:'stored'});
   }
   // An admin can also upload the *original* retail PK3 directly to the
   // Game Rebuilds Original Assets tab. Those files are already in Base44 storage,
