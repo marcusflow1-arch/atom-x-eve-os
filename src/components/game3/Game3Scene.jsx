@@ -59,7 +59,7 @@ function RoadObjects({distance}){
     <mesh position={[0,12,0]}><boxGeometry args={[13.8,0.22,0.22]}/><meshStandardMaterial color="#4f6972" metalness={0.4}/></mesh>
     <pointLight position={[0,11.6,0]} intensity={9} color="#a2efff" distance={15}/>
    </group>)}
-  <mesh position={[0,0.03,-65+(distance%420)]} rotation={[-0.14,0,0]}><boxGeometry args={[10.7,0.45,7]}/><meshStandardMaterial color="#1b5e77" metalness={0.25}/></mesh>
+  <mesh position={[0,0.03,2-(420-(distance%420))]} rotation={[-0.14,0,0]}><boxGeometry args={[10.7,0.45,7]}/><meshStandardMaterial color="#1b5e77" metalness={0.25}/></mesh>
  </group>;
 }
 function CameraRig({stateRef}){
