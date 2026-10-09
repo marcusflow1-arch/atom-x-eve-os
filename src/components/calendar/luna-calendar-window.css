@@ -19,6 +19,7 @@
   scrollbar-color:#78a6c6 #244866;
 }
 .luna-calendar-window{
+  container-type:inline-size;
   color:#f3faff;
   background:linear-gradient(140deg,#315d80 0%,#264e70 48%,#214766 100%);
 }
@@ -135,15 +136,23 @@
 .luna-calendar-window .luna-calendar-creator [class*="text-white/"]{
   color:#e1f0fb!important;
 }
-@media (max-width:900px){
-  .luna-calendar-window .luna-calendar-sidebar{width:235px}
-  .luna-calendar-window .luna-calendar-header{height:60px;padding-inline:10px}
-  .luna-calendar-window .luna-calendar-header h1{font-size:15px!important}
+/* Respond to the resized CALENDAR window, not the browser viewport. */
+@container (max-width:900px){
+  .luna-calendar-sidebar{width:235px}
+  .luna-calendar-header{height:60px;padding-inline:10px}
+  .luna-calendar-header h1{font-size:15px!important}
 }
-@media (max-width:640px){
-  .luna-calendar-window .luna-calendar-header{height:55px}
-  .luna-calendar-window [data-calendar-day]{padding:2px!important}
-  .luna-calendar-window [data-calendar-day] .h-6.w-6{width:21px;height:21px}
+@container (max-width:740px){
+  .luna-calendar-sidebar{display:none!important}
+  .luna-calendar-header .hidden.md\\:flex{display:none!important}
+}
+@container (max-width:520px){
+  .luna-calendar-rail{display:none!important}
+  .luna-calendar-header{height:55px}
+  .luna-calendar-header h1{font-size:13px!important}
+  .luna-calendar-header [class*="tracking-"]{letter-spacing:normal}
+  [data-calendar-day]{padding:2px!important}
+  [data-calendar-day] .h-6.w-6{width:21px;height:21px}
 }
 @media(prefers-reduced-motion:reduce){
   .luna-calendar-window *{transition:none!important;animation:none!important}
