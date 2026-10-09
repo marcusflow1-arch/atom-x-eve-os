@@ -30,7 +30,8 @@ import { useEquipment } from '../luna/hooks/useEquipment';
 import { showError } from '@/components/error/ErrorToast';
 import useAvatarCombatStats from '@/components/avatar/useAvatarCombatStats';
 import AIBoxSocialPanel from './AIBoxSocialPanel';
-import { setAIBoxSocialMode, toggleAIBoxSocialMode, useAIBoxSocialMode } from './aiBoxSocialMode';
+import LunaGamerProfile from './LunaGamerProfile';
+import { setAIBoxSocialMode } from './aiBoxSocialMode';
 
 const FALLBACK_GENRES = ['Action','RPG','Strategy','Adventure','Shooter','Sci-Fi','Horror','Sports','Racing','Simulation','Puzzle'];
 
@@ -118,14 +119,32 @@ export default function DashboardAvatarOverview() {
   const [avatarFocusMode, setAvatarFocusMode] = useState(false);
   const [activeQuickPanel, setActiveQuickPanel] = useState(null);
   const lastInteractiveRef = useRef(null);
-  const { mode: aiBoxSocialMode } = useAIBoxSocialMode();
-  const socialModeActive = ['online', 'friends', 'party'].includes(aiBoxSocialMode);
+  const [socialDirectoryMode, setSocialDirectoryMode] = useState(null);
+  const [profileTarget, setProfileTarget] = useState(null);
+  // Keep the AI Attribute panel unchanged: social modes now live in windows.
+  const socialModeActive = false;
 
   useEffect(() => {
-    if (!socialModeActive) return;
-    setAttributeView('overview');
-    setAttributeMenuOpen(false);
-  }, [socialModeActive]);
+    setAIBoxSocialMode(null);
+    const openDirectory = event => {
+      const requested = String(event?.detail?.mode || 'friends');
+      const mode = ['online','friends','party'].includes(requested) ? requested : 'friends';
+      setSocialDirectoryMode(mode);
+      focusDashboardWindow('social-directory');
+    };
+    const openProfile = event => {
+      const player = event.detail?.player || event.detail;
+      if (!player?.id && !player?.friend_id) return;
+      setProfileTarget(player);
+      focusDashboardWindow('gamer-profile');
+    };
+    window.addEventListener('openLunaSocialWindow', openDirectory);
+    window.addEventListener('openLunaGamerProfile', openProfile);
+    return () => {
+      window.removeEventListener('openLunaSocialWindow', openDirectory);
+      window.removeEventListener('openLunaGamerProfile', openProfile);
+    };
+  }, []);
 
   // Observe the always-mounted AI Battle query cache without starting another
   // poller. The parent dashboard owns the popup, so it also owns the final
@@ -173,6 +192,8 @@ export default function DashboardAvatarOverview() {
       setSeasonMode(false);
       setBattleMode(false);
       setAIBoxSocialMode(null);
+      setSocialDirectoryMode(null);
+      setProfileTarget(null);
     }
   }, [surface]);
 
@@ -192,6 +213,8 @@ export default function DashboardAvatarOverview() {
         setBattleMode(false);
         setAttributeMenuOpen(false);
         setAIBoxSocialMode(null);
+        setSocialDirectoryMode(null);
+        setProfileTarget(null);
         setInteractionDimmed(false);
       }
     };
@@ -357,6 +380,16 @@ export default function DashboardAvatarOverview() {
         {friendsMode && <DashboardWindow id="friends" title="Friends" width={440} height={580} index={2} onClose={() => setFriendsMode(false)}>
           <LunaFriendsQuickAccessPanel />
         </DashboardWindow>}
+        {socialDirectoryMode && <DashboardWindow id="social-directory" title={socialDirectoryMode === 'online' ? 'People Online' : socialDirectoryMode === 'party' ? 'Invite Friends to Party' : 'Friends Online'}
+          width={420} height={590} anchor="ai-attributes" onClose={() => setSocialDirectoryMode(null)}>
+          <div className="h-full min-h-0 overflow-auto bg-[linear-gradient(155deg,#1d3a54,#0a1727)] p-3">
+            <AIBoxSocialPanel mode={socialDirectoryMode} />
+          </div>
+        </DashboardWindow>}
+        {profileTarget && <DashboardWindow id="gamer-profile" title="Gamer Profile" width={505} height={585} index={2}
+          onClose={() => setProfileTarget(null)}>
+          <LunaGamerProfile player={profileTarget} onClose={() => setProfileTarget(null)} />
+        </DashboardWindow>}
         {messagesMode && <DashboardWindow id="messages" title="Messages" width={820} height={580} index={3} onClose={() => setMessagesMode(false)}>
           <div className="luna-window__messages"><LunaMessageFriendsPanel /><section><MessengerHub threadOnly /></section></div>
         </DashboardWindow>}
@@ -388,7 +421,7 @@ export default function DashboardAvatarOverview() {
               <div className="flex items-center gap-2 pr-9">
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
                 <div className="min-w-0 flex-1">
-                  <div data-axe-panel-label className="text-white/45 text-[8px] uppercase tracking-[0.2em]">{aiBoxSocialMode === 'party' ? 'Party Invitations' : socialModeActive ? 'AI Social' : 'AI Attribute Box'}</div>
+                  <div data-axe-panel-label className="text-white/45 text-[8px] uppercase tracking-[0.2em]">{'AI Attribute Box'}</div>
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="truncate text-white font-bold text-base">
                       {companion?.name || 'AI Avatar'}
@@ -398,12 +431,12 @@ export default function DashboardAvatarOverview() {
                         { id: 'online', label: 'People Online', icon: UserPlus },
                         { id: 'friends', label: 'Friends Online', icon: Users },
                       ].map(({ id, label, icon: Icon }) => {
-                        const active = aiBoxSocialMode === id;
+                        const active = socialDirectoryMode === id;
                         return (
                           <button
                             key={id}
                             type="button"
-                            onClick={() => id === 'friends' ? (setFriendsMode(true), focusDashboardWindow('friends')) : toggleAIBoxSocialMode(id)}
+                            onClick={() => { setSocialDirectoryMode(id); focusDashboardWindow('social-directory'); }}
                             title={label}
                             aria-label={label}
                             aria-pressed={active}
