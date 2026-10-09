@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { GripVertical } from 'lucide-react';
-import { constrainLibraryWidth, LIBRARY_DEFAULT_WIDTH, LIBRARY_MIN_WIDTH, LIBRARY_MAX_WIDTH } from './libraryResize';
+import { constrainLibraryWidth, LIBRARY_DEFAULT_WIDTH, LIBRARY_MIN_WIDTH } from './libraryResize';
 import './library-divider.css';
 
 /**
@@ -11,6 +10,8 @@ export default function LibraryWidthDivider({ width, onResize, containerRef }) {
   const handleRef = useRef(null);
   const dragging = useRef(false);
   const previousBodyStyle = useRef(null);
+  const containerWidth = containerRef.current?.getBoundingClientRect().width || window.innerWidth;
+  const ratio = Math.round(width / containerWidth * 100);
 
   const stop = (event) => {
     if (!dragging.current) return;
@@ -62,8 +63,9 @@ export default function LibraryWidthDivider({ width, onResize, containerRef }) {
         aria-orientation="vertical"
         aria-controls="luna-resizable-library luna-resizable-main"
         aria-valuemin={LIBRARY_MIN_WIDTH}
-        aria-valuemax={LIBRARY_MAX_WIDTH}
+        aria-valuemax={constrainLibraryWidth(Number.MAX_SAFE_INTEGER, containerWidth)}
         aria-valuenow={width}
+        aria-valuetext={`Library ${ratio}%, main area ${100 - ratio}%`}
         tabIndex={0}
         title="Drag left or right to resize · Double-click to reset"
         data-dragging={dragging.current || undefined}
@@ -82,9 +84,7 @@ export default function LibraryWidthDivider({ width, onResize, containerRef }) {
         onLostPointerCapture={stop}
         onDoubleClick={() => setWidth(LIBRARY_DEFAULT_WIDTH)}
         onKeyDown={keys}
-      >
-        <GripVertical size={14} strokeWidth={1.8} aria-hidden="true" />
-      </div>
+      />
     </div>
   );
 }
