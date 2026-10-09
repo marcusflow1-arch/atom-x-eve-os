@@ -73,14 +73,15 @@ export default function CrossScrollGameMenu({ games, selectedGame, onSelectGame,
             const isSel = selectedGame?.id === g.id;
             const completion = Math.min(100, Math.max(0, g.completion ?? g.progress ?? 0));
             const done = completion >= 100;
-            const TW = 24, TH = 32, R = 5;
+            const TW = browsing ? 42 : 24, TH = browsing ? 45 : 32, R = 5;
             const ringColor = done ? 'rgba(34,211,238,0.95)' : 'rgba(255,255,255,0.85)';
             return (
               <div
                 key={g.id}
                 data-library-game={g.id}
+                data-selected={isSel || undefined}
                 onClick={() => handleRowClick(g)}
-                className="flex items-center gap-1.5 w-full rounded-lg cursor-pointer transition-all"
+                className="ll-forged-game-row flex items-center gap-1.5 w-full rounded-lg cursor-pointer transition-all"
                 style={{
                   padding: '3px 5px',
                   background: isSel ? 'rgba(34,211,238,0.10)' : 'rgba(255,255,255,0.03)',
