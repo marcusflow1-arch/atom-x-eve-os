@@ -137,6 +137,7 @@ test('basic gamer profile renders, opens options, and calls the real backend act
    await run(()=>button('Report Player').click());
    await run(()=>button('Submit report').click());
    assert.ok(globalThis.socialFixture.calls.some(c=>c.name==='forumSystem'&&c.input.action==='report'&&c.input.data.target_type==='user'));
+   await run(()=>button('More options').click());
    await run(()=>button('Unfriend').click());
    assert.ok(globalThis.socialFixture.calls.some(c=>c.name==='socialActions'&&c.input.action==='remove_friend'));
    await run(()=>button('Voice Chat').click());
