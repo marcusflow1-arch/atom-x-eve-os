@@ -32,7 +32,7 @@ function asSceneEnvironment(scene) {
     description: scene.description || 'Saved 3D environment',
     origin: '3D Scenes',
     thumbnail: scene.thumbnail_url || scene.thumbnail || scene.preview_url || '',
-    modelUrl: scene.environment_url || '',
+    modelUrl: scene.environment_url || scene.model_url || '',
     layoutData: scene,
     sceneLayoutId: scene.id,
     playerSpawn: scene.player_spawn,
