@@ -43,7 +43,7 @@ test('pin action in Hub populates shortcut; filled shortcut applies real 3D back
     ],
     models:[
       {id:'forest',name:'Moonlit Forest Map',file_url:'/forest.glb'},
-      {id:'desert',name:'Desert Dunes',file_url:'/desert.glb'},
+      {id:'desert',name:'Desert Landscape',file_url:'/desert.glb'},
     ]
   };
   const bundle=await build({
@@ -96,7 +96,7 @@ test('pin action in Hub populates shortcut; filled shortcut applies real 3D back
     }
     assert.equal(document.querySelectorAll('[data-environment-slot]').length,4);
     assert.equal(readEnvironmentPins('p1').length,4);
-    await run(()=>findByLabel('Pin Desert Dunes to quick access').click());
+    await run(()=>findByLabel('Pin Desert Landscape to quick access').click());
     assert.equal(readEnvironmentPins('p1').length,4);
     assert.match(document.querySelector('[role="alert"]').textContent,/All four favorites/);
     // Pinned IDs for the first account never appear for a different user.
