@@ -6,6 +6,8 @@ import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
 import { SKILL_KEYS, SKILL_SET_COUNT } from '@/components/luna/skillSlots';
 import { showError } from '@/components/error/ErrorToast';
 import './luna-hotbar.css';
+import './luna-ornate-hotbar.css';
+import LunaOrnateChrome from './LunaOrnateChrome';
 
 export function HotkeyFrame() {
   const id = useId();
@@ -152,11 +154,14 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
       </header>}
       <div className="luna-hotbar-layout">
         <div className="luna-hotbar-main">
-          <HotkeyFrame />
-          <div className="luna-hotbar-grid" aria-label="Equipped skill keys 1 through 0">
-            {SKILL_KEYS.map((key, index) => <HotkeySlot key={key} index={index} selected={selectedSlot === index}
-              pendingCard={pendingCard} onAssign={assign} saving={isSaving || isLoading || Boolean(loadoutError)} combatMode={combatMode} embedded={embedded}
-              onSelect={(slot, card) => { setSelectedSlot(slot); setPreviewCard(card); }} />)}
+          {embedded && <HotkeyFrame />}
+          <div className="luna-hotbar-skill-shell">
+            {!embedded && <LunaOrnateChrome variant="skills" />}
+            <div className="luna-hotbar-grid" aria-label="Equipped skill keys 1 through 0">
+              {SKILL_KEYS.map((key, index) => <HotkeySlot key={key} index={index} selected={selectedSlot === index}
+                pendingCard={pendingCard} onAssign={assign} saving={isSaving || isLoading || Boolean(loadoutError)} combatMode={combatMode} embedded={embedded}
+                onSelect={(slot, card) => { setSelectedSlot(slot); setPreviewCard(card); }} />)}
+            </div>
           </div>
           <div className="luna-hotbar-exp" aria-label="Avatar experience">
             <div className="luna-hotbar-exp-label"><span><b>EXP</b> Experience</span><span>Lv {level} · {Math.round(progress)}%</span></div>
