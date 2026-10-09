@@ -1,5 +1,5 @@
 import { partySession } from '@/components/social/partySession';
-import { unwrap } from '@/components/social/dashboardSession';
+import { unwrap, joinDashboard } from '@/components/social/dashboardSession';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Crown, Gamepad2, Headphones, Mic, MicOff, Plus, UserMinus, Users, X, Check, LogOut, Link2 } from 'lucide-react';
@@ -104,6 +104,15 @@ export default function PartyDrawer({ user }) {
     }
   };
 
+  const acceptPartyInvite = async (invite) => {
+    const accepted = await act('accept_invite', { inviteId: invite.id });
+    if (!accepted?.party) return;
+    const leaderId = String(accepted.party.leaderId || invite.inviter_id || '');
+    if (leaderId && leaderId !== String(user?.id)) {
+      await joinDashboard({ id: leaderId, name: invite.inviter_name || 'Party Leader' });
+    }
+  };
+
   const inviteFriend = async (friend) => {
     const result = await act('invite_member', { inviteeId: friend.friend_id });
     if (result) setOpen(true);
@@ -163,7 +172,7 @@ export default function PartyDrawer({ user }) {
                     <div className="text-[10px] uppercase tracking-widest text-cyan-300/65">Party invitation</div>
                     <div className="mt-1 text-sm font-medium text-white">{invite.inviter_name} invited you</div>
                     <div className="mt-3 flex gap-2">
-                      <button disabled={busy} onClick={() => act('accept_invite', { inviteId: invite.id })} className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-cyan-400/15 py-2 text-xs text-cyan-200 hover:bg-cyan-400/25"><Check className="h-3.5 w-3.5" /> Join</button>
+                      <button disabled={busy} onClick={() => acceptPartyInvite(invite)} className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-cyan-400/15 py-2 text-xs text-cyan-200 hover:bg-cyan-400/25"><Check className="h-3.5 w-3.5" /> Join</button>
                       <button disabled={busy} onClick={() => act('decline_invite', { inviteId: invite.id })} className="rounded-lg bg-white/[0.05] px-3 text-white/55 hover:text-white"><X className="h-3.5 w-3.5" /></button>
                     </div>
                   </section>
