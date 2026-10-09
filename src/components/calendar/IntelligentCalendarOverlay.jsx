@@ -206,7 +206,7 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId, emb
       role={embedded ? 'region' : 'dialog'} aria-modal={embedded ? undefined : 'true'} aria-label="Luna Calendar">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(34,211,238,.07),transparent_34%),radial-gradient(circle_at_15%_90%,rgba(99,102,241,.06),transparent_36%)]" />
       <div className="relative z-10 flex h-full min-h-0 flex-col">
-        <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-white/[0.055] px-5 lg:px-8">
+        <header className="luna-calendar-header flex h-[72px] shrink-0 items-center justify-between border-b border-white/[0.055] px-5 lg:px-8">
           <div className="flex min-w-0 items-center gap-4">
             <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/[0.05] text-cyan-100/65"><CalendarDays className="h-4 w-4" /></div>
             <div className="min-w-0"><div className="text-[8px] font-black uppercase tracking-[0.28em] text-cyan-200/40">Luna Schedule</div><h1 className="truncate text-xl font-semibold tracking-tight text-white/92">{heading}</h1></div>
@@ -222,23 +222,23 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId, emb
         </header>
 
         <div className="flex min-h-0 flex-1">
-          <aside className="hidden w-[68px] shrink-0 flex-col items-center border-r border-white/[0.05] py-4 sm:flex">
+          <aside className="luna-calendar-rail hidden w-[68px] shrink-0 flex-col items-center border-r border-white/[0.05] py-4 sm:flex">
             {[['events',CalendarDays],['tasks',ListChecks],['notes',StickyNote]].map(([id,Icon]) => <button key={id} type="button" title={id} onClick={() => setActiveRail(id)} className={`mb-2 grid h-11 w-11 place-items-center transition ${activeRail === id ? 'bg-cyan-200/[0.08] text-cyan-100/75' : 'text-white/22 hover:bg-white/[0.04] hover:text-white/60'}`}><Icon className="h-4 w-4" /></button>)}
             <div className="flex-1" />
             <div className="mb-2 grid h-9 w-9 place-items-center rounded-full bg-white/[0.035] text-[9px] font-bold text-amber-100/60" title={`${reminderCount} active reminders`}><Bell className="h-3.5 w-3.5" /></div>
           </aside>
 
-          <main className="relative min-w-0 flex-1 overflow-hidden">
+          <main className="luna-calendar-grid-stage relative min-w-0 flex-1 overflow-hidden">
             {loading && <div className="absolute inset-0 z-20 grid place-items-center bg-[#05080d]/65 backdrop-blur-sm"><div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/30"><Loader2 className="h-4 w-4 animate-spin text-cyan-200/55" /> Syncing schedule</div></div>}
             {error && <div className="absolute left-1/2 top-3 z-30 -translate-x-1/2 border border-rose-200/10 bg-rose-200/[0.05] px-3 py-2 text-[9px] text-rose-100/65">{error}</div>}
 
             {viewMode === 'month' && (
               <div className="flex h-full min-h-0 flex-col p-3 md:p-5">
                 <div className="grid shrink-0 grid-cols-7 border-b border-white/[0.05] pb-2">{DAY_NAMES.map((name) => <div key={name} className="px-2 text-[8px] font-bold uppercase tracking-[0.16em] text-white/22">{name}</div>)}</div>
-                <div className="grid min-h-0 flex-1 grid-cols-7 grid-rows-6 border-l border-t border-white/[0.04]">
+                <div className="luna-calendar-month-grid grid min-h-0 flex-1 grid-cols-7 grid-rows-6 border-l border-t border-white/[0.04]">
                   {gridDays.map((date) => {
                     const key = dateKey(date); const list = byDate.get(key) || []; const today = key === dateKey(new Date()); const inMonth = date.getMonth() === cursor.getMonth(); const selected = key === dateKey(selectedDate);
-                    return <button key={key} type="button" onClick={() => openDate(date)} className={`group relative min-h-0 overflow-hidden border-b border-r border-white/[0.04] p-1.5 text-left transition hover:bg-white/[0.025] ${!inMonth ? 'bg-black/10 opacity-45' : ''} ${selected ? 'bg-cyan-200/[0.035]' : ''}`}><div className="mb-1 flex items-center justify-between"><span className={`grid h-6 w-6 place-items-center rounded-full text-[10px] font-semibold ${today ? 'bg-cyan-100 text-slate-950' : 'text-white/45'}`}>{date.getDate()}</span>{list.length > 3 && <span className="text-[8px] text-white/20">+{list.length-3}</span>}</div><div className="space-y-px">{list.slice(0,3).map((event) => <EventPill key={event.occurrence_key || `${event.id}-${event.occurrence_start}`} event={event} compact onClick={(item) => { setSelectedEvent(item); setActiveRail('events'); }} />)}</div></button>;
+                    return <button key={key} type="button" data-calendar-day data-today={today || undefined} data-selected={selected || undefined} onClick={() => openDate(date)} className={`group relative min-h-0 overflow-hidden border-b border-r border-white/[0.04] p-1.5 text-left transition hover:bg-white/[0.025] ${!inMonth ? 'bg-black/10 opacity-45' : ''} ${selected ? 'bg-cyan-200/[0.035]' : ''}`}><div className="mb-1 flex items-center justify-between"><span className={`grid h-6 w-6 place-items-center rounded-full text-[10px] font-semibold ${today ? 'bg-cyan-100 text-slate-950' : 'text-white/45'}`}>{date.getDate()}</span>{list.length > 3 && <span className="text-[8px] text-white/20">+{list.length-3}</span>}</div><div className="space-y-px">{list.slice(0,3).map((event) => <EventPill key={event.occurrence_key || `${event.id}-${event.occurrence_start}`} event={event} compact onClick={(item) => { setSelectedEvent(item); setActiveRail('events'); }} />)}</div></button>;
                   })}
                 </div>
               </div>
@@ -253,7 +253,7 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId, emb
             {viewMode === 'day' && <DayPlanningView date={selectedDate} events={byDate.get(dateKey(selectedDate)) || []} tasks={tasks.filter((task) => task.due_date && dateKey(task.due_date) === dateKey(selectedDate) && task.status !== 'cancelled')} onAddEvent={() => openCreator('manual')} onAiAssist={() => openCreator('ai')} onEventClick={(item) => { setSelectedEvent(item); setActiveRail('events'); }} />}
           </main>
 
-          <aside className="hidden w-[330px] shrink-0 flex-col border-l border-white/[0.05] bg-[#060a10]/78 lg:flex">
+          <aside className="luna-calendar-sidebar hidden w-[330px] shrink-0 flex-col border-l border-white/[0.05] bg-[#060a10]/78 lg:flex">
             <div className="border-b border-white/[0.05] p-4">
               <button type="button" onClick={() => openCreator('ai')} className="group w-full bg-[linear-gradient(135deg,rgba(34,211,238,.06),rgba(99,102,241,.035))] p-4 text-left transition hover:bg-white/[0.045]"><div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.2em] text-cyan-200/45"><Bot className="h-3.5 w-3.5" /> AI Schedule Agent</div><div className="mt-2 text-sm font-semibold text-white/75">Describe the day, week, or month.</div><p className="mt-1 text-[10px] leading-4 text-white/28">It checks your schedule, creates events and tasks, and connects reminders automatically.</p><div className="mt-3 text-[9px] font-bold uppercase tracking-wider text-cyan-100/55 group-hover:text-cyan-100">Plan with AI →</div></button>
             </div>
