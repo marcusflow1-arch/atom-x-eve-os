@@ -5,7 +5,6 @@ import { useDashboardSession } from '@/components/social/dashboardSession';
 import { useAuth } from '@/components/auth/AuthContext';
 import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
 import PlayerAvatarPreview from '@/components/onboarding/PlayerAvatarPreview';
-import EnvironmentHubWorkspace from '@/components/avatarHome/EnvironmentHubWorkspace';
 import EnvironmentHubStageLayer from '@/components/avatarHome/EnvironmentHubStageLayer';
 import { useAIBattleSnapshot } from '@/components/battle/useAIBattleQueue';
 import { useAIBattleSurfaceState } from '@/components/battle/aiBattleSurfaceState';
@@ -187,7 +186,6 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
           {session.host_id !== user?.id && <button type="button" className="mt-2 block text-cyan-200" onClick={() => window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `dashboard_${user.id}`, hostId: user.id, hostName: 'My' } }))}>Return to my dashboard</button>}
         </div>
       )}
-      <EnvironmentHubWorkspace />
     </>
   );
 }
