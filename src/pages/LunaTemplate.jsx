@@ -200,13 +200,23 @@ export default function LunaTemplate() {
   const [currentHostName, setCurrentHostName] = useState(null);
   const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
   const [showEnvironmentCollection, setShowEnvironmentCollection] = useState(false);
+  const openEnvironmentWindow = () => {
+    setShowEnvironmentCollection(true);
+    focusDashboardWindow('environment-hub');
+  };
   useEffect(() => {
-    const toggle = () => setShowEnvironmentCollection(value => !value);
+    const toggle = () => setShowEnvironmentCollection(value => {
+      if (!value) focusDashboardWindow('environment-hub');
+      return !value;
+    });
+    const open = () => openEnvironmentWindow();
     const close = () => setShowEnvironmentCollection(false);
     window.addEventListener('toggleLunaEnvironmentCollection', toggle);
+    window.addEventListener('openEnvironmentHub', open);
     window.addEventListener('closeEnvironmentHub', close);
     return () => {
       window.removeEventListener('toggleLunaEnvironmentCollection', toggle);
+      window.removeEventListener('openEnvironmentHub', open);
       window.removeEventListener('closeEnvironmentHub', close);
     };
   }, []);
@@ -712,10 +722,18 @@ export default function LunaTemplate() {
       sidebarVisible={sidebarVisible}
       onSidebarToggle={toggleSidebar}
       chromeHidden={avatarFocusMode}
-      bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} hideSearch environmentOpen={showEnvironmentCollection} onEnvironmentToggle={() => setShowEnvironmentCollection(value => !value)} />}
+      bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} hideSearch environmentOpen={showEnvironmentCollection} onEnvironmentToggle={openEnvironmentWindow} />}
     >
-    <EnvHubDrawer open={showEnvironmentCollection} onClose={() => setShowEnvironmentCollection(false)}
-      currentEnvId={currentEnvId} onSelectEnv={handleEnvSelect} defaultModelUrl={GAME1_ENV_URL} />
+    {/* Compact Environment Hub shares the same move/resize/minimize/window stack
+        as Inventory, Messages, Friends, Skill Tree, and the Calendar. */}
+    {showEnvironmentCollection && (
+      <DashboardWindow id="environment-hub" title="Environment Hub" width={580} height={510} index={2}
+        onClose={() => setShowEnvironmentCollection(false)}>
+        <EnvHubDrawer open currentEnvId={currentEnvId}
+          onClose={() => setShowEnvironmentCollection(false)}
+          onSelectEnv={handleEnvSelect} defaultModelUrl={GAME1_ENV_URL} />
+      </DashboardWindow>
+    )}
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} surface="dashboard" />
