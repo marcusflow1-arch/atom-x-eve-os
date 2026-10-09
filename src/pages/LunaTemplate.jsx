@@ -69,6 +69,8 @@ import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
 import GameHubArea from '../components/dashboard/gamehub/GameHubArea';
 import GameList from '../components/dashboard/gamehub/GameList';
 import LibraryBrowser from '@/components/dashboard/gamehub/LibraryBrowser';
+import LibraryWidthDivider from '@/components/dashboard/LibraryWidthDivider';
+import { constrainLibraryWidth, LIBRARY_DEFAULT_WIDTH, LIBRARY_WIDTH_STORAGE_KEY } from '@/components/dashboard/libraryResize';
 import LibraryCardExplorer from '@/components/dashboard/gamehub/LibraryCardExplorer';
 import GameLandingPage from '../components/dashboard/gamehub/GameLandingPage';
 import GameProgressHub from '../components/dashboard/gamehub/GameProgressHub';
@@ -227,6 +229,25 @@ export default function LunaTemplate() {
   }, []);
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
+  const dashboardContentRef = useRef(null);
+  const [libraryWidth, setLibraryWidth] = useState(() => {
+    try {
+      const saved = window.localStorage.getItem(LIBRARY_WIDTH_STORAGE_KEY);
+      return constrainLibraryWidth(saved === null ? LIBRARY_DEFAULT_WIDTH : Number(saved), window.innerWidth);
+    } catch { return LIBRARY_DEFAULT_WIDTH; }
+  });
+  useEffect(() => {
+    const clampToViewport = () => {
+      const available = dashboardContentRef.current?.getBoundingClientRect().width || window.innerWidth;
+      setLibraryWidth(current => constrainLibraryWidth(current, available));
+    };
+    window.addEventListener('resize', clampToViewport);
+    clampToViewport();
+    return () => window.removeEventListener('resize', clampToViewport);
+  }, []);
+  useEffect(() => {
+    try { window.localStorage.setItem(LIBRARY_WIDTH_STORAGE_KEY, String(libraryWidth)); } catch {}
+  }, [libraryWidth]);
 
   // Keep the dashboard avatar overlay aware of which surface currently owns
   // the right side of the dashboard. The overlay disappears for Full Library
@@ -729,7 +750,7 @@ export default function LunaTemplate() {
       )}
 
       {/* 95% Main Area */}
-      <div data-luna-dashboard-content className="flex-1 relative h-full overflow-hidden" style={{ backgroundColor: '#070a11' }}>
+      <div data-luna-dashboard-content ref={dashboardContentRef} className="flex-1 relative h-full overflow-hidden" style={{ backgroundColor: '#070a11' }}>
         {/* Dark moonlight aesthetic background */}
         <RealTimeMoonSky />
         {!avatarFocusMode && <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />}
@@ -749,7 +770,7 @@ export default function LunaTemplate() {
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
               className="absolute z-30 pointer-events-auto overflow-hidden"
-              style={{ left: '440px', top: '88px', right: '60px', bottom: '160px' }}>
+              style={{ left: `${libraryWidth + 110}px`, top: '88px', right: '60px', bottom: '160px' }}>
               {homeSection === 'developer' && <DeveloperSpotlightSection onOpenOverlay={() => setShowDevSpotlight(true)} />}
               {homeSection === 'discover' && <WhatsNewSection />}
             </motion.div>
@@ -762,10 +783,8 @@ export default function LunaTemplate() {
 
       {/* Mini 3D Viewer Box + Game Library — unified left column, flush to left edge */}
       {!showConsoleMode && !showAchievements &&
-              <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
-              style={uiVisible ? {
-                left: '0px', top: '64px', bottom: '0px', width: '388px', gap: '0px'
-              } : { left: '0px', top: '64px', bottom: '0px', width: '330px', gap: '0px' }}>
+              <div id="luna-resizable-library" className="absolute z-20 pointer-events-auto flex flex-col"
+              style={{ left: '0px', top: '64px', bottom: '0px', width: uiVisible ? '388px' : `${libraryWidth}px`, gap: '0px' }}>
 
           {/* Unified card: 3D viewer on top, game list below — one seamless box */}
           {!avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
@@ -829,6 +848,11 @@ export default function LunaTemplate() {
         </div>
               }
 
+      {/* One resizer governs both the Games/Cards rail and the space to its right. */}
+      {!avatarFocusMode && !uiVisible && !showConsoleMode && !showAchievements && homeSection === 'avatar' && (
+        <LibraryWidthDivider width={libraryWidth} onResize={setLibraryWidth} containerRef={dashboardContentRef} />
+      )}
+
       {/* Avatar Focus Hub — blank UI on avatar click; A/D rotates full-page section UIs */}
       <AnimatePresence>
         {avatarFocusMode && !uiVisible && !showConsoleMode && !showAchievements && homeSection === 'avatar' &&
@@ -879,7 +903,7 @@ export default function LunaTemplate() {
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
             className="absolute z-30 pointer-events-auto overflow-hidden"
-            style={{ left: '330px', top: '64px', right: '8px', bottom: '32px', background: 'transparent' }}
+            style={{ left: `${libraryWidth}px`, top: '64px', right: '8px', bottom: '32px', background: 'transparent' }}
           >
             {libraryFilters.view === 'cards'
               ? <LibraryCardExplorer full filters={libraryFilters} onChange={updateLibraryFilters} onClose={() => setShowLibraryLanding(false)} />
@@ -896,9 +920,10 @@ export default function LunaTemplate() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
                   transition={{ duration: 0.4, ease: 'easeOut' }}
+                  id="luna-resizable-main"
                   className="absolute right-0 z-30 pointer-events-none"
                   style={{
-                    left: '330px',
+                    left: `${libraryWidth}px`,
                     top: '64px',
                     bottom: '32px'
                   }}>
