@@ -1,0 +1,17 @@
+/* Delicate brushed-metal glass border, intentionally distinct from the AI's heavy filigree. */
+.luna-light-edge{position:absolute;inset:0;z-index:4;pointer-events:none;border:1px solid rgba(173,199,208,.20);background:linear-gradient(110deg,rgba(188,217,229,.025),transparent 38%,rgba(82,171,200,.015));box-shadow:inset 0 1px 0 rgba(226,238,245,.10),0 0 12px rgba(41,145,186,.04)}
+.luna-light-edge:before,.luna-light-edge:after{content:"";position:absolute;left:13px;right:13px;height:1px;background:linear-gradient(90deg,rgba(155,210,227,.02),rgba(195,224,229,.4) 29%,rgba(27,180,219,.50) 50%,rgba(195,224,229,.4) 71%,rgba(155,210,227,.02))}
+.luna-light-edge:before{top:0}.luna-light-edge:after{bottom:0}
+.luna-light-edge__corner{position:absolute;width:20px;height:20px;border:solid rgba(187,206,214,.67);filter:drop-shadow(0 0 2px rgba(30,165,206,.15))}
+.luna-light-edge__corner--tl{top:-1px;left:-1px;border-width:2px 0 0 2px;clip-path:polygon(0 0,100% 0,100% 10%,24% 10%,24% 24%,10% 24%,10% 100%,0 100%)}
+.luna-light-edge__corner--tr{top:-1px;right:-1px;border-width:2px 2px 0 0;clip-path:polygon(0 0,100% 0,100% 100%,90% 100%,90% 24%,76% 24%,76% 10%,0 10%)}
+.luna-light-edge__corner--bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px;clip-path:polygon(0 0,10% 0,10% 76%,24% 76%,24% 90%,100% 90%,100% 100%,0 100%)}
+.luna-light-edge__corner--br{bottom:-1px;right:-1px;border-width:0 2px 2px 0;clip-path:polygon(90% 0,100% 0,100% 100%,0 100%,0 90%,76% 90%,76% 76%,90% 76%)}
+.luna-light-edge__pin{position:absolute;left:50%;width:10px;height:10px;transform:translateX(-50%) rotate(45deg);background:linear-gradient(130deg,#e6fcff,#24cdeb 70%,#136b8e);border:1px solid rgba(240,252,255,.7);box-shadow:0 0 8px rgba(34,197,240,.57)}
+.luna-light-edge__pin--top{top:-5px}.luna-light-edge__pin--bottom{bottom:-5px}
+.luna-light-edge--clock{inset:4px 3px 5px 0;border-color:rgba(188,213,224,.14);background:linear-gradient(135deg,rgba(137,168,193,.085),rgba(37,76,112,.055) 67%,transparent);box-shadow:inset 0 1px 0 rgba(213,236,255,.08)}
+.luna-light-edge--clock .luna-light-edge__corner{width:14px;height:14px;border-color:rgba(173,211,224,.45)}
+.luna-light-edge--clock .luna-light-edge__pin{width:7px;height:7px;box-shadow:0 0 5px rgba(46,198,231,.35)}
+.luna-light-edge--clock .luna-light-edge__pin--bottom{display:none}
+.luna-light-edge--clock:before,.luna-light-edge--clock:after{left:12px;right:12px;background:linear-gradient(90deg,transparent,rgba(117,197,228,.28),transparent)}
+@media(prefers-reduced-motion:reduce){.luna-light-edge,.luna-light-edge *{animation:none!important;transition:none!important}}
