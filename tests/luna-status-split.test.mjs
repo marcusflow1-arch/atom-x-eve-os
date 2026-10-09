@@ -21,7 +21,9 @@ test('top row places calendar/time then upright divider then exactly five real p
   assert.match(markup,/partySlots\.map\(\(member, index\) =>/);
   assert.match(markup,/data-party-slot=\{index \+ 1\}/);
   assert.match(markup,/data-party-portrait/);
-  assert.match(markup,/setAIBoxSocialMode\('party'\)/);
+  assert.match(markup,/openLunaSocialWindow/);
+  assert.match(markup,/mode: 'party'/);
+  assert.doesNotMatch(markup,/setAIBoxSocialMode\('party'\)/);
   assert.match(markup,/lunaAIBattleRejoin/);
 });
 
