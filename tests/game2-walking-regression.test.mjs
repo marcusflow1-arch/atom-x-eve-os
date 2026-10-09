@@ -20,7 +20,7 @@ function createTestScene() {
   const world=new BSPCollision(map);
   const spawn=world.chooseSpawns().player;
   const game=Object.create(Game.prototype);
-  game.t=0;game.duel=true;
+  game.t=0;game.duel=true;game.round={state:'fight',t:1};
   game.input=input;
   game.world=world;
   game.separate=()=>{};
