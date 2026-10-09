@@ -1,0 +1,9 @@
+/* Translucent variation of the ornate skill slots: cyan/silver, no thick bronze rim. */
+.luna-hotbar:not([data-embedded]) .luna-hotbar-skill-shell{background:linear-gradient(135deg,rgba(111,150,177,.11),rgba(11,31,54,.4) 57%,rgba(4,17,38,.26));box-shadow:inset 0 0 18px rgba(4,13,31,.29),0 5px 16px rgba(0,0,0,.14)}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-slot{border:1px solid rgba(154,204,221,.56)!important;background:linear-gradient(145deg,rgba(40,69,89,.56),rgba(9,25,48,.67))!important;box-shadow:inset 0 1px 0 rgba(232,250,255,.13),inset 0 -1px 0 rgba(83,151,179,.19)!important}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-slot:hover,.luna-hotbar:not([data-embedded]) .luna-hotbar-slot[data-drag-over],.luna-hotbar:not([data-embedded]) .luna-hotbar-slot[data-pending]{border-color:rgba(160,242,255,.92)!important;background:linear-gradient(145deg,rgba(45,115,144,.56),rgba(13,46,74,.67))!important}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-slot[data-selected]{border-color:#c6f5ff!important}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-key{border-color:rgba(135,194,220,.3)}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-exp-track{border:1px solid rgba(149,204,223,.28);box-shadow:inset 0 0 6px rgba(6,20,42,.4);background:rgba(20,42,64,.35)}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-prefabs button{border:1px solid rgba(145,199,218,.32);background:linear-gradient(135deg,rgba(45,76,95,.45),rgba(7,29,51,.52));color:#bfdce8;box-shadow:inset 0 1px 0 rgba(218,240,250,.06)}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-prefabs button[aria-pressed=true]{background:rgba(24,99,130,.47);border-color:rgba(121,231,250,.72)}
