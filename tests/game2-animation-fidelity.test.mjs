@@ -65,7 +65,7 @@ test('continued attack uses original saber quadrants for follow-ups', () => {
   assert.ok(plays.filter(p=>p.name.startsWith('BOTH_A2_')).length >= 2,'holding attack supports follow-up animation chain');
 });
 
-test('right strafe and right roll actually move right at yaw zero', () => {
+test('A/D strafe and roll preserve their pre-audit Game 2 movement directions', () => {
   const f = Object.create(Fighter.prototype);
   f.g = {t:0,world:{floorAt:()=>0,collide(){}},separate(){},sfxAt(){}};
   f.pos=[0,0,0]; f.vel=[0,0,0]; f.yaw=0; f.targetYaw=0;
@@ -76,12 +76,19 @@ test('right strafe and right roll actually move right at yaw zero', () => {
     jump:false,jumpPressed:false,attack:false,alt:false};
   f.trySpecialJumpAttack=()=>false; f.selectLegs=()=>{};f.updateSaber=()=>{};
   f.normalUpdate(0.05);
-  assert.ok(f.pos[0]>0,'D key should move the world-space player to +X when facing +Z');
+  assert.ok(f.pos[0]<0,'restore the original Game 2 D-key strafe direction');
+  // Verify both directions, not just the one that was reported broken.
+  f.pos=[0,0,0]; f.vel=[0,0,0]; f.cmd.right=-1;
+  f.normalUpdate(0.05);
+  assert.ok(f.pos[0]>0,'restore the original Game 2 A-key strafe direction');
   f.actor={skel:{anims:clips},setBoth(name){this.last=name;}};
   f.saber={weaponTime:0,torsoTimer:0,I:{LS_READY:1},move:1};
   f.cmd.right=1; f.cmd.fwd=0; f.startRoll();
   assert.equal(f.actor.last,'BOTH_ROLL_R');
-  assert.ok(f.rollDir[0]>0,'right roll velocity must agree with right strafe');
+  assert.ok(f.rollDir[0]<0,'restore original right-roll direction');
+  f.cmd.right=-1; f.startRoll();
+  assert.equal(f.actor.last,'BOTH_ROLL_L');
+  assert.ok(f.rollDir[0]>0,'restore original left-roll direction');
 });
 
 test('after takeoff the Ghoul2 JUMP clip blends into its direction-matched INAIR pose',()=>{
