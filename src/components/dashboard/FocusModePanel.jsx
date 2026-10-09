@@ -35,6 +35,7 @@ import EnvironmentHub from '@/components/environment/EnvironmentHub';
 import MemoriesDrawer from '@/components/dashboard/MemoriesDrawer';
 import QuickChangeEnvDrawer from '@/components/dashboard/QuickChangeEnvDrawer';
 import DateTimeTile from '@/components/dashboard/DateTimeTile';
+import DashboardClockTile from '@/components/dashboard/DashboardClockTile';
 import SystemUpdatesBox from '@/components/dashboard/SystemUpdatesBox';
 import SystemUpdatesDrawer from '@/components/dashboard/SystemUpdatesDrawer';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
@@ -1242,7 +1243,7 @@ function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
 // ── AI Avatar Home Section (PS5-style) ───────────────────────────────────────
 export function LibraryBannerSection({ 
   games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown, onQuickChangeToggle,
-  navBoxes, calendarBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment,
+  navBoxes, calendarBox, notificationsBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment,
   activeFriend, onActiveFriendChange, selectedFocusGame
 }) {
   const envDropdownRef = useRef(null);
@@ -1520,20 +1521,24 @@ export function LibraryBannerSection({
         <div className="flex flex-col gap-3 w-full h-full relative">
 
           {/* ── PS5-style Top Row ── */}
-          <div className="flex items-center gap-4 w-full h-24">
+          <div className="luna-header-status-row" data-luna-party-status-row>
 
-            {/* Invisible measurement anchor; the Skill Tree icon is beside slot 1. */}
-            <div className="w-[247px] h-full flex-shrink-0">
+            {/* Skill-tree alignment anchor beside the avatar viewer. */}
+            <div className="luna-header-skill-anchor">
               <SkillTreeAnchor />
             </div>
 
-            {/* ── Party Bar: Five confirmed member slots ── */}
-            <div className="flex flex-shrink-0 items-center gap-2 h-full">
+            {/* Calendar icon + time/date FIRST, then an upright silver line,
+                then the same five confirmed party boxes and invite controls. */}
+            <div className="luna-party-clock-group">
+              <div className="luna-party-clock">{calendarBox}</div>
+              <span className="luna-party-clock-divider" aria-hidden="true" />
+              <div className="luna-party-five-slots" role="group" aria-label="Five party slots">
               {/* Only accepted party members fill slots; any plus opens the
                   friend-to-party picker in the AI Attribute box. */}
               <div className="relative flex h-full flex-shrink-0 items-center gap-2">
                 {partySlots.map((member, index) => (
-                  <div key={`party-slot-${index}`} className="flex flex-col items-center gap-1 flex-shrink-0">
+                  <div key={`party-slot-${index}`} data-party-slot={index + 1} className="flex flex-col items-center gap-1 flex-shrink-0">
                     <button
                       type="button"
                       title="Invite online friends to your party"
@@ -1548,6 +1553,7 @@ export function LibraryBannerSection({
                       title={member ? `Party member: ${member.user_name || 'Player'} · Open party` : 'Open party invitations'}
                       aria-label={member ? `Party member ${member.user_name || 'Player'}` : `Empty party slot ${index + 1} · Invite friends`}
                       onClick={() => member ? window.dispatchEvent(new Event('openLunaParty')) : setAIBoxSocialMode('party')}
+                      data-party-portrait
                       className="relative h-16 w-16 overflow-hidden rounded-lg border border-white/[0.09] bg-white/[0.025] transition hover:border-cyan-300/30"
                     >
                       {member && (
@@ -1585,12 +1591,10 @@ export function LibraryBannerSection({
 
             </div>
 
-            {/* Status box is 35% narrower than its original slot. It stays
-                right-aligned without changing the party bar or dashboard layout. */}
-            <div className="flex-1 min-w-0 h-full flex justify-end">
-              <div className="luna-status-size-frame h-full min-w-0" style={{ width: '65%' }}>
-                {calendarBox}
-              </div>
+            {/* Notification strip starts at the left edge of the 338px
+                AI Attribute Box and extends right with the same width. */}
+            <div className="luna-attribute-notifications" data-luna-ai-notifications>
+              {notificationsBox}
             </div>
           </div>
 
@@ -2055,13 +2059,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                   />
                 }
                 intelligenceFeed={<LiveIntelligenceFeed />}
-                calendarBox={
-                  <div className="flex w-full h-full">
-                    <div className="flex-1 min-w-0 h-full">
-                      <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
-                    </div>
-                  </div>
-                }
+                calendarBox={<DashboardClockTile onCalendarClick={onOpenCalendar || openCalendar} />}
+                notificationsBox={<DateTimeTile />}
               />
 
               {/* Empty by default — content fades in only when a game is selected or Full Library is opened */}
