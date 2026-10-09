@@ -1,0 +1,156 @@
+/*
+ * Luna's left Games/Cards/Library skin.
+ * Same SILVER ornamental language as Skill Slots + AI Attribute Box,
+ * with opaque navy-blue paneling instead of blue light beams.
+ * Deliberately scoped: Full Library overlays, Skill Book, and game pages
+ * continue using their own layouts and logic.
+ */
+.ll-forged-library {
+  --ll-silver:rgba(195,211,226,.65);
+  --ll-silver-muted:rgba(153,176,198,.32);
+  --ll-blue-panel:#0b1b2d;
+  background:linear-gradient(160deg,#10283e 0%,#0b1d32 43%,#071728 100%)!important;
+  border:1px solid rgba(191,207,220,.30);
+  border-radius:6px;
+  box-shadow:inset 0 1px 0 rgba(244,249,252,.08),inset 0 0 26px rgba(0,3,12,.26),0 8px 20px rgba(0,0,0,.22)!important;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  isolation:isolate;
+}
+.ll-forged-library::before { display:none; }
+.ll-forged-library-inner {
+  position:relative;z-index:1;display:flex;flex-direction:column;
+  flex:1;min-height:0;padding:9px 9px 11px;
+}
+.ll-forged-library .axe-ornate-frame--library {z-index:5;overflow:hidden;}
+.ll-forged-library .axe-ornate-frame--library .axe-ornate-frame__corner {
+  width:39px;height:47px;
+  background-image:url('/ui/luna/xe-silver-corner.svg');
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.35));
+}
+.ll-forged-library .axe-ornate-frame--library .axe-ornate-frame__gem{
+  width:44px;height:16px;opacity:.58;
+  background-image:url('/ui/luna/xe-silver-gem.svg');
+  filter:grayscale(.7);
+}
+.ll-forged-library .axe-ornate-frame--library .axe-ornate-frame__gem--top{top:-6px;}
+.ll-forged-library .axe-ornate-frame--library .axe-ornate-frame__gem--bottom{bottom:-6px;}
+.ll-forged-library .axe-ornate-frame--library .axe-ornate-frame__rail--top,
+.ll-forged-library .axe-ornate-frame--library .axe-ornate-frame__rail--bottom{
+  left:20px;right:20px;height:4px;
+  background:linear-gradient(180deg,rgba(20,29,42,.1),rgba(192,207,220,.75) 50%,rgba(54,75,98,.30));
+  filter:none;
+}
+.ll-forged-library .axe-ornate-frame--library .axe-ornate-frame__rail--left,
+.ll-forged-library .axe-ornate-frame--library .axe-ornate-frame__rail--right{
+  top:24px;bottom:24px;width:4px;
+  background:linear-gradient(90deg,rgba(40,54,72,.14),rgba(191,206,220,.67) 50%,rgba(52,69,85,.35));
+}
+.ll-forged-library .ll-toolbar {gap:6px;padding:7px 9px 8px;}
+.ll-forged-library .ll-voice-search{min-width:0;}
+.ll-forged-library .ll-search-line{
+  min-height:34px;gap:6px;padding:0 9px;border:1px solid rgba(176,202,222,.48);border-radius:7px;
+  background:linear-gradient(180deg,#112e49,#091c32);
+  box-shadow:inset 0 1px 0 rgba(231,242,251,.10);
+}
+.ll-forged-library .ll-search-line:focus-within{border-color:#cee8f5;outline:1px solid rgba(176,223,245,.34)}
+.ll-forged-library .ll-search-line input::placeholder{color:rgba(206,226,239,.60)}
+.ll-forged-library .ll-viewer-toggle{
+  width:34px;height:34px;border:1px solid var(--ll-silver-muted);
+  border-radius:6px;background:#0d2236;color:#c5d6e1;
+}
+.ll-forged-library .ll-viewer-toggle:hover {border-color:var(--ll-silver);background:#18384f;}
+.ll-forged-library .ll-forged-tabs{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;
+  margin:3px 9px 9px;
+}
+.ll-forged-library .ll-forged-tab {
+  min-width:0;min-height:39px;display:flex;align-items:center;justify-content:center;
+  gap:5px;padding:3px 4px;color:#c0d1de;font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.045em;
+  border:1px solid rgba(167,191,211,.45);border-radius:5px;
+  background:linear-gradient(155deg,#152e44,#091b2d);
+  box-shadow:inset 0 1px 0 rgba(221,237,251,.09),inset 0 -2px 0 rgba(52,75,95,.4);
+}
+.ll-forged-library .ll-forged-tab[aria-pressed=true]{
+  border-color:rgba(223,237,248,.9);color:#f1f9ff;
+  background:linear-gradient(155deg,#24445a,#112b43);
+  box-shadow:inset 0 1px 0 rgba(243,248,254,.20),inset 0 -2px 0 rgba(163,185,204,.45);
+}
+.ll-forged-library .ll-forged-tab:hover{border-color:#c4dce9;color:#f3fcff;background:#1c3a50;}
+.ll-forged-library .ll-forged-tab svg{flex:none;color:#d9e5ec;}
+.ll-forged-library .ll-filters{gap:6px;padding:0 9px 7px;}
+.ll-forged-library .ll-genre>span{color:#cedce6;font-size:9px;}
+.ll-forged-library .ll-genre select{
+  height:30px;min-width:0;padding:5px 7px;
+  border:1px solid rgba(157,184,203,.45);border-radius:5px;
+  background:#0b2238;color:#e1ebf2;
+}
+.ll-forged-library .ll-kind-switch button{
+  width:30px;height:30px;border:1px solid rgba(157,184,203,.42);
+  border-radius:5px;color:#bccfdb;background:#0c2439;
+}
+.ll-forged-library .ll-kind-switch button[aria-pressed=true]{
+  border-color:rgba(220,238,249,.8);color:#f1f9ff;background:#204056;
+}
+.ll-forged-library .ll-forged-collection-heading{
+  flex:none;display:flex;align-items:center;justify-content:space-between;
+  gap:6px;margin:0 9px 6px;padding:5px 2px;
+  border-bottom:1px solid rgba(168,192,210,.28);
+  color:#dce8f0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.045em;
+}
+.ll-forged-library .ll-forged-collection-heading strong{margin-left:6px;color:#b2c6d4;font-size:10px;font-weight:500;}
+.ll-forged-library .ll-forged-collection-heading button{
+  min-height:24px;color:#cedfea;font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;
+}
+.ll-forged-library .ll-forged-collection-heading button:hover{color:#fff;}
+.ll-forged-library .ll-content,.ll-forged-library .ll-explorer{min-height:0;flex:1;}
+.ll-forged-library .ll-content>div{min-height:0;}
+.ll-forged-library [data-testid="library-game-list"]{padding-top:5px!important;padding-bottom:20px!important;scrollbar-width:thin!important;scrollbar-color:rgba(158,180,198,.55) transparent!important;}
+.ll-forged-library [data-testid="library-game-list"]>div{padding:0 7px 9px;gap:6px;}
+.ll-forged-library .ll-forged-game-row{
+  min-height:52px!important;gap:7px!important;padding:5px!important;
+  background:linear-gradient(120deg,#0e2740,#091c30)!important;
+  border:1px solid rgba(155,181,202,.45)!important;border-radius:5px!important;
+  box-shadow:inset 0 1px 0 rgba(226,239,248,.07)!important;
+}
+.ll-forged-library .ll-forged-game-row:hover{
+  background:#18374e!important;border-color:rgba(214,234,247,.75)!important;
+}
+.ll-forged-library .ll-forged-game-row[data-selected=true]{
+  background:linear-gradient(120deg,#21445e,#122c43)!important;
+  border-color:#d3e5f1!important;box-shadow:inset 2px 0 rgba(197,230,248,.70)!important;
+}
+.ll-forged-library .ll-forged-game-row>div:nth-child(2) button{
+  font-size:11px;line-height:1.3;white-space:normal;overflow:hidden;display:-webkit-box;
+  -webkit-box-orient:vertical;-webkit-line-clamp:2;text-overflow:ellipsis;
+}
+.ll-forged-library .ll-forged-game-row img{border-radius:3px;}
+.ll-forged-library .ll-forged-game-row .shrink-0 button{color:#c4d5e0;}
+.ll-forged-library .ll-game-list .ll-game{
+  background:linear-gradient(120deg,#0e2740,#091c30);
+  border:1px solid rgba(156,181,201,.44);border-radius:5px;
+  box-shadow:inset 0 1px 0 rgba(225,239,251,.08);
+}
+.ll-forged-library .ll-game-list .ll-game:hover{
+  background:#18374e;border-color:rgba(208,230,245,.68);
+}
+.ll-forged-library .ll-game-list .ll-game[aria-expanded=true]{
+  background:#1b3d55;border-color:#d1e4ef;box-shadow:inset 2px 0 rgba(200,233,246,.7);
+}
+.ll-forged-library .ll-card-grid{gap:9px 7px;}
+.ll-forged-library .ll-card{padding:3px;border:1px solid rgba(160,186,205,.34);border-radius:5px;background:#0b2034;}
+.ll-forged-library .ll-card:hover{border-color:rgba(220,238,250,.75);background:#173348;}
+.ll-forged-library .ll-card-art{border-radius:3px;box-shadow:inset 0 0 0 1px rgba(180,207,225,.25);}
+.ll-forged-library .ll-card>strong,.ll-forged-library .ll-card>small{padding:0 3px;}
+.ll-forged-library .ll-explorer .ll-results{padding:0 11px 22px;}
+.ll-forged-library .ll-result-heading{color:#d1e2ed;}
+.ll-forged-library .ll-empty{padding:13px 4px;}
+@media(max-width:430px){
+  .ll-forged-library-inner{padding:7px 6px 10px;}
+  .ll-forged-library .ll-forged-tabs{margin-inline:6px;gap:3px;}
+  .ll-forged-library .ll-forged-tab{gap:3px;font-size:9px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .ll-forged-library *{transition:none!important;animation:none!important;}
+}
