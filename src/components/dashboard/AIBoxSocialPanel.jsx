@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Check, ChevronDown, ChevronUp, LogIn, Search, UserPlus, Users } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, LogIn, MessageSquare, Mic, Repeat2, Search, UserPlus, UserRound, Users } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { usePartySession, partySession } from '@/components/social/partySession';
 import { filterSocialPlayers } from './socialDiscoverySelectors.mjs';
-import { isLivePlayer, joinDashboard } from '@/components/social/dashboardSession';
+import { isLivePlayer, joinDashboard, openPlayerMessage } from '@/components/social/dashboardSession';
+import { sendTradeRequest } from '@/components/game3d/social/tradeRequest';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import { useAIBattleSurfaceState } from '@/components/battle/aiBattleSurfaceState';
 
@@ -79,11 +80,27 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
       }));
   }, [presenceRows, user?.id, pvpIds, friendIds]);
 
+  // Party selector is a FRIENDS list, including offline friends rather than
+  // showing an empty panel when none of them happen to be online.
+  const availablePlayers = useMemo(() => {
+    if (mode !== 'party') return onlinePlayers;
+    const byId = new Map(onlinePlayers.map(player => [String(player.id), player]));
+    for (const friend of friendRows || []) {
+      const id = String(friend.friend_id || '');
+      if (!id || id === String(user?.id || '') || byId.has(id) || pvpIds.has(id)) continue;
+      byId.set(id, {
+        id, name: friend.friend_name || 'Friend', avatar: friend.friend_avatar || '',
+        status: 'offline', friend: true, genres: [],
+      });
+    }
+    return [...byId.values()];
+  }, [mode, onlinePlayers, friendRows, user?.id, pvpIds]);
+
   const partyMemberIds = useMemo(() => new Set((party.members || []).map(row => String(row.user_id))), [party.members]);
   const partyFull = Boolean(party.party && (party.members || []).length >= (party.party.maxSize || 5));
   const players = useMemo(
-    () => filterSocialPlayers(onlinePlayers, { mode, genreFilter, search, partyMemberIds }),
-    [mode, onlinePlayers, partyMemberIds, genreFilter, search],
+    () => filterSocialPlayers(availablePlayers, { mode, genreFilter, search, partyMemberIds }),
+    [mode, availablePlayers, partyMemberIds, genreFilter, search],
   );
 
   const setAction = (id, action, value) => {
@@ -167,6 +184,15 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
     `Joining ${player.name}'s dashboard.`,
   );
 
+  const openProfile = player => window.dispatchEvent(new CustomEvent('openLunaGamerProfile', { detail: { player } }));
+  const message = player => openPlayerMessage({
+    id: player.id, friend_id: player.id, friend_name: player.name, name: player.name,
+    friend_avatar: player.avatar, avatar_url: player.avatar, is_friend: player.friend,
+  });
+  const voice = player => { window.__lunaPendingVoiceTargetId = String(player.id); message(player); };
+  const trade = player => run(player, 'trade',
+    () => sendTradeRequest({ id: user.id }, { id: player.id, name: player.name }),
+    `Trade request sent to ${player.name}.`);
   const label = mode === 'party' ? 'Invite to Party' : mode === 'friends' ? 'Friends Online' : 'People Online';
   const saveGenres = async () => {
     setSavingGenres(true);
@@ -272,6 +298,23 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
                     <LogIn className="h-3 w-3" />
                     {joinState === 'working' ? 'Joining…' : joinState === 'error' ? 'Retry Join' : 'Join Dashboard'}
                   </button>}
+                  <button type="button" onClick={() => openProfile(player)}
+                    className="flex min-h-8 items-center justify-center gap-1 rounded-lg bg-white/[0.045] px-2 text-[8px] font-semibold text-white/75 hover:bg-white/[0.09]">
+                    <UserRound className="h-3 w-3" />View Profile
+                  </button>
+                  <button type="button" onClick={() => message(player)}
+                    className="flex min-h-8 items-center justify-center gap-1 rounded-lg bg-white/[0.045] px-2 text-[8px] font-semibold text-white/75 hover:bg-white/[0.09]">
+                    <MessageSquare className="h-3 w-3" />Message
+                  </button>
+                  <button type="button" onClick={() => voice(player)}
+                    className="flex min-h-8 items-center justify-center gap-1 rounded-lg bg-white/[0.045] px-2 text-[8px] font-semibold text-white/75 hover:bg-white/[0.09]">
+                    <Mic className="h-3 w-3" />Start Voice Chat
+                  </button>
+                  <button type="button" disabled={actionState[actionKey(player.id,'trade')] === 'working'}
+                    onClick={() => trade(player)}
+                    className="flex min-h-8 items-center justify-center gap-1 rounded-lg bg-white/[0.045] px-2 text-[8px] font-semibold text-white/75 hover:bg-white/[0.09] disabled:opacity-45">
+                    <Repeat2 className="h-3 w-3" />Offer Trade
+                  </button>
                   {mode === 'online' && recruitingClan && (
                     <button type="button" disabled={clanState === 'working' || clanState === 'done'} onClick={() => inviteClan(player)} className="col-span-2 flex min-h-8 items-center justify-center gap-1 rounded-lg bg-cyan-200/[0.06] px-2 text-[8px] font-bold uppercase tracking-[.08em] text-cyan-100/80 hover:bg-cyan-200/[0.12] disabled:opacity-45">
                       <UserPlus className="h-3 w-3" />
