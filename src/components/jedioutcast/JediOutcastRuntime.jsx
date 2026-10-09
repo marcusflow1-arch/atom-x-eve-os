@@ -38,8 +38,8 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign', embedded
   const activeLabels = isGame2 ? GAME2_LABELS : LABELS;
   const sessionTitle = isGame2 ? 'Game 2 — Kyle Combat Sandbox' : 'Star Wars Jedi Knight II: Jedi Outcast';
   const iframeSrc = isGame2
-    ? '/games/jedi-outcast/index.html?runtime=game2-kyle-v1&mode=game2'
-    : '/games/jedi-outcast/index.html?runtime=native-camera-v11';
+    ? '/games/jedi-outcast/index.html?runtime=game2-viewport-v12&mode=game2'
+    : '/games/jedi-outcast/index.html?runtime=viewport-v12';
   const { user } = useAuth();
   const frame = useRef(null);
   const shell = useRef(null);
