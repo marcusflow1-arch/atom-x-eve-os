@@ -90,7 +90,24 @@ try {
   assert.equal(document.querySelectorAll('[data-luna-window]').length,7,
     'closing Inventory must not close the other seven panels');
   for(const [,id] of expected.slice(1))assert.ok(popup(id));
-  console.log('PASS: eight independent quick-action windows mount together, correctly focus on repeat click, and close individually');
+  // Plus slots and both AI Attribute icons use the same independent popup;
+  // opening it cannot replace the AI Attribute's live-stat content.
+  await run(()=>window.dispatchEvent(new CustomEvent('openLunaSocialWindow',{detail:{mode:'party'}})));
+  assert.ok(popup('social-directory'),'party plus buttons open a movable social window');
+  assert.match(popup('social-directory').getAttribute('aria-label'),/Invite Friends to Party/);
+  assert.ok(document.querySelector('[aria-label="AI Attribute Box"]'));
+  const people=[...document.querySelectorAll('button')].find(button=>button.getAttribute('aria-label')==='People Online');
+  const friends=[...document.querySelectorAll('button')].find(button=>button.getAttribute('aria-label')==='Friends Online');
+  await run(()=>people.click());
+  assert.match(popup('social-directory').getAttribute('aria-label'),/People Online/);
+  await run(()=>friends.click());
+  assert.match(popup('social-directory').getAttribute('aria-label'),/Friends Online/);
+  assert.equal(document.querySelectorAll('[data-luna-window="social-directory"]').length,1);
+  await run(()=>window.dispatchEvent(new CustomEvent('openLunaGamerProfile',{detail:{player:{id:'friend-77',name:'Nova'}}})));
+  assert.ok(popup('gamer-profile'),'View Profile opens a second independent floating window');
+  assert.ok(popup('social-directory'),'profile remains independent of friends list');
+  assert.ok(document.querySelector('[aria-label="AI Attribute Box"]'));
+  console.log('PASS: eight independent quick-action windows plus social directory, both AI icons, profile and preserved AI Attributes');
 }finally{
   await act(async()=>root.unmount());
   dom.window.close();
