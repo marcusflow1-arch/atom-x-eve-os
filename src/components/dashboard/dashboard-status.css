@@ -1,11 +1,19 @@
 /*
- * Luna Dashboard header — three separate working regions:
- * calendar/time | thin vertical rule | five party slots
- * plus a notifications strip starting exactly at the AI Attribute rail.
+ * Luna Dashboard header:
+ * environment icon | silver divider | five party slots
+ * calendar/time (unchanged size/style) | divider | system notifications.
+ * The notification box stays anchored to the AI Attribute right rail.
  */
 .luna-header-status-row{display:flex;align-items:center;gap:12px;width:100%;min-width:0;height:96px}
 .luna-header-skill-anchor{width:clamp(112px,15vw,247px);flex:none;height:100%}
-.luna-party-clock-group{position:relative;display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;height:100%}
+.luna-environment-party-group{position:relative;display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;height:100%}
+.luna-environment-top-icon{position:relative;isolation:isolate;display:grid;place-items:center;flex:none;width:50px;height:58px;padding:0;border:1px solid rgba(194,217,232,.36);border-radius:9px;color:#cce6f6;background:linear-gradient(153deg,rgba(72,106,130,.5),rgba(17,40,65,.55));box-shadow:inset 0 1px rgba(248,253,255,.13),0 5px 16px rgba(3,13,27,.19);cursor:pointer;transition:color .17s,border-color .17s,background .17s}
+.luna-environment-top-icon::before{content:'';position:absolute;inset:5px;border:1px solid rgba(199,228,245,.11);border-radius:5px;pointer-events:none}
+.luna-environment-top-icon:hover,.luna-environment-top-icon[aria-expanded=true]{color:#f3fcff;border-color:rgba(205,239,253,.76);background:linear-gradient(153deg,rgba(98,148,170,.53),rgba(30,72,98,.68))}
+.luna-environment-top-icon[aria-expanded=true]{box-shadow:inset 0 1px rgba(247,253,255,.21),0 0 18px rgba(126,216,248,.16)}
+.luna-environment-top-icon:focus-visible{outline:2px solid #d0f5ff;outline-offset:3px}
+.luna-environment-party-divider{align-self:center;flex:none;width:1px;height:62px;margin:0 3px;background:linear-gradient(to bottom,transparent,rgba(199,223,239,.64) 20%,rgba(227,242,253,.86) 50%,rgba(199,223,239,.64) 80%,transparent);box-shadow:0 0 7px rgba(157,218,250,.18)}
+.luna-attribute-clock-group{display:flex;align-items:center;gap:12px;height:100%;min-width:0;flex:none;margin-left:auto}
 .luna-party-clock{width:162px;height:77px;flex:none;min-width:0}
 .luna-party-clock-divider{align-self:center;flex:none;width:1px;height:62px;margin:0 3px;background:linear-gradient(to bottom,transparent,rgba(207,231,245,.68) 18%,rgba(217,236,249,.9) 50%,rgba(207,231,245,.68) 82%,transparent);box-shadow:0 0 7px rgba(167,216,246,.2)}
 .luna-party-five-slots{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-inline:contain;height:100%}
@@ -46,7 +54,8 @@
 @media(max-width:1470px){
   .luna-header-status-row{gap:9px}
   .luna-header-skill-anchor{width:clamp(106px,13vw,188px)}
-  .luna-party-clock-group{gap:8px}
+  .luna-environment-party-group{gap:8px}
+  .luna-attribute-clock-group{gap:9px}
   .luna-party-clock{width:145px}
   .luna-party-five-slots{gap:6px}
   .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:56px;height:60px}
@@ -54,6 +63,9 @@
 @media(max-width:1280px){
   .luna-header-skill-anchor{width:clamp(65px,9vw,112px)}
   .luna-party-clock{width:129px}
+  .luna-environment-top-icon{width:42px;height:52px}
+  .luna-environment-party-group{gap:6px}
+  .luna-attribute-clock-group{gap:7px}
   .luna-calendar-launch{padding:8px;gap:6px}
   .luna-calendar-launch time{font-size:18px}
   .luna-calendar-launch small{font-size:8px}
@@ -67,7 +79,11 @@
   .luna-party-clock{width:112px}
   .luna-calendar-launch__icon{width:17px;height:17px}
   .luna-calendar-launch time{font-size:16px}
-  .luna-party-clock-group{gap:5px}
+  .luna-environment-party-group{gap:5px}
+  .luna-environment-top-icon{width:37px;height:47px}
+  .luna-environment-top-icon svg{width:19px;height:19px}
+  .luna-environment-party-divider{height:51px;margin:0 1px}
+  .luna-attribute-clock-group{gap:5px}
   .luna-attribute-notifications{width:min(338px,30vw)}
   .luna-status-summary strong{font-size:10px}
   .luna-status-summary span{font-size:9px}
