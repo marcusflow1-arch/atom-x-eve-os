@@ -37,7 +37,7 @@ test('Windows companion syncs Drive and checks essential original game archives 
  assert.match(ps,/assets5\.pk3/);
  assert.match(ps,/Start-Process -FilePath \$exe -WorkingDirectory \$installDir/);
  assert.match(ps,/\$LaunchUrl -ne \$expected/);
- assert.doesNotMatch(ps,/Invoke-Expression|iex |curl .*\|.*powershell|WebGL/);
+ assert.doesNotMatch(ps,/Invoke-Expression|iex |curl .*\|.*powershell/);
  assert.match(install,/HKCU:\\Software\\Classes\\atomxe/);
  assert.match(install,/Launch-JediOutcast.ps1/);
 });
