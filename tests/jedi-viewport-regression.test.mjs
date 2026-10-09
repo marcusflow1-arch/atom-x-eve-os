@@ -62,7 +62,7 @@ test('native transition from menu to a different GPU backing buffer repairs stal
   assert.equal(f.canvas.width,1024);
   assert.equal(f.canvas.height,768);
   const msg=f.messages.filter(m=>m.type==='atom-jedi-video').at(-1);
-  assert.deepEqual(msg.viewport,[0,0,1024,768]);
+  assert.deepEqual(Array.from(msg.viewport),[0,0,1024,768]);
   assert.equal(msg.fullFrame,true);
   assert.equal(msg.renderWidth,1024);
   assert.equal(msg.renderHeight,768);
