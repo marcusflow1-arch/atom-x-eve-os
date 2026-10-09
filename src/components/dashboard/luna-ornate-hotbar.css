@@ -1,0 +1,18 @@
+/* Ornate slot housing on the live dashboard, without changing skill bindings. */
+.luna-hotbar:not([data-embedded]) .luna-hotbar-frame{display:none}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-skill-shell{position:relative;isolation:isolate;min-width:0;padding:13px 15px 12px;background:linear-gradient(180deg,rgba(12,25,40,.82),rgba(5,13,27,.91));box-shadow:inset 0 0 22px rgba(0,6,14,.75),0 5px 22px rgba(0,0,0,.3);clip-path:polygon(18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px),calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px),0 18px)}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-skill-shell .luna-hotbar-grid{position:relative;z-index:1;gap:4px}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-slot{border:1px solid rgba(173,132,82,.9)!important;border-radius:2px!important;color:#bed9e8!important;background:linear-gradient(145deg,#203449 0%,#0c1b30 52%,#071121 100%)!important;box-shadow:inset 0 1px 0 rgba(255,222,155,.18),inset 0 -2px 0 rgba(101,65,36,.6),0 1px 2px rgba(0,0,0,.7)!important;clip-path:polygon(7px 0,calc(100% - 7px) 0,100% 7px,100% calc(100% - 7px),calc(100% - 7px) 100%,7px 100%,0 calc(100% - 7px),0 7px)}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-slot:hover,.luna-hotbar:not([data-embedded]) .luna-hotbar-slot[data-pending],.luna-hotbar:not([data-embedded]) .luna-hotbar-slot[data-drag-over]{border-color:#9fefff!important;background:linear-gradient(145deg,#255b72,#112a46)!important;filter:drop-shadow(0 0 4px rgba(21,215,255,.42))}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-slot[data-selected]{border-color:#e9c383!important}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-slot>svg{color:#cdefff;stroke-width:1.2;filter:drop-shadow(0 0 3px rgba(19,204,250,.3))}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-key{border:1px solid rgba(169,132,87,.4);background:rgba(3,11,23,.96);font-size:9px}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-exp{margin-top:7px}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-exp-track{height:9px;border:1px solid rgba(165,116,70,.65);box-shadow:inset 0 0 8px rgba(0,4,16,.9),0 1px 0 rgba(238,197,135,.15);background:linear-gradient(180deg,rgba(5,15,28,.97),rgba(16,29,42,.97))}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-exp-track>div{background:linear-gradient(90deg,#0f6c9d,#05c7ee,#92f5ff);box-shadow:0 0 12px rgba(52,219,255,.55)}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-prefabs{padding-top:13px}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-prefabs button{border:1px solid rgba(158,117,73,.7);border-radius:2px;background:linear-gradient(135deg,#182d42,#0a182c);color:#e1d0b2;box-shadow:inset 0 1px 0 rgba(242,195,131,.11)}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-prefabs button[aria-pressed=true]{border-color:rgba(121,238,255,.82);background:linear-gradient(135deg,#134663,#0a253f);color:#e4faff}
+.luna-hotbar[data-embedded] .luna-hotbar-skill-shell{padding:0;min-width:0}
+@media(max-width:760px){.luna-hotbar:not([data-embedded]) .luna-hotbar-skill-shell{padding:12px 10px}}
+@media(prefers-reduced-motion:reduce){.luna-hotbar-skill-shell *{transition:none!important;animation:none!important}}
