@@ -225,9 +225,18 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign', embedded
         setState(event.data.state);
         if (event.data.state === 'error') setNotice(event.data.detail || 'The engine could not start.');
         if (event.data.state === 'engine-ready') {
+          setProgress('');
           requestAnimationFrame(() => {
             try { frame.current?.focus({ preventScroll: true }); } catch (_) { frame.current?.focus?.(); }
           });
+        }
+      }
+
+      if (event.data?.type === 'atom-jedi-progress') {
+        const done = Number(event.data.done);
+        const total = Number(event.data.total);
+        if (Number.isFinite(done) && Number.isFinite(total) && total > 0) {
+          setProgress(`Loading original textures, maps and shaders · ${(done / 1048576).toFixed(1)} / ${(total / 1048576).toFixed(1)} MB`);
         }
       }
 
