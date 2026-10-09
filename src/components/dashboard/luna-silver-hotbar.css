@@ -1,0 +1,40 @@
+/*
+ * Skill slots: match the AI Attribute Box light-silver metallic finish.
+ * Keeps the existing ornate shape, cyan skill effects and all button behavior.
+ */
+.luna-hotbar:not([data-embedded]) .axe-ornate-frame--skills .axe-ornate-frame__corner{
+  background-image:url('/ui/luna/xe-silver-corner.svg');
+}
+.luna-hotbar:not([data-embedded]) .axe-ornate-frame--skills .axe-ornate-frame__gem{
+  background-image:url('/ui/luna/xe-silver-gem.svg');
+}
+.luna-hotbar:not([data-embedded]) .axe-ornate-frame--skills .axe-ornate-frame__rail--top,
+.luna-hotbar:not([data-embedded]) .axe-ornate-frame--skills .axe-ornate-frame__rail--bottom{
+  background:linear-gradient(180deg,transparent,rgba(21,31,43,.9) 18%,rgba(169,184,199,.83) 38%,rgba(239,244,249,.95) 48%,rgba(84,103,121,.8) 70%,transparent);
+}
+.luna-hotbar:not([data-embedded]) .axe-ornate-frame--skills .axe-ornate-frame__rail--left,
+.luna-hotbar:not([data-embedded]) .axe-ornate-frame--skills .axe-ornate-frame__rail--right{
+  background:linear-gradient(90deg,transparent,rgba(75,91,109,.8) 24%,rgba(223,232,243,.84) 44%,rgba(99,114,133,.84) 68%,transparent);
+}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-slot{
+  border-color:rgba(185,201,219,.84)!important;
+  box-shadow:inset 0 1px 0 rgba(247,251,255,.20),inset 0 -2px 0 rgba(75,99,120,.5),0 1px 2px rgba(0,0,0,.7)!important;
+}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-slot[data-selected]{
+  border-color:#e2edf7!important;
+}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-key{
+  border-color:rgba(180,195,211,.52);
+}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-exp-track{
+  border-color:rgba(180,195,211,.70);
+  box-shadow:inset 0 0 8px rgba(0,4,16,.9),0 1px 0 rgba(235,245,253,.14);
+}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-prefabs button{
+  border-color:rgba(185,201,219,.76);
+  color:#dee8f0;
+  box-shadow:inset 0 1px 0 rgba(247,251,255,.15);
+}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-prefabs button[aria-pressed=true]{
+  border-color:#c9eff9;color:#e4faff;
+}
