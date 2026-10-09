@@ -17,6 +17,7 @@ export default function DateTimeTile({ onCalendarClick = () => {} }) {
   const returnFocus = useRef(null);
   const helpId = useId();
   const data = useDashboardStatusFeeds();
+  const latestStatus = data.feeds.notifications[0] || data.feeds.updates[0] || null;
   const preview = useStatusPreview({
     sources: data.sources, identity: data.identity,
     paused: hovered || focused || hidden || Boolean(overlay),
@@ -51,14 +52,21 @@ export default function DateTimeTile({ onCalendarClick = () => {} }) {
 
   return <>
     <section ref={dock} className="luna-status" aria-label="Dashboard status" data-luna-notification-dock>
-      {/* Clock / calendar on the left, system updates and notifications on the right. */}
+      <LunaLightEdge variant="clock" />
+      {/* One compact box: 30% clock / 70% status, separated by a thin vertical rule. */}
       <div className="luna-status-calendar-side">
-        <LunaLightEdge variant="clock" />
         <button type="button" className="luna-status-clock" aria-label="Open calendar" onClick={onCalendarClick}>
-          <CalendarIcon size={21} /><span><time dateTime={time.toISOString()}>{time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</time><small>{time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</small></span>
+          <CalendarIcon size={17} aria-hidden="true" /><span><time dateTime={time.toISOString()}>{time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</time><small title={time.toLocaleDateString('en-US', { dateStyle: 'full' })}>{time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</small></span>
         </button>
       </div>
+      <span className="luna-status-split" aria-hidden="true" />
       <div className="luna-status-announcements">
+        <button type="button" className="luna-status-summary"
+          aria-label="Open system updates and reminders"
+          onClick={() => open(latestStatus?.kind === 'updates' ? 'updates' : 'notifications', latestStatus)}>
+          <strong>System updates &amp; reminders</strong>
+          <span>{latestStatus?.title || (data.signedIn ? 'No new notifications or reminders' : 'Sign in to see your updates')}</span>
+        </button>
         <div className="luna-status-preview" data-expanded={preview.expanded || undefined}
           aria-hidden={!preview.expanded} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
           onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
