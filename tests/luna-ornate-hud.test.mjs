@@ -49,8 +49,10 @@ test('skill slots retain existing hotkeys, drop handlers and prefab logic', () =
 
 test('AI Attribute preserves live stats, social views and action controls', () => {
   assert.match(attrs, /aria-label="AI Attribute Box"/);
-  assert.match(attrs, /toggleAIBoxSocialMode\(id\)/);
-  assert.match(attrs, /<AIBoxSocialPanel mode=\{aiBoxSocialMode\}/);
+  assert.match(attrs, /setSocialDirectoryMode\(id\)/);
+  assert.match(attrs, /<AIBoxSocialPanel mode=\{socialDirectoryMode\}/);
+  assert.match(attrs, /<DashboardWindow id="social-directory"/);
+  assert.match(attrs, /<LunaGamerProfile player=\{profileTarget\}/);
   assert.match(attrs, /<StatRow icon=/);
   assert.match(attrs, /data-dashboard-attribute-actions/);
   assert.match(attrs, /axe-attribute-shell/);
