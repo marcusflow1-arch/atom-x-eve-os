@@ -1,0 +1,63 @@
+{
+  "name": "GameplayRecord",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "game_name": {
+      "type": "string"
+    },
+    "media_uri": {
+      "type": "string"
+    },
+    "media_type": {
+      "type": "string",
+      "enum": [
+        "video",
+        "image"
+      ]
+    },
+    "duration": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "recording",
+        "pending",
+        "ready",
+        "interrupted"
+      ]
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "size_bytes": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "user_id",
+    "title",
+    "game_name"
+  ],
+  "rls": {
+    "create": {
+      "data.user_id": "{{user.id}}"
+    },
+    "read": {
+      "data.user_id": "{{user.id}}"
+    },
+    "update": {
+      "data.user_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.user_id": "{{user.id}}"
+    }
+  }
+}
