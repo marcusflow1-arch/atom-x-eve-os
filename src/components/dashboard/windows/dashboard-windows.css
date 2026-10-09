@@ -1,0 +1,33 @@
+.luna-window{position:fixed;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;pointer-events:auto;color:#edf3fa;border:1px solid #aac5de45;border-radius:8px;background:#111d2bf5;box-shadow:0 16px 48px #0008, inset 0 1px #ffffff0a;isolation:isolate}
+.luna-window:focus-within{border-color:#b8d3e87a}
+.luna-window__bar{display:flex;align-items:center;height:39px;flex:none;background:linear-gradient(#26364a,#1b2839);border-bottom:1px solid #b6cfe124;user-select:none;padding-right:4px}
+.luna-window__drag{min-width:0;flex:1;height:100%;display:flex;align-items:center;gap:9px;padding:0 13px;cursor:grab;touch-action:none;font-size:12px;font-weight:600;letter-spacing:.03em}
+.luna-window__drag:active{cursor:grabbing}
+.luna-window__drag>svg{color:#91a7bb;flex:none}
+.luna-window__drag>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.luna-window__bar>button{display:grid;place-items:center;width:30px;height:29px;color:#a4b7c9;border-radius:3px}
+.luna-window__bar>button:hover{background:#ffffff12;color:#fff}
+.luna-window__bar>button:last-child:hover{background:#893d4b;color:#fff}
+.luna-window__bar :focus-visible,.luna-window__resize:focus-visible{outline:2px solid #bcd9ec;outline-offset:-3px}
+.luna-window__body{position:relative;flex:1;min-height:0;min-width:0;overflow:auto;overscroll-behavior:contain;transform:translateZ(0);scrollbar-width:thin;scrollbar-color:#566b83 #111d2b}
+.luna-window__body[hidden]{display:none}
+.luna-window__resize{position:absolute;bottom:1px;right:1px;width:18px;height:18px;z-index:20;touch-action:none;cursor:nwse-resize;background:repeating-linear-gradient(135deg,transparent 0 3px,#b4cbd04f 3px 4px);clip-path:polygon(100% 0,100% 100%,0 100%)}
+.luna-window__embedded{position:relative!important;inset:auto!important;width:100%!important;height:100%!important;min-height:0!important;max-width:none!important;z-index:auto!important;pointer-events:auto!important}
+.luna-window__body>.luna-window__embedded{overflow:auto}
+.luna-window__embedded.axe-progression .axe-progression__shell{min-height:100%;height:100%}
+.luna-window__embedded.axe-progression .axe-progression__topbar{display:flex;justify-content:center;padding:18px 18px 0}
+.luna-window__embedded.axe-progression .axe-progression__brand,.luna-window__embedded.axe-progression .axe-progression__motto{display:none}
+.luna-window__embedded.axe-progression .axe-progression__body{overflow:auto;padding:16px;min-height:0}
+.luna-window__embedded.axe-progression .axe-skill-header{grid-template-columns:100px 1fr}
+.luna-window__embedded.axe-progression .axe-stats-template-stage{height:690px;min-width:1100px}
+.luna-window__embedded.axe-progression .axe-progress-toast{position:absolute}
+.luna-window__messages{display:grid;grid-template-columns:minmax(160px,30%) minmax(280px,1fr);height:100%;min-width:460px;min-height:0}
+.luna-window__messages>section{position:relative;min-height:0;overflow:hidden}
+.luna-window__inventory{height:100%;min-height:0;position:relative;overflow:auto}
+.luna-window__story{position:relative;height:100%;min-width:480px;min-height:440px}
+.luna-window__story>div>div:last-child>div{padding:24px}
+.luna-window__battle{height:100%;overflow:auto}
+.luna-window__battle>section{width:100%;min-height:100%}
+.luna-window__body .luna-skill-book{height:100%;min-height:0}
+.luna-window__memories{position:relative;height:100%;min-height:0;overflow:auto}
+.luna-window__memories>div{min-width:680px;min-height:620px}
