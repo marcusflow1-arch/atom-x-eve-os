@@ -4,6 +4,7 @@ import SystemUpdatesRemindersOverlay from './SystemUpdatesRemindersOverlay';
 import useDashboardStatusFeeds from './useDashboardStatusFeeds';
 import useStatusPreview from './useStatusPreview';
 import StatusFeedButton from './StatusFeedButton';
+import LunaLightEdge from './LunaLightEdge';
 import './dashboard-status.css';
 
 export default function DateTimeTile({ onCalendarClick = () => {} }) {
@@ -77,6 +78,7 @@ export default function DateTimeTile({ onCalendarClick = () => {} }) {
       </div>
       <span className="luna-status-divider" aria-hidden="true" />
       <div className="luna-status-calendar-side">
+        <LunaLightEdge variant="clock" />
         <button type="button" className="luna-status-clock" aria-label="Open calendar" onClick={onCalendarClick}>
           <CalendarIcon size={21} /><span><time dateTime={time.toISOString()}>{time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</time><small>{time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</small></span>
         </button>
