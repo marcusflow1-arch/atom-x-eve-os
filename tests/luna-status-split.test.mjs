@@ -48,10 +48,10 @@ test('four new environment pins are separate from five party slots, preserving p
   assert.match(css,/\.luna-env-quickslots\{position:absolute/);
   assert.match(css,/\.luna-env-quickslot-shell\{[^}]*width:46px;height:46px/);
   assert.match(css,/\.luna-environment-party-divider,\.luna-party-end-divider\{[^}]*height:77px/);
-  assert.match(css,/\.luna-party-five-slots\{[^}]*margin-left:calc\(clamp\(112px,15vw,247px\) \+ 12px - 25px\)/);
-  assert.match(css,/@media\(max-width:1470px\)\{[\s\S]*?margin-left:calc\(clamp\(106px,13vw,188px\) \+ 9px - 25px\)/);
-  assert.match(css,/@media\(max-width:1280px\)\{[\s\S]*?margin-left:calc\(clamp\(65px,9vw,112px\) \+ 9px - 21px\)/);
-  assert.match(css,/@media\(max-width:1040px\)\{[\s\S]*?margin-left:calc\(75px - 18px\)/);
+  assert.match(css,/\.luna-party-five-slots\{[^}]*margin-left:calc\(clamp\(112px,15vw,247px\) \+ 12px - 25px \+ 42px\)/);
+  assert.match(css,/@media\(max-width:1470px\)\{[\s\S]*?margin-left:calc\(clamp\(106px,13vw,188px\) \+ 9px - 25px \+ 39px\)/);
+  assert.match(css,/@media\(max-width:1280px\)\{[\s\S]*?margin-left:calc\(clamp\(65px,9vw,112px\) \+ 9px - 21px \+ 34\.5px\)/);
+  assert.match(css,/@media\(max-width:1040px\)\{[\s\S]*?margin-left:calc\(75px - 18px \+ 25\.5px\)/);
   const row=frame.slice(frame.indexOf('<div className="luna-header-status-row"'),frame.indexOf('{/* Bottom Row: Nav Boxes + Intelligence Feed */}'));
   assert.match(row,/data-luna-environment-trigger/);
   assert.match(row,/luna-environment-party-divider/);
