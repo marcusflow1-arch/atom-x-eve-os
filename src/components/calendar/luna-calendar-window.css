@@ -1,0 +1,125 @@
+/*
+ * Luna Calendar — floating desktop window.
+ * High-contrast, soft slate-blue finish instead of the near-black modal.
+ * Scoped to embedded calendar so the global/full-screen calendar stays intact.
+ */
+.luna-window:has(.luna-calendar-window){
+  background:#234965;
+  border:1px solid #a6d0ec;
+  box-shadow:0 18px 52px rgba(0,10,26,.42),inset 0 1px rgba(231,247,255,.32);
+}
+.luna-window:has(.luna-calendar-window)>.luna-window__bar{
+  background:linear-gradient(135deg,#4b7fa4,#2e5b7f 70%,#254e73);
+  border-bottom:1px solid rgba(198,232,251,.55);
+}
+.luna-window:has(.luna-calendar-window)>.luna-window__bar .luna-window__drag,
+.luna-window:has(.luna-calendar-window)>.luna-window__bar>button{color:#f3faff}
+.luna-window:has(.luna-calendar-window)>.luna-window__body{
+  background:#254b6c;
+  scrollbar-color:#78a6c6 #244866;
+}
+.luna-calendar-window{
+  color:#f3faff;
+  background:linear-gradient(140deg,#315d80 0%,#264e70 48%,#214766 100%);
+}
+.luna-calendar-window .luna-calendar-header{
+  height:65px;
+  padding-inline:17px;
+  background:linear-gradient(135deg,#3c7095,#2e597c);
+  border-bottom:1px solid rgba(193,226,247,.44)!important;
+}
+.luna-calendar-window .luna-calendar-header h1{
+  font-size:18px!important;color:#f9fdff!important;
+  text-shadow:0 1px 1px rgba(10,35,60,.24);
+}
+.luna-calendar-window .luna-calendar-rail{
+  background:#305c7e;
+  border-right:1px solid rgba(182,218,241,.42)!important;
+}
+.luna-calendar-window .luna-calendar-grid-stage{
+  background:#315a7b;
+}
+.luna-calendar-window .luna-calendar-sidebar{
+  background:#2e587a!important;
+  border-left:1px solid rgba(178,216,240,.48)!important;
+}
+/* More contrast for the original low-opacity secondary copy. */
+.luna-calendar-window [class*="text-white/"],
+.luna-calendar-window [class*="text-cyan-200/"],
+.luna-calendar-window [class*="text-cyan-100/"]{
+  color:#e0f0fc!important;
+}
+.luna-calendar-window [class*="text-white/18"],
+.luna-calendar-window [class*="text-white/20"],
+.luna-calendar-window [class*="text-white/22"],
+.luna-calendar-window [class*="text-white/24"],
+.luna-calendar-window [class*="text-white/25"],
+.luna-calendar-window [class*="text-white/28"],
+.luna-calendar-window [class*="text-white/30"]{
+  color:#c6e1f4!important;
+}
+.luna-calendar-window .luna-calendar-month-grid{
+  border-color:rgba(177,215,241,.34)!important;
+}
+.luna-calendar-window [data-calendar-day]{
+  border-color:rgba(176,210,233,.37)!important;
+  background:#315f82;
+  opacity:1;
+}
+.luna-calendar-window [data-calendar-day]:nth-child(odd){background:#2d597b}
+.luna-calendar-window [data-calendar-day]:hover{background:#437d9e!important}
+.luna-calendar-window [data-calendar-day][data-selected]{background:#4d88a8!important;box-shadow:inset 0 0 0 1px rgba(220,247,255,.60)}
+.luna-calendar-window [data-calendar-day].opacity-45{opacity:.71}
+.luna-calendar-window [data-calendar-day] span.text-slate-950{color:#163b57!important}
+.luna-calendar-window .luna-calendar-grid-stage .luna-calendar-dayview{background:#315f82!important}
+.luna-calendar-window .luna-calendar-dayview [class*="border-white/"]{border-color:rgba(183,218,238,.34)!important}
+.luna-calendar-window .luna-calendar-week-label{
+  background:#345f80!important;border-color:rgba(170,215,240,.40)!important
+}
+.luna-calendar-window .luna-calendar-grid-stage [class*="border-white/"],
+.luna-calendar-window .luna-calendar-sidebar [class*="border-white/"],
+.luna-calendar-window .luna-calendar-rail [class*="border-white/"]{
+  border-color:rgba(184,218,240,.32)!important;
+}
+.luna-calendar-window .luna-calendar-sidebar button,
+.luna-calendar-window .luna-calendar-rail button{border-radius:6px}
+.luna-calendar-window .luna-calendar-sidebar button:hover,
+.luna-calendar-window .luna-calendar-rail button:hover{
+  background-color:rgba(154,211,245,.18)!important;color:#fff!important;
+}
+.luna-calendar-window .luna-calendar-sidebar input,
+.luna-calendar-window .luna-calendar-sidebar textarea{
+  color:#f7fcff!important;
+  background:rgba(16,48,75,.65)!important;
+  border:1px solid rgba(176,219,245,.32);
+}
+.luna-calendar-window .luna-calendar-sidebar input::placeholder,
+.luna-calendar-window .luna-calendar-sidebar textarea::placeholder{color:#c6dfed}
+.luna-calendar-window button:focus-visible{outline:2px solid #e3f6ff;outline-offset:-1px}
+.luna-calendar-window .luna-calendar-grid-stage>.absolute.inset-0.z-20{background:rgba(27,66,95,.76)!important}
+.luna-calendar-window .luna-calendar-header [class*="bg-cyan-200"]{
+  background:#b1e7fb!important;color:#153b55!important;
+}
+.luna-calendar-window .luna-calendar-header [class*="bg-cyan-200"] *{color:#153b55!important}
+.luna-calendar-window .luna-calendar-header [class*="bg-white/"],
+.luna-calendar-window .luna-calendar-rail [class*="bg-white/"],
+.luna-calendar-window .luna-calendar-sidebar [class*="bg-white/"]{
+  background-color:rgba(164,212,241,.14);
+}
+/* Creator stays inside the floating calendar, with a readable modal surface. */
+.luna-calendar-window .luna-calendar-creator {
+  background:rgba(34,75,108,.78)!important;
+}
+@media (max-width:900px){
+  .luna-calendar-window .luna-calendar-sidebar{width:235px}
+  .luna-calendar-window .luna-calendar-header{height:60px;padding-inline:10px}
+  .luna-calendar-window .luna-calendar-header h1{font-size:15px!important}
+}
+@media (max-width:640px){
+  .luna-calendar-window .luna-calendar-header{height:55px}
+  .luna-calendar-window [data-calendar-day]{padding:2px!important}
+  .luna-calendar-window [data-calendar-day] .h-6.w-6{width:21px;height:21px}
+}
+@media(prefers-reduced-motion:reduce){
+  .luna-calendar-window *{transition:none!important;animation:none!important}
+}
