@@ -8,6 +8,7 @@ import {
 import { base44 } from '@/api/base44Client';
 import DayPlanningView from './DayPlanningView';
 import AIEventCreator from './AIEventCreator';
+import './luna-calendar-window.css';
 
 const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const EVENT_ACCENTS = {
@@ -58,7 +59,7 @@ function EventPill({ event, compact = false, onClick }) {
   );
 }
 
-export default function IntelligentCalendarOverlay({ onClose, currentUserId }) {
+export default function IntelligentCalendarOverlay({ onClose, currentUserId, embedded = false }) {
   const [cursor, setCursor] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState('month');
@@ -108,18 +109,24 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId }) {
   }, [loadData]);
 
   useEffect(() => {
+    // The floating calendar must not lock dashboard scrolling or steal Escape
+    // from other independent windows. Its creator dialog still closes first.
     const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    if (!embedded) document.body.style.overflow = 'hidden';
     const key = (event) => {
       if (event.key !== 'Escape') return;
+      if (embedded && !showCreator) return; // DashboardWindow handles top-window Escape.
       event.preventDefault();
       event.stopImmediatePropagation?.();
       if (showCreator) setShowCreator(false);
       else onClose?.();
     };
     window.addEventListener('keydown', key, true);
-    return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', key, true); };
-  }, [onClose, showCreator]);
+    return () => {
+      if (!embedded) document.body.style.overflow = previous;
+      window.removeEventListener('keydown', key, true);
+    };
+  }, [onClose, showCreator, embedded]);
 
   const byDate = useMemo(() => {
     const map = new Map();
@@ -194,7 +201,9 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId }) {
   if (typeof document === 'undefined') return null;
 
   const overlay = (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .2 }} className="fixed inset-0 z-[200000] isolate h-[100dvh] w-screen overflow-hidden bg-[#04070c] text-white pointer-events-auto" role="dialog" aria-modal="true" aria-label="Luna Calendar">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .2 }}
+      className={embedded ? 'luna-calendar-window luna-window__embedded relative isolate h-full w-full min-h-0 overflow-hidden text-white pointer-events-auto' : 'fixed inset-0 z-[200000] isolate h-[100dvh] w-screen overflow-hidden bg-[#04070c] text-white pointer-events-auto'}
+      role={embedded ? 'region' : 'dialog'} aria-modal={embedded ? undefined : 'true'} aria-label="Luna Calendar">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(34,211,238,.07),transparent_34%),radial-gradient(circle_at_15%_90%,rgba(99,102,241,.06),transparent_36%)]" />
       <div className="relative z-10 flex h-full min-h-0 flex-col">
         <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-white/[0.055] px-5 lg:px-8">
@@ -270,5 +279,5 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId }) {
     </motion.div>
   );
 
-  return createPortal(overlay, document.body);
+  return embedded ? overlay : createPortal(overlay, document.body);
 }
