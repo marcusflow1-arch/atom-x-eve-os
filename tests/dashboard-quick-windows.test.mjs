@@ -20,7 +20,7 @@ const {act,createElement}=await import('react');
 const {createRoot}=await import('react-dom/client');
 const fakeNames=new Set(['PartyPortraitRail','MemoriesDrawer','AIStoryOverlay','DashboardAvatarScene','InventoryGrid',
   'LunaSplitInventory','LunaCardsPanel','LunaLeaderboardOverlay','LunaAIBattleOverlay','LunaFriendsQuickAccessPanel',
-  'LunaSeasonPassOverlay','LunaSkillXpHud','LunaMessageFriendsPanel','MessengerHub','AIBoxSocialPanel','LunaOrnateChrome']);
+  'LunaSeasonPassOverlay','LunaSkillXpHud','LunaMessageFriendsPanel','MessengerHub','AIBoxSocialPanel','LunaGamerProfile','LunaOrnateChrome']);
 const fakeHooks={
   AuthContext:"export const useAuth=()=>({user:{id:'quick-window-user',name:'Player'}});",
   CompanionIdentityContext:"export const useCompanionIdentity=()=>({name:'Artemis'});",
