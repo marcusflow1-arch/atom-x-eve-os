@@ -5,8 +5,9 @@
  * The notification box stays anchored to the AI Attribute right rail.
  */
 .luna-header-status-row{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-width:0;height:96px}
-/* Keep the Library/Skill Book geometry marker, but remove the empty 247px
-   flex spacer that pushed the entire environment/party row to the right. */
+/* Keep the Library/Skill Book geometry marker out of the flex flow so
+   the Environment icon and the LEFT silver divider stay exactly in place.
+   Only the five party portraits recover their previous horizontal position. */
 .luna-header-skill-anchor{position:absolute;top:0;left:0;width:1px;height:100%;pointer-events:none;flex:none}
 .luna-environment-party-group{position:relative;display:flex;align-items:center;gap:10px;flex:0 1 auto;min-width:0;height:100%}
 .luna-environment-top-icon{position:relative;isolation:isolate;display:grid;place-items:center;flex:none;width:50px;height:58px;padding:0;border:1px solid rgba(194,217,232,.36);border-radius:9px;color:#cce6f6;background:linear-gradient(153deg,rgba(72,106,130,.5),rgba(17,40,65,.55));box-shadow:inset 0 1px rgba(248,253,255,.13),0 5px 16px rgba(3,13,27,.19);cursor:pointer;transition:color .17s,border-color .17s,background .17s}
@@ -20,7 +21,10 @@
 .luna-attribute-clock-group{display:flex;align-items:center;gap:12px;height:100%;min-width:0;flex:none;margin-left:auto}
 .luna-party-clock{width:162px;height:77px;flex:none;min-width:0}
 .luna-party-clock-divider{align-self:center;flex:none;width:1px;height:62px;margin:0 3px;background:linear-gradient(to bottom,transparent,rgba(207,231,245,.68) 18%,rgba(217,236,249,.9) 50%,rgba(207,231,245,.68) 82%,transparent);box-shadow:0 0 7px rgba(167,216,246,.2)}
-.luna-party-five-slots{display:flex;align-items:center;gap:6px;min-width:0;flex:0 1 auto;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-inline:contain;height:100%}
+/* Restore the five boxes to their pre-left-shift location by replacing the
+   old SkillTreeAnchor offset BEFORE the slots, not before the icon or line.
+   The old row started with a clamp(112px,15vw,247px) anchor and 12px gap. */
+.luna-party-five-slots{display:flex;align-items:center;gap:6px;min-width:0;flex:0 1 auto;margin-left:calc(clamp(112px,15vw,247px) + 12px);overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-inline:contain;height:100%}
 .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:56px;height:60px}
 .luna-party-five-slots::-webkit-scrollbar{display:none}
 .luna-attribute-notifications{width:min(338px,30vw);height:77px;flex:none;min-width:0;margin-left:auto}
@@ -61,11 +65,12 @@
   .luna-environment-party-group{gap:7px}
   .luna-attribute-clock-group{gap:9px}
   .luna-party-clock{width:145px}
-  .luna-party-five-slots{gap:6px}
+  .luna-party-five-slots{gap:6px;margin-left:calc(clamp(106px,13vw,188px) + 9px)}
   .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:52px;height:56px}
 }
 @media(max-width:1280px){
   .luna-party-clock{width:129px}
+  .luna-party-five-slots{margin-left:calc(clamp(65px,9vw,112px) + 9px)}
   .luna-environment-top-icon{width:42px;height:52px}
   .luna-environment-party-group{gap:6px}
   .luna-attribute-clock-group{gap:7px}
@@ -85,7 +90,7 @@
   .luna-environment-top-icon{width:37px;height:47px}
   .luna-environment-top-icon svg{width:19px;height:19px}
   .luna-environment-party-divider,.luna-party-end-divider{height:77px;margin:0 1px}
-  .luna-party-five-slots{gap:3px}
+  .luna-party-five-slots{gap:3px;margin-left:75px}
   .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:34px;height:44px}
   .luna-attribute-clock-group{gap:5px}
   .luna-attribute-notifications{width:min(338px,30vw)}
