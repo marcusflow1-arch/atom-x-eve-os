@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84 98">
+<defs>
+  <linearGradient id="bronze" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f6f8fb"/><stop offset=".23" stop-color="#b5c0cc"/><stop offset=".48" stop-color="#46576a"/><stop offset=".68" stop-color="#dfe6ed"/><stop offset="1" stop-color="#657382"/></linearGradient>
+  <linearGradient id="cyan" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#dcffff"/><stop offset=".38" stop-color="#3ddaff"/><stop offset="1" stop-color="#056891"/></linearGradient>
+</defs>
+<!-- Finely stepped outer corner: dark undercut, polished ridges, cut-metal filigree -->
+<path d="M84 5 H47 L39 13 H27 L13 26 L7 45 V63 L15 72 V98" fill="none" stroke="#0a111c" stroke-width="10"/>
+<path d="M84 5 H47 L39 13 H27 L13 26 L7 45 V63 L15 72 V98" fill="none" stroke="url(#bronze)" stroke-width="5"/>
+<path d="M84 9 H50 L42 17 H30 L18 30 L12 46 V61 L20 69 V98" fill="none" stroke="#eff3f8" stroke-opacity=".72" stroke-width="1.2"/>
+<path d="M84 15 H54 L44 23 H33 L23 35 L18 47 V61 L25 68 V98" fill="none" stroke="#8194a5" stroke-width="2"/>
+<path d="M68 2 56 12 45 14 38 25 31 27 28 37 17 42 10 56 3 44 9 29 22 16 34 16 44 3Z" fill="#1b2636" stroke="url(#bronze)" stroke-width="2"/>
+<path d="M53 5 43 16 30 18 19 28 15 36 22 33 32 23 46 21 61 8Z" fill="#aebecb" fill-opacity=".46"/>
+<path d="M10 61 3 72 10 81 17 73 23 68 18 61Z" fill="#223041" stroke="#aebccc" stroke-width="1.5"/>
+<path d="m5 70 5-6 5 6-5 8Z" fill="url(#cyan)" stroke="#bdf5fc" stroke-width=".8"/>
+<path d="M8 83 13 88 13 98 M25 73 25 86 31 93 M31 33 37 39 43 35" fill="none" stroke="#dee7f0" stroke-width="1"/>
+<path d="M59 6 56 10 65 10 M17 51 13 57 17 61" fill="none" stroke="#dcffff" stroke-opacity=".65" stroke-width="1"/>
+</svg>
