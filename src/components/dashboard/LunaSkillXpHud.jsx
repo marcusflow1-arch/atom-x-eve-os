@@ -7,6 +7,7 @@ import { SKILL_KEYS, SKILL_SET_COUNT } from '@/components/luna/skillSlots';
 import { showError } from '@/components/error/ErrorToast';
 import './luna-hotbar.css';
 import './luna-ornate-hotbar.css';
+import './luna-silver-hotbar.css';
 import LunaOrnateChrome from './LunaOrnateChrome';
 
 export function HotkeyFrame() {
