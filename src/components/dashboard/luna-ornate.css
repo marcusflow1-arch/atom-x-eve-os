@@ -1,0 +1,24 @@
+/* Shared scalable bronze/cyan ornament; never intercepts user input. */
+.axe-ornate-frame{position:absolute;inset:0;z-index:6;pointer-events:none;isolation:isolate}
+.axe-ornate-frame__rail{position:absolute;pointer-events:none}
+.axe-ornate-frame__rail--top,.axe-ornate-frame__rail--bottom{left:37px;right:37px;height:6px;background:linear-gradient(180deg,transparent,rgba(20,13,10,.95) 18%,rgba(218,165,97,.8) 39%,rgba(249,224,181,.8) 48%,rgba(104,65,39,.85) 70%,transparent)}
+.axe-ornate-frame__rail--top{top:3px}
+.axe-ornate-frame__rail--bottom{bottom:3px;transform:rotate(180deg)}
+.axe-ornate-frame__rail--left,.axe-ornate-frame__rail--right{top:48px;bottom:48px;width:6px;background:linear-gradient(90deg,transparent,rgba(93,66,45,.78) 24%,rgba(232,184,116,.8) 44%,rgba(111,71,41,.85) 68%,transparent)}
+.axe-ornate-frame__rail--left{left:4px}
+.axe-ornate-frame__rail--right{right:4px;transform:rotate(180deg)}
+.axe-ornate-frame__corner{position:absolute;width:70px;height:82px;background:url('/ui/luna/xe-ornate-corner.svg') center/100% 100% no-repeat;filter:drop-shadow(0 1px 2px #04070b)}
+.axe-ornate-frame__corner--tl{top:-4px;left:-5px}
+.axe-ornate-frame__corner--tr{top:-4px;right:-5px;transform:scaleX(-1)}
+.axe-ornate-frame__corner--bl{bottom:-4px;left:-5px;transform:scaleY(-1)}
+.axe-ornate-frame__corner--br{bottom:-4px;right:-5px;transform:scale(-1)}
+.axe-ornate-frame__gem{position:absolute;left:50%;width:102px;height:35px;transform:translateX(-50%);background:url('/ui/luna/xe-ornate-gem.svg') center/100% 100% no-repeat;filter:drop-shadow(0 0 5px rgba(6,211,255,.56))}
+.axe-ornate-frame__gem--top{top:-12px}
+.axe-ornate-frame__gem--bottom{bottom:-12px;transform:translateX(-50%) rotate(180deg)}
+.axe-ornate-frame--skills .axe-ornate-frame__corner{width:51px;height:60px}
+.axe-ornate-frame--skills .axe-ornate-frame__rail--left,.axe-ornate-frame--skills .axe-ornate-frame__rail--right{top:29px;bottom:29px}
+.axe-ornate-frame--skills .axe-ornate-frame__rail--top,.axe-ornate-frame--skills .axe-ornate-frame__rail--bottom{left:27px;right:27px}
+.axe-ornate-frame--skills .axe-ornate-frame__gem{width:78px;height:28px}
+.axe-ornate-frame--skills .axe-ornate-frame__gem--top{top:-10px}
+.axe-ornate-frame--skills .axe-ornate-frame__gem--bottom{bottom:-10px}
+@media(max-width:760px){.axe-ornate-frame--panel .axe-ornate-frame__corner{width:50px;height:61px}.axe-ornate-frame--panel .axe-ornate-frame__rail--left,.axe-ornate-frame--panel .axe-ornate-frame__rail--right{top:35px;bottom:35px}}
