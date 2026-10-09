@@ -102,6 +102,7 @@ Deno.serve(async (req) => {
       if (party) members = await rosterFor(party.id);
 
       const invitations = await svc.PartyInvite.filter({ invitee_id: user.id, status: 'pending' }, '-created_date', 20);
+      const outgoingInvites = party ? await svc.PartyInvite.filter({ party_id: party.id, status: 'pending' }, '-created_date', 50) : [];
       const launchInvites = await svc.PartyLaunchInvite.filter({ recipient_id: user.id, status: 'pending' }, '-created_date', 20);
 
       const activeInvitations = [];
@@ -123,6 +124,9 @@ Deno.serve(async (req) => {
         membership,
         members,
         invitations: activeInvitations,
+        // A pending invitation occupies a clearly marked top-row slot until
+        // accepted, declined or expired; it is NOT yet an active party member.
+        outgoingInvites: (outgoingInvites || []).filter((item: any) => !isExpired(item.expires_at) && !members.some(m => m.user_id === item.invitee_id)),
         launchInvites: activeLaunchInvites,
       });
     }
@@ -165,11 +169,16 @@ Deno.serve(async (req) => {
         await svc.PartyInvite.update(duplicate.id, { status: 'expired' });
       }
 
+      const targetUser = await svc.User.get(inviteeId).catch(() => null);
+      const inviteeName = String(friendship?.[0]?.friend_name || targetUser?.full_name || targetUser?.username || data.inviteeName || 'Player').slice(0, 80);
+      const inviteeAvatar = String(friendship?.[0]?.friend_avatar || targetUser?.avatar_url || data.inviteeAvatar || '').slice(0, 500);
       const invite = await svc.PartyInvite.create({
         party_id: party.id,
         inviter_id: user.id,
         inviter_name: displayName(user),
         invitee_id: inviteeId,
+        invitee_name: inviteeName,
+        invitee_avatar: inviteeAvatar,
         status: 'pending',
         expires_at: expiresIn(10),
         message: data.message || `${displayName(user)} invited you to a party`,
