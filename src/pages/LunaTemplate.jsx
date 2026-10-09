@@ -961,6 +961,7 @@ export default function LunaTemplate() {
                       onOpenDevSpotlight={() => setShowDevSpotlight(true)}
                       isEnvironmentActive={isEnvironmentActive}
                       onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)}
+                      environmentWindowOpen={showEnvironmentCollection}
                       selectedFocusGame={selectedFocusGame}
                       onSelectFocusGame={setSelectedFocusGame}
                       optionsGame={optionsGame}
