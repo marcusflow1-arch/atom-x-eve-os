@@ -5,7 +5,7 @@
  */
 .luna-header-status-row{display:flex;align-items:center;gap:12px;width:100%;min-width:0;height:96px}
 .luna-header-skill-anchor{width:clamp(112px,15vw,247px);flex:none;height:100%}
-.luna-party-clock-group{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;height:100%}
+.luna-party-clock-group{position:relative;display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;height:100%}
 .luna-party-clock{width:162px;height:77px;flex:none;min-width:0}
 .luna-party-clock-divider{align-self:center;flex:none;width:1px;height:62px;margin:0 3px;background:linear-gradient(to bottom,transparent,rgba(207,231,245,.68) 18%,rgba(217,236,249,.9) 50%,rgba(207,231,245,.68) 82%,transparent);box-shadow:0 0 7px rgba(167,216,246,.2)}
 .luna-party-five-slots{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-inline:contain;height:100%}
