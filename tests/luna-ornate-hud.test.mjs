@@ -9,10 +9,16 @@ const frame = read('src/components/dashboard/LunaOrnateChrome.jsx');
 const slots = read('src/components/dashboard/luna-ornate-hotbar.css');
 const attrCss = read('src/components/dashboard/luna-ornate-attributes.css');
 const chromeCss = read('src/components/dashboard/luna-ornate.css');
+const lightChrome = read('src/components/dashboard/LunaLightEdge.jsx');
+const dateTile = read('src/components/dashboard/DateTimeTile.jsx');
+const lightCss = read('src/components/dashboard/luna-light-edge.css');
 
-test('both live dashboard surfaces share the ornate bezel assets', () => {
-  assert.match(hud, /LunaOrnateChrome variant="skills"/);
+test('AI panel retains ornate bronze frame while skills and clock use translucent light pins', () => {
+  assert.match(hud, /LunaLightEdge variant="skills"/);
+  assert.match(dateTile, /LunaLightEdge variant="clock"/);
   assert.match(attrs, /<LunaOrnateChrome \/>/);
+  assert.match(lightChrome, /aria-hidden="true"/);
+  assert.match(lightCss, /pointer-events:none/);
   assert.match(frame, /aria-hidden="true"/);
   assert.match(chromeCss, /pointer-events:none/);
   assert.ok(existsSync('public/ui/luna/xe-ornate-corner.svg'));
