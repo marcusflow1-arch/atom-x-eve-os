@@ -18,6 +18,7 @@ import LunaSeasonPassOverlay from './LunaSeasonPassOverlay';
 import LunaSkillXpHud from './LunaSkillXpHud';
 import LunaOrnateChrome from './LunaOrnateChrome';
 import './luna-ornate-attributes.css';
+import './luna-silver-attribute.css';
 import LunaMessageFriendsPanel from './LunaMessageFriendsPanel';
 import MessengerHub from '@/components/friends/MessengerHub';
 import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
