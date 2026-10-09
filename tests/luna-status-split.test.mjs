@@ -16,12 +16,14 @@ test('top row places icon-only Environment Hub first, divider, party slots, then
   const environmentPos=markup.indexOf('className="luna-environment-top-icon"');
   const environmentDividerPos=markup.indexOf('<span className="luna-environment-party-divider" aria-hidden="true" />');
   const slotsPos=markup.indexOf('<div className="luna-party-five-slots"');
+  const partyEndDividerPos=markup.indexOf('<span className="luna-party-end-divider" aria-hidden="true" />');
   const clockGroupPos=markup.indexOf('<div className="luna-attribute-clock-group"');
   const clockPos=markup.indexOf('<div className="luna-party-clock">{calendarBox}</div>');
   const calendarDividerPos=markup.indexOf('<span className="luna-party-clock-divider" aria-hidden="true" />');
   const notificationPos=markup.indexOf('<div className="luna-attribute-notifications"');
   assert.ok(environmentPos>0 && environmentPos<environmentDividerPos && environmentDividerPos<slotsPos
-    && slotsPos<clockGroupPos && clockGroupPos<clockPos && clockPos<calendarDividerPos && calendarDividerPos<notificationPos);
+    && slotsPos<partyEndDividerPos && partyEndDividerPos<clockGroupPos
+    && clockGroupPos<clockPos && clockPos<calendarDividerPos && calendarDividerPos<notificationPos);
   assert.match(markup,/aria-label="Open Environment Hub"/);
   assert.match(markup,/onClick=\{\(\) => window\.dispatchEvent\(new Event\('openEnvironmentHub'\)\)\}/);
   assert.match(markup,/<Globe size=\{23\} strokeWidth=\{1\.6\} aria-hidden="true" \/>/);
@@ -45,9 +47,12 @@ test('calendar tile has functional icon, live time, date and calendar-window act
   assert.match(clock,/window\.clearInterval/);
 });
 
-test('two silver lines separate Environment from party and Calendar from notifications',()=>{
-  assert.match(css,/\.luna-environment-party-group\{[^}]*gap:12px/);
-  assert.match(css,/\.luna-environment-party-divider\{[^}]*width:1px;height:62px/);
+test('full-height silver dividers bound the five small portraits while clock/notices stay anchored right',()=>{
+  assert.match(css,/\.luna-environment-party-group\{[^}]*gap:10px/);
+  assert.match(css,/\.luna-environment-party-divider,\.luna-party-end-divider\{[^}]*width:1px;height:77px/);
+  assert.match(css,/\.luna-header-skill-anchor\{position:absolute;top:0;left:0;width:1px/);
+  assert.match(css,/\.luna-environment-party-group\{[^}]*flex:0 1 auto/);
+  assert.match(css,/\.luna-party-five-slots\{[^}]*flex:0 1 auto/);
   assert.match(css,/\.luna-party-clock-divider\{[^}]*width:1px;height:62px/);
   assert.match(css,/\.luna-attribute-clock-group\{[^}]*gap:12px/);
   assert.match(css,/\.luna-party-five-slots\{/);
