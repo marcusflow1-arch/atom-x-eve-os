@@ -106,6 +106,7 @@ test('special airborne saber animations retain full-body priority over jump pose
 test('Space while knocked down starts the real Force Getup clip without waiting for the timeout',()=>{
   const f=Object.create(Fighter.prototype),played=[];
   f.g={t:1};f.status='down';f.statusT=0.01;f.cmd={jumpPressed:true};f.onGround=true;
+  f.timers=[];f.flash=0;f.dmgFlash=0;f.distracted=0;
   f.actor={skel:{anims:clips}};
   f.frictionMove=()=>{};f.playWhole=(name,opts)=>{played.push(name);return clips[name].n/clips[name].fps;};
   f.finish=()=>{};
