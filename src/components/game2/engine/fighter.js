@@ -227,10 +227,7 @@ export class Fighter {
     if (c.jumpPressed && this.onGround && !this.ducked && !frozen) this.startJump();
     if (!this.onGround && c.jump && !this.fjUsed && this.now - this.jumpAt > 0.16 && this.now - this.jumpAt < 0.6 && this.vel[1] > 0.5 && this.canForceJump()) this.startForceJump();
     // wish velocity
-    // With +Z as forward, +X is RIGHT. The old (-cosY,+sinY) vector
-    // inverted A/D relative to the 'RUNSTRAFE_RIGHT/LEFT' Ghoul2 clips.
-    const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw);
-    const fwd = [sinY, 0, cosY], right = [cosY, 0, -sinY];
+    const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); const fwd = [sinY, 0, cosY], right = [-cosY, 0, sinY];
     let f = c.fwd, r = c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }
     const crouched = this.ducked; const base = crouched ? 2.1 : c.walk ? 2.4 : 5.6; let sp = base * this.speedMul * (f < 0 ? 0.82 : 1);
     if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY) || this.heavyLandUntil > now) sp *= 0.0;
@@ -298,7 +295,7 @@ export class Fighter {
   startRoll() {
     const c = this.cmd, sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); let an, d;
     if (c.fwd) { if (c.fwd < 0) { an = 'BOTH_ROLL_B'; d = [-sinY, 0, -cosY]; } else { an = 'BOTH_ROLL_F'; d = [sinY, 0, cosY]; } }
-    else if (c.right > 0) { an = 'BOTH_ROLL_R'; d = [cosY, 0, -sinY]; } else { an = 'BOTH_ROLL_L'; d = [-cosY, 0, sinY]; }
+    else if (c.right > 0) { an = 'BOTH_ROLL_R'; d = [-cosY, 0, sinY]; } else { an = 'BOTH_ROLL_L'; d = [cosY, 0, -sinY]; }
     this.rollDir = d; this.status = 'roll'; this.statusT = 0; this.ducked = false; this.endForceKeepAnim(); this.cancelSwingForRoll();
     this.rollLen = animLen(this.actor.skel.anims[an]); this.actor.setBoth(an, { restart: true, blend: 0.08, loop: false }); this.g.sfxAt && this.g.sfxAt('jumpbuild', this.pos, 0.0);
   }
@@ -339,7 +336,7 @@ export class Fighter {
     if (this.ducked) an = !moving ? 'BOTH_CROUCH1IDLE' : (f < 0 ? 'BOTH_CROUCH1WALKBACK' : 'BOTH_CROUCH1WALK');
     else if (!moving) { an = out ? 'BOTH_STAND2' : 'BOTH_STAND1'; }
     else {
-      const run = !this.cmd.walk; const fw = f > 0.25, bk = f < -0.25; const theta = Math.atan2(r, f); // + = moving right of facing
+      const run = !this.cmd.walk; const fw = f > 0.25, bk = f < -0.25; const theta = Math.atan2(-r, f); // + = moving to the left of facing
       if (!fw && !bk) { an = r > 0 ? 'BOTH_RUNSTRAFE_RIGHT1' : 'BOTH_RUNSTRAFE_LEFT1'; if (!run) an = r > 0 ? 'BOTH_RUNSTRAFE_RIGHT1' : 'BOTH_RUNSTRAFE_LEFT1'; }
       else if (bk) { an = run ? 'BOTH_RUNBACK1' : 'BOTH_WALKBACK1'; twist = clamp(theta > 0 ? theta - Math.PI : theta + Math.PI, -0.7, 0.7); }
       else { an = run ? (out ? 'BOTH_RUN2' : 'BOTH_RUN1') : 'BOTH_WALK1'; twist = clamp(theta, -0.7, 0.7); }
