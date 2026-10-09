@@ -50,6 +50,37 @@ var __videoLastReport = '';
 var __videoMonitorStarted = false;
 var __videoReady = false;
 var __videoFailed = false;
+var __lastGPUFrame = null;
+
+// GL viewport size and the canvas drawing buffer are separate. When the
+// original renderer changes video mode, a legacy WebGL translation can retain
+// the *old full-frame viewport*, cropping/scaling the next 3D scene. Repair
+// ONLY that identifiable stale viewport, after the native buffer has changed.
+// Never resize the canvas, override a sub-viewport (menus/cinematics), or
+// interfere with render-to-texture framebuffers.
+function __reconcileGameViewport(gl, width, height) {
+  var previous = __lastGPUFrame;
+  __lastGPUFrame = { width: width, height: height };
+  if (!gl || typeof gl.getParameter !== 'function' || typeof gl.viewport !== 'function') return false;
+  if (!(width > 0 && height > 0)) return false;
+  try {
+    if (gl.FRAMEBUFFER_BINDING != null && gl.getParameter(gl.FRAMEBUFFER_BINDING)) return false;
+    var vp = gl.getParameter(gl.VIEWPORT);
+    if (!vp || vp.length !== 4) return false;
+    if (vp[0] === 0 && vp[1] === 0 && vp[2] === width && vp[3] === height) return false;
+    if (previous && (previous.width !== width || previous.height !== height) &&
+        vp[0] === 0 && vp[1] === 0 &&
+        vp[2] === previous.width && vp[3] === previous.height) {
+      gl.viewport(0, 0, width, height);
+      return true;
+    }
+  } catch (error) {
+    // Some emulated/preview contexts do not expose gl.VIEWPORT. Preserve the
+    // native render path rather than failing the entire mission.
+    console.warn('Video viewport check unavailable:', error);
+  }
+  return false;
+}
 
 // Read the existing engine context, never create another one just to measure it.
 // onRuntimeInitialized runs BEFORE callMain/GLimp_Init, when a canvas can still
@@ -61,6 +92,7 @@ function __reportVideo(){
   if (!c || !gl || gl.canvas !== c || (gl.isContextLost && gl.isContextLost())) return;
   var w = Number(gl.drawingBufferWidth), h = Number(gl.drawingBufferHeight);
   if (!(w > 0 && h > 0)) return;
+  __reconcileGameViewport(gl, w, h);
 
   // Fit presentation to the frame; only the native engine writes the backing
   // dimensions once it has started. Resizing them here would clear a live frame.
@@ -78,6 +110,18 @@ function __reportVideo(){
     clientHeight: c.clientHeight,
     devicePixelRatio: window.devicePixelRatio || 1
   };
+  // Diagnostics are read-only; original menu/cinematic sub-viewports are
+  // allowed and never automatically expanded into a full-screen viewport.
+  if (typeof gl.getParameter === 'function') {
+    try {
+      var viewport = gl.getParameter(gl.VIEWPORT);
+      if (viewport && viewport.length === 4) {
+        info.viewport = Array.from(viewport);
+        info.fullFrame = viewport[0] === 0 && viewport[1] === 0 &&
+                         viewport[2] === w && viewport[3] === h;
+      }
+    } catch (_) {}
+  }
   var signature = JSON.stringify(info);
   if (signature !== __videoLastReport) {
     __videoLastReport = signature;
