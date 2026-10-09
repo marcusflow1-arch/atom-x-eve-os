@@ -3,7 +3,7 @@ import { Globe2, Loader2, Plus, X, Mountain } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { loadEnvironmentChoices, resolveEnvironmentChoice } from './environmentQuickCatalog.mjs';
-import { MAX_ENVIRONMENT_PINS, readEnvironmentPins, writeEnvironmentPins } from './environmentQuickPins.mjs';
+import { MAX_ENVIRONMENT_PINS, environmentPinsKey, readEnvironmentPins, writeEnvironmentPins } from './environmentQuickPins.mjs';
 
 // Rendered directly to the right of the Environment icon's silver divider.
 // An empty square opens the full Hub once for pinning; a filled square applies
@@ -26,8 +26,15 @@ export default function EnvironmentFavoriteSlots({ currentEnvId, defaultModelUrl
         setPins(readEnvironmentPins(userId));
       }
     };
+    const fromAnotherTab = event => {
+      if (event.key === environmentPinsKey(userId)) setPins(readEnvironmentPins(userId));
+    };
     window.addEventListener('lunaEnvironmentPinsChanged', sync);
-    return () => window.removeEventListener('lunaEnvironmentPinsChanged', sync);
+    window.addEventListener('storage', fromAnotherTab);
+    return () => {
+      window.removeEventListener('lunaEnvironmentPinsChanged', sync);
+      window.removeEventListener('storage', fromAnotherTab);
+    };
   }, [userId]);
 
   const pinSignature = pins.join('|');
@@ -90,7 +97,7 @@ export default function EnvironmentFavoriteSlots({ currentEnvId, defaultModelUrl
             onClick={() => removePin(id)}><X size={10} aria-hidden="true" /></button>}
         </div>;
       })}
-      <span className="sr-only" role="status">{error || (loading ? 'Loading favorite environments.' : '')}</span>
+      <span className={error ? 'luna-env-quickslots__feedback' : 'sr-only'} role="status">{error || (loading ? 'Loading favorite environments.' : '')}</span>
     </div>
   );
 }
