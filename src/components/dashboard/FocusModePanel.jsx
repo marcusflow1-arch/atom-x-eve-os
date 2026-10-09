@@ -35,6 +35,7 @@ import MemoriesDrawer from '@/components/dashboard/MemoriesDrawer';
 import QuickChangeEnvDrawer from '@/components/dashboard/QuickChangeEnvDrawer';
 import DateTimeTile from '@/components/dashboard/DateTimeTile';
 import DashboardClockTile from '@/components/dashboard/DashboardClockTile';
+import EnvironmentFavoriteSlots from '@/components/dashboard/EnvironmentFavoriteSlots';
 import SystemUpdatesBox from '@/components/dashboard/SystemUpdatesBox';
 import SystemUpdatesDrawer from '@/components/dashboard/SystemUpdatesDrawer';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
@@ -1242,7 +1243,7 @@ function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
 // ── AI Avatar Home Section (PS5-style) ───────────────────────────────────────
 export function LibraryBannerSection({ 
   games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown, onQuickChangeToggle,
-  navBoxes, calendarBox, notificationsBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment, environmentWindowOpen,
+  navBoxes, calendarBox, notificationsBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment, environmentWindowOpen, defaultModelUrl,
   activeFriend, onActiveFriendChange, selectedFocusGame
 }) {
   const envDropdownRef = useRef(null);
@@ -1546,6 +1547,8 @@ export function LibraryBannerSection({
                 <Globe size={23} strokeWidth={1.6} aria-hidden="true" />
               </button>
               <span className="luna-environment-party-divider" aria-hidden="true" />
+              <EnvironmentFavoriteSlots currentEnvId={currentEnvId} defaultModelUrl={defaultModelUrl}
+                onSelectEnv={onSelectEnv} onOpenHub={() => window.dispatchEvent(new Event('openEnvironmentHub'))} />
               <div className="luna-party-five-slots" role="group" aria-label="Five party slots">
               {/* Confirmed members and clearly marked pending invitations
                   occupy five slots; plus opens a separate floating Friends window. */}
@@ -1948,7 +1951,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 );
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment, environmentWindowOpen = false, selectedFocusGame, onSelectFocusGame, optionsGame, onCloseOptionsGame, longPressGame, onCloseLongPress }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment, environmentWindowOpen = false, defaultModelUrl, selectedFocusGame, onSelectFocusGame, optionsGame, onCloseOptionsGame, longPressGame, onCloseLongPress }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [activeFriend, setActiveFriend] = useState(null);
@@ -2071,6 +2074,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                  isEnvironmentActive={isEnvironmentActive}
                  onToggleEnvironment={onToggleEnvironment}
                  environmentWindowOpen={environmentWindowOpen}
+                 defaultModelUrl={defaultModelUrl}
                  activeFriend={activeFriend}
                  onActiveFriendChange={setActiveFriend}
                  selectedFocusGame={selectedFocusGame}
