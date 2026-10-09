@@ -40,6 +40,7 @@ const compiled=await build({
   bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',loader:{'.css':'empty'},
   alias:{'@':process.cwd()+'/src'},
   plugins:[{name:'dashboard-quick-fixtures',setup(builder){
+    builder.onResolve({filter:/^lucide-react$/},()=>({path:'icons',namespace:'quick-fixture'}));
     builder.onResolve({filter:/.*/},args=>{
       if(args.path==='@tanstack/react-query')return {path:'react-query',namespace:'quick-fixture'};
       const name=args.path.split('/').at(-1).replace(/\.(jsx|js)$/,'');
@@ -47,7 +48,9 @@ const compiled=await build({
       return undefined;
     });
     builder.onLoad({filter:/.*/,namespace:'quick-fixture'},args=>({
-      loader:'jsx',contents:fakeNames.has(args.path)
+      loader:'js',contents:args.path==='icons'
+        ? "export const "+['Activity','Heart','Zap','Trophy','Gamepad2','Star','Shield','ChevronRight','BarChart3','Gauge','Target','Sparkles','Users','UserPlus','Camera','MessageSquare','Crown','PackageOpen','Medal','X','Grip','Maximize2','Minimize2','Minus'].map(name=>name+'=()=>null').join(',')+';'
+        : fakeNames.has(args.path)
         ? "export default function Placeholder(){return null;}"
         : fakeHooks[args.path],
     }));
