@@ -11,7 +11,14 @@ export class Input {
     on(window, 'keydown', e => { if (typing(e) || e.metaKey || e.ctrlKey || e.altKey) return; if (prevent.has(e.code)) e.preventDefault(); if (!e.repeat) { this.down.add(e.code); this.pressedSet.add(e.code); } this.gesture(); });
     on(window, 'keyup', e => { this.down.delete(e.code); this.releasedSet.add(e.code); });
     on(window, 'blur', () => { this.down.clear(); this.btn.fill(false); });
-    on(canvas, 'mousedown', e => { e.preventDefault(); this.btn[e.button] = true; this.btnPressed[e.button] = true; this.gesture(); if (!this.locked && e.button === 0) this.lock(); });
+    on(canvas, 'mousedown', e => {
+      e.preventDefault();
+      // Base44's embedded editor can leave focus on its own toolbar after a
+      // click. Return keyboard focus to the playable canvas every time.
+      try { canvas.focus?.({ preventScroll: true }); } catch { canvas.focus?.(); }
+      this.btn[e.button] = true; this.btnPressed[e.button] = true;
+      this.gesture(); if (!this.locked && e.button === 0) this.lock();
+    });
     on(window, 'mouseup', e => { this.btn[e.button] = false; });
     on(canvas, 'contextmenu', e => e.preventDefault());
     on(window, 'mousemove', e => { if (this.locked || this.btn[1]) { this.dx += e.movementX || 0; this.dy += e.movementY || 0; } });
