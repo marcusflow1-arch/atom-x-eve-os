@@ -17,6 +17,7 @@
 .luna-party-clock{width:162px;height:77px;flex:none;min-width:0}
 .luna-party-clock-divider{align-self:center;flex:none;width:1px;height:62px;margin:0 3px;background:linear-gradient(to bottom,transparent,rgba(207,231,245,.68) 18%,rgba(217,236,249,.9) 50%,rgba(207,231,245,.68) 82%,transparent);box-shadow:0 0 7px rgba(167,216,246,.2)}
 .luna-party-five-slots{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-inline:contain;height:100%}
+.luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:56px;height:60px}
 .luna-party-five-slots::-webkit-scrollbar{display:none}
 .luna-attribute-notifications{width:min(338px,30vw);height:77px;flex:none;min-width:0;margin-left:auto}
 
@@ -58,7 +59,7 @@
   .luna-attribute-clock-group{gap:9px}
   .luna-party-clock{width:145px}
   .luna-party-five-slots{gap:6px}
-  .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:56px;height:60px}
+  .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:52px;height:56px}
 }
 @media(max-width:1280px){
   .luna-header-skill-anchor{width:clamp(65px,9vw,112px)}
@@ -69,7 +70,7 @@
   .luna-calendar-launch{padding:8px;gap:6px}
   .luna-calendar-launch time{font-size:18px}
   .luna-calendar-launch small{font-size:8px}
-  .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:48px;height:55px}
+  .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:46px;height:52px}
   .luna-status-announcements{padding:5px 73px 5px 8px}
   .luna-status-selectors{right:5px;gap:3px}
   .luna-status-icon{width:28px;height:28px}
