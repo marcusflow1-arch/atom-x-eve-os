@@ -85,9 +85,29 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign', embedded
 
       const chunkBytes = PAK_CHUNK_BYTES;
       const byName = findRegisteredJediArchives(archives, workspaceFiles);
+      // The newly supplied GOG GameData/base includes a genuine assets5.pk3.
+      // Let the existing admin backend register that known Drive file on demand
+      // if it was not already entered in Game Rebuilds. Do not ask the player
+      // to browse for local files or install a separate Windows handler.
+      if (!byName.has('assets5.pk3')) {
+        setProgress('Checking original patch archive from connected Google Drive…');
+        try {
+          const fallback = unwrap(await base44.functions.invoke('jediOutcastSource', {
+            action: 'registerProvidedArchive', archiveName: 'assets5.pk3',
+          }));
+          if (fallback?.success && fallback.asset) {
+            const registered = findRegisteredJediArchives([fallback.asset], []);
+            if (registered.has('assets5.pk3')) byName.set('assets5.pk3', registered.get('assets5.pk3'));
+          }
+        } catch (error) {
+          // Other registered sources may still be present; the final missing
+          // archive list is the authoritative failure, not a false success.
+          console.warn('Jedi Outcast optional Drive source unavailable:', error);
+        }
+      }
       const missing = missingRegisteredJediArchives(byName);
       if (missing.length) {
-        throw new Error(`Original game data is incomplete in Admin → Game Rebuilds: ${missing.join(', ')}. The linked Google Drive/GameData/base folder currently exposes only assets5.pk3. The other original retail archives must be present in an existing registered source before the engine can start.`);
+        throw new Error(`Original game data is incomplete in Admin → Game Rebuilds: ${missing.join(', ')}. The provided Google Drive/GameData/base currently lists only assets5.pk3. A complete original game cannot be started until these archive records exist in the connected Game Rebuilds workspace.`);
       }
 
       const jobs = [];
