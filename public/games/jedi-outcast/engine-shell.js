@@ -171,11 +171,20 @@ var Module = {
     // Files whose headers have not arrived yet contribute 0 to both sides, so the total grows
     // as they land rather than starting wrong.
     var __got = {}, __need = {};
+    var __lastProgressMessage = 0;
     function __reportProgress(){
       var done = 0, total = 0, n = 0;
       for (var k in __need){ total += __need[k]; done += (__got[k] || 0); n++; }
       setProgress(done, total, 'Loading game data',
         __MB(done) + ' / ' + __MB(total) + ' MB · ' + n + ' file' + (n === 1 ? '' : 's'));
+      // The detached Luna window owns a separate loading view. Report actual
+      // downloaded bytes with throttling instead of faking a shader/loading
+      // percentage. Engine-ready is posted only after WebGL has a framebuffer.
+      var now = Date.now();
+      if (parent !== window && (done >= total || now - __lastProgressMessage > 180)) {
+        __lastProgressMessage = now;
+        parent.postMessage({type:'atom-jedi-progress',done:done,total:total,files:n},location.origin);
+      }
     }
     async function __stage(url, dstDir, name, idx, expectedSize, chunks){
       var label = name + ' (' + (idx + 1) + ' of ' + __files.length + ')';
