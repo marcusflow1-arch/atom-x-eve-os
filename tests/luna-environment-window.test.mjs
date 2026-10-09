@@ -48,7 +48,7 @@ test('real admin 3D environments and owned backgrounds can be selected and appli
   bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',loader:{'.css':'empty'},alias:{'@':process.cwd()+'/src'},
   plugins:[{name:'env-fixture',setup(b){
    b.onResolve({filter:/^lucide-react$/},()=>({path:'icons',namespace:'mock'}));
-   b.onLoad({filter:/^icons$/,namespace:'mock'},()=>({contents:"export const Check=()=>null; export const Globe2=()=>null; export const Loader2=()=>null; export const RefreshCw=()=>null; export const ImageOff=()=>null;",loader:'js'}));
+   b.onLoad({filter:/^icons$/,namespace:'mock'},()=>({contents:"export const Check=()=>null; export const Globe2=()=>null; export const Loader2=()=>null; export const RefreshCw=()=>null; export const ImageOff=()=>null; export const Pin=()=>null;",loader:'js'}));
    b.onResolve({filter:/AuthContext$/},()=>({path:'auth',namespace:'mock'}));
    b.onLoad({filter:/^auth$/,namespace:'mock'},()=>({contents:"export const useAuth=()=>({user:globalThis.__envFixture.user});",loader:'js'}));
    b.onResolve({filter:/base44Client$/},()=>({path:'client',namespace:'mock'}));
