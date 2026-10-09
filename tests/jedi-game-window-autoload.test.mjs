@@ -57,5 +57,10 @@ test('new provided GOG Drive assets5 is recognized through the whitelisted backe
  assert.match(runtime,/state !== 'engine-ready'/);
  assert.match(runtime,/activeDashboardWindow\(\) !== 'jedi-outcast-game'/);
  assert.match(app,/captureEscape=\{false\}/);
+ assert.match(app,/atom:jedi-request-window-close/);
+ assert.match(runtime,/atom:jedi-request-window-close/);
+ assert.match(runtime,/atom-jedi-progress/);
+ assert.match(read('public/games/jedi-outcast/engine-shell.js'),/atom-jedi-progress/);
+ assert.match(read('src/components/jedioutcast/jedi-outcast-window.css'),/\.jko-loading-cover/);
  assert.match(chrome,/!captureEscape \|\| event\.key !== 'Escape'/);
 });
