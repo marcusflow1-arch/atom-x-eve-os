@@ -70,7 +70,7 @@ import GameHubArea from '../components/dashboard/gamehub/GameHubArea';
 import GameList from '../components/dashboard/gamehub/GameList';
 import LibraryBrowser from '@/components/dashboard/gamehub/LibraryBrowser';
 import LibraryWidthDivider from '@/components/dashboard/LibraryWidthDivider';
-import { constrainLibraryWidth, LIBRARY_DEFAULT_WIDTH, LIBRARY_WIDTH_STORAGE_KEY } from '@/components/dashboard/libraryResize';
+import { libraryWidthFromRatio, libraryRatioFromWidth, LIBRARY_DEFAULT_WIDTH, LIBRARY_WIDTH_STORAGE_KEY, LIBRARY_RATIO_STORAGE_KEY } from '@/components/dashboard/libraryResize';
 import LibraryCardExplorer from '@/components/dashboard/gamehub/LibraryCardExplorer';
 import GameLandingPage from '../components/dashboard/gamehub/GameLandingPage';
 import GameProgressHub from '../components/dashboard/gamehub/GameProgressHub';
@@ -230,29 +230,40 @@ export default function LunaTemplate() {
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
   const dashboardContentRef = useRef(null);
-  const [libraryWidth, setLibraryWidth] = useState(() => {
+  const [contentWidth, setContentWidth] = useState(() => window.innerWidth);
+  // Save the RATIO, not a pixel offset: both panels continue to fit on screen
+  // when the browser window is resized.
+  const [libraryRatio, setLibraryRatio] = useState(() => {
+    const initialWidth = window.innerWidth;
     try {
-      const saved = window.localStorage.getItem(LIBRARY_WIDTH_STORAGE_KEY);
-      return constrainLibraryWidth(saved === null ? LIBRARY_DEFAULT_WIDTH : Number(saved), window.innerWidth);
-    } catch { return LIBRARY_DEFAULT_WIDTH; }
+      const storedRatio = Number(window.localStorage.getItem(LIBRARY_RATIO_STORAGE_KEY));
+      if (Number.isFinite(storedRatio) && storedRatio > 0 && storedRatio < 1) return storedRatio;
+      const legacy = window.localStorage.getItem(LIBRARY_WIDTH_STORAGE_KEY);
+      return libraryRatioFromWidth(legacy === null ? LIBRARY_DEFAULT_WIDTH : Number(legacy), initialWidth);
+    } catch { return libraryRatioFromWidth(LIBRARY_DEFAULT_WIDTH, initialWidth); }
   });
+  const libraryWidth = libraryWidthFromRatio(libraryRatio, contentWidth);
+  const resizeLibrary = useCallback((pixelWidth) => {
+    const total = dashboardContentRef.current?.getBoundingClientRect().width || window.innerWidth;
+    setLibraryRatio(libraryRatioFromWidth(pixelWidth, total));
+  }, []);
   useEffect(() => {
-    const clampToViewport = () => {
-      const available = dashboardContentRef.current?.getBoundingClientRect().width || window.innerWidth;
-      setLibraryWidth(current => constrainLibraryWidth(current, available));
+    const measure = () => {
+      const total = dashboardContentRef.current?.getBoundingClientRect().width || window.innerWidth;
+      setContentWidth(current => Math.abs(current - total) < 1 ? current : total);
     };
-    window.addEventListener('resize', clampToViewport);
-    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(clampToViewport) : null;
+    window.addEventListener('resize', measure);
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
     if (dashboardContentRef.current) observer?.observe(dashboardContentRef.current);
-    clampToViewport();
+    measure();
     return () => {
       observer?.disconnect();
-      window.removeEventListener('resize', clampToViewport);
+      window.removeEventListener('resize', measure);
     };
   }, []);
   useEffect(() => {
-    try { window.localStorage.setItem(LIBRARY_WIDTH_STORAGE_KEY, String(libraryWidth)); } catch {}
-  }, [libraryWidth]);
+    try { window.localStorage.setItem(LIBRARY_RATIO_STORAGE_KEY, String(libraryRatio)); } catch {}
+  }, [libraryRatio]);
 
   // Keep the dashboard avatar overlay aware of which surface currently owns
   // the right side of the dashboard. The overlay disappears for Full Library
@@ -855,7 +866,7 @@ export default function LunaTemplate() {
 
       {/* One resizer governs both the Games/Cards rail and the space to its right. */}
       {!avatarFocusMode && !uiVisible && !showConsoleMode && !showAchievements && homeSection === 'avatar' && (
-        <LibraryWidthDivider width={libraryWidth} onResize={setLibraryWidth} containerRef={dashboardContentRef} />
+        <LibraryWidthDivider width={libraryWidth} onResize={resizeLibrary} containerRef={dashboardContentRef} />
       )}
 
       {/* Avatar Focus Hub — blank UI on avatar click; A/D rotates full-page section UIs */}
