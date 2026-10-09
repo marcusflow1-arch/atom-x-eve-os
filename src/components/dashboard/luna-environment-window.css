@@ -12,6 +12,11 @@
 .luna-env-picker__count{margin-left:auto;font-size:11px;font-weight:650;border:1px solid rgba(177,203,220,.38);border-radius:5px;padding:5px 9px;color:#d2e5f2}
 .luna-env-picker__list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:15px 17px;scrollbar-width:thin;scrollbar-color:#65869d #11283d}
 .luna-env-picker__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:10px}
+.luna-env-picker__cell{position:relative;min-width:0}
+.luna-env-picker__cell>.luna-env-picker__card{width:100%;height:100%}
+.luna-env-picker__pin{position:absolute;top:8px;left:8px;z-index:3;display:grid;place-items:center;width:29px;height:29px;border:1px solid rgba(217,240,253,.48);border-radius:6px;background:rgba(5,23,41,.88);color:#bcd8e8;box-shadow:0 1px 7px rgba(2,10,20,.29)}
+.luna-env-picker__pin:hover,.luna-env-picker__pin[aria-pressed=true]{background:#23475f;color:#e6f8ff;border-color:#d0eeff}
+.luna-env-picker__pin[aria-pressed=true]{color:#a1ecfb}
 .luna-env-picker__card{display:flex;flex-direction:column;min-width:0;overflow:hidden;padding:0;border:1px solid rgba(167,194,214,.38);border-radius:7px;background:#142f48;color:#e3f1fa;text-align:left;box-shadow:inset 0 1px rgba(232,247,255,.07)}
 .luna-env-picker__card:hover{border-color:#c0e6f6;background:#24465e}
 .luna-env-picker__card[aria-pressed=true]{border-color:#d5ebfa;box-shadow:inset 0 0 0 1px rgba(194,226,244,.5)}
