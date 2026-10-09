@@ -105,7 +105,8 @@ try {
   assert.ok(document.querySelector('.luna-status-split'),'30/70 split divider is rendered');
   assert.ok(document.querySelector('.luna-status-summary'),'70% pane shows system reminders and updates');
   await run(()=>button('Open system updates and reminders').click());
-  assert.equal(document.querySelector('[role="dialog"]').getAttribute('aria-label'),'System Updates','status summary opens the matching updates panel');
+  assert.equal(document.querySelector('[role="dialog"]').getAttribute('aria-label'),'Notifications & reminders','status summary opens the matching reminder feed');
+  assert.match(document.querySelector('[aria-label="Selected feed item"]').textContent,/Guild raid/,'the selected latest reminder remains actionable');
   await run(()=>button('Close status feed').click());
 
   notices.unshift({id:'n1',recipient_id:'player',title:'Friend request',body:'Nova sent you a friend request.',type:'friend_request',action_kind:'friend_request',related_entity_id:'friend-1',status:'unread',actionable:true,created_date:'2026-10-03T17:00:00Z'});
