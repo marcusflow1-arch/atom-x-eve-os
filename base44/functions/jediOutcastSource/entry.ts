@@ -313,6 +313,53 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, reused: false, file: record });
     }
 
+    if (action === 'registerProvidedArchive') {
+      // Whitelisted fallback from the user's newly provided GOG GameData/base
+      // folder. No arbitrary Drive file IDs or URL parameters are accepted.
+      // The other retail archives must still exist in Game Rebuilds.
+      const name = String(body.archiveName || '').toLowerCase();
+      if (name !== 'assets5.pk3') {
+        return Response.json({ success: false, error: 'Only the confirmed assets5.pk3 Drive fallback is registered.' }, { status: 400 });
+      }
+      const fileId = '1uGN9pbzUvPueJVXv_vtqYE3L7xDdCrBP';
+      const existing = await base44.asServiceRole.entities.JediSourceAsset.filter(
+        { game_key: 'jedi_outcast', path: name, category: 'retail_archive' },
+        '-updated_date',
+        20,
+      );
+      const usable = existing.find((row: any) => row.drive_file_id && Number(row.byte_size) > 0);
+      if (usable) return Response.json({ success: true, reused: true, asset: usable });
+      const token = await getDriveToken(base44);
+      const meta = await driveMetadata(token, fileId);
+      const size = Number(meta.size || 0);
+      if (!Number.isSafeInteger(size) || size < 1024 || size > MAX_IMPORT_BYTES) {
+        return Response.json({ success: false, error: 'Provided assets5.pk3 size is invalid.' }, { status: 422 });
+      }
+      const head = await driveRange(token, fileId, 0, 3);
+      if (head[0] !== 80 || head[1] !== 75 || (head[2] !== 3 && head[2] !== 5) || (head[3] !== 4 && head[3] !== 6)) {
+        return Response.json({ success: false, error: 'The supplied file is not a PK3/ZIP archive.' }, { status: 422 });
+      }
+      const row = {
+        game_key: 'jedi_outcast',
+        path: name,
+        category: 'retail_archive',
+        source_kind: 'drive_file',
+        source_root_key: 'user_drive_gog_2026_10_08',
+        drive_file_id: fileId,
+        drive_parent_id: '1DX9GDa0vUqJ_IokcEgI4TzjF9YfKjlO_',
+        byte_size: size,
+        mime_type: 'application/zip',
+        canonical: true,
+        editable: false,
+        status: 'verified',
+        metadata: { source: 'user_provided_gog_game_data', validated_header: true },
+      };
+      const asset = existing[0]
+        ? await base44.asServiceRole.entities.JediSourceAsset.update(existing[0].id, row)
+        : await base44.asServiceRole.entities.JediSourceAsset.create(row);
+      return Response.json({ success: true, reused: false, asset });
+    }
+
     if (action === 'cachePakChunk') {
       const archiveAssetId = String(body.archiveAssetId || '');
       const chunkIndex = Number(body.chunkIndex);
