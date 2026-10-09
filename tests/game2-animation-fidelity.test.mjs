@@ -116,6 +116,32 @@ test('Space while knocked down starts the real Force Getup clip without waiting 
   assert.equal(f.cmd.jumpPressed,false);
 });
 
+test('jump keeps the original saber swing on the torso layer while legs leave ground',()=>{
+  const f=Object.create(Fighter.prototype),legs=[];
+  f.g={t:2,sfxAt(){}};
+  f.cmd={fwd:0,right:1};
+  f.vel=[0,0,0];f.onGround=true;f.saber={holstered:false,isActiveSwing:()=>true};
+  f.actor={setLegs:name=>legs.push(name),followLegs:()=>{throw new Error('active swing must not be overwritten');}};
+  f.startJump();
+  assert.deepEqual(legs,['BOTH_JUMPRIGHT1']);
+  assert.equal(f.airAnim,'BOTH_JUMPRIGHT1');
+});
+
+test('Force Jump keeps its directional landing pose instead of the heavy-fall bounce',()=>{
+  const f=Object.create(Fighter.prototype),legs=[];
+  f.g={t:6,onLand(){}};
+  f.actor={skel:{anims:clips},setLegs:name=>legs.push(name)};
+  f.airAnim='BOTH_FORCEINAIRRIGHT1';f.fjUsed=true;
+  f.land(19);
+  assert.deepEqual(legs,['BOTH_FORCELANDRIGHT1']);
+  assert.equal(f.landUntil-f.g.t,clips.BOTH_FORCELANDRIGHT1.n/clips.BOTH_FORCELANDRIGHT1.fps);
+  assert.equal(f.heavyLandUntil,0);
+  f.airAnim='BOTH_INAIR1';f.fjUsed=false;
+  f.land(19);
+  assert.deepEqual(legs,['BOTH_FORCELANDRIGHT1','BOTH_LAND2']);
+  assert.equal(f.heavyLandUntil,f.landUntil,'full heavy-impact recovery is played');
+});
+
 test('saber trail only tracks moving combat blade, and is cleared on holster',()=>{
   const b=new Blade([0.3,0.6,1]),mat=new Float32Array(16);
   mat[0]=mat[5]=mat[10]=mat[15]=1;
