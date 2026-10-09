@@ -1167,6 +1167,17 @@ function LayoutContent({ children, currentPageName }) {
                             Star Wars Jedi Knight II: Jedi Outcast
                           </button>
 
+                          {/* Original street-racing Game 3 is intentionally placed immediately before Game 2. */}
+                          <button
+                            type="button"
+                            onClick={() => navigate(createPageUrl('Game3'))}
+                            className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-cyan-500/15 border-cyan-300/35 text-cyan-100 hover:bg-cyan-500/30 hover:text-white items-center gap-2"
+                            title="Game 3 — Night Run, original street racing"
+                          >
+                            <CarFront className="w-4 h-4" />
+                            Game 3
+                          </button>
+
                           <button
                             type="button"
                             onClick={() => navigate(createPageUrl('Game2'))}
