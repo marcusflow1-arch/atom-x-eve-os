@@ -58,7 +58,7 @@ globalThis.statusFixture={
   },
 };
 const built=await build({
-  stdin:{contents:"export {default as Status} from './src/components/dashboard/DateTimeTile.jsx';export {SocialNotificationAlerts as Alerts} from './src/components/social/SocialNotifications.jsx';",resolveDir:process.cwd(),loader:'jsx'},
+  stdin:{contents:"export {default as Clock} from './src/components/dashboard/DashboardClockTile.jsx';export {default as Status} from './src/components/dashboard/DateTimeTile.jsx';export {SocialNotificationAlerts as Alerts} from './src/components/social/SocialNotifications.jsx';",resolveDir:process.cwd(),loader:'jsx'},
   bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},loader:{'.css':'empty'},
   plugins:[{name:'status-fixtures',setup(b){
     b.onResolve({filter:/^react(?:\/|$)/},a=>({path:a.path,external:true}));
@@ -74,7 +74,7 @@ const built=await build({
 });
 const filename=process.cwd()+'/tests/__status_dock.cjs',mod=new Module(filename);
 mod.paths=Module._nodeModulePaths(process.cwd());mod._compile(built.outputFiles[0].text,filename);
-const {Status,Alerts}=mod.exports;
+const {Status,Alerts,Clock}=mod.exports;
 const client=new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0},mutations:{retry:false,gcTime:0}}});
 const root=createRoot(document.getElementById('root'));
 const run=(fn=()=>{})=>act(async()=>{fn();await new Promise(resolve=>setTimeout(resolve,40));});
@@ -89,21 +89,22 @@ const title=()=>preview().querySelector('strong').textContent;
 let calendars=0;
 try {
   await run(()=>root.render(React.createElement(QueryClientProvider,{client},React.createElement(React.Fragment,null,
-    React.createElement(Alerts),React.createElement(Status,{onCalendarClick:()=>calendars++})))));
+    React.createElement(Alerts),React.createElement(Clock,{onCalendarClick:()=>calendars++}),React.createElement(Status)))));
   await run();
   assert.equal(expanded(),false,'old items do not trigger arrival popups');
   assert.equal(document.querySelectorAll('.luna-status-selectors button').length,2);
   const statusDock = document.querySelector('.luna-status');
-  const clock = statusDock.querySelector('.luna-status-calendar-side');
+  const clock = document.querySelector('.luna-calendar-tile');
   const notifications = statusDock.querySelector('.luna-status-announcements');
-  assert.ok(clock.compareDocumentPosition(notifications) & Node.DOCUMENT_POSITION_FOLLOWING,'clock is to the left of notification controls');
-  assert.equal(document.querySelector('.luna-status-divider'),null,'no separator line between calendar and notifications');
-  assert.equal(document.querySelector('.luna-status-underline'),null,'no line below notifications');
+  assert.ok(clock && notifications,'clock tile and notification strip are independently rendered');
+  assert.equal(statusDock.contains(clock),false,'calendar is no longer inside the notification strip');
+  assert.ok(clock.compareDocumentPosition(statusDock) & Node.DOCUMENT_POSITION_FOLLOWING,'clock precedes notifications in dashboard markup');
+  assert.equal(document.querySelector('.luna-status-split'),null,'old combined 30/70 box divider was removed');
   assert.equal(document.querySelector('.luna-status .lucide-chevron-right'),null);
   assert.equal(document.querySelector('.luna-status-quick'),null);
   await run(()=>button('Open calendar').click());assert.equal(calendars,1);
-  assert.ok(document.querySelector('.luna-status-split'),'30/70 split divider is rendered');
-  assert.ok(document.querySelector('.luna-status-summary'),'70% pane shows system reminders and updates');
+  assert.ok(document.querySelector('.luna-calendar-tile'),'calendar/clock tile is separate from the right rail');
+  assert.ok(document.querySelector('.luna-status-summary'),'system updates/reminders remain accessible above AI Attributes');
   await run(()=>button('Open system updates and reminders').click());
   assert.equal(document.querySelector('[role="dialog"]').getAttribute('aria-label'),'Notifications & reminders','status summary opens the matching reminder feed');
   assert.match(document.querySelector('[aria-label="Selected feed item"]').textContent,/Guild raid/,'the selected latest reminder remains actionable');
