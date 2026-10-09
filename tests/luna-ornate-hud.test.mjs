@@ -13,16 +13,22 @@ const lightChrome = read('src/components/dashboard/LunaLightEdge.jsx');
 const dateTile = read('src/components/dashboard/DateTimeTile.jsx');
 const lightCss = read('src/components/dashboard/luna-light-edge.css');
 
-test('AI panel retains ornate bronze frame while skills and clock use translucent light pins', () => {
-  assert.match(hud, /LunaLightEdge variant="skills"/);
+test('skills restore bronze ornament, clock stays light and AI chrome becomes silver', () => {
+  assert.match(hud, /LunaOrnateChrome variant="skills"/);
+  assert.doesNotMatch(hud, /luna-light-hotbar\.css/);
   assert.match(dateTile, /LunaLightEdge variant="clock"/);
-  assert.match(attrs, /<LunaOrnateChrome \/>/);
+  assert.match(attrs, /<LunaOrnateChrome variant="silver" \/>/);
   assert.match(lightChrome, /aria-hidden="true"/);
   assert.match(lightCss, /pointer-events:none/);
   assert.match(frame, /aria-hidden="true"/);
   assert.match(chromeCss, /pointer-events:none/);
   assert.ok(existsSync('public/ui/luna/xe-ornate-corner.svg'));
   assert.ok(existsSync('public/ui/luna/xe-ornate-gem.svg'));
+  assert.ok(existsSync('public/ui/luna/xe-silver-corner.svg'));
+  assert.ok(existsSync('public/ui/luna/xe-silver-gem.svg'));
+  const silverCss = read('src/components/dashboard/luna-silver-attribute.css');
+  assert.match(silverCss, /xe-silver-corner\.svg/);
+  assert.match(silverCss, /xe-silver-gem\.svg/);
 });
 
 test('skill slots retain existing hotkeys, drop handlers and prefab logic', () => {
