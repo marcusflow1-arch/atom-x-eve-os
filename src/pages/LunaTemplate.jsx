@@ -85,6 +85,7 @@ import LunaEquipmentUpgradeWorkspace from '../components/dashboard/LunaEquipment
 import TransparentModel3DViewer from '../components/dashboard/TransparentModel3DViewer';
 import LunaBottomNav from '../components/dashboard/LunaBottomNav';
 import EnvHubDrawer from '@/components/dashboard/EnvHubDrawer';
+import DashboardWindow, { focusDashboardWindow } from '@/components/dashboard/windows/DashboardWindow';
 import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOfflineView';
 import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
 import SidebarOverlays from '../components/dashboard/SidebarOverlays';
@@ -303,7 +304,7 @@ export default function LunaTemplate() {
   }, [avatarFocusMode]);
 
   useEffect(() => {
-    const handleSkillTree = () => { setShowEnvironmentCollection(false); setShowSkillTreeBlankUI(true); };
+    const handleSkillTree = () => { setShowEnvironmentCollection(false); setShowSkillTreeBlankUI(true); focusDashboardWindow('skill-tree'); };
     window.addEventListener('toggleSkillTree', handleSkillTree);
     return () => window.removeEventListener('toggleSkillTree', handleSkillTree);
   }, []);
@@ -1997,10 +1998,10 @@ export default function LunaTemplate() {
       {/* Full-screen Avatar Progression — intentionally covers every Luna UI layer. Escape is the only close control. */}
       <AnimatePresence>
         {showSkillTreeBlankUI &&
-          <AvatarProgressionOverlay
-            initialTab="skill"
-            onClose={() => setShowSkillTreeBlankUI(false)}
-          />
+          <DashboardWindow id="skill-tree" title="Skill Tree" width={1040} height={720}
+            onClose={() => setShowSkillTreeBlankUI(false)}>
+            <AvatarProgressionOverlay embedded initialTab="skill" onClose={() => setShowSkillTreeBlankUI(false)} />
+          </DashboardWindow>
         }
       </AnimatePresence>
 

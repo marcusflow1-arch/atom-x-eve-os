@@ -15,7 +15,7 @@ function workArea() {
   const bottom = Math.min(window.innerHeight, document.querySelector('.glass-page-bottom-bar')?.getBoundingClientRect().top ?? window.innerHeight - 48);
   return { x: 0, y: top, width: window.innerWidth, height: Math.max(40, bottom - top) };
 }
-export default function DashboardWindow({ id, title, children, onClose, width = 720, height = 560, index = 0 }) {
+export default function DashboardWindow({ id, title, children, onClose, onMinimizedChange, width = 720, height = 560, index = 0 }) {
   const { user } = useAuth();
   const storageKey = 'luna-window-v1:' + (user?.id || 'guest') + ':' + id;
   const [rect, setRect] = useState(() => {
@@ -27,6 +27,7 @@ export default function DashboardWindow({ id, title, children, onClose, width = 
   const [maximized, setMaximized] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [z, setZ] = useState(1500);
+  useEffect(() => { onMinimizedChange?.(minimized); }, [minimized, onMinimizedChange]);
   const [area, setArea] = useState(workArea);
   const shell = useRef(null);
   const gesture = useRef(null);

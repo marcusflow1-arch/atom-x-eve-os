@@ -254,7 +254,7 @@ function StatsAttribute({ def, value, remaining, busy, onPlus }) {
   );
 }
 
-export default function AvatarProgressionOverlay({ onClose, initialTab = 'skill' }) {
+export default function AvatarProgressionOverlay({ onClose, initialTab = 'skill', embedded = false }) {
   const [tab, setTab] = useState(initialTab === 'stats' ? 'stats' : 'skill');
   const [savedMessage, setSavedMessage] = useState('');
   const { state, isLoading: loading, error, refetch, save, saving: busy } = useAvatarCombatStats();
@@ -263,6 +263,7 @@ export default function AvatarProgressionOverlay({ onClose, initialTab = 'skill'
 
   useEffect(() => setTab(initialTab === 'stats' ? 'stats' : 'skill'), [initialTab]);
   useEffect(() => {
+    if (embedded) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const key = event => {
@@ -276,7 +277,7 @@ export default function AvatarProgressionOverlay({ onClose, initialTab = 'skill'
       document.body.style.overflow = previous;
       window.removeEventListener('keydown', key, true);
     };
-  }, [onClose]);
+  }, [onClose, embedded]);
 
   const allocateSkill = async branch => {
     try {
@@ -300,13 +301,13 @@ export default function AvatarProgressionOverlay({ onClose, initialTab = 'skill'
     <motion.div
       data-avatar-progression-overlay="true"
       role="dialog"
-      aria-modal="true"
+      aria-modal={!embedded}
       aria-label="AI Avatar Progression"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: .2 }}
-      className="axe-progression"
+      className={embedded ? "axe-progression luna-window__embedded" : "axe-progression"}
     >
       <div className="axe-progression__veil" />
       <div className="axe-progression__shell">
@@ -374,5 +375,5 @@ export default function AvatarProgressionOverlay({ onClose, initialTab = 'skill'
     </motion.div>
   );
 
-  return typeof document !== 'undefined' ? createPortal(overlay, document.body) : overlay;
+  return embedded ? overlay : typeof document !== 'undefined' ? createPortal(overlay, document.body) : overlay;
 }

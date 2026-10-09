@@ -47,7 +47,7 @@ function EmptyLadder({ mode }) {
   );
 }
 
-export default function LunaLeaderboardOverlay({ onClose }) {
+export default function LunaLeaderboardOverlay({ onClose, embedded = false }) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('achievements');
   const [search, setSearch] = useState('');
@@ -218,7 +218,7 @@ export default function LunaLeaderboardOverlay({ onClose }) {
     <div
       data-dashboard-utility-workspace
       aria-label="Leaderboard workspace"
-      className="fixed left-[330px] right-0 top-[64px] bottom-[32px] z-[120] pointer-events-auto overflow-hidden"
+      className={embedded ? "luna-window__embedded" : "fixed left-[330px] right-0 top-[64px] bottom-[32px] z-[120] pointer-events-auto overflow-hidden"}
       style={{
         background: 'linear-gradient(135deg, rgba(11,18,29,.91), rgba(18,29,44,.86) 48%, rgba(8,15,25,.92))',
         backdropFilter: 'blur(26px) saturate(135%)',

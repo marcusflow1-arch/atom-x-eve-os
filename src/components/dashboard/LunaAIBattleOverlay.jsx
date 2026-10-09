@@ -1,3 +1,4 @@
+import { activeDashboardWindow } from './windows/DashboardWindow';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Crown, Loader2, Shield, Swords, X } from 'lucide-react';
 import useAIBattleQueue, { isRateLimited, setAIBattleOverlayOpen } from '@/components/battle/useAIBattleQueue';
@@ -13,7 +14,7 @@ const MODES = [
 
 const BUSY_MESSAGE = 'AI Battle is busy right now. Wait a few seconds and press Queue again.';
 
-export default function LunaAIBattleOverlay({ onClose }) {
+export default function LunaAIBattleOverlay({ onClose, embedded = false }) {
   const preferred = typeof window !== 'undefined' ? window.__lunaAIBattlePreferredMode : null;
   const { data: onlineSummary } = useOnlineSummary();
   const [mode, setMode] = useState(MODES.some((item) => item.id === preferred) ? preferred : 'pvp');
@@ -109,6 +110,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
   useEffect(() => {
     const onKey = (event) => {
       if (event.key.toLowerCase() !== 'q' || event.repeat) return;
+      if (embedded && (activeDashboardWindow() !== 'ai-battle' || document.querySelector('[data-luna-window="ai-battle"]')?.dataset.minimized)) return;
       const target = event.target;
       if (target instanceof HTMLElement && target.closest('input,textarea,select,[contenteditable=true]')) return;
       event.preventDefault();
@@ -119,7 +121,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [enterQueue, waiting, reserved, connecting, ready]);
+  }, [enterQueue, waiting, reserved, connecting, ready, embedded]);
 
   const statusText = reserved
     ? 'Opponent found. Waiting for both players to confirm the same match before the arena opens…'
@@ -132,7 +134,7 @@ export default function LunaAIBattleOverlay({ onClose }) {
           : 'Choose a mode, then press Q or Enter Queue. Opening AI Battle never queues automatically.';
 
   return (
-    <div className="fixed left-[390px] right-[338px] top-[205px] z-[130] flex justify-center pointer-events-none" data-dashboard-utility-workspace>
+    <div className={embedded ? "luna-window__embedded luna-window__battle" : "fixed left-[390px] right-[338px] top-[205px] z-[130] flex justify-center pointer-events-none"} data-dashboard-utility-workspace>
       <section className="pointer-events-auto w-[min(540px,94%)] border border-white/[0.10] bg-slate-950/78 text-white shadow-[0_24px_70px_rgba(0,0,0,.28)] backdrop-blur-2xl">
         <header className="flex items-center gap-3 border-b border-white/[0.07] px-4 py-3">
           <Swords className="h-4 w-4 text-cyan-100/75" />

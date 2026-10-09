@@ -1257,11 +1257,7 @@ export function LibraryBannerSection({
   const [joiningUsers, setJoiningUsers] = useState({});
   const [tradeFriend, setTradeFriend] = useState(null);
 
-  useEffect(() => {
-    const openMemories = () => setShowMemoriesDrawer(true);
-    window.addEventListener('openLunaMemories', openMemories);
-    return () => window.removeEventListener('openLunaMemories', openMemories);
-  }, []);
+
 
   const { match: pvpMatch, isParticipant: isPvpParticipant } = useAIBattleSnapshot();
   const battleSurface = useAIBattleSurfaceState();

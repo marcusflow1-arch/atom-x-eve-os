@@ -69,7 +69,7 @@ function RewardTile({ level, premium, currentLevel }) {
   );
 }
 
-export default function LunaSeasonPassOverlay({ onClose }) {
+export default function LunaSeasonPassOverlay({ onClose, embedded = false }) {
   const { user } = useAuth();
   const [tab, setTab] = useState('rewards');
   const [track, setTrack] = useState('all');
@@ -136,7 +136,7 @@ export default function LunaSeasonPassOverlay({ onClose }) {
     <div
       data-dashboard-utility-workspace
       aria-label="Season Pass"
-      className="fixed left-[330px] right-0 top-0 bottom-0 z-[132] pointer-events-auto overflow-hidden text-white"
+      className={embedded ? "luna-window__embedded" : "fixed left-[330px] right-0 top-0 bottom-0 z-[132] pointer-events-auto overflow-hidden text-white"}
       style={{
         background: 'linear-gradient(135deg, rgba(10,17,28,.96), rgba(21,32,49,.94) 48%, rgba(7,13,23,.98))',
         backdropFilter: 'blur(28px) saturate(138%)',

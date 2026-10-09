@@ -1,4 +1,7 @@
 import PartyPortraitRail from './PartyPortraitRail';
+import DashboardWindow, { focusDashboardWindow } from './windows/DashboardWindow';
+import MemoriesDrawer from './MemoriesDrawer';
+import AIStoryOverlay from './AIStoryOverlay';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, UserPlus, Camera, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -100,6 +103,8 @@ export default function DashboardAvatarOverview() {
   const [inventoryMode, setInventoryMode] = useState(false);
   const [inventorySlot, setInventorySlot] = useState(null);
   const [cardsMode, setCardsMode] = useState(false);
+  const [cardsMinimized, setCardsMinimized] = useState(false);
+  const [memoriesMode, setMemoriesMode] = useState(false);
   const [skillBookDock, setSkillBookDock] = useState(null);
   const [leaderboardMode, setLeaderboardMode] = useState(false);
   const [messagesMode, setMessagesMode] = useState(false);
@@ -194,54 +199,18 @@ export default function DashboardAvatarOverview() {
     return () => window.removeEventListener('lunaAvatarFocusChanged', onFocus);
   }, []);
 
-  // Ordinary dashboard controls must never blur the avatar/dashboard surface.
-  // Blur/dimming is reserved for explicit surface transitions only.
   useEffect(() => {
-    const handleKeyDown = event => {
-      if (event.key === 'Escape') {
-        if (inventoryMode && inventorySlot) {
-          setInventorySlot(null);
-          setInteractionDimmed(false);
-          lastInteractiveRef.current = null;
-          return;
-        }
-        if (inventoryMode) {
-          setInventoryMode(false);
-          setInventorySlot(null);
-        }
-        if (cardsMode) setCardsMode(false);
-        if (leaderboardMode) setLeaderboardMode(false);
-        if (messagesMode) setMessagesMode(false);
-        if (friendsMode) setFriendsMode(false);
-        if (seasonMode) setSeasonMode(false);
-        if (battleMode) setBattleMode(false);
-        setAIBoxSocialMode(null);
-        setActiveQuickPanel(null);
-        setInteractionDimmed(false);
-        lastInteractiveRef.current = null;
-      }
+    const openInventory = () => { setInventoryMode(true); focusDashboardWindow('inventory'); };
+    const openMemories = () => { setMemoriesMode(true); focusDashboardWindow('memories'); };
+    const openFriends = () => { setFriendsMode(true); focusDashboardWindow('friends'); };
+    window.addEventListener('openLunaInventoryWorkspace', openInventory);
+    window.addEventListener('openLunaMemories', openMemories);
+    window.addEventListener('openLunaFriends', openFriends);
+    return () => {
+      window.removeEventListener('openLunaInventoryWorkspace', openInventory);
+      window.removeEventListener('openLunaMemories', openMemories);
+      window.removeEventListener('openLunaFriends', openFriends);
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [inventoryMode, inventorySlot, cardsMode, leaderboardMode, messagesMode, friendsMode, seasonMode, battleMode]);
-
-  useEffect(() => {
-    const toggleInventory = () => {
-      setActiveQuickPanel(null);
-      setInteractionDimmed(false);
-      setInventorySlot(null);
-      setCardsMode(false);
-      setLeaderboardMode(false);
-      setMessagesMode(false);
-      setFriendsMode(false);
-      setSeasonMode(false);
-      setBattleMode(false);
-      setInventoryMode((current) => !current);
-    };
-
-    window.addEventListener('openLunaInventoryWorkspace', toggleInventory);
-    return () => window.removeEventListener('openLunaInventoryWorkspace', toggleInventory);
   }, []);
 
   const stats=useMemo(()=>{
@@ -281,16 +250,8 @@ export default function DashboardAvatarOverview() {
     const openBattle = (event) => {
       const requestedMode = event?.detail?.mode;
       if (requestedMode) window.__lunaAIBattlePreferredMode = requestedMode;
-      setActiveQuickPanel(null);
-      setInteractionDimmed(false);
-      setInventoryMode(false);
-      setInventorySlot(null);
-      setCardsMode(false);
-      setLeaderboardMode(false);
-      setMessagesMode(false);
-      setFriendsMode(false);
-      setSeasonMode(false);
       setBattleMode(true);
+      focusDashboardWindow('ai-battle');
     };
     window.addEventListener('openAIBattle', openBattle);
     return () => window.removeEventListener('openAIBattle', openBattle);
@@ -302,16 +263,8 @@ export default function DashboardAvatarOverview() {
       if (target?.friend_id || target?.player_id || target?.id || target?.partner_id) {
         window.__lunaPendingMessageTarget = target;
       }
-      setActiveQuickPanel(null);
-      setInteractionDimmed(false);
-      setInventoryMode(false);
-      setInventorySlot(null);
-      setCardsMode(false);
-      setLeaderboardMode(false);
-      setFriendsMode(false);
-      setSeasonMode(false);
-      setBattleMode(false);
       setMessagesMode(true);
+      focusDashboardWindow('messages');
     };
     const clearForPresenceMenu = () => {
       setInteractionDimmed(false);
@@ -351,112 +304,17 @@ export default function DashboardAvatarOverview() {
   };
 
   const handleQuickAction = (item) => {
-    if (item.id === 'inventory') {
-      setActiveQuickPanel(null);
-      setInteractionDimmed(false);
-      setInventorySlot(null);
-      setCardsMode(false);
-      setLeaderboardMode(false);
-      setMessagesMode(false);
-      setFriendsMode(false);
-      setSeasonMode(false);
-      setBattleMode(false);
-      setInventoryMode((current) => !current);
-      return;
-    }
-    if (item.id === 'cards') {
-      setActiveQuickPanel(null);
-      setInteractionDimmed(false);
-      setInventoryMode(false);
-      setInventorySlot(null);
-      setLeaderboardMode(false);
-      setMessagesMode(false);
-      setFriendsMode(false);
-      setSeasonMode(false);
-      setBattleMode(false);
-      setCardsMode((current) => !current);
-      return;
-    }
-    if (item.id === 'leaderboard') {
-      setActiveQuickPanel(null);
-      setInteractionDimmed(false);
-      setInventoryMode(false);
-      setInventorySlot(null);
-      setCardsMode(false);
-      setMessagesMode(false);
-      setFriendsMode(false);
-      setSeasonMode(false);
-      setBattleMode(false);
-      setLeaderboardMode((current) => !current);
-      return;
-    }
-    if (item.id === 'messages') {
-      setActiveQuickPanel(null);
-      setInteractionDimmed(false);
-      setInventoryMode(false);
-      setInventorySlot(null);
-      setCardsMode(false);
-      setLeaderboardMode(false);
-      setFriendsMode(false);
-      setSeasonMode(false);
-      setBattleMode(false);
-      setMessagesMode((current) => !current);
-      return;
-    }
-    if (item.id === 'memories') {
-      setActiveQuickPanel(null);
-      setInteractionDimmed(false);
-      setInventoryMode(false);
-      setInventorySlot(null);
-      setCardsMode(false);
-      setLeaderboardMode(false);
-      setMessagesMode(false);
-      setFriendsMode(false);
-      setSeasonMode(false);
-      setBattleMode(false);
-      window.dispatchEvent(new CustomEvent('openLunaMemories'));
-      return;
-    }
-    if (item.id === 'season') {
-      setActiveQuickPanel(null);
-      setInteractionDimmed(false);
-      setInventoryMode(false);
-      setInventorySlot(null);
-      setCardsMode(false);
-      setLeaderboardMode(false);
-      setMessagesMode(false);
-      setFriendsMode(false);
-      setBattleMode(false);
-      setSeasonMode((current) => !current);
-      return;
-    }
-    if (item.id === 'ai-battle') {
-      setActiveQuickPanel(null);
-      setInteractionDimmed(false);
-      setInventoryMode(false);
-      setInventorySlot(null);
-      setCardsMode(false);
-      setLeaderboardMode(false);
-      setMessagesMode(false);
-      setFriendsMode(false);
-      setSeasonMode(false);
-      setBattleMode((current) => !current);
-      return;
-    }
-    setInventoryMode(false);
-    setInventorySlot(null);
-    setCardsMode(false);
-    setLeaderboardMode(false);
-    setMessagesMode(false);
-    setFriendsMode(false);
-    setSeasonMode(false);
-    setBattleMode(false);
-    setActiveQuickPanel(current => current === item.id ? null : item.id);
+    const setters = {
+      inventory: setInventoryMode, cards: setCardsMode, leaderboard: setLeaderboardMode,
+      messages: setMessagesMode, memories: setMemoriesMode, season: setSeasonMode,
+      'ai-battle': setBattleMode,
+    };
+    if (setters[item.id]) setters[item.id](true);
+    else setActiveQuickPanel(item.id);
+    focusDashboardWindow(item.id);
   };
 
-  const embeddedUtilityMode = inventoryMode || cardsMode;
-  const libraryEdgeMode = inventoryMode || friendsMode;
-  const skillLayout = useDashboardSkillLayout({ active: !avatarFocusMode && surface === 'dashboard', bookOpen: cardsMode });
+  const skillLayout = useDashboardSkillLayout({ active: !avatarFocusMode && surface === 'dashboard', bookOpen: cardsMode && !cardsMinimized });
 
   const circleOptions = [
     { id: 'blank-1', label: 'View 1', icon: Activity },
@@ -470,163 +328,54 @@ export default function DashboardAvatarOverview() {
     <div
       data-dashboard-avatar-overview
       className="fixed right-0 top-[164px] bottom-[48px] z-[25] pointer-events-none overflow-visible transition-[left] duration-500 ease-out"
-      style={{ left: libraryEdgeMode ? '330px' : '390px', zIndex: cardsMode ? 55 : undefined }}
+      style={{ left: '390px' }}
     >
-      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !leaderboardMode && !messagesMode && !friendsMode && !seasonMode && !battleMode && activeQuickPanel && (
-        <div
-          aria-label={`${activeQuickPanel} workspace`}
-          className="absolute left-[8px] right-[8px] top-[8px] bottom-[8px] z-[35] pointer-events-auto overflow-hidden transition-all duration-300"
-          style={{
-            background: 'linear-gradient(135deg, rgba(20,29,44,0.52) 0%, rgba(10,16,28,0.30) 48%, rgba(22,34,50,0.44) 100%)',
-            backdropFilter: 'blur(28px) saturate(145%)',
-            WebkitBackdropFilter: 'blur(28px) saturate(145%)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14), inset 0 0 60px rgba(103,232,249,0.025), 0 30px 70px rgba(0,0,0,0.24)',
-            clipPath: 'polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)'
-          }}
-        >
-          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_24%_12%,rgba(103,232,249,0.08),transparent_33%),radial-gradient(circle_at_82%_82%,rgba(129,140,248,0.055),transparent_34%)]" />
-          <div className="absolute inset-[1px] pointer-events-none border border-white/[0.025]" style={{ clipPath: 'polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)' }} />
-        </div>
-      )}
-
       <div
         className={`absolute top-[26px] bottom-0 pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 scale-[0.995]' : 'blur-0 opacity-100 scale-100'}`}
-        style={inventoryMode
-          ? {
-              left: 'auto',
-              right: 'calc(338px + min(680px, calc(100% - 638px)))',
-              width: '300px',
-            }
-          : { left: '0px', right: 'min(338px, 30vw)', width: 'auto' }}
-      >
+        style={{ left: '0px', right: 'min(338px, 30vw)', width: 'auto' }}>
         <DashboardAvatarScene focusMode={avatarFocusMode} />
       </div>
 
-      {!avatarFocusMode && surface === 'dashboard' && cardsMode && (
-        <div data-dashboard-utility-workspace className="luna-skill-book-workspace" style={skillLayout.workspace}>
+      {!avatarFocusMode && surface === 'dashboard' && <>
+        <PartyPortraitRail />
+        <LunaSkillXpHud dockStyle={skillLayout.hud} stacked={skillLayout.stacked}
+          currentXp={stats.currentXP} nextXp={stats.nextXP} level={stats.level}
+          showcaseEditing={cardsMode && !cardsMinimized} embedded={cardsMode && !cardsMinimized}
+          dockTarget={skillBookDock} combatMode={false} />
+
+        {inventoryMode && <DashboardWindow id="inventory" title="Inventory" width={640} height={600} onClose={() => setInventoryMode(false)}>
+          <div className="luna-window__inventory">
+            {inventorySlot ? <LunaSplitInventory inventory={inventoryData} selectedSlotId={inventorySlot}
+              onEquipItem={handleInventoryEquip} onBackToLoadout={() => setInventorySlot(null)} compactSlotMode /> :
+              <InventoryGrid equippedItems={equippedItems} handleBoxClick={handleInventorySlot} compact selectedSlotId={null} />}
+          </div>
+        </DashboardWindow>}
+        {cardsMode && <DashboardWindow id="cards" title="Cards · Skill Book" width={850} height={680} index={1}
+          onMinimizedChange={setCardsMinimized} onClose={() => { setCardsMode(false); setCardsMinimized(false); }}>
           <LunaCardsPanel onClose={() => setCardsMode(false)} slotDockRef={setSkillBookDock} />
-        </div>
-      )}
-
-      {!avatarFocusMode && surface === 'dashboard' && inventoryMode && (
-        <div
-          data-dashboard-utility-workspace
-          className="absolute right-[338px] top-[26px] bottom-0 z-40 w-[680px] pointer-events-auto overflow-hidden"
-          style={{
-            maxWidth: 'calc(100% - 638px)',
-            background: 'radial-gradient(ellipse at 50% 48%, rgba(3,6,11,.92) 0%, rgba(4,8,14,.84) 56%, rgba(4,8,14,.52) 76%, rgba(4,8,14,.18) 90%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, black 74%, rgba(0,0,0,.82) 86%, transparent 100%)',
-            maskImage: 'radial-gradient(ellipse at center, black 0%, black 74%, rgba(0,0,0,.82) 86%, transparent 100%)',
-          }}
-        >
-          <div className="relative h-full min-h-0">
-            <section
-              className="absolute bottom-0 right-0 top-0 min-h-0 w-full max-w-[680px] overflow-hidden"
-              style={{
-                background: 'radial-gradient(ellipse at 58% 48%, rgba(3,6,11,.84) 0%, rgba(4,8,14,.64) 58%, rgba(4,8,14,.24) 82%, transparent 100%)',
-              }}
-            >
-              {inventorySlot ? (
-                <LunaSplitInventory
-                  inventory={inventoryData}
-                  selectedSlotId={inventorySlot}
-                  onEquipItem={handleInventoryEquip}
-                  onBackToLoadout={() => setInventorySlot(null)}
-                  compactSlotMode
-                />
-              ) : (
-                <InventoryGrid
-                  equippedItems={equippedItems}
-                  handleBoxClick={handleInventorySlot}
-                  compact
-                  selectedSlotId={null}
-                />
-              )}
-            </section>
-          </div>
-        </div>
-      )}
-
-      {!avatarFocusMode
-        && surface === 'dashboard'
-        && !inventoryMode
-        && !messagesMode
-        && !friendsMode
-        && !seasonMode
-        && !leaderboardMode
-        && !battleMode
-        && !activeQuickPanel
-        && (
-          <LunaSkillXpHud
-            dockStyle={skillLayout.hud}
-            stacked={skillLayout.stacked}
-            currentXp={stats.currentXP}
-            nextXp={stats.nextXP}
-            level={stats.level}
-            showcaseEditing={cardsMode}
-            embedded={cardsMode}
-            dockTarget={skillBookDock}
-            combatMode={false}
-          />
-        )}
-
-      {!avatarFocusMode && surface === 'dashboard' && !embeddedUtilityMode && !messagesMode && !friendsMode && !seasonMode && !battleMode && <PartyPortraitRail />}
-      {!avatarFocusMode && surface === 'dashboard' && friendsMode && (
-        <div
-          data-dashboard-utility-workspace
-          aria-label="Friends quick access"
-          className="absolute left-0 top-[26px] bottom-0 z-40 w-[560px] pointer-events-auto overflow-hidden"
-          style={{
-            maxWidth: 'calc(100% - 338px)',
-            WebkitMaskImage: 'linear-gradient(to right, black 0%, black 92%, rgba(0,0,0,.80) 97%, transparent 100%)',
-            maskImage: 'linear-gradient(to right, black 0%, black 92%, rgba(0,0,0,.80) 97%, transparent 100%)',
-          }}
-        >
+        </DashboardWindow>}
+        {friendsMode && <DashboardWindow id="friends" title="Friends" width={440} height={580} index={2} onClose={() => setFriendsMode(false)}>
           <LunaFriendsQuickAccessPanel />
-        </div>
-      )}
-
-      {!avatarFocusMode && surface === 'dashboard' && messagesMode && (
-        <div
-          data-dashboard-utility-workspace
-          aria-label="Luna messages workspace"
-          className="absolute right-[338px] top-[26px] bottom-0 z-40 w-[800px] pointer-events-auto overflow-hidden"
-          style={{
-            maxWidth: 'calc(100% - 338px)',
-            boxShadow: '0 22px 54px rgba(0,0,0,.22)',
-          }}
-        >
-          <div
-            className="grid h-full min-h-0 w-full overflow-hidden"
-            style={{ gridTemplateColumns: 'clamp(190px, 30%, 240px) minmax(0, 1fr)' }}
-          >
-            <LunaMessageFriendsPanel />
-            <section
-              className="relative min-h-0 min-w-0 overflow-hidden border-y border-r border-white/[0.07]"
-              style={{
-                background: 'radial-gradient(ellipse at 48% 18%, rgba(48,68,94,.30), rgba(18,31,48,.64) 52%, rgba(8,15,25,.78) 100%)',
-                backdropFilter: 'blur(18px) saturate(125%)',
-                WebkitBackdropFilter: 'blur(18px) saturate(125%)',
-              }}
-            >
-              <MessengerHub threadOnly />
-            </section>
-          </div>
-        </div>
-      )}
-
-      {!avatarFocusMode && surface === 'dashboard' && seasonMode && (
-        <LunaSeasonPassOverlay onClose={() => setSeasonMode(false)} />
-      )}
-
-      {!avatarFocusMode && surface === 'dashboard' && battleMode && (
-        <LunaAIBattleOverlay onClose={() => setBattleMode(false)} />
-      )}
-
-      {!avatarFocusMode && surface === 'dashboard' && leaderboardMode && (
-        <LunaLeaderboardOverlay onClose={() => setLeaderboardMode(false)} />
-      )}
+        </DashboardWindow>}
+        {messagesMode && <DashboardWindow id="messages" title="Messages" width={820} height={580} index={3} onClose={() => setMessagesMode(false)}>
+          <div className="luna-window__messages"><LunaMessageFriendsPanel /><section><MessengerHub threadOnly /></section></div>
+        </DashboardWindow>}
+        {memoriesMode && <DashboardWindow id="memories" title="Memories" width={980} height={700} index={4} onClose={() => setMemoriesMode(false)}>
+          <div className="luna-window__memories"><MemoriesDrawer embedded onClose={() => setMemoriesMode(false)} /></div>
+        </DashboardWindow>}
+        {activeQuickPanel === 'ai-story' && <DashboardWindow id="ai-story" title="AI Story" width={850} height={620} index={5} onClose={() => setActiveQuickPanel(null)}>
+          <div className="luna-window__story"><AIStoryOverlay onClose={() => setActiveQuickPanel(null)} /></div>
+        </DashboardWindow>}
+        {seasonMode && <DashboardWindow id="season" title="Season Pass" width={960} height={660} index={6} onClose={() => setSeasonMode(false)}>
+          <LunaSeasonPassOverlay embedded onClose={() => setSeasonMode(false)} />
+        </DashboardWindow>}
+        {battleMode && <DashboardWindow id="ai-battle" title="AI Battle" width={560} height={550} index={7} onClose={() => setBattleMode(false)}>
+          <LunaAIBattleOverlay embedded onClose={() => setBattleMode(false)} />
+        </DashboardWindow>}
+        {leaderboardMode && <DashboardWindow id="leaderboard" title="Leaderboard" width={900} height={620} index={8} onClose={() => setLeaderboardMode(false)}>
+          <LunaLeaderboardOverlay embedded onClose={() => setLeaderboardMode(false)} />
+        </DashboardWindow>}
+      </>}
 
       {!avatarFocusMode && <aside
         className={`absolute right-[-1px] top-[26px] z-50 w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
@@ -654,7 +403,7 @@ export default function DashboardAvatarOverview() {
                           <button
                             key={id}
                             type="button"
-                            onClick={() => toggleAIBoxSocialMode(id)}
+                            onClick={() => id === 'friends' ? (setFriendsMode(true), focusDashboardWindow('friends')) : toggleAIBoxSocialMode(id)}
                             title={label}
                             aria-label={label}
                             aria-pressed={active}
@@ -745,7 +494,7 @@ export default function DashboardAvatarOverview() {
                       key={item.id}
                       icon={item.icon}
                       label={item.label}
-                      active={item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : item.id === 'messages' ? messagesMode : item.id === 'season' ? seasonMode : item.id === 'ai-battle' ? battleMode : item.id === 'leaderboard' ? leaderboardMode : activeQuickPanel === item.id}
+                      active={item.id === 'memories' ? memoriesMode : item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : item.id === 'messages' ? messagesMode : item.id === 'season' ? seasonMode : item.id === 'ai-battle' ? battleMode : item.id === 'leaderboard' ? leaderboardMode : activeQuickPanel === item.id}
                       alert={item.alert}
                       badge={item.badge}
                       compact
