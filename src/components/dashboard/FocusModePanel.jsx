@@ -1585,6 +1585,7 @@ export function LibraryBannerSection({
 
 
               </div>
+              </div>
               {/* Right-hand boundary: the five small portrait boxes are the
                   only content between the two full-height silver lines. */}
               <span className="luna-party-end-divider" aria-hidden="true" />
