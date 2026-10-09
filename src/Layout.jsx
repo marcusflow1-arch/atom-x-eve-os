@@ -1,6 +1,7 @@
 import PartyDrawer from './components/dashboard/PartyDrawer';
 import JediOutcastRuntime from './components/jedioutcast/JediOutcastRuntime';
 import './components/jedioutcast/jedi-outcast.css';
+import './components/jedioutcast/jedi-outcast-window.css';
 import DashboardWindow, { focusDashboardWindow } from './components/dashboard/windows/DashboardWindow';
 import { SocialNotificationAlerts } from './components/social/SocialNotifications';
 import AIBattleReturnBanner from './components/battle/AIBattleReturnBanner';
