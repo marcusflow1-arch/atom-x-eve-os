@@ -47,6 +47,8 @@ test('original game exposes 4:3 1024x768 native video size with source 80-degree
   assert.equal(map.get('cg_fov'),'80');
   const css=read('launcher.css');
   assert.match(css,/#canvas\{[^}]*--jedi-aspect/);
+  assert.match(css,/#canvas\{[^}]*--jedi-inverse-aspect/);
+  assert.doesNotMatch(css,/calc\(100vw \/ var\(--jedi-aspect/);
   assert.match(css,/#wrap\{[^}]*overflow:hidden/);
  }finally{f.dom.window.close();}
 });
@@ -67,6 +69,7 @@ test('native transition from menu to a different GPU backing buffer repairs stal
   assert.equal(msg.renderWidth,1024);
   assert.equal(msg.renderHeight,768);
   assert.equal(f.canvas.style.getPropertyValue('--jedi-aspect'),String(4/3));
+  assert.equal(f.canvas.style.getPropertyValue('--jedi-inverse-aspect'),'0.75');
  }finally{f.dom.window.close();}
 });
 
