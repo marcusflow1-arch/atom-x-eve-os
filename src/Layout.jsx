@@ -1289,7 +1289,7 @@ function LayoutContent({ children, currentPageName }) {
         <DashboardWindow id="jedi-outcast-game"
           title="Star Wars Jedi Knight II: Jedi Outcast"
           width={1200} height={780} index={1} captureEscape={false}
-          onClose={() => setJediGameWindowOpen(false)}>
+          onClose={() => window.dispatchEvent(new Event('atom:jedi-request-window-close'))}>
           <JediOutcastRuntime embedded onBack={() => setJediGameWindowOpen(false)} />
         </DashboardWindow>
       )}
