@@ -4,16 +4,17 @@ import {readFileSync} from 'node:fs';
 import {requestNativeJediLaunch,JEDI_OUTCAST_PROTOCOL,JEDI_OUTCAST_DRIVE_FOLDER} from '../src/components/jedioutcast/nativeJediLauncher.js';
 
 const read=p=>readFileSync(p,'utf8');
-test('Jedi Outcast top button opens an independent floating native launcher',()=>{
+test('Luna defaults to the original Raven browser engine in a floating game window without desktop setup',()=>{
  const l=read('src/Layout.jsx');
- const w=read('src/components/jedioutcast/NativeJediLauncher.jsx');
- assert.match(l,/onClick=\{\(\) => \{ setNativeJediLauncherOpen\(true\); focusDashboardWindow\('jedi-native-launcher'\)/);
- assert.match(l,/<DashboardWindow id="jedi-native-launcher"/);
- assert.match(l,/<NativeJediLauncher onPreviewWeb=/);
- assert.match(w,/Launch on Desktop/);
- assert.match(w,/Use the original Windows executable/);
- assert.match(w,/web reconstruction \(not original game\)/);
- assert.doesNotMatch(w,/Math\.random\(|setInterval\(|Loading 100%|GAME RUNNING/);
+ const runtime=read('src/components/jedioutcast/JediOutcastRuntime.jsx');
+ assert.match(l,/setJediGameWindowOpen\(true\); focusDashboardWindow\('jedi-outcast-game'\)/);
+ assert.match(l,/<DashboardWindow id="jedi-outcast-game"/);
+ assert.match(l,/<JediOutcastRuntime embedded/);
+ assert.match(l,/captureEscape=\{false\}/);
+ assert.doesNotMatch(l,/<NativeJediLauncher/);
+ assert.match(runtime,/GameReconstructionFile\.filter/);
+ assert.match(runtime,/JediPakChunk\.filter/);
+ assert.match(runtime,/registerProvidedArchive/);
 });
 test('browser sends fixed explicit native protocol; never reports a verified launch',()=>{
  let url='';
