@@ -1,6 +1,5 @@
 import { joinDashboard, isLivePlayer } from '@/components/social/dashboardSession';
 import { usePartySession } from '@/components/social/partySession';
-import { setAIBoxSocialMode } from '@/components/dashboard/aiBoxSocialMode';
 import { buildPartySlots } from '@/components/dashboard/socialDiscoverySelectors.mjs';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
@@ -1543,7 +1542,7 @@ export function LibraryBannerSection({
                       type="button"
                       title="Invite online friends to your party"
                       aria-label={`Invite a friend to party slot ${index + 1}`}
-                      onClick={() => setAIBoxSocialMode('party')}
+                      onClick={() => window.dispatchEvent(new CustomEvent('openLunaSocialWindow', { detail: { mode: 'party' } }))}
                       className="grid h-3.5 w-6 place-items-center text-white/65 transition hover:text-cyan-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
                     >
                       <Plus className="h-3.5 w-3.5" />
@@ -1552,7 +1551,7 @@ export function LibraryBannerSection({
                       type="button"
                       title={member ? `Party member: ${member.user_name || 'Player'} · Open party` : 'Open party invitations'}
                       aria-label={member ? `Party member ${member.user_name || 'Player'}` : `Empty party slot ${index + 1} · Invite friends`}
-                      onClick={() => member ? window.dispatchEvent(new Event('openLunaParty')) : setAIBoxSocialMode('party')}
+                      onClick={() => member ? window.dispatchEvent(new Event('openLunaParty')) : window.dispatchEvent(new CustomEvent('openLunaSocialWindow', { detail: { mode: 'party' } }))}
                       data-party-portrait
                       className="relative h-16 w-16 overflow-hidden rounded-lg border border-white/[0.09] bg-white/[0.025] transition hover:border-cyan-300/30"
                     >
