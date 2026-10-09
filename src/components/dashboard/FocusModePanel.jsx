@@ -1570,6 +1570,9 @@ export function LibraryBannerSection({
                   </div>
                 ))}
 
+
+              </div>
+            </div>
                 <AnimatePresence>
                   {showPvpRejoin && (
                     <motion.button
@@ -1587,8 +1590,6 @@ export function LibraryBannerSection({
                     </motion.button>
                   )}
                 </AnimatePresence>
-              </div>
-            </div>
             </div>
 
             {/* Notification strip starts at the left edge of the 338px
