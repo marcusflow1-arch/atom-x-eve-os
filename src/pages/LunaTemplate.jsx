@@ -242,8 +242,13 @@ export default function LunaTemplate() {
       setLibraryWidth(current => constrainLibraryWidth(current, available));
     };
     window.addEventListener('resize', clampToViewport);
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(clampToViewport) : null;
+    if (dashboardContentRef.current) observer?.observe(dashboardContentRef.current);
     clampToViewport();
-    return () => window.removeEventListener('resize', clampToViewport);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', clampToViewport);
+    };
   }, []);
   useEffect(() => {
     try { window.localStorage.setItem(LIBRARY_WIDTH_STORAGE_KEY, String(libraryWidth)); } catch {}
@@ -902,6 +907,7 @@ export default function LunaTemplate() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
+            id="luna-resizable-main"
             className="absolute z-30 pointer-events-auto overflow-hidden"
             style={{ left: `${libraryWidth}px`, top: '64px', right: '8px', bottom: '32px', background: 'transparent' }}
           >
