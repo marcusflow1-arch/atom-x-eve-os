@@ -1,10 +1,24 @@
 /**
  * Dashboard social discovery and party slot selectors.
- * Presence is not party membership: only accepted PartyMember rows occupy slots.
+ * Presence is not party membership. Accepted PartyMember rows are members;
+ * outgoing invitations are shown distinctly as PENDING placeholders so a
+ * freshly invited friend's name appears without granting membership early.
  */
-export function buildPartySlots(members, maxSize = 5) {
-  const confirmed = Array.isArray(members) ? members : [];
-  return Array.from({ length: maxSize }, (_, index) => confirmed[index] || null);
+export function buildPartySlots(members, maxSize = 5, outgoingInvites = []) {
+  const confirmed = Array.isArray(members) ? members.slice(0, maxSize) : [];
+  const occupied = new Set(confirmed.map(member => String(member.user_id)));
+  const pending = [];
+  for (const invite of Array.isArray(outgoingInvites) ? outgoingInvites : []) {
+    const userId = String(invite?.invitee_id || '');
+    if (!userId || invite.status !== 'pending' || occupied.has(userId)) continue;
+    occupied.add(userId);
+    pending.push({
+      user_id: userId, user_name: invite.invitee_name || 'Invited player',
+      user_avatar: invite.invitee_avatar || '', pending: true, invite_id: invite.id,
+    });
+  }
+  const slots = [...confirmed, ...pending].slice(0, maxSize);
+  return Array.from({ length: maxSize }, (_, index) => slots[index] || null);
 }
 
 export function filterSocialPlayers(onlinePlayers, {
