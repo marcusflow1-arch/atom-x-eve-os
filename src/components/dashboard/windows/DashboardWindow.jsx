@@ -15,14 +15,17 @@ function workArea() {
   const bottom = Math.min(window.innerHeight, document.querySelector('.glass-page-bottom-bar')?.getBoundingClientRect().top ?? window.innerHeight - 48);
   return { x: 0, y: top, width: window.innerWidth, height: Math.max(40, bottom - top) };
 }
-export default function DashboardWindow({ id, title, children, onClose, onMinimizedChange, width = 720, height = 560, index = 0, captureEscape = true }) {
+export default function DashboardWindow({ id, title, children, onClose, onMinimizedChange, width = 720, height = 560, index = 0, captureEscape = true, anchor = 'center' }) {
   const { user } = useAuth();
   const storageKey = 'luna-window-v1:' + (user?.id || 'guest') + ':' + id;
   const initialRect = (key) => {
     const area = workArea();
     let saved;
     try { saved = JSON.parse(sessionStorage.getItem(key) || 'null'); } catch { /* fresh position */ }
-    return fitWindow(saved || { x: area.width / 2 - width / 2 + index * 24, y: area.y + 28 + index * 22, width, height }, area);
+    const position = anchor === 'ai-attributes'
+      ? { x: area.x + area.width - width - 12, y: area.y + 118, width, height }
+      : { x: area.width / 2 - width / 2 + index * 24, y: area.y + 28 + index * 22, width, height };
+    return fitWindow(saved || position, area);
   };
   const [rect, setRect] = useState(() => initialRect(storageKey));
   // Authentication may complete after this window opens. Never overwrite
