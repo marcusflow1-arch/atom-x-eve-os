@@ -10,6 +10,7 @@ const require=createRequire(import.meta.url);
 const out=path.resolve('node_modules/.cache/records-check');
 await fs.mkdir(out,{recursive:true});
 const bundle=async(entry,name,mocks={})=>{
+ mocks={'lucide-react':"export const Grip=()=>null,Maximize2=()=>null,Minimize2=()=>null,Minus=()=>null,X=()=>null;",...mocks};
  const dest=path.join(out,name+'.cjs');
  await build({entryPoints:[entry],outfile:dest,bundle:true,platform:'node',format:'cjs',jsx:'automatic',packages:'external',loader:{'.css':'empty'},plugins:[{name:'test-stubs',setup(b){
   b.onResolve({filter:/.*/},args=>mocks[args.path]?{path:args.path,namespace:'stub'}:args.path.startsWith('@/')?{path:path.resolve('src',args.path.slice(2)+(path.extname(args.path)?'':'.jsx'))}:undefined);
