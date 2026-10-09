@@ -1,4 +1,5 @@
 import PartyDrawer from './components/dashboard/PartyDrawer';
+import NativeJediLauncher from './components/jedioutcast/NativeJediLauncher';
 import DashboardWindow, { focusDashboardWindow } from './components/dashboard/windows/DashboardWindow';
 import { SocialNotificationAlerts } from './components/social/SocialNotifications';
 import AIBattleReturnBanner from './components/battle/AIBattleReturnBanner';
@@ -318,6 +319,7 @@ function LayoutContent({ children, currentPageName }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [socialHubOpen, setSocialHubOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [nativeJediLauncherOpen, setNativeJediLauncherOpen] = useState(false);
   const [auraStreamsDrawerOpen, setAuraStreamsDrawerOpen] = useState(false);
   const { openCart, getCartCount } = useCart();
   const [showGuidedTour, setShowGuidedTour] = useState(false);
@@ -1156,9 +1158,9 @@ function LayoutContent({ children, currentPageName }) {
 
                           <button
                             type="button"
-                            onClick={() => navigate(createPageUrl('JediOutcast'))}
+                            onClick={() => { setNativeJediLauncherOpen(true); focusDashboardWindow('jedi-native-launcher'); }}
                             className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-amber-500/10 border-amber-300/20 text-amber-100/80 hover:bg-amber-500/20 hover:text-white items-center gap-2"
-                            title="Open Star Wars Jedi Knight II: Jedi Outcast with original game files"
+                            title="Open Jedi Outcast desktop game launcher in a separate window"
                           >
                             <Swords className="w-4 h-4" />
                             Star Wars Jedi Knight II: Jedi Outcast
@@ -1276,6 +1278,19 @@ function LayoutContent({ children, currentPageName }) {
           </>
         )}
       </AnimatePresence>
+
+      {/* Original Jedi Outcast handoff uses the same independent window
+          manager as the dashboard's eight buttons. Its desktop companion
+          executes the native game separately; this web view never claims it
+          can run the Windows EXE directly. */}
+      {nativeJediLauncherOpen && (
+        <DashboardWindow id="jedi-native-launcher" title="Jedi Outcast Launcher" width={850} height={575} index={1} onClose={() => setNativeJediLauncherOpen(false)}>
+          <NativeJediLauncher onPreviewWeb={() => {
+            setNativeJediLauncherOpen(false);
+            navigate(createPageUrl('JediOutcast'));
+          }} />
+        </DashboardWindow>
+      )}
 
       {/* Dashboard calendar is independent, draggable and resizable.
           Other routes retain the full-screen calendar experience. */}
