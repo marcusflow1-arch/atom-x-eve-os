@@ -83,7 +83,9 @@ export default function EnvHubDrawer({ open = true, onClose, currentEnvId, onSel
           .filter(row => String(row.owner_id) === String(user?.id))
           .map(asLibraryEnvironment)
           .filter(row => row.selectable);
-        const layouts = (scenes || []).map(asSceneEnvironment).filter(row => row.selectable);
+        const layouts = (scenes || [])
+          .filter(scene => !/\[legacy_archive\]/i.test(scene.name || ''))
+          .map(asSceneEnvironment).filter(row => row.selectable);
         const sceneModels = (models || [])
           .filter(model => model.file_url && SCENE_PATTERN.test(`${model.name || ''} ${model.description || ''}`))
           .map(asModelEnvironment);
@@ -93,7 +95,8 @@ export default function EnvHubDrawer({ open = true, onClose, currentEnvId, onSel
           const key = item.modelUrl || item.layoutData?.environment_url || item.id;
           if (!deduped.has(key)) deduped.set(key, item);
         }
-        setEnvironments([...deduped.values()]);
+        setEnvironments([...deduped.values()].sort((a, b) =>
+          a.id === 'default_room' ? -1 : b.id === 'default_room' ? 1 : a.name.localeCompare(b.name)));
       } catch (cause) {
         if (!cancelled) setError(cause?.message || 'Could not load your environments.');
       } finally {
