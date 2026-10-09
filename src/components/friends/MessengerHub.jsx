@@ -20,6 +20,7 @@ export default function MessengerHub({ threadOnly = false }) {
   const [conversations, setConversations] = useState([]);
   const [manualTargets, setManualTargets] = useState({});
   const [selectedId, setSelectedId] = useState('');
+  const [voiceTargetId, setVoiceTargetId] = useState('');
   const [messages, setMessages] = useState([]);
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState('');
@@ -123,6 +124,10 @@ export default function MessengerHub({ threadOnly = false }) {
         },
       }));
       setSelectedId(String(id));
+      if (String(window.__lunaPendingVoiceTargetId || '') === String(id)) {
+        window.__lunaPendingVoiceTargetId = null;
+        setVoiceTargetId(String(id));
+      }
       if (window.__lunaPendingMessageTarget && String(id) === String(window.__lunaPendingMessageTarget.friend_id || window.__lunaPendingMessageTarget.id)) window.__lunaPendingMessageTarget = null;
     };
     openTarget(null);
@@ -276,6 +281,15 @@ export default function MessengerHub({ threadOnly = false }) {
       setError(e.message || 'Call could not start.');
     }
   };
+
+  // A direct 'Start Voice Chat' action from the friends popup opens the
+  // established WebRTC Messenger call with the exact selected participant.
+  // Permission and WebRTC failures remain visible in the normal call UI.
+  useEffect(() => {
+    if (!voiceTargetId || !selected || String(selected.partner_id) !== voiceTargetId) return;
+    setVoiceTargetId('');
+    startCall('voice');
+  }, [voiceTargetId, selected]);
 
   const flushIce = async () => {
     const pc = pcRef.current;
