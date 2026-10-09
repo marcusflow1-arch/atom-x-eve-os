@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ExternalLink, FolderDown, Gamepad2, HardDrive, Info, MonitorPlay, ShieldCheck } from 'lucide-react';
-import { createPageUrl } from '@/utils';
 import { JEDI_OUTCAST_DRIVE_URL, requestNativeJediLaunch } from './nativeJediLauncher';
 import './native-jedi-launcher.css';
 
