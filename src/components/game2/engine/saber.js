@@ -106,9 +106,13 @@ export class SaberLogic {
       if (this.weaponTime > 0) this.weaponTime -= dtMs; if (this.torsoTimer > 0) this.torsoTimer -= dtMs; return;
     }
     if (this.inFlight) { H.playTorso('BOTH_SABERPULL', { parts: 'torso', blendMs: 100, durMs: 100, hold: true }); this.torsoTimer = 1; return; }
-    if (this.torsoTimer > 0) this.torsoTimer -= dtMs;
-    if (this.weaponTime > 0) this.weaponTime -= dtMs; else this.state = 'ready';
-    if (this.state === 'ready' && this.move !== I.LS_READY && this.weaponTime <= 0 && !this.blocked) this.setMove(I.LS_READY, now);
+    if (this.torsoTimer > 0) this.torsoTimer = Math.max(0, this.torsoTimer - dtMs);
+    if (this.weaponTime > 0) this.weaponTime = Math.max(0, this.weaponTime - dtMs);
+    // Important: do not reset to LS_READY before choosing the next move.
+    // The original START -> ATTACK -> RETURN / transitional chaining reads
+    // the previous move's start/end quadrants. Resetting here erased them on
+    // every swing, causing repeated windups and wrong strong-stance arcs.
+    // The no-input branch below selects RETURN or READY when appropriate.
     // blocked / parried
     if (this.blocked) {
       const b = this.blocked; this.blocked = null; const first = this.weaponTime <= 0;
