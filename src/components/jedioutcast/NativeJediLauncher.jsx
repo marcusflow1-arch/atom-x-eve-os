@@ -3,7 +3,7 @@ import { ExternalLink, FolderDown, Gamepad2, HardDrive, Info, MonitorPlay, Shiel
 import { JEDI_OUTCAST_DRIVE_URL, requestNativeJediLaunch } from './nativeJediLauncher';
 import './native-jedi-launcher.css';
 
-const SOURCE_ROOT = 'https://github.com/marcusflow1-arch/atom-x-eve-os/tree/main/tools/native-jedi-launcher';
+const SETUP_DOC = 'https://github.com/marcusflow1-arch/atom-x-eve-os/blob/main/tools/native-jedi-launcher/README.md';
 
 /** This is a native Windows launcher handoff, not a counterfeit browser game. */
 export default function NativeJediLauncher({ onPreviewWeb }) {
@@ -31,7 +31,7 @@ export default function NativeJediLauncher({ onPreviewWeb }) {
     </span></div>
     <div className="jko-native-launcher__actions">
       <button type="button" onClick={launch} className="jko-native-launcher__primary"><MonitorPlay size={17}/> Launch on Desktop</button>
-      <a href={SOURCE_ROOT + '/README.md'} target="_blank" rel="noopener noreferrer"><HardDrive size={16}/> Desktop setup instructions <ExternalLink size={13}/></a>
+      <a href={SETUP_DOC} target="_blank" rel="noopener noreferrer"><HardDrive size={16}/> Desktop setup instructions <ExternalLink size={13}/></a>
       <a href={JEDI_OUTCAST_DRIVE_URL} target="_blank" rel="noopener noreferrer"><FolderDown size={16}/> View Drive files <ExternalLink size={13}/></a>
       {onPreviewWeb && <button type="button" className="jko-native-launcher__secondary" onClick={onPreviewWeb}>Open existing web reconstruction (not original game)</button>}
     </div>
