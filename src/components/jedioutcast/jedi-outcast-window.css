@@ -1,0 +1,20 @@
+/* The original Raven WebAssembly renderer lives inside a movable Luna window.
+ * Preserve the engine's own pixel resolution/aspect ratio; never stretch the canvas. */
+.luna-window:has([data-jedi-embedded]){background:#050b13;border-color:rgba(150,194,219,.58)}
+.luna-window:has([data-jedi-embedded]) .luna-window__body{overflow:hidden;background:#000}
+.jko-session[data-jedi-embedded]{width:100%;height:100%;min-width:0;min-height:0;overflow:hidden}
+.jko-session[data-jedi-embedded] .jko-session-bar{min-height:40px;gap:9px;padding:6px 12px}
+.jko-session[data-jedi-embedded] .jko-session-label{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jko-session[data-jedi-embedded] .jko-session-label small{font-size:10px}
+.jko-loading-cover{
+  position:absolute;inset:0;z-index:10;display:flex;align-items:center;
+  justify-content:center;flex-direction:column;gap:15px;padding:24px;
+  background:linear-gradient(140deg,rgba(10,31,49,.97),rgba(4,14,28,.97));
+  color:#edfaff;text-align:center;
+}
+.jko-loading-cover strong{font-size:16px;font-weight:650;letter-spacing:.01em}
+.jko-loading-cover small{font-size:12px;color:#b9d9ed;max-width:540px;line-height:1.6}
+.jko-loading-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(122,179,212,.32);border-top-color:#c0e7f9;animation:jko-spin .8s linear infinite}
+@keyframes jko-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.jko-loading-spinner{animation:none}}
+@media(max-width:700px){.jko-session[data-jedi-embedded] .jko-session-bar{padding:5px 7px}.jko-session[data-jedi-embedded] .jko-session-label{font-size:10px}}
