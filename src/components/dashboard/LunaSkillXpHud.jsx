@@ -7,7 +7,8 @@ import { SKILL_KEYS, SKILL_SET_COUNT } from '@/components/luna/skillSlots';
 import { showError } from '@/components/error/ErrorToast';
 import './luna-hotbar.css';
 import './luna-ornate-hotbar.css';
-import LunaOrnateChrome from './LunaOrnateChrome';
+import './luna-light-hotbar.css';
+import LunaLightEdge from './LunaLightEdge';
 
 export function HotkeyFrame() {
   const id = useId();
@@ -156,7 +157,7 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
         <div className="luna-hotbar-main">
           {embedded && <HotkeyFrame />}
           <div className="luna-hotbar-skill-shell">
-            {!embedded && <LunaOrnateChrome variant="skills" />}
+            {!embedded && <LunaLightEdge variant="skills" />}
             <div className="luna-hotbar-grid" aria-label="Equipped skill keys 1 through 0">
               {SKILL_KEYS.map((key, index) => <HotkeySlot key={key} index={index} selected={selectedSlot === index}
                 pendingCard={pendingCard} onAssign={assign} saving={isSaving || isLoading || Boolean(loadoutError)} combatMode={combatMode} embedded={embedded}
