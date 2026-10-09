@@ -48,6 +48,9 @@ export default function DashboardWindow({ id, title, children, onClose, onMinimi
     };
     const escape = event => {
       if (event.key !== 'Escape' || stack.top() !== id) return;
+      // Nested editor dialogs (such as Calendar event creation) handle
+      // their own first Escape; only a second Escape closes the window.
+      if (shell.current?.querySelector('[data-window-dismiss-layer]')) return;
       // Window-level Escape never fans out to every dashboard panel.
       event.preventDefault();
       event.stopImmediatePropagation();
