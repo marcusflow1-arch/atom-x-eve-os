@@ -31,7 +31,6 @@ import UniversalPageRail from './components/shared/UniversalPageRail';
 import SidebarToggle from './components/shared/SidebarToggle';
 import GuidedTour from './components/onboarding/GuidedTour';
 import { ViewModeProvider, useViewMode } from './components/mobile/ViewModeContext';
-import ViewModeToggle from './components/mobile/ViewModeToggle';
 import MobileLayoutShell from './components/mobile/MobileLayoutShell';
 import AuraWatchedStreamsDrawer from './components/streaming/AuraWatchedStreamsDrawer';
 import { AIPresenceProvider } from './components/dashboard/AIPresenceContext';
@@ -1185,24 +1184,12 @@ function LayoutContent({ children, currentPageName }) {
 
             </div>
 
-            {/* Settings + View Mode Toggle - right side (hidden on Store, which has its own StorefrontTopBar cluster) */}
-            {!showStoreHeader && (
+            {/* Keep the optional developer setup preview. The public top-right
+                Settings and Switch to Mobile controls are intentionally removed;
+                Settings remains accessible from the navigation drawer. */}
+            {!showStoreHeader && import.meta.env.DEV && user?.role === 'admin' && (
               <div className="ml-auto flex shrink-0 items-center gap-2">
-                {import.meta.env.DEV && user?.role === 'admin' && <button type="button" title="Preview first-time setup" aria-label="Preview first-time setup" onClick={() => navigate('/SetupPreview')} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10"><Sparkles className="w-3.5 h-3.5" /></button>}
-                <button
-                  onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
-                  style={{
-                    background: 'rgba(10, 14, 20, 0.85)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-                  }}
-                  title="Settings"
-                >
-                  <Settings className="w-3.5 h-3.5 text-white/60" />
-                </button>
-                <ViewModeToggle />
+                <button type="button" title="Preview first-time setup" aria-label="Preview first-time setup" onClick={() => navigate('/SetupPreview')} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10"><Sparkles className="w-3.5 h-3.5" /></button>
               </div>
             )}
             </div>
@@ -1210,19 +1197,6 @@ function LayoutContent({ children, currentPageName }) {
 
             </div>
             );
-      })()}
-
-      {/* Floating View Mode Toggle for pages with hidden headers */}
-      {(() => {
-        const p = location.pathname.toLowerCase();
-        const hiddenHeaderPages = ['/friends', '/worldevents', '/blanktransition'];
-        const isHiddenHeader = hiddenHeaderPages.some(s => p.includes(s));
-        if (!isHiddenHeader) return null;
-        return (
-          <div className="fixed top-4 right-4 z-[50]">
-            <ViewModeToggle />
-          </div>
-        );
       })()}
 
       {/* Main Content with Error Boundary */}
