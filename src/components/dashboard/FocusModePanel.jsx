@@ -1588,7 +1588,7 @@ export function LibraryBannerSection({
                   )}
                 </AnimatePresence>
               </div>
-
+            </div>
             </div>
 
             {/* Notification strip starts at the left edge of the 338px
