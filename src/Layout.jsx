@@ -1,5 +1,6 @@
 import PartyDrawer from './components/dashboard/PartyDrawer';
-import NativeJediLauncher from './components/jedioutcast/NativeJediLauncher';
+import JediOutcastRuntime from './components/jedioutcast/JediOutcastRuntime';
+import './components/jedioutcast/jedi-outcast.css';
 import DashboardWindow, { focusDashboardWindow } from './components/dashboard/windows/DashboardWindow';
 import { SocialNotificationAlerts } from './components/social/SocialNotifications';
 import AIBattleReturnBanner from './components/battle/AIBattleReturnBanner';
@@ -319,7 +320,7 @@ function LayoutContent({ children, currentPageName }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [socialHubOpen, setSocialHubOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [nativeJediLauncherOpen, setNativeJediLauncherOpen] = useState(false);
+  const [jediGameWindowOpen, setJediGameWindowOpen] = useState(false);
   const [auraStreamsDrawerOpen, setAuraStreamsDrawerOpen] = useState(false);
   const { openCart, getCartCount } = useCart();
   const [showGuidedTour, setShowGuidedTour] = useState(false);
@@ -1158,9 +1159,9 @@ function LayoutContent({ children, currentPageName }) {
 
                           <button
                             type="button"
-                            onClick={() => { setNativeJediLauncherOpen(true); focusDashboardWindow('jedi-native-launcher'); }}
+                            onClick={() => { setJediGameWindowOpen(true); focusDashboardWindow('jedi-outcast-game'); }}
                             className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-amber-500/10 border-amber-300/20 text-amber-100/80 hover:bg-amber-500/20 hover:text-white items-center gap-2"
-                            title="Open Jedi Outcast desktop game launcher in a separate window"
+                            title="Open Jedi Outcast Raven-engine game in its own floating window"
                           >
                             <Swords className="w-4 h-4" />
                             Star Wars Jedi Knight II: Jedi Outcast
@@ -1279,16 +1280,16 @@ function LayoutContent({ children, currentPageName }) {
         )}
       </AnimatePresence>
 
-      {/* Original Jedi Outcast handoff uses the same independent window
-          manager as the dashboard's eight buttons. Its desktop companion
-          executes the native game separately; this web view never claims it
-          can run the Windows EXE directly. */}
-      {nativeJediLauncherOpen && (
-        <DashboardWindow id="jedi-native-launcher" title="Jedi Outcast Launcher" width={850} height={575} index={1} onClose={() => setNativeJediLauncherOpen(false)}>
-          <NativeJediLauncher onPreviewWeb={() => {
-            setNativeJediLauncherOpen(false);
-            navigate(createPageUrl('JediOutcast'));
-          }} />
+      {/* Use the existing GPL Raven-engine WebAssembly port and the original
+          retail archives in Admin/Game Rebuilds. All required archives are
+          checked and cached before the engine boots inside this window.
+          This is NOT a native Windows EXE, and is not presented as one. */}
+      {jediGameWindowOpen && (
+        <DashboardWindow id="jedi-outcast-game"
+          title="Star Wars Jedi Knight II: Jedi Outcast"
+          width={1200} height={780} index={1} captureEscape={false}
+          onClose={() => setJediGameWindowOpen(false)}>
+          <JediOutcastRuntime embedded onBack={() => setJediGameWindowOpen(false)} />
         </DashboardWindow>
       )}
 
