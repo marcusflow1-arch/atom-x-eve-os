@@ -1,0 +1,38 @@
+/* Dedicated launcher: occupies the original AI Battle tile only. */
+.axe-attribute-actions .luna-battle-launch{
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;width:100%;min-width:0;height:44px;padding:3px 2px 4px;overflow:hidden;
+  border:1px solid rgba(174,203,223,.64);border-radius:7px;
+  background:radial-gradient(ellipse at 50% -30%,rgba(167,219,240,.21),transparent 72%),linear-gradient(155deg,rgba(36,58,77,.96),rgba(12,25,40,.98));
+  box-shadow:inset 0 1px 0 rgba(239,249,255,.21),inset 0 -1px 0 rgba(3,9,18,.7),0 3px 9px rgba(0,0,0,.2);
+  color:#e9f3fa;cursor:pointer;isolation:isolate;
+  transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.luna-battle-launch:before{
+  content:"";position:absolute;left:11%;right:11%;top:0;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(220,245,255,.86),transparent);
+}
+.luna-battle-launch:after{
+  content:"";position:absolute;inset:3px;border:1px solid rgba(190,215,235,.08);
+  border-radius:4px;pointer-events:none;z-index:-1;
+}
+.luna-battle-launch__crest{position:relative;display:grid;place-items:center;height:21px;width:26px;flex:none;color:#bfddea;pointer-events:none}
+.luna-battle-launch__crest:before{
+  content:"";position:absolute;width:18px;height:18px;border:1px solid rgba(164,200,220,.18);
+  border-radius:3px;transform:rotate(45deg);background:rgba(156,199,222,.045);z-index:-1;
+}
+.luna-battle-launch__label{font-size:8px;font-weight:650;line-height:11px;letter-spacing:.025em;white-space:nowrap;color:#f1f6fa;pointer-events:none}
+.luna-battle-launch__status{position:absolute;top:5px;right:5px;width:3px;height:3px;border-radius:50%;background:#9cd9e9;opacity:0;pointer-events:none}
+.axe-attribute-actions .luna-battle-launch:hover{
+  border-color:#d2e9f5;transform:translateY(-1px);
+  background:radial-gradient(ellipse at 50% -30%,rgba(177,228,249,.28),transparent 75%),linear-gradient(155deg,#29475d,#12273b);
+  box-shadow:inset 0 1px 0 rgba(242,251,255,.3),0 4px 12px rgba(0,0,0,.28);
+}
+.axe-attribute-actions .luna-battle-launch[aria-pressed=true]{
+  border-color:#a3d9e9;background:linear-gradient(150deg,#2a4b61,#183349);
+  box-shadow:inset 0 1px 0 rgba(234,251,255,.3),inset 0 -2px 0 rgba(164,218,234,.45),0 3px 10px rgba(0,0,0,.22);
+}
+.luna-battle-launch[aria-pressed=true] .luna-battle-launch__status{opacity:1}
+.axe-attribute-actions .luna-battle-launch:active{transform:translateY(0);box-shadow:inset 0 2px 5px rgba(0,0,0,.25)}
+.axe-attribute-actions .luna-battle-launch:focus-visible{outline:2px solid #d1ecf7;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.axe-attribute-actions .luna-battle-launch{transition:none;transform:none}}
