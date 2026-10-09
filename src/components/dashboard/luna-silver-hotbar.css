@@ -38,3 +38,43 @@
 .luna-hotbar:not([data-embedded]) .luna-hotbar-prefabs button[aria-pressed=true]{
   border-color:#c9eff9;color:#e4faff;
 }
+
+/* A single icon-only Skill Tree launcher immediately OUTSIDE the left edge
+   of slot 1. Skill slots retain their positions, hotkeys and drag targets. */
+.luna-hotbar:not([data-embedded]) .luna-hotbar-skill-tree-button{
+  position:absolute;
+  left:-52px;
+  top:17px;
+  width:42px;
+  height:42px;
+  z-index:12;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:1px solid rgba(185,201,219,.7);
+  border-radius:8px;
+  background:linear-gradient(145deg,rgba(35,55,73,.91),rgba(7,22,41,.92));
+  color:#dcecf5;
+  box-shadow:inset 0 1px 0 rgba(240,249,255,.18),0 3px 12px rgba(0,0,0,.38);
+  cursor:pointer;
+  transition:border-color .16s,background .16s,box-shadow .16s;
+}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-skill-tree-button>svg{
+  pointer-events:none;
+}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-skill-tree-button:hover{
+  border-color:#b8edfa;
+  color:#f0fcff;
+  background:linear-gradient(145deg,rgba(48,85,108,.95),rgba(14,39,61,.98));
+  box-shadow:inset 0 1px 0 rgba(240,249,255,.2),0 0 12px rgba(72,208,240,.25);
+}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-skill-tree-button:focus-visible{
+  outline:2px solid #b5f2ff;
+  outline-offset:3px;
+}
+@media(max-width:560px){
+  .luna-hotbar:not([data-embedded]) .luna-hotbar-skill-tree-button{
+    left:0;
+    top:-51px;
+  }
+}
