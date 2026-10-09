@@ -45,7 +45,7 @@ export default function RecordsWorkspace(){
     let live=true;setUrl('');setPosition(0);setDuration(Number(record?.duration)||0);setMomentId('');
     if(record?.media_uri)privateUrl(record.media_uri).then(value=>{if(live)setUrl(value);}).catch(e=>{if(live)setError(e.message);});
     return()=>{live=false;};
-  },[record?.id,record?.media_uri,tick]);
+  },[record?.id,record?.media_uri]);
   const games=useMemo(()=>[...new Set([...catalog.map(g=>g.title),...records.map(r=>r.game_name)].filter(Boolean))].sort((a,b)=>a.localeCompare(b)),[catalog,records]);
   const visible=records.filter(row=>(filterGame==='all'||row.game_name===filterGame)&&(!search||(row.title+' '+row.game_name).toLowerCase().includes(search.toLowerCase())));
   const shownMoments=moments.filter(row=>tab==='all'||(tab==='screenshots'?!!row.image_uri:row.kind===tab));
@@ -80,7 +80,7 @@ export default function RecordsWorkspace(){
       <button disabled={!!busy||!game.trim()||!user?.id} onClick={()=>upload.current?.click()}><Upload size={15}/>Upload</button>
       <input ref={upload} type="file" accept="video/*,image/*" hidden onChange={uploadFile}/>
     </section>
-    <p className="records-helper">{capturing?'Recording continues while this window is minimized. Stop sharing or use Stop & save to finish.':'Choose the game, then share its window. Audio depends on your browser and the surface shared. Sessions stop at 30 minutes or 200 MB.'} {ai?'Selected frames are sent to AI only during your recording; reviews can miss fast events.':''}</p>
+    <p className="records-helper">{capturing?'Recording continues if this window is minimized or closed. Reopen Records, or stop browser sharing, to finish.':'Choose the game, then share its window. Audio depends on your browser and the surface shared. Sessions stop at 30 minutes or 200 MB.'} {ai?'Selected frames are sent to AI only during your recording; reviews can miss fast events.':''}</p>
     {(error||(ownCapture&&capture.error))&&<div className="records-notice" role="alert">{error||capture.error}<button onClick={()=>{setError('');refresh();}}>Reload library</button></div>}
     {(busy||capture.saving)&&<p className="records-status" role="status">{busy||'Saving recording…'}</p>}
     {ownCapture&&capture.draft&&!capture.saving&&<div className="records-notice"><span>Recording ready to recover</span><button onClick={()=>run('Saving recording',saveRecordDraft)}>Retry save</button><button onClick={downloadRecordDraft}><Download size={14}/>Download copy</button></div>}

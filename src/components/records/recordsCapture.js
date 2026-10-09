@@ -118,9 +118,10 @@ export async function startRecording({userId,gameName,aiEnabled=false}){
       preview?.pause();if(preview)preview.srcObject=null;
       const draft={blob:new Blob(chunks,{type:recorder.mimeType||'video/webm'}),duration:(Date.now()-startTime)/1000,record:created};
       chunks=[];stream=null;preview=null;recorder=null;
-      emit({active:false,draft,elapsed:draft.duration,revision:state.revision+1});
+      emit({active:false,saving:true,elapsed:draft.duration,revision:state.revision+1});
       await draftStore('put',draft,userId).catch(()=>emit({error:'Local recovery storage is unavailable. Keep this page open until the upload finishes.'}));
       await base44.entities.GameplayRecord.update(created.id,{status:'pending',duration:draft.duration}).catch(()=>{});
+      emit({draft,saving:false});
       await saveRecordDraft().catch(()=>{});
     };
     recorder.start(1000);
