@@ -33,7 +33,21 @@ export class Game {
     this.enemySpawn = this.duel ? this.world.spawns.enemy.slice() : [0, 0, 8];
     this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
     this.input.onFirstGesture = () => this.startAudio();
-    if (this.duel) { this.input.wheelThrottle = 90; const h = this.hud; h.helpList = HELP_DUEL; h.helpW = 820; h.title = 'LIGHTSABER TRAINING'; h.subtitle = 'Reborn saber duel · original Raven arena · click to start'; h.debug = false; }
+    if (this.duel) {
+      this.input.wheelThrottle = 90;
+      const h = this.hud;
+      h.helpList = HELP_DUEL; h.helpW = 820;
+      h.title = 'LIGHTSABER TRAINING';
+      h.subtitle = 'Reborn saber duel · original Raven arena · F1 = controls';
+      h.debug = false;
+      // The full-screen controls sheet previously paused every simulation step
+      // until a mouse click. In the dashboard/embedded browser it could appear
+      // as completely disabled WASD movement. Start playable immediately and
+      // leave the controls sheet available explicitly via F1.
+      h.help = false;
+      this.started = true;
+      h.msg('WASD to move · F1 for controls');
+    }
     this.player = new Fighter(this, { name: 'player', isPlayer: true, team: 'player', pos: this.playerSpawn, yaw: 0, hp: 100, bladeColor: [0.22, 0.52, 1] }); this.player.label = 'You'; this.player.humId = 0;
     this.force = new Force(this, this.player, { list: this.duel ? SELECT_ORDER : SELECT_ALL }); this.player.force = this.force; this.combat = new Combat(this);
     this.world.onThud = b => { if (b.vel[1] < -4) this.sfxAt('hit1', b.pos, 0.5); };
@@ -194,7 +208,9 @@ export class Game {
   frameInput(dt) {
     const i = this.input, p = this.player, c = this.cam, h = this.hud;
     if (i.pressed('F1')) h.help = !h.help; if (i.pressed('F3')) h.debug = !h.debug; if (i.pressed('KeyM')) { this.sfx.muted = !this.sfx.muted; h.msg(this.sfx.muted ? 'Sound off' : 'Sound on'); }
-    if (h.help && (i.btnPressed[0]) && !i.pressedSet.has('F1')) { h.help = false; this.started = true; }
+    if (h.help && (i.btnPressed[0] || ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space'].some(key => i.pressed(key))) && !i.pressedSet.has('F1')) {
+      h.help = false; this.started = true;
+    }
     if (!h.help) this.started = true;
     if (i.dx || i.dy) { c.yaw -= i.dx * i.sens; c.pitch += i.dy * i.sens; }
     const ar = 2.2 * dt; if (i.held('ArrowLeft')) c.yaw += ar; if (i.held('ArrowRight')) c.yaw -= ar; if (i.held('ArrowUp')) c.pitch -= ar * 0.7; if (i.held('ArrowDown')) c.pitch += ar * 0.7;
