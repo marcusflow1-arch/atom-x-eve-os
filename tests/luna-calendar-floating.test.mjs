@@ -40,6 +40,8 @@ test('embedded calendar renders actual month, day, and event creation without bo
     stdin:{contents:"export {default as Calendar} from './src/components/calendar/IntelligentCalendarOverlay.jsx';",resolveDir:process.cwd(),loader:'jsx'},
     bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},loader:{'.css':'empty'},
     plugins:[{name:'calendar-fixtures',setup(b){
+      b.onResolve({filter:/^lucide-react$/},()=>({path:process.cwd()+'/node_modules/lucide-react/dist/esm/lucide-react.js'}));
+      b.onResolve({filter:/^react(?:\/|$)/},a=>({path:a.path,external:true}));
       b.onResolve({filter:/base44Client$/},()=>({path:'sdk',namespace:'fixture'}));
       b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:'export const base44=globalThis.calendarFixture.sdk;',loader:'js'}));
     }}],
