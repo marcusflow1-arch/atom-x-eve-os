@@ -1,4 +1,0 @@
-/* Stationary divider at the original 330px library boundary.
-   Decorative only — cannot resize the page, library or Skill Tree. */
-.luna-library-divider-track{position:absolute;left:329px;top:64px;bottom:44px;z-index:79;width:2px;pointer-events:none;user-select:none}
-.luna-library-divider-line{display:block;width:2px;height:100%;background:linear-gradient(180deg,rgba(70,72,78,.36),rgba(89,91,97,.82) 18%,#55575e 50%,rgba(89,91,97,.82) 82%,rgba(70,72,78,.36));box-shadow:1px 0 1px rgba(0,0,0,.35)}
