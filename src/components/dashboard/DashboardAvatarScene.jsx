@@ -123,9 +123,9 @@ export default function DashboardAvatarScene({ focusMode: _focusMode = false }) 
   };
 
   const socialAvatarStage = roster.length > 1 ? (
-    <div className="absolute inset-y-0 left-0 flex items-stretch justify-center" style={{ right: 'min(410px, 36vw)' }} aria-label="Shared dashboard">
+    <div className="absolute inset-y-0 left-0 flex items-stretch justify-center gap-[clamp(8px,1.2vw,20px)]" style={{ right: 'min(410px, 36vw)' }} aria-label="Shared dashboard">
       {roster.map((player) => (
-        <div key={player.player_id} data-dashboard-player={player.player_id} className="relative h-full min-w-0 flex-1" style={{ maxWidth: 190 }}>
+        <div key={player.player_id} data-dashboard-player={player.player_id} className="relative h-full min-w-0 flex-1 overflow-hidden" style={{ maxWidth: 190 }}>
           {player.player_id === user?.id
             ? <PlayerAvatarPreview controls="none" idleOnly secondaryCharacter={creatorChild} skillEffects />
             : <GenesisModelPreview config={player.appearance || FALLBACK_AVATAR} compact controls="none" idleOnly />}
