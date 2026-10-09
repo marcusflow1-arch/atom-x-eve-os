@@ -1,4 +1,5 @@
 import PartyDrawer from './components/dashboard/PartyDrawer';
+import DashboardWindow, { focusDashboardWindow } from './components/dashboard/windows/DashboardWindow';
 import { SocialNotificationAlerts } from './components/social/SocialNotifications';
 import AIBattleReturnBanner from './components/battle/AIBattleReturnBanner';
 import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
@@ -328,7 +329,7 @@ function LayoutContent({ children, currentPageName }) {
   }, []);
 
   useEffect(() => {
-    const openCalendar = () => setCalendarOpen(true);
+    const openCalendar = () => { setCalendarOpen(true); focusDashboardWindow('calendar'); };
     const closeCalendar = () => setCalendarOpen(false);
     window.addEventListener('openAtomCalendar', openCalendar);
     window.addEventListener('closeAtomCalendar', closeCalendar);
@@ -1276,15 +1277,21 @@ function LayoutContent({ children, currentPageName }) {
         )}
       </AnimatePresence>
 
-      {/* Calendar Overlay */}
+      {/* Dashboard calendar is independent, draggable and resizable.
+          Other routes retain the full-screen calendar experience. */}
       <AnimatePresence>
         {calendarOpen && (
-          <Suspense fallback={<LoadingFallback />}>
-            <IntelligentCalendarOverlay 
-              onClose={() => setCalendarOpen(false)} 
-              currentUserId={user?.id} 
-            />
-          </Suspense>
+          p_lower.includes('/lunatemplate') ? (
+            <DashboardWindow id="calendar" title="Calendar" width={980} height={690} index={3} onClose={() => setCalendarOpen(false)}>
+              <Suspense fallback={<LoadingFallback />}>
+                <IntelligentCalendarOverlay embedded onClose={() => setCalendarOpen(false)} currentUserId={user?.id} />
+              </Suspense>
+            </DashboardWindow>
+          ) : (
+            <Suspense fallback={<LoadingFallback />}>
+              <IntelligentCalendarOverlay onClose={() => setCalendarOpen(false)} currentUserId={user?.id} />
+            </Suspense>
+          )
         )}
       </AnimatePresence>
 
