@@ -69,8 +69,7 @@ import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
 import GameHubArea from '../components/dashboard/gamehub/GameHubArea';
 import GameList from '../components/dashboard/gamehub/GameList';
 import LibraryBrowser from '@/components/dashboard/gamehub/LibraryBrowser';
-import LibraryWidthDivider from '@/components/dashboard/LibraryWidthDivider';
-import { libraryWidthFromRatio, libraryRatioFromWidth, LIBRARY_DEFAULT_WIDTH, LIBRARY_WIDTH_STORAGE_KEY, LIBRARY_RATIO_STORAGE_KEY } from '@/components/dashboard/libraryResize';
+import LibrarySectionDivider from '@/components/dashboard/LibrarySectionDivider';
 import LibraryCardExplorer from '@/components/dashboard/gamehub/LibraryCardExplorer';
 import GameLandingPage from '../components/dashboard/gamehub/GameLandingPage';
 import GameProgressHub from '../components/dashboard/gamehub/GameProgressHub';
@@ -229,41 +228,8 @@ export default function LunaTemplate() {
   }, []);
   const [homeSection, setHomeSection] = useState('avatar'); // 'avatar' | 'developer' | 'discover'
   const [sidebarVisible, toggleSidebar] = useSidebarVisible();
-  const dashboardContentRef = useRef(null);
-  const [contentWidth, setContentWidth] = useState(() => window.innerWidth);
-  // Save the RATIO, not a pixel offset: both panels continue to fit on screen
-  // when the browser window is resized.
-  const [libraryRatio, setLibraryRatio] = useState(() => {
-    const initialWidth = window.innerWidth;
-    try {
-      const storedRatio = Number(window.localStorage.getItem(LIBRARY_RATIO_STORAGE_KEY));
-      if (Number.isFinite(storedRatio) && storedRatio > 0 && storedRatio < 1) return storedRatio;
-      const legacy = window.localStorage.getItem(LIBRARY_WIDTH_STORAGE_KEY);
-      return libraryRatioFromWidth(legacy === null ? LIBRARY_DEFAULT_WIDTH : Number(legacy), initialWidth);
-    } catch { return libraryRatioFromWidth(LIBRARY_DEFAULT_WIDTH, initialWidth); }
-  });
-  const libraryWidth = libraryWidthFromRatio(libraryRatio, contentWidth);
-  const resizeLibrary = useCallback((pixelWidth) => {
-    const total = dashboardContentRef.current?.getBoundingClientRect().width || window.innerWidth;
-    setLibraryRatio(libraryRatioFromWidth(pixelWidth, total));
-  }, []);
-  useEffect(() => {
-    const measure = () => {
-      const total = dashboardContentRef.current?.getBoundingClientRect().width || window.innerWidth;
-      setContentWidth(current => Math.abs(current - total) < 1 ? current : total);
-    };
-    window.addEventListener('resize', measure);
-    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
-    if (dashboardContentRef.current) observer?.observe(dashboardContentRef.current);
-    measure();
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-  }, []);
-  useEffect(() => {
-    try { window.localStorage.setItem(LIBRARY_RATIO_STORAGE_KEY, String(libraryRatio)); } catch {}
-  }, [libraryRatio]);
+  // Restore the original fixed-width library / Skill Tree geometry.
+  // The divider is ornamental and does not control page proportions.
 
   // Keep the dashboard avatar overlay aware of which surface currently owns
   // the right side of the dashboard. The overlay disappears for Full Library
@@ -766,7 +732,7 @@ export default function LunaTemplate() {
       )}
 
       {/* 95% Main Area */}
-      <div data-luna-dashboard-content ref={dashboardContentRef} className="flex-1 relative h-full overflow-hidden" style={{ backgroundColor: '#070a11' }}>
+      <div data-luna-dashboard-content className="flex-1 relative h-full overflow-hidden" style={{ backgroundColor: '#070a11' }}>
         {/* Dark moonlight aesthetic background */}
         <RealTimeMoonSky />
         {!avatarFocusMode && <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />}
@@ -786,7 +752,7 @@ export default function LunaTemplate() {
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
               className="absolute z-30 pointer-events-auto overflow-hidden"
-              style={{ left: `${libraryWidth + 110}px`, top: '88px', right: '60px', bottom: '160px' }}>
+              style={{ left: '440px', top: '88px', right: '60px', bottom: '160px' }}>
               {homeSection === 'developer' && <DeveloperSpotlightSection onOpenOverlay={() => setShowDevSpotlight(true)} />}
               {homeSection === 'discover' && <WhatsNewSection />}
             </motion.div>
@@ -800,7 +766,7 @@ export default function LunaTemplate() {
       {/* Mini 3D Viewer Box + Game Library — unified left column, flush to left edge */}
       {!showConsoleMode && !showAchievements &&
               <div id="luna-resizable-library" className="absolute z-20 pointer-events-auto flex flex-col"
-              style={{ left: '0px', top: '64px', bottom: '0px', width: uiVisible ? '388px' : `${libraryWidth}px`, gap: '0px' }}>
+              style={{ left: '0px', top: '64px', bottom: '0px', width: uiVisible ? '388px' : '330px', gap: '0px' }}>
 
           {/* Unified card: 3D viewer on top, game list below — one seamless box */}
           {!avatarFocusMode && !uiVisible && homeSection === 'avatar' ? (
@@ -864,9 +830,9 @@ export default function LunaTemplate() {
         </div>
               }
 
-      {/* One resizer governs both the Games/Cards rail and the space to its right. */}
+      {/* Stationary visual separator — the original 330px library width never changes. */}
       {!avatarFocusMode && !uiVisible && !showConsoleMode && !showAchievements && homeSection === 'avatar' && (
-        <LibraryWidthDivider width={libraryWidth} onResize={resizeLibrary} containerRef={dashboardContentRef} />
+        <LibrarySectionDivider />
       )}
 
       {/* Avatar Focus Hub — blank UI on avatar click; A/D rotates full-page section UIs */}
@@ -920,7 +886,7 @@ export default function LunaTemplate() {
             transition={{ duration: 0.3, ease: 'easeOut' }}
             id="luna-resizable-main"
             className="absolute z-30 pointer-events-auto overflow-hidden"
-            style={{ left: `${libraryWidth}px`, top: '64px', right: '8px', bottom: '32px', background: 'transparent' }}
+            style={{ left: '330px', top: '64px', right: '8px', bottom: '32px', background: 'transparent' }}
           >
             {libraryFilters.view === 'cards'
               ? <LibraryCardExplorer full filters={libraryFilters} onChange={updateLibraryFilters} onClose={() => setShowLibraryLanding(false)} />
@@ -940,7 +906,7 @@ export default function LunaTemplate() {
                   id="luna-resizable-main"
                   className="absolute right-0 z-30 pointer-events-none"
                   style={{
-                    left: `${libraryWidth}px`,
+                    left: '330px',
                     top: '64px',
                     bottom: '32px'
                   }}>
