@@ -134,7 +134,7 @@ test('Force Jump keeps its directional landing pose instead of the heavy-fall bo
   f.airAnim='BOTH_FORCEINAIRRIGHT1';f.fjUsed=true;
   f.land(19);
   assert.deepEqual(legs,['BOTH_FORCELANDRIGHT1']);
-  assert.equal(f.landUntil-f.g.t,clips.BOTH_FORCELANDRIGHT1.n/clips.BOTH_FORCELANDRIGHT1.fps);
+  assert.ok(Math.abs((f.landUntil-f.g.t) - clips.BOTH_FORCELANDRIGHT1.n/clips.BOTH_FORCELANDRIGHT1.fps) < 1e-8);
   assert.equal(f.heavyLandUntil,0);
   f.airAnim='BOTH_INAIR1';f.fjUsed=false;
   f.land(19);
