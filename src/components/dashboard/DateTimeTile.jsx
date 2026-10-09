@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Bell, Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
+import { Bell, RefreshCw } from 'lucide-react';
 import SystemUpdatesRemindersOverlay from './SystemUpdatesRemindersOverlay';
 import useDashboardStatusFeeds from './useDashboardStatusFeeds';
 import useStatusPreview from './useStatusPreview';
@@ -7,8 +7,7 @@ import StatusFeedButton from './StatusFeedButton';
 import LunaLightEdge from './LunaLightEdge';
 import './dashboard-status.css';
 
-export default function DateTimeTile({ onCalendarClick = () => {} }) {
-  const [time, setTime] = useState(new Date());
+export default function DateTimeTile() {
   const [overlay, setOverlay] = useState(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -23,10 +22,9 @@ export default function DateTimeTile({ onCalendarClick = () => {} }) {
     paused: hovered || focused || hidden || Boolean(overlay),
   });
   useEffect(() => {
-    const clock = window.setInterval(() => setTime(new Date()), 1000);
     const visibility = () => setHidden(document.hidden);
     document.addEventListener('visibilitychange', visibility);
-    return () => { window.clearInterval(clock); document.removeEventListener('visibilitychange', visibility); };
+    return () => document.removeEventListener('visibilitychange', visibility);
   }, []);
   const open = (mode, item) => {
     returnFocus.current = document.activeElement;
@@ -51,20 +49,13 @@ export default function DateTimeTile({ onCalendarClick = () => {} }) {
   };
 
   return <>
-    <section ref={dock} className="luna-status" aria-label="Dashboard status" data-luna-notification-dock>
+    <section ref={dock} className="luna-status" aria-label="System notifications" data-luna-notification-dock>
       <LunaLightEdge variant="clock" />
-      {/* One compact box: 30% clock / 70% status, separated by a thin vertical rule. */}
-      <div className="luna-status-calendar-side">
-        <button type="button" className="luna-status-clock" aria-label="Open calendar" onClick={onCalendarClick}>
-          <CalendarIcon size={17} aria-hidden="true" /><span><time dateTime={time.toISOString()}>{time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</time><small title={time.toLocaleDateString('en-US', { dateStyle: 'full' })}>{time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</small></span>
-        </button>
-      </div>
-      <span className="luna-status-split" aria-hidden="true" />
       <div className="luna-status-announcements">
         <button type="button" className="luna-status-summary"
           aria-label="Open system updates and reminders"
           onClick={() => open(latestStatus?.kind === 'updates' ? 'updates' : 'notifications', latestStatus)}>
-          <strong>System updates &amp; reminders</strong>
+          <strong>System notifications</strong>
           <span>{latestStatus?.title || (data.signedIn ? 'No new notifications or reminders' : 'Sign in to see your updates')}</span>
         </button>
         <div className="luna-status-preview" data-expanded={preview.expanded || undefined}
