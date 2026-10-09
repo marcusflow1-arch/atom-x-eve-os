@@ -311,6 +311,10 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign', embedded
 
   const leave = action => {
     if (leaving.current) return;
+    if (!frame.current?.contentWindow || state === 'error' || state === 'awaiting-source') {
+      action();
+      return;
+    }
     leaving.current = true;
     setExiting(true);
     setNotice('');
@@ -339,6 +343,15 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign', embedded
       window.location.origin,
     );
   };
+
+  // Closing the independent desktop-like window must flush original game
+  // saves and configuration before the iframe is unmounted.
+  useEffect(() => {
+    if (!embedded) return;
+    const closeWindow = () => leave(onBack);
+    window.addEventListener('atom:jedi-request-window-close', closeWindow);
+    return () => window.removeEventListener('atom:jedi-request-window-close', closeWindow);
+  }, [embedded, onBack, state]);
 
   const restart = () => {
     sourceSent.current = false;
