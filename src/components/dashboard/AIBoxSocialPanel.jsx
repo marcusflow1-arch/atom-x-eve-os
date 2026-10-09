@@ -143,7 +143,7 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
     player,
     'party',
     async () => {
-      const response = await base44.functions.invoke('partySystem', { action: 'invite_member', data: { inviteeId: player.id } });
+      const response = await base44.functions.invoke('partySystem', { action: 'invite_member', data: { inviteeId: player.id, inviteeName: player.name, inviteeAvatar: player.avatar } });
       const body = response?.data ?? response ?? {};
       if (body?.error || body?.success === false) throw new Error(body.error || 'Party invite failed');
       const stateResponse = await base44.functions.invoke('partySystem', { action: 'get_state', data: {} });
@@ -151,7 +151,7 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
       if (!next.error) partySession.publish(next);
       window.dispatchEvent(new Event('lunaSocialChanged'));
     },
-    `Party invite sent to ${player.name}. They will appear in the five boxes after accepting.`,
+    `Invitation sent to ${player.name}. Their slot shows Invited until they accept and join your dashboard.`, 
   );
 
   const inviteClan = (player) => {
@@ -253,7 +253,7 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
           </>
         )}
         {mode === 'party' && (
-          <p className="text-[9px] leading-4 text-white/45">Invite an online friend to your party. Only accepted members appear in the five party boxes above the dashboard.{partyFull ? ' Your party is full.' : ''}</p>
+          <p className="text-[9px] leading-4 text-white/45">Invite a friend to your party. Pending names appear in the five boxes, and accepted members become visible 3D avatars on the shared dashboard.{partyFull ? ' Your party is full.' : ''}</p>
         )}
       </div>
       <div className="space-y-1.5">
