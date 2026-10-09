@@ -43,9 +43,9 @@ test('camera module preserves Raven camera state-machine concepts', () => {
   }
 });
 
-test('native Jedi runtime uses the current camera cache generation', () => {
-  assert.match(runtime, /native-camera-v11/);
-  assert.match(index, /native-camera-v11/);
-  assert.doesNotMatch(runtime, /native-camera-v10/);
-  assert.doesNotMatch(index, /native-camera-v10/);
+test('native Jedi runtime uses the current viewport/camera cache generation', () => {
+  assert.match(runtime, /viewport-v12/);
+  assert.match(index, /viewport-v12/);
+  assert.doesNotMatch(runtime, /native-camera-v11/);
+  assert.doesNotMatch(index, /native-camera-v11/);
 });
