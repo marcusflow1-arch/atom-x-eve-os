@@ -632,7 +632,7 @@ export default function DashboardAvatarOverview() {
         aria-label="AI Attribute Box"
       >
         <div className="axe-attribute-shell relative h-full w-full bg-transparent border-b border-white/[0.06] shadow-[0_20px_45px_rgba(0,0,0,0.10)]">
-          <LunaOrnateChrome />
+          <LunaOrnateChrome variant="silver" />
           <div className="axe-attribute-content relative flex h-full w-full flex-col bg-transparent backdrop-blur-[10px] overflow-hidden">
             <div className="axe-attribute-heading relative shrink-0 px-5 pt-3 pb-2 border-b border-white/[0.12]">
               <div className="flex items-center gap-2 pr-9">
