@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Maximize2, RotateCcw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
+import { REQUIRED_JEDI_ARCHIVES, JEDI_ARCHIVE_CHUNK_BYTES, findRegisteredJediArchives, collectCachedArchiveChunks, missingRegisteredJediArchives } from './jediArchiveSources';
 
-const REQUIRED_PAKS = ['assets0.pk3', 'assets1.pk3', 'assets2.pk3', 'assets5.pk3'];
-const PAK_CHUNK_BYTES = 16 * 1024 * 1024;
+const REQUIRED_PAKS = REQUIRED_JEDI_ARCHIVES;
+const PAK_CHUNK_BYTES = JEDI_ARCHIVE_CHUNK_BYTES;
 const CACHE_RETRIES = 3;
 
 const LABELS = {
@@ -31,7 +32,7 @@ function unwrap(value) {
   return value?.data ?? value;
 }
 
-export default function JediOutcastRuntime({ onBack, mode = 'campaign' }) {
+export default function JediOutcastRuntime({ onBack, mode = 'campaign', embedded = false }) {
   const isGame2 = mode === 'game2';
   const activeLabels = isGame2 ? GAME2_LABELS : LABELS;
   const sessionTitle = isGame2 ? 'Game 2 — Kyle Combat Sandbox' : 'Star Wars Jedi Knight II: Jedi Outcast';
@@ -66,28 +67,27 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign' }) {
       setProgress('');
       setNotice('');
 
-      // Normal launches must not depend on the server function. The four retail
-      // archives and their persistent chunk cache are ordinary admin-readable Base44
-      // entities, so read them directly. The function is reserved only for repairing a
-      // genuinely missing chunk.
-      const [archives, statusChunks] = await Promise.all([
+      // Pull the existing Admin → Project Rebuilds → Game Rebuilds assets.
+      // Drive-indexed archives retain the 16 MiB Base44 chunk cache; PK3 files
+      // uploaded directly in Game Rebuilds can be used via their storage URL.
+      // No client filesystem picker or Windows companion is required.
+      const [archives, statusChunks, workspaceFiles] = await Promise.all([
         base44.entities.JediSourceAsset.filter(
-          { game_key: 'jedi_outcast', category: 'retail_archive' },
-          'path',
-          50,
+          { game_key: 'jedi_outcast', category: 'retail_archive' }, 'path', 50,
         ),
         base44.entities.JediPakChunk.filter(
-          { game_key: 'jedi_outcast', status: 'cached' },
-          'archive_name',
-          500,
+          { game_key: 'jedi_outcast', status: 'cached' }, 'archive_name', 1000,
+        ),
+        base44.entities.GameReconstructionFile.filter(
+          { game_key: 'jedi_outcast', area: 'original_asset' }, 'path', 1000,
         ),
       ]);
 
       const chunkBytes = PAK_CHUNK_BYTES;
-      const byName = new Map(archives.map(asset => [String(asset.path || '').toLowerCase(), asset]));
-      const missing = REQUIRED_PAKS.filter(name => !byName.get(name)?.id || !(Number(byName.get(name)?.byte_size) > 0));
+      const byName = findRegisteredJediArchives(archives, workspaceFiles);
+      const missing = missingRegisteredJediArchives(byName);
       if (missing.length) {
-        throw new Error(`Canonical retail archives are missing from Base44: ${missing.join(', ')}`);
+        throw new Error(`Original game data is incomplete in Admin → Game Rebuilds: ${missing.join(', ')}. The linked Google Drive/GameData/base folder currently exposes only assets5.pk3. The other original retail archives must be present in an existing registered source before the engine can start.`);
       }
 
       const jobs = [];
@@ -97,37 +97,10 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign' }) {
       for (const name of REQUIRED_PAKS) {
         const archive = byName.get(name);
         const size = Number(archive.byte_size);
-        const count = Math.ceil(size / chunkBytes);
-        const slots = new Array(count);
+        const slots = collectCachedArchiveChunks(archive, cachedChunkRows, chunkBytes);
         chunksByArchive.set(name, slots);
-
-        for (const row of cachedChunkRows) {
-          if (row.archive_asset_id !== archive.id && String(row.archive_name || '').toLowerCase() !== name) continue;
-          const chunkIndex = Number(row.chunk_index);
-          if (!Number.isInteger(chunkIndex) || chunkIndex < 0 || chunkIndex >= count) continue;
-
-          const expectedOffset = chunkIndex * chunkBytes;
-          const expectedSize = Math.min(chunkBytes, size - expectedOffset);
-          if (
-            row.status !== 'cached' ||
-            !row.storage_url ||
-            Number(row.offset) !== expectedOffset ||
-            Number(row.byte_size) !== expectedSize ||
-            Number(row.source_size) !== size
-          ) {
-            continue;
-          }
-
-          slots[chunkIndex] = {
-            index: chunkIndex,
-            offset: expectedOffset,
-            size: expectedSize,
-            url: row.storage_url,
-            sha256: row.sha256 || '',
-          };
-        }
-
-        for (let chunkIndex = 0; chunkIndex < count; chunkIndex++) {
+        if (archive.kind === 'stored') continue;
+        for (let chunkIndex = 0; chunkIndex < slots.length; chunkIndex++) {
           if (!slots[chunkIndex]) jobs.push({ name, archive, size, chunkIndex });
         }
       }
@@ -197,7 +170,7 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign' }) {
         return {
           name,
           size: Number(archive.byte_size),
-          sourceAssetId: archive.id,
+          sourceAssetId: archive.id || null,
           chunks,
         };
       });
