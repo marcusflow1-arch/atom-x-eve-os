@@ -1,7 +1,7 @@
 /* Luna Library: compact controls and a single unfolding glass leaf. */
 /* One continuous glass surface in both Games and Cards mode, flush to the footer. */
-.ll-browser { position:relative; color:#eff7ff; overflow:hidden; padding-top:1px; box-sizing:border-box; background:linear-gradient(180deg,rgba(17,30,46,.96),rgba(10,20,34,.96)); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:inset -1px 0 rgba(165,207,225,.12); }
-.ll-browser::before { content:''; position:absolute; left:0; right:0; top:0; z-index:30; height:1px; pointer-events:none; background:linear-gradient(90deg,rgba(205,220,228,.10),rgba(205,220,228,.24) 50%,rgba(205,220,228,.10)); }
+.ll-browser { position:relative; color:#eff7ff; overflow:hidden; padding-top:1px; box-sizing:border-box; background:linear-gradient(100deg,rgba(70,105,135,.11) 0%,rgba(40,73,105,.08) 40%,rgba(10,30,54,.045) 80%,rgba(5,18,36,.01) 100%); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); box-shadow:none; }
+.ll-browser::before { content:''; position:absolute; left:0; right:0; top:0; z-index:30; height:1px; pointer-events:none; background:linear-gradient(90deg,rgba(205,220,228,.06),rgba(205,220,228,.18) 50%,transparent); }
 .ll-toolbar { display:flex; align-items:center; gap:7px; padding:10px 12px 8px; }
 .ll-voice-search { min-width:0; flex:1 1 auto; width:auto; }
 .ll-search-line { display:flex; align-items:center; gap:4px; min-height:32px; border-bottom:1px solid rgba(198,231,243,.52); transition:border-color .2s; }
@@ -18,7 +18,7 @@
 .ll-filters { display:flex; align-items:center; gap:8px; padding:4px 12px 10px; }
 .ll-genre { display:flex; align-items:center; gap:6px; flex:1; min-width:0; }
 .ll-genre>span { color:#879baa; font-size:9px; text-transform:uppercase; letter-spacing:.12em; }
-.ll-genre select { color:#edf7ff; background:#111d2b; min-width:0; width:100%; padding:6px; border:0; border-radius:5px; font-size:11px; }
+.ll-genre select { color:#edf7ff; background:rgba(35,58,82,.24); min-width:0; width:100%; padding:6px; border:0; border-radius:5px; font-size:11px; }
 .ll-kind-switch { display:flex; align-items:center; gap:3px; flex:none; }
 .ll-kind-switch button { display:grid; place-items:center; width:29px; height:29px; color:#8099aa; border-radius:6px; }
 .ll-kind-switch button[aria-pressed="true"] { color:#b8f6ff; background:rgba(96,215,240,.12); }
