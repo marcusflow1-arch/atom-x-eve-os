@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, RefreshCw, Sparkles, X } from 'lucide-react';
+import { Check, Network, RefreshCw, Sparkles, X } from 'lucide-react';
 import useLunaStore from '@/components/luna/useLunaStore';
 import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
 import { SKILL_KEYS, SKILL_SET_COUNT } from '@/components/luna/skillSlots';
@@ -155,6 +155,18 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
       </header>}
       <div className="luna-hotbar-layout">
         <div className="luna-hotbar-main">
+          {!embedded && (
+            <button
+              type="button"
+              data-luna-skill-tree-hotbar-button
+              className="luna-hotbar-skill-tree-button"
+              aria-label="Open Skill Tree"
+              title="Open Skill Tree"
+              onClick={() => window.dispatchEvent(new CustomEvent('toggleSkillTree'))}
+            >
+              <Network aria-hidden="true" size={22} strokeWidth={1.7} />
+            </button>
+          )}
           {embedded && <HotkeyFrame />}
           <div className="luna-hotbar-skill-shell">
             {!embedded && <LunaOrnateChrome variant="skills" />}
