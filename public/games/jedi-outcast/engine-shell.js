@@ -99,6 +99,10 @@ function __reportVideo(){
   var aspect = String(w / h);
   if (c.style.getPropertyValue('--jedi-aspect') !== aspect) {
     c.style.setProperty('--jedi-aspect', aspect);
+    // CSS calc(length / number) is not consistently supported in embedded
+    // Chromium/WebViews. A precomputed inverse keeps both fitted dimensions
+    // valid and prevents 4:3 graphics stretching in narrower Base44 windows.
+    c.style.setProperty('--jedi-inverse-aspect', String(h / w));
   }
   var info = {
     type: 'atom-jedi-video',
