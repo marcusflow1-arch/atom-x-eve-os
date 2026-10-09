@@ -18,6 +18,7 @@ import Aura from './pages/Aura';
 import Screenshots from './pages/Screenshots';
 import JediOutcast from './pages/JediOutcast';
 import Game2 from './pages/Game2';
+import Game3 from './pages/Game3';
 import AvatarHome from './pages/AvatarHome';
 import AvatarStudio from './pages/AvatarStudio';
 import BlankTransition from './pages/BlankTransition';
@@ -84,6 +85,7 @@ export const PAGES = {
     "Screenshots": Screenshots,
     "JediOutcast": JediOutcast,
     "Game2": Game2,
+    "Game3": Game3,
     "AvatarHome": AvatarHome,
     "AvatarStudio": AvatarStudio,
     "BlankTransition": BlankTransition,
