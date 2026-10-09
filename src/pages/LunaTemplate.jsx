@@ -379,6 +379,31 @@ export default function LunaTemplate() {
             setRoomModelUrl(GAME1_ENV_URL);
             return;
           }
+          // Floating Environment Hub can select an Admin SceneLayout or Model3D,
+          // not just a collected EnvironmentInstance. Restore those real
+          // background choices after page refresh as well.
+          if (savedId?.startsWith('scene-')) {
+            const savedScene = (await base44.entities.SceneLayout.filter({ id: savedId.slice(6) }))?.[0];
+            if (savedScene) {
+              setCurrentEnvId(savedId);
+              setActiveScene(savedScene);
+              setRoomModelUrl(savedScene.environment_url || savedScene.model_url || GAME1_ENV_URL);
+              setPlayerSpawn(savedScene.player_spawn || { x: 0, y: -0.5, z: 0 });
+              setUseMeshCollision(!!savedScene.use_mesh_collision);
+              return;
+            }
+          }
+          if (savedId?.startsWith('model-')) {
+            const savedModel = (await base44.entities.Model3D.list()).find(model => String(model.id) === savedId.slice(6));
+            if (savedModel?.file_url) {
+              setCurrentEnvId(savedId);
+              setActiveScene(null);
+              setRoomModelUrl(savedModel.file_url);
+              setPlayerSpawn(savedModel.player_spawn || { x: 0, y: -0.5, z: 0 });
+              setUseMeshCollision(!!savedModel.use_mesh_collision);
+              return;
+            }
+          }
           if (savedId && !savedId.startsWith('joined_')) {
             const owned = await base44.entities.EnvironmentInstance.filter({ id: savedId, owner_id: user.id });
             const env = owned?.[0];
