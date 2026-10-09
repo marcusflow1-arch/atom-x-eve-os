@@ -216,7 +216,10 @@ export class Fighter {
     if (c.jumpPressed && this.onGround && !this.ducked && !frozen) this.startJump();
     if (!this.onGround && c.jump && !this.fjUsed && this.now - this.jumpAt > 0.16 && this.now - this.jumpAt < 0.6 && this.vel[1] > 0.5 && this.canForceJump()) this.startForceJump();
     // wish velocity
-    const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); const fwd = [sinY, 0, cosY], right = [-cosY, 0, sinY];
+    // With +Z as forward, +X is RIGHT. The old (-cosY,+sinY) vector
+    // inverted A/D relative to the 'RUNSTRAFE_RIGHT/LEFT' Ghoul2 clips.
+    const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw);
+    const fwd = [sinY, 0, cosY], right = [cosY, 0, -sinY];
     let f = c.fwd, r = c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }
     const crouched = this.ducked; const base = crouched ? 2.1 : c.walk ? 2.4 : 5.6; let sp = base * this.speedMul * (f < 0 ? 0.82 : 1);
     if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY)) sp *= 0.0;
@@ -226,7 +229,11 @@ export class Fighter {
       const tv = wish, acc = (f || r) ? 48 : 36; const dx = tv[0] - this.vel[0], dz = tv[1] - this.vel[2], dl = Math.hypot(dx, dz), st = acc * dt;
       if (dl <= st) { this.vel[0] = tv[0]; this.vel[2] = tv[1]; } else { this.vel[0] += dx / dl * st; this.vel[2] += dz / dl * st; }
       this.vel[1] = 0;
-    } else { const air = 7 * dt; this.vel[0] += (wish[0] - this.vel[0]) * Math.min(1, air * 0.35); this.vel[2] += (wish[1] - this.vel[1 + 1]) * Math.min(1, air * 0.35); }
+    } else {
+      const airBlend = Math.min(1, 7 * dt * 0.35);
+      this.vel[0] += (wish[0] - this.vel[0]) * airBlend;
+      this.vel[2] += (wish[1] - this.vel[2]) * airBlend;
+    }
     const wasGround = this.onGround; const preVy = this.vel[1];
     this.integrate(dt, true);
     if (this.shoveV[0] || this.shoveV[2]) { // slide from a weak / partly blocked push
@@ -269,7 +276,7 @@ export class Fighter {
   startRoll() {
     const c = this.cmd, sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); let an, d;
     if (c.fwd) { if (c.fwd < 0) { an = 'BOTH_ROLL_B'; d = [-sinY, 0, -cosY]; } else { an = 'BOTH_ROLL_F'; d = [sinY, 0, cosY]; } }
-    else if (c.right > 0) { an = 'BOTH_ROLL_R'; d = [-cosY, 0, sinY]; } else { an = 'BOTH_ROLL_L'; d = [cosY, 0, -sinY]; }
+    else if (c.right > 0) { an = 'BOTH_ROLL_R'; d = [cosY, 0, -sinY]; } else { an = 'BOTH_ROLL_L'; d = [-cosY, 0, sinY]; }
     this.rollDir = d; this.status = 'roll'; this.statusT = 0; this.ducked = false; this.endForceKeepAnim(); this.cancelSwingForRoll();
     this.rollLen = animLen(this.actor.skel.anims[an]); this.actor.setBoth(an, { restart: true, blend: 0.08, loop: false }); this.g.sfxAt && this.g.sfxAt('jumpbuild', this.pos, 0.0);
   }
@@ -279,8 +286,22 @@ export class Fighter {
     const a = this.actor, now = this.now, S = this.saber, out = !S.holstered; const speed = Math.hypot(this.vel[0], this.vel[2]);
     let twist = 0;
     if (!this.onGround) {
-      if (this.airAnim && /^BOTH_FORCEJUMP/.test(this.airAnim)) { const info = a.skel.anims[this.airAnim]; if (now - this.fjStart > animLen(info) && this.vel[1] < 1) { this.airAnim = this.airAnim.replace('FORCEJUMP', 'FORCEINAIR'); a.setLegs(this.airAnim, { blend: 0.1, loop: true }); } }
-      else if (!this.airAnim) { this.airAnim = 'BOTH_FORCEINAIR1'; a.setLegs(this.airAnim, { blend: 0.15, loop: true }); }
+      // Real JO Ghoul2 bank: finite JUMP/FORCEJUMP anticipation is followed
+      // by the matching held INAIR pose, not a frozen last takeoff frame.
+      if (this.airAnim && /^BOTH_(FORCE)?JUMP/.test(this.airAnim)) {
+        const name = this.airAnim, info = a.skel.anims[name];
+        const started = /^BOTH_FORCEJUMP/.test(name) ? this.fjStart : this.jumpAt;
+        if (info && now - started >= animLen(info) / (a.legs.cur?.speed || 1)) {
+          const next = name.replace('FORCEJUMP', 'FORCEINAIR').replace(/^BOTH_JUMP/, 'BOTH_INAIR');
+          if (a.skel.anims[next]) {
+            this.airAnim = next;
+            a.setLegs(next, { blend: 0.1, loop: true });
+          }
+        }
+      } else if (!this.airAnim) {
+        this.airAnim = 'BOTH_INAIR1';
+        a.setLegs(this.airAnim, { blend: 0.12, loop: true });
+      }
       return;
     }
     const moving = speed > 0.6 && (f || r);
@@ -290,7 +311,7 @@ export class Fighter {
     if (this.ducked) an = !moving ? 'BOTH_CROUCH1IDLE' : (f < 0 ? 'BOTH_CROUCH1WALKBACK' : 'BOTH_CROUCH1WALK');
     else if (!moving) { an = out ? 'BOTH_STAND2' : 'BOTH_STAND1'; }
     else {
-      const run = !this.cmd.walk; const fw = f > 0.25, bk = f < -0.25; const theta = Math.atan2(-r, f); // + = moving to the left of facing
+      const run = !this.cmd.walk; const fw = f > 0.25, bk = f < -0.25; const theta = Math.atan2(r, f); // + = moving right of facing
       if (!fw && !bk) { an = r > 0 ? 'BOTH_RUNSTRAFE_RIGHT1' : 'BOTH_RUNSTRAFE_LEFT1'; if (!run) an = r > 0 ? 'BOTH_RUNSTRAFE_RIGHT1' : 'BOTH_RUNSTRAFE_LEFT1'; }
       else if (bk) { an = run ? 'BOTH_RUNBACK1' : 'BOTH_WALKBACK1'; twist = clamp(theta > 0 ? theta - Math.PI : theta + Math.PI, -0.7, 0.7); }
       else { an = run ? (out ? 'BOTH_RUN2' : 'BOTH_RUN1') : 'BOTH_WALK1'; twist = clamp(theta, -0.7, 0.7); }
