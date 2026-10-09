@@ -60,12 +60,7 @@ export function drawBolt(R, pts, col = [0.55, 0.75, 1], scale = 1) {
 // ---- lightsaber blade (visual only): base/tip from hilt matrix, ignition, glow, swing trail
 export class Blade {
   constructor(color) { this.color = color; this.len = 0; this.target = 0; this.maxLen = 1.02; this.trail = []; this.base = [0, 0, 0]; this.tip = [0, 0, 0]; this.lit = false; this.trailOn = 0; }
-  set(on) {
-    // A holster/ignite transition must not recycle the old swing ribbon.
-    if (this.lit !== on) this.trail.length = 0;
-    this.lit = on; this.target = on ? 1 : 0;
-    if (!on) this.trailOn = 0;
-  }
+  set(on) { this.lit = on; this.target = on ? 1 : 0; }
   update(dt, hiltM, hiltLen, scaleY, now, dirOverride) {
     const sp = this.target > this.len ? 5.5 : 4.5; this.len += Math.sign(this.target - this.len) * Math.min(Math.abs(this.target - this.len), sp * dt);
     // hilt local -Y axis is the blade direction; emitter at local y = -L/2
@@ -73,15 +68,8 @@ export class Blade {
     const base = [hiltM[12] + hiltM[4] * (-hiltLen / 2), hiltM[13] + hiltM[5] * (-hiltLen / 2), hiltM[14] + hiltM[6] * (-hiltLen / 2)];
     this.base = base; this.dir = dir; this.tip = v3.addS(base, dir, this.maxLen * this.len);
     this.tick = (this.tick || 0) + 1;
-    for (const s of this.trail) s.age += dt;
-    while (this.trail.length && this.trail[0].age > 0.22) this.trail.shift();
-    // Only record an actual moving combat blade. Recording every idle frame
-    // produced a false rectangular glowing smear when an attack started.
-    if (this.len > 0.05 && this.trailOn > 0.15 && this.lit) {
-      const previous = this.trail[this.trail.length - 1];
-      if (!previous || v3.dist(previous.t, this.tip) + v3.dist(previous.b, base) > 0.025)
-        this.trail.push({ b: base.slice(), t: this.tip.slice(), age: 0 });
-    } else if (this.trailOn < 0.01 || !this.lit) this.trail.length = 0;
+    if (this.len > 0.05) { this.trail.push({ b: base.slice(), t: this.tip.slice(), age: 0 }); } 
+    for (const s of this.trail) s.age += dt; while (this.trail.length && this.trail[0].age > 0.22) this.trail.shift();
   }
   draw(R, flicker = 1) {
     if (this.len < 0.02) return; const c = this.color; const a = this.base, b = this.tip; const f = flicker;

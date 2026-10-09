@@ -163,7 +163,7 @@ export class Fighter {
     if (!wasFlung) this.playWhole(opts.deathAnim || DEATHS[Math.floor(Math.random() * DEATHS.length)], { blend: 0.08 }); else this.playWhole('BOTH_KNOCKDOWN1', { blend: 0.05 });
     this.g.onDeath && this.g.onDeath(this);
   }
-  revive(at) { this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.landUntil = 0; this.heavyLandUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
+  revive(at) { this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
   chest() { const y = this.status === 'down' || this.status === 'dead' ? 0.3 : this.ducked ? 0.75 : 1.15; return [this.pos[0], this.pos[1] + y, this.pos[2]]; }
   headPos() { return this.actor.bonePos('cranium', [0, 0, 0]); }
   // ---------- per-frame update
@@ -174,18 +174,7 @@ export class Fighter {
     switch (this.status) {
       case 'dead': this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
       case 'flung': this.physicsFlung(dt); return this.finish(dt);
-      case 'down':
-        this.frictionMove(dt, 8);
-        // JO quick-rise: Space while grounded cancels the prone wait and uses
-        // the supplied Force Getup animation. Without input, use a normal getup.
-        if (this.onGround && (this.cmd.jumpPressed || this.statusT > (this.downTime || 1.1))) {
-          const quick = this.cmd.jumpPressed;
-          const anim = quick && a.skel.anims.BOTH_FORCE_GETUP_B1 ? 'BOTH_FORCE_GETUP_B1' : 'BOTH_GETUP1';
-          this.status = 'getup'; this.statusT = 0;
-          this.getupLen = this.playWhole(anim, { blend: 0.08 });
-          this.cmd.jumpPressed = false;
-        }
-        return this.finish(dt);
+      case 'down': this.frictionMove(dt, 8); if (this.statusT > (this.downTime || 1.1)) { this.status = 'getup'; this.statusT = 0; const g = Math.random() < 0.5 ? ['BOTH_GETUP1', 1] : Math.random() < 0.5 ? ['BOTH_FORCE_GETUP_B1', 2] : ['BOTH_FORCE_GETUP_B3', 3]; this.getupLen = this.playWhole(g[0], { blend: 0.1 }); this.yaw = this.yaw; } return this.finish(dt);
       case 'getup': this.frictionMove(dt, 8); if (this.statusT >= this.getupLen - 0.05) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; this.actor.setLegs(this.saber.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2', { blend: 0.15 }); } return this.finish(dt);
       case 'gripped': { const ty = this.gripLift ?? 1.3; this.pos[1] += (ty - this.pos[1]) * Math.min(1, dt * 4); this.vel[0] = this.vel[2] = 0; if (this.gripCarry) { const c = this.gripCarry(); const k = Math.min(1, dt * 3); this.pos[0] += (c[0] - this.pos[0]) * k; this.pos[2] += (c[2] - this.pos[2]) * k; this.g.world.collide(this.pos, this.radius); } this.pos[1] += Math.sin(now * 3.1) * 0.0025; this.yaw += Math.sin(now * 2.2) * 0.004; return this.finish(dt); }
       case 'shocked': {
@@ -227,24 +216,17 @@ export class Fighter {
     if (c.jumpPressed && this.onGround && !this.ducked && !frozen) this.startJump();
     if (!this.onGround && c.jump && !this.fjUsed && this.now - this.jumpAt > 0.16 && this.now - this.jumpAt < 0.6 && this.vel[1] > 0.5 && this.canForceJump()) this.startForceJump();
     // wish velocity
-    // With +Z as forward, +X is RIGHT. The old (-cosY,+sinY) vector
-    // inverted A/D relative to the 'RUNSTRAFE_RIGHT/LEFT' Ghoul2 clips.
-    const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw);
-    const fwd = [sinY, 0, cosY], right = [cosY, 0, -sinY];
+    const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); const fwd = [sinY, 0, cosY], right = [-cosY, 0, sinY];
     let f = c.fwd, r = c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }
     const crouched = this.ducked; const base = crouched ? 2.1 : c.walk ? 2.4 : 5.6; let sp = base * this.speedMul * (f < 0 ? 0.82 : 1);
-    if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY) || this.heavyLandUntil > now) sp *= 0.0;
+    if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY)) sp *= 0.0;
     if (this.elecUntil > now) sp *= 0.72;                              // lightning slows the victim (they keep control)
     const wish = [(fwd[0] * f + right[0] * r) * sp, (fwd[2] * f + right[2] * r) * sp];
     if (this.onGround) {
       const tv = wish, acc = (f || r) ? 48 : 36; const dx = tv[0] - this.vel[0], dz = tv[1] - this.vel[2], dl = Math.hypot(dx, dz), st = acc * dt;
       if (dl <= st) { this.vel[0] = tv[0]; this.vel[2] = tv[1]; } else { this.vel[0] += dx / dl * st; this.vel[2] += dz / dl * st; }
       this.vel[1] = 0;
-    } else {
-      const airBlend = Math.min(1, 7 * dt * 0.35);
-      this.vel[0] += (wish[0] - this.vel[0]) * airBlend;
-      this.vel[2] += (wish[1] - this.vel[2]) * airBlend;
-    }
+    } else { const air = 7 * dt; this.vel[0] += (wish[0] - this.vel[0]) * Math.min(1, air * 0.35); this.vel[2] += (wish[1] - this.vel[1 + 1]) * Math.min(1, air * 0.35); }
     const wasGround = this.onGround; const preVy = this.vel[1];
     this.integrate(dt, true);
     if (this.shoveV[0] || this.shoveV[2]) { // slide from a weak / partly blocked push
@@ -266,39 +248,28 @@ export class Fighter {
   startJump() {
     const c = this.cmd; this.vel[1] = 5.65; this.onGround = false; this.jumpAt = this.now; this.fjUsed = false;
     let an = 'BOTH_JUMP1'; if (c.fwd < 0) an = 'BOTH_JUMPBACK1'; else if (c.fwd === 0 && c.right > 0) an = 'BOTH_JUMPRIGHT1'; else if (c.fwd === 0 && c.right < 0) an = 'BOTH_JUMPLEFT1';
-    this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.06, loop: false });
-    // Jump legs should not kill an in-progress torso saber slash.
-    if (this.saber.holstered || !this.saber.isActiveSwing()) this.actor.followLegs();
+    this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.06, loop: false }); this.actor.followLegs(); if (!this.saber.holstered && !this.saber.isActiveSwing()) { }
     this.g.sfxAt && this.g.sfxAt('jump', this.pos, 0.0);
   }
   startForceJump() {
     const c = this.cmd; this.fjUsed = true; const h = FORCE_JUMP_HEIGHT[this.jumpLevel]; const v = Math.sqrt(2 * G * h); this.vel[1] = Math.max(this.vel[1], v);
     // JO: FORCEJUMP1/BACK/LEFT/RIGHT anim chosen by movement direction
     let an = 'BOTH_FORCEJUMP1'; if (c.fwd < 0) an = 'BOTH_FORCEJUMPBACK1'; else if (c.fwd === 0 && c.right > 0) an = 'BOTH_FORCEJUMPRIGHT1'; else if (c.fwd === 0 && c.right < 0) an = 'BOTH_FORCEJUMPLEFT1';
-    this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.05, loop: false });
-    if (this.saber.holstered || !this.saber.isActiveSwing()) this.actor.followLegs();
-    this.fjStart = this.now; this.g.onForceJump && this.g.onForceJump(this);
+    this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.05, loop: false }); this.fjStart = this.now; this.g.onForceJump && this.g.onForceJump(this);
   }
   land(impact) {
     const air = this.airAnim || 'BOTH_JUMP1'; let an = 'BOTH_LAND1';
     const forceJ = /FORCE/.test(air) || this.fjUsed;
     if (forceJ) an = air.includes('BACK') ? 'BOTH_FORCELANDBACK1' : air.includes('LEFT') ? 'BOTH_FORCELANDLEFT1' : air.includes('RIGHT') ? 'BOTH_FORCELANDRIGHT1' : 'BOTH_FORCELAND1';
     else an = air.includes('BACK') ? 'BOTH_LANDBACK1' : air.includes('LEFT') ? 'BOTH_LANDLEFT1' : air.includes('RIGHT') ? 'BOTH_LANDRIGHT1' : 'BOTH_LAND1';
-    // A Force Jump has its own landing clip; never replace it with the
-    // generic heavy fall, which produced a conspicuous wrong landing bounce.
-    if (impact > 14 && !forceJ) an = 'BOTH_LAND2';
-    const info = this.actor.skel.anims[an];
-    const duration = info ? animLen(info) : 0.3;
-    this.landUntil = this.now + duration; // retain the complete source animation
-    this.heavyLandUntil = an === 'BOTH_LAND2' ? this.landUntil : 0;
-    this.actor.setLegs(an, { restart: true, blend: 0.04, loop: false });
-    this.airAnim = null; this.fjUsed = false;
+    if (impact > 14) an = 'BOTH_LAND2';
+    const info = this.actor.skel.anims[an]; this.landUntil = this.now + Math.min(0.5, animLen(info)); this.actor.setLegs(an, { restart: true, blend: 0.04, loop: false }); this.airAnim = null; this.fjUsed = false;
     this.g.onLand && this.g.onLand(this, impact);
   }
   startRoll() {
     const c = this.cmd, sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); let an, d;
     if (c.fwd) { if (c.fwd < 0) { an = 'BOTH_ROLL_B'; d = [-sinY, 0, -cosY]; } else { an = 'BOTH_ROLL_F'; d = [sinY, 0, cosY]; } }
-    else if (c.right > 0) { an = 'BOTH_ROLL_R'; d = [cosY, 0, -sinY]; } else { an = 'BOTH_ROLL_L'; d = [-cosY, 0, sinY]; }
+    else if (c.right > 0) { an = 'BOTH_ROLL_R'; d = [-cosY, 0, sinY]; } else { an = 'BOTH_ROLL_L'; d = [cosY, 0, -sinY]; }
     this.rollDir = d; this.status = 'roll'; this.statusT = 0; this.ducked = false; this.endForceKeepAnim(); this.cancelSwingForRoll();
     this.rollLen = animLen(this.actor.skel.anims[an]); this.actor.setBoth(an, { restart: true, blend: 0.08, loop: false }); this.g.sfxAt && this.g.sfxAt('jumpbuild', this.pos, 0.0);
   }
@@ -308,28 +279,8 @@ export class Fighter {
     const a = this.actor, now = this.now, S = this.saber, out = !S.holstered; const speed = Math.hypot(this.vel[0], this.vel[2]);
     let twist = 0;
     if (!this.onGround) {
-      // Do not replace full-body flip, lunge or aerial saber strikes with
-      // INAIR until the original special-attack clip has finished playing.
-      if (now < this.legsLockUntil && S.inSpecial(S.move)) return;
-      // Ground strafe twist should not remain welded into an airborne pose.
-      this.legYaw = (this.legYaw || 0) * Math.max(0, 1 - dt * 8);
-      a.legYaw = this.legYaw;
-      // Real JO Ghoul2 bank: finite JUMP/FORCEJUMP anticipation is followed
-      // by the matching held INAIR pose, not a frozen last takeoff frame.
-      if (this.airAnim && /^BOTH_(FORCE)?JUMP/.test(this.airAnim)) {
-        const name = this.airAnim, info = a.skel.anims[name];
-        const started = /^BOTH_FORCEJUMP/.test(name) ? this.fjStart : this.jumpAt;
-        if (info && now - started >= animLen(info) / (a.legs.cur?.speed || 1)) {
-          const next = name.replace('FORCEJUMP', 'FORCEINAIR').replace(/^BOTH_JUMP/, 'BOTH_INAIR');
-          if (a.skel.anims[next]) {
-            this.airAnim = next;
-            a.setLegs(next, { blend: 0.1, loop: true });
-          }
-        }
-      } else if (!this.airAnim) {
-        this.airAnim = 'BOTH_INAIR1';
-        a.setLegs(this.airAnim, { blend: 0.12, loop: true });
-      }
+      if (this.airAnim && /^BOTH_FORCEJUMP/.test(this.airAnim)) { const info = a.skel.anims[this.airAnim]; if (now - this.fjStart > animLen(info) && this.vel[1] < 1) { this.airAnim = this.airAnim.replace('FORCEJUMP', 'FORCEINAIR'); a.setLegs(this.airAnim, { blend: 0.1, loop: true }); } }
+      else if (!this.airAnim) { this.airAnim = 'BOTH_FORCEINAIR1'; a.setLegs(this.airAnim, { blend: 0.15, loop: true }); }
       return;
     }
     const moving = speed > 0.6 && (f || r);
@@ -339,7 +290,7 @@ export class Fighter {
     if (this.ducked) an = !moving ? 'BOTH_CROUCH1IDLE' : (f < 0 ? 'BOTH_CROUCH1WALKBACK' : 'BOTH_CROUCH1WALK');
     else if (!moving) { an = out ? 'BOTH_STAND2' : 'BOTH_STAND1'; }
     else {
-      const run = !this.cmd.walk; const fw = f > 0.25, bk = f < -0.25; const theta = Math.atan2(r, f); // + = moving right of facing
+      const run = !this.cmd.walk; const fw = f > 0.25, bk = f < -0.25; const theta = Math.atan2(-r, f); // + = moving to the left of facing
       if (!fw && !bk) { an = r > 0 ? 'BOTH_RUNSTRAFE_RIGHT1' : 'BOTH_RUNSTRAFE_LEFT1'; if (!run) an = r > 0 ? 'BOTH_RUNSTRAFE_RIGHT1' : 'BOTH_RUNSTRAFE_LEFT1'; }
       else if (bk) { an = run ? 'BOTH_RUNBACK1' : 'BOTH_WALKBACK1'; twist = clamp(theta > 0 ? theta - Math.PI : theta + Math.PI, -0.7, 0.7); }
       else { an = run ? (out ? 'BOTH_RUN2' : 'BOTH_RUN1') : 'BOTH_WALK1'; twist = clamp(theta, -0.7, 0.7); }
@@ -377,8 +328,8 @@ export class Fighter {
   onMoveChanged(m) {
     const S = this.saber, I = S.I, sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
     if (m === I.LS_A_LUNGE) { this.vel[0] = sy * 3.75; this.vel[2] = cy * 3.75; }
-    else if (m === I.LS_A_FLIP_STAB || m === I.LS_A_FLIP_SLASH) { this.vel[0] = sy * 1.4; this.vel[2] = cy * 1.4; this.vel[1] = 8.5; this.onGround = false; this.jumpAt = this.now; this.airAnim = 'BOTH_JUMP1'; this.g.sfxAt('jump', this.pos, 0.5); }
-    else if (m === I.LS_A_JUMP_T__B_) { this.vel[0] = sy * 7.5; this.vel[2] = cy * 7.5; this.vel[1] = 7.0; this.onGround = false; this.jumpAt = this.now; this.airAnim = 'BOTH_JUMP1'; this.g.sfxAt('jump', this.pos, 0.5); }
+    else if (m === I.LS_A_FLIP_STAB || m === I.LS_A_FLIP_SLASH) { this.vel[0] = sy * 1.4; this.vel[2] = cy * 1.4; this.vel[1] = 8.5; this.onGround = false; this.airAnim = 'BOTH_JUMP1'; this.g.sfxAt('jump', this.pos, 0.5); }
+    else if (m === I.LS_A_JUMP_T__B_) { this.vel[0] = sy * 7.5; this.vel[2] = cy * 7.5; this.vel[1] = 7.0; this.onGround = false; this.airAnim = 'BOTH_JUMP1'; this.g.sfxAt('jump', this.pos, 0.5); }
   }
   trySpecialJumpAttack() { // JO PM_CheckJump: jump while an attack just started -> flip attack (medium) / jump attack (strong)
     const S = this.saber, I = S.I, c = this.cmd; if (S.holstered || !(c.jumpPressed && this.onGround) || !(S.weaponTime > 0 || c.attack)) return false;
@@ -401,13 +352,11 @@ export class Fighter {
       const T = this.thrown, d = [Math.cos(T.ang), 0, Math.sin(T.ang)]; const Y = v3.scale(d, -1), X = v3.norm(v3.cross([0, 1, 0], Y)), Z = v3.cross(X, Y);
       M.fill(0); M[0] = X[0]; M[1] = X[1]; M[2] = X[2]; M[4] = Y[0]; M[5] = Y[1]; M[6] = Y[2]; M[8] = Z[0]; M[9] = Z[1]; M[10] = Z[2]; M[12] = T.pos[0]; M[13] = T.pos[1]; M[14] = T.pos[2]; M[15] = 1; this.hiltScaleY = 1;
     }
-    // Saber attacks already use their actual Ghoul2 directional arm/bone clips.
-    // A limited camera correction helps third-person targeting without
-    // twisting the blade 50+ degrees away from the animated hand and hilt.
-    // Collision and rendering continue to sample this exact same direction.
+    // Aim the visible blade in pitch as well as yaw so the hit test and the rendered
+    // down-slash/up-slash occupy the same 3D path (including crouched or airborne targets).
     let bladeDir;
     if (this.isPlayer && this.hilt === 'hand' && this.swingActive()) {
-      const pitch = clamp(this.g.cam.pitch * 0.24, -0.17, 0.25);
+      const pitch = clamp(this.g.cam.pitch, -0.6, 1.1) * 0.85;
       const axis = [Math.cos(this.yaw), 0, -Math.sin(this.yaw)];
       const original = v3.norm([-M[4], -M[5], -M[6]]);
       const cross = v3.cross(axis, original), dot = v3.dot(axis, original);
