@@ -107,8 +107,33 @@
   background-color:rgba(164,212,241,.14);
 }
 /* Creator stays inside the floating calendar, with a readable modal surface. */
-.luna-calendar-window .luna-calendar-creator {
+.luna-calendar-window .luna-calendar-creator{
   background:rgba(34,75,108,.78)!important;
+}
+.luna-calendar-window .luna-calendar-creator>div{
+  background:#2f5a7b!important;
+  border-color:rgba(192,226,246,.60)!important;
+  border-radius:10px;
+  box-shadow:0 10px 36px rgba(8,30,53,.45)!important;
+}
+.luna-calendar-window .luna-calendar-creator>div>header{
+  background:rgba(91,147,183,.28);
+  border-bottom-color:rgba(192,226,246,.40)!important;
+}
+.luna-calendar-window .luna-calendar-creator input,
+.luna-calendar-window .luna-calendar-creator textarea,
+.luna-calendar-window .luna-calendar-creator select{
+  background:#214766!important;
+  border-color:rgba(186,226,248,.50)!important;
+  color:#f3fbff!important;
+  border-radius:5px;
+}
+.luna-calendar-window .luna-calendar-creator input::placeholder,
+.luna-calendar-window .luna-calendar-creator textarea::placeholder{
+  color:#bad8ee!important;
+}
+.luna-calendar-window .luna-calendar-creator [class*="text-white/"]{
+  color:#e1f0fb!important;
 }
 @media (max-width:900px){
   .luna-calendar-window .luna-calendar-sidebar{width:235px}
