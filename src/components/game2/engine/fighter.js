@@ -300,6 +300,9 @@ export class Fighter {
       // Do not replace full-body flip, lunge or aerial saber strikes with
       // INAIR until the original special-attack clip has finished playing.
       if (now < this.legsLockUntil && S.inSpecial(S.move)) return;
+      // Ground strafe twist should not remain welded into an airborne pose.
+      this.legYaw = (this.legYaw || 0) * Math.max(0, 1 - dt * 8);
+      a.legYaw = this.legYaw;
       // Real JO Ghoul2 bank: finite JUMP/FORCEJUMP anticipation is followed
       // by the matching held INAIR pose, not a frozen last takeoff frame.
       if (this.airAnim && /^BOTH_(FORCE)?JUMP/.test(this.airAnim)) {
