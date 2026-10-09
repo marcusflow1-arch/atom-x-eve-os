@@ -1,0 +1,8 @@
+/* Library / game-space resizer. A subdued Steam-inspired seam. */
+.luna-library-divider-track{position:absolute;z-index:79;top:64px;bottom:44px;width:12px;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.luna-library-divider{position:relative;height:100%;width:12px;touch-action:none;cursor:col-resize;pointer-events:auto;outline:0}
+.luna-library-divider:before{content:'';position:absolute;top:0;bottom:0;left:5px;width:2px;background:linear-gradient(180deg,rgba(159,225,240,.07),rgba(165,215,229,.3) 18%,rgba(87,178,208,.45) 49%,rgba(165,215,229,.30) 82%,rgba(159,225,240,.08));box-shadow:1px 0 3px rgba(1,9,20,.5)}
+.luna-library-divider>svg{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);width:22px;height:42px;padding:5px 3px;border:1px solid rgba(117,198,223,.35);border-radius:5px;background:linear-gradient(160deg,rgba(18,43,59,.82),rgba(5,17,32,.9));color:#b5eafa;box-shadow:0 0 7px rgba(30,192,229,.14),0 3px 8px rgba(0,0,0,.25)}
+.luna-library-divider:hover:before,.luna-library-divider:focus-visible:before,.luna-library-divider[data-dragging]:before{background:linear-gradient(180deg,rgba(137,226,245,.15),#65daef 48%,rgba(137,226,245,.15));box-shadow:0 0 7px rgba(28,190,230,.6)}
+.luna-library-divider:focus-visible>svg{outline:2px solid #b4f3ff;outline-offset:2px}
+@media(max-width:680px){.luna-library-divider-track{width:17px}.luna-library-divider{width:17px}.luna-library-divider:before{left:8px}}
