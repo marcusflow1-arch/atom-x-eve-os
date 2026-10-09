@@ -1,59 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Globe2, Loader2, RefreshCw, ImageOff } from 'lucide-react';
+import { Check, Globe2, Loader2, RefreshCw, ImageOff, Pin } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
+import { loadEnvironmentChoices, resolveEnvironmentChoice } from './environmentQuickCatalog.mjs';
+import { readEnvironmentPins, toggleEnvironmentPin } from './environmentQuickPins.mjs';
 import './luna-environment-window.css';
-
-const DEFAULT_ENVIRONMENT = {
-  id: 'default_room',
-  name: 'Standard Quarters',
-  description: 'Your default Luna 3D environment.',
-  rarity: 'Common',
-  origin: 'Default',
-};
-
-const SCENE_PATTERN = /environment|scene|room|landscape|world|hub|skybox|town|village|terrain|arena|garden|cave|temple|forest|castle|home|house|loft|outpost|plaza|city|map/i;
-
-function asLibraryEnvironment(row) {
-  return {
-    ...row,
-    origin: row.game_origin || 'My environments',
-    thumbnail: row.thumbnail_url || row.preview_image_url || '',
-    modelUrl: row.model_url || '',
-    sceneLayoutId: row.scene_layout_id || null,
-    selectable: Boolean(row.model_url || row.scene_layout_id),
-  };
-}
-
-function asSceneEnvironment(scene) {
-  return {
-    id: 'scene-' + scene.id,
-    name: scene.name || '3D Scene',
-    description: scene.description || 'Saved 3D environment',
-    origin: '3D Scenes',
-    thumbnail: scene.thumbnail_url || scene.thumbnail || scene.preview_url || '',
-    modelUrl: scene.environment_url || scene.model_url || '',
-    layoutData: scene,
-    sceneLayoutId: scene.id,
-    playerSpawn: scene.player_spawn,
-    useMeshCollision: scene.use_mesh_collision || false,
-    selectable: Boolean(scene.environment_url || scene.model_url || scene.objects?.length),
-  };
-}
-
-function asModelEnvironment(model) {
-  return {
-    id: 'model-' + model.id,
-    name: model.name || '3D Environment',
-    description: model.description || '3D background',
-    origin: '3D Environments',
-    thumbnail: model.thumbnail_url || '',
-    modelUrl: model.file_url,
-    playerSpawn: model.player_spawn,
-    useMeshCollision: model.use_mesh_collision || false,
-    selectable: true,
-  };
-}
 
 export default function EnvHubDrawer({ open = true, onClose, currentEnvId, onSelectEnv, defaultModelUrl }) {
   const { user } = useAuth();
@@ -63,6 +14,7 @@ export default function EnvHubDrawer({ open = true, onClose, currentEnvId, onSel
   const [retry, setRetry] = useState(0);
   const [selectedId, setSelectedId] = useState(null);
   const [applying, setApplying] = useState(false);
+  const [pins, setPins] = useState(() => readEnvironmentPins(user?.id));
 
   useEffect(() => {
     if (!open) return;
@@ -71,32 +23,7 @@ export default function EnvHubDrawer({ open = true, onClose, currentEnvId, onSel
     setError('');
     (async () => {
       try {
-        // Read the real, admin-managed scene and model data, and the player's
-        // environment collection. Do not introduce stock wallpaper previews.
-        const [owned, scenes, models] = await Promise.all([
-          user?.id ? base44.entities.EnvironmentInstance.filter({ owner_id: user.id }) : Promise.resolve([]),
-          base44.entities.SceneLayout.list().catch(() => []),
-          base44.entities.Model3D.list().catch(() => []),
-        ]);
-        if (cancelled) return;
-        const collection = (owned || [])
-          .filter(row => String(row.owner_id) === String(user?.id))
-          .map(asLibraryEnvironment)
-          .filter(row => row.selectable);
-        const layouts = (scenes || [])
-          .filter(scene => !/\[legacy_archive\]/i.test(scene.name || ''))
-          .map(asSceneEnvironment).filter(row => row.selectable);
-        const sceneModels = (models || [])
-          .filter(model => model.file_url && SCENE_PATTERN.test(`${model.name || ''} ${model.description || ''}`))
-          .map(asModelEnvironment);
-        // Remove repeated 3D model URLs so each backdrop appears only once.
-        const deduped = new Map();
-        for (const item of [DEFAULT_ENVIRONMENT, ...collection, ...layouts, ...sceneModels]) {
-          const key = item.modelUrl || item.layoutData?.environment_url || item.id;
-          if (!deduped.has(key)) deduped.set(key, item);
-        }
-        setEnvironments([...deduped.values()].sort((a, b) =>
-          a.id === 'default_room' ? -1 : b.id === 'default_room' ? 1 : a.name.localeCompare(b.name)));
+        setEnvironments(await loadEnvironmentChoices(base44, user?.id));
       } catch (cause) {
         if (!cancelled) setError(cause?.message || 'Could not load your environments.');
       } finally {
@@ -105,6 +32,22 @@ export default function EnvHubDrawer({ open = true, onClose, currentEnvId, onSel
     })();
     return () => { cancelled = true; };
   }, [open, user?.id, retry]);
+
+  useEffect(() => {
+    setPins(readEnvironmentPins(user?.id));
+    const sync = event => {
+      if (String(event.detail?.userId) === String(user?.id || 'guest')) setPins(readEnvironmentPins(user?.id));
+    };
+    window.addEventListener('lunaEnvironmentPinsChanged', sync);
+    return () => window.removeEventListener('lunaEnvironmentPinsChanged', sync);
+  }, [user?.id]);
+
+  const togglePin = item => {
+    const result = toggleEnvironmentPin(user?.id, item.id);
+    if (result.full) setError('All four favorites are pinned. Unpin one before choosing another.');
+    else if (!result.ok) setError('Could not save your pinned environments.');
+    else { setPins(result.pins); setError(''); }
+  };
 
   const selected = useMemo(() =>
     environments.find(item => String(item.id) === String(selectedId)) || null,
@@ -115,22 +58,7 @@ export default function EnvHubDrawer({ open = true, onClose, currentEnvId, onSel
     setApplying(true);
     setError('');
     try {
-      let layoutData = item.layoutData || null;
-      if (!layoutData && item.sceneLayoutId) {
-        const list = await base44.entities.SceneLayout.filter({ id: item.sceneLayoutId });
-        layoutData = list?.[0] || null;
-      }
-      const modelUrl = item.id === 'default_room' ? defaultModelUrl : (item.modelUrl || layoutData?.environment_url);
-      if (!modelUrl && !layoutData?.objects?.length) {
-        throw new Error('This environment has no playable 3D scene attached.');
-      }
-      await onSelectEnv?.({
-        ...item,
-        modelUrl,
-        layoutData,
-        playerSpawn: item.playerSpawn || layoutData?.player_spawn,
-        useMeshCollision: item.useMeshCollision || layoutData?.use_mesh_collision || false,
-      });
+      await onSelectEnv?.(await resolveEnvironmentChoice(item, base44, defaultModelUrl));
       onClose?.();
     } catch (cause) {
       setError(cause?.message || 'Could not change the 3D background.');
@@ -147,7 +75,7 @@ export default function EnvHubDrawer({ open = true, onClose, currentEnvId, onSel
         <div className="luna-env-picker__heading-icon"><Globe2 size={21} aria-hidden="true" /></div>
         <div className="min-w-0">
           <h2>3D Environments</h2>
-          <p>Choose the background for your Luna dashboard.</p>
+          <p>Choose your 3D background. Pin up to four for one-click access above.</p>
         </div>
         <span className="luna-env-picker__count" aria-label="Available environment count">{loading ? '…' : environments.length}</span>
       </div>
@@ -163,7 +91,8 @@ export default function EnvHubDrawer({ open = true, onClose, currentEnvId, onSel
             {environments.map(item => {
               const active = String(currentEnvId || 'default_room') === String(item.id);
               const chosen = String(selectedId) === String(item.id);
-              return <button type="button" key={item.id} data-env-id={item.id}
+              return <div key={item.id} className="luna-env-picker__cell">
+                <button type="button" data-env-id={item.id}
                 aria-pressed={chosen || active && !selectedId}
                 className="luna-env-picker__card" onClick={() => { setSelectedId(item.id); setError(''); }}>
                 <div className="luna-env-picker__preview">
@@ -174,7 +103,13 @@ export default function EnvHubDrawer({ open = true, onClose, currentEnvId, onSel
                   <strong title={item.name}>{item.name}</strong>
                   <small>{item.origin}</small>
                 </div>
-              </button>;
+              </button>
+                <button type="button" className="luna-env-picker__pin"
+                  aria-label={pins.includes(String(item.id)) ? `Unpin ${item.name}` : `Pin ${item.name} to quick access`}
+                  title={pins.includes(String(item.id)) ? 'Remove from quick access' : 'Pin to one of four shortcuts'}
+                  aria-pressed={pins.includes(String(item.id))}
+                  onClick={() => togglePin(item)}><Pin size={14} fill={pins.includes(String(item.id)) ? 'currentColor' : 'none'} aria-hidden="true" /></button>
+              </div>;
             })}
           </div>}
         {!loading && !environments.length && <div className="luna-env-picker__empty"><ImageOff size={19} /> No 3D environments found.</div>}
