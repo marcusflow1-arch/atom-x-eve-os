@@ -109,7 +109,7 @@ export default function AIEventCreator({ mode = 'manual', selectedDate, planning
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="luna-calendar-creator absolute inset-0 z-[80] grid place-items-center bg-[#020509]/80 p-4 backdrop-blur-2xl md:p-8" onClick={onClose}>
+    <motion.div data-window-dismiss-layer initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="luna-calendar-creator absolute inset-0 z-[80] grid place-items-center bg-[#020509]/80 p-4 backdrop-blur-2xl md:p-8" onClick={onClose}>
       <motion.div initial={{ opacity: 0, y: 16, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: .985 }} onClick={(e) => e.stopPropagation()} className="flex max-h-[88dvh] w-full max-w-3xl flex-col overflow-hidden border border-white/[0.08] bg-[#080d14]/98 shadow-[0_30px_120px_rgba(0,0,0,.65)]">
         <header className="flex h-[68px] shrink-0 items-center justify-between border-b border-white/[0.06] px-5 md:px-6">
           <div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-full bg-cyan-300/[0.07] text-cyan-100/70">{mode === 'ai' ? <Bot className="h-4 w-4" /> : <CalendarDays className="h-4 w-4" />}</div><div><div className="text-[8px] font-bold uppercase tracking-[0.22em] text-cyan-200/45">{mode === 'ai' ? 'Luna Schedule Agent' : 'Calendar'}</div><h3 className="text-base font-semibold text-white/90">{mode === 'ai' ? 'Build my schedule' : 'Create event'}</h3></div></div>
