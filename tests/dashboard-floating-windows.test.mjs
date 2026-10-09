@@ -31,12 +31,11 @@ const bundle=await build({
   alias:{'@':process.cwd()+'/src'},
   plugins:[{name:'window-fixtures',setup(builder) {
     builder.onResolve({filter:/^lucide-react$/},()=>({path:'icons',namespace:'fixture'}));
-    builder.onLoad({filter:/.*/,namespace:'fixture'},()=>({loader:'jsx',contents:
-      "import React from 'react'; export const Grip=()=>null; export const Maximize2=()=>null; export const Minimize2=()=>null; export const Minus=()=>null; export const X=()=>null;"
+    builder.onLoad({filter:/^icons$/,namespace:'fixture'},()=>({loader:'js',contents:
+      "export const Grip=()=>null; export const Maximize2=()=>null; export const Minimize2=()=>null; export const Minus=()=>null; export const X=()=>null;"
     }));
     builder.onResolve({filter:/AuthContext$/},()=>({path:'auth',namespace:'fixture'}));
-    builder.onLoad({filter:/.*/,namespace:'fixture-auth'},()=>({contents:'',loader:'js'}));
-    builder.onLoad({filter:/auth/,namespace:'fixture'},()=>({contents:"export const useAuth=()=>({user:{id:'test-player'}});",loader:'js'}));
+    builder.onLoad({filter:/^auth$/,namespace:'fixture'},()=>({contents:"export const useAuth=()=>({user:{id:'test-player'}});",loader:'js'}));
   }}],
 });
 const filename=process.cwd()+'/tests/__floating_window_runtime.cjs',module=new Module(filename);
