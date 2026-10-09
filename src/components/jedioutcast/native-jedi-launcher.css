@@ -1,0 +1,21 @@
+.jko-native-launcher{display:flex;flex-direction:column;min-height:100%;gap:18px;padding:24px;color:#e9f5ff;background:linear-gradient(150deg,#183950,#0b2238 68%,#0a1d33);font-family:Inter,system-ui,sans-serif}
+.jko-native-launcher__header{display:flex;gap:16px;align-items:flex-start;border-bottom:1px solid #9fc9e132;padding-bottom:20px}
+.jko-native-launcher__icon{width:48px;height:48px;flex:none;display:grid;place-items:center;border:1px solid #92bdd850;border-radius:12px;background:#477a9d33;color:#c3f3ff}
+.jko-native-launcher__header small{display:block;font-size:10px;font-weight:750;letter-spacing:.17em;text-transform:uppercase;color:#abd7f1}
+.jko-native-launcher__header h2{font-size:19px;font-weight:700;margin:5px 0 8px}
+.jko-native-launcher__header p{font-size:12px;line-height:1.6;color:#b9d3e7}
+.jko-native-launcher__steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.jko-native-launcher__steps>div{display:flex;flex-direction:column;gap:8px;padding:15px;border:1px solid #aacbe244;border-radius:9px;background:#5083a228}
+.jko-native-launcher__steps svg{color:#b4e6f4}
+.jko-native-launcher__steps strong{font-size:12px}
+.jko-native-launcher__steps span{font-size:11px;line-height:1.55;color:#c2d5e4}
+.jko-native-launcher__notice{display:flex;gap:12px;align-items:flex-start;padding:13px 15px;border:1px solid #b5d7f043;border-radius:8px;background:#3a658441;color:#d0e1ee;font-size:11px;line-height:1.6}
+.jko-native-launcher__notice svg{flex:none;color:#c4e7f7}
+.jko-native-launcher__actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.jko-native-launcher__actions button,.jko-native-launcher__actions a{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:39px;padding:10px 15px;border:1px solid #b9d7e65f;border-radius:7px;font-size:11px;font-weight:650;background:#446f8a50;color:#e0f1fc;text-decoration:none}
+.jko-native-launcher__actions button:hover,.jko-native-launcher__actions a:hover{border-color:#c6f1ff;background:#568baa67}
+.jko-native-launcher__actions .jko-native-launcher__primary{color:#123347;background:#b5e9fa;border-color:#e9fcff;font-weight:780}
+.jko-native-launcher__actions .jko-native-launcher__primary:hover{background:#e8fbff}
+.jko-native-launcher__actions .jko-native-launcher__secondary{background:transparent;color:#c5d9e8;font-weight:500}
+.jko-native-launcher__hint{margin:0;font-size:11px;color:#c2e8f5;line-height:1.5}
+@media(max-width:650px){.jko-native-launcher{padding:15px;gap:12px}.jko-native-launcher__steps{grid-template-columns:1fr}.jko-native-launcher__header h2{font-size:16px}}
