@@ -83,6 +83,13 @@ export async function saveRecordDraft(){
     return updated;
   }catch(error){emit({saving:false,error:'Upload failed. Your recording is still available here to retry or download. '+(error.message||'')});throw error;}
 }
+export async function discardRecordDraft(){
+  const draft=state.draft;
+  if(!draft||state.saving||!window.confirm('Discard this unsaved recording? Download a copy first if you want to keep it.'))return;
+  await draftStore('delete',null,draft.record.user_id);
+  await base44.entities.GameplayRecord.update(draft.record.id,{status:'interrupted'}).catch(()=>{});
+  emit({draft:null,error:'',revision:state.revision+1});
+}
 export function downloadRecordDraft(){
   if(!state.draft)return;
   const url=URL.createObjectURL(state.draft.blob),a=document.createElement('a');

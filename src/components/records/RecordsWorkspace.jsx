@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, Circle, Download, Gamepad2, Image, Search, Sparkles, Square, Upload, Video, Flag } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
-import { captureLiveMoment, downloadRecordDraft, formatTime, privateUrl, restoreRecordDraft, reviewMoment, saveMoment, saveRecordDraft, startRecording, stopRecording, supportsCapture, useRecordsCapture } from './recordsCapture';
+import { captureLiveMoment, discardRecordDraft, downloadRecordDraft, formatTime, privateUrl, restoreRecordDraft, reviewMoment, saveMoment, saveRecordDraft, startRecording, stopRecording, supportsCapture, useRecordsCapture } from './recordsCapture';
 import './records.css';
 
 function PrivateImage({uri,alt='',...props}){
@@ -83,7 +83,7 @@ export default function RecordsWorkspace(){
     <p className="records-helper">{capturing?'Recording continues if this window is minimized or closed. Reopen Records, or stop browser sharing, to finish.':'Choose the game, then share its window. Audio depends on your browser and the surface shared. Sessions stop at 30 minutes or 200 MB.'} {ai?'Selected frames are sent to AI only during your recording; reviews can miss fast events.':''}</p>
     {(error||(ownCapture&&capture.error))&&<div className="records-notice" role="alert">{error||capture.error}<button onClick={()=>{setError('');refresh();}}>Reload library</button></div>}
     {(busy||capture.saving)&&<p className="records-status" role="status">{busy||'Saving recording…'}</p>}
-    {ownCapture&&capture.draft&&!capture.saving&&<div className="records-notice"><span>Recording ready to recover</span><button onClick={()=>run('Saving recording',saveRecordDraft)}>Retry save</button><button onClick={downloadRecordDraft}><Download size={14}/>Download copy</button></div>}
+    {ownCapture&&capture.draft&&!capture.saving&&<div className="records-notice"><span>Recording ready to recover</span><button onClick={()=>run('Saving recording',saveRecordDraft)}>Retry save</button><button onClick={downloadRecordDraft}><Download size={14}/>Download copy</button><button onClick={()=>run('Discarding draft',discardRecordDraft)}>Discard draft</button></div>}
     {capturing&&capture.tip&&<div className="records-live-tip"><Sparkles size={16}/><span><strong>Frame-based coach</strong>{capture.tip}</span></div>}
     <div className="records-layout">
       <aside className="records-library">

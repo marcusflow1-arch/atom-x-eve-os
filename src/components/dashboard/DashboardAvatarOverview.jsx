@@ -402,7 +402,7 @@ export default function DashboardAvatarOverview() {
           <div className="luna-window__messages"><LunaMessageFriendsPanel /><section><MessengerHub threadOnly /></section></div>
         </DashboardWindow>}
         {memoriesMode && <DashboardWindow id="records" title="Records" width={980} height={700} index={4} onClose={() => setMemoriesMode(false)}>
-          <RecordsWorkspace />
+          <RecordsWorkspace key={user?.id || 'guest'} />
         </DashboardWindow>}
         {activeQuickPanel === 'ai-story' && <DashboardWindow id="ai-story" title="AI Story" width={850} height={620} index={5} onClose={() => setActiveQuickPanel(null)}>
           <div className="luna-window__story"><AIStoryOverlay onClose={() => setActiveQuickPanel(null)} /></div>

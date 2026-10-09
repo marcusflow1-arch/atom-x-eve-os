@@ -30,10 +30,10 @@ function Collection({rows,kind}){
    </div>
  </article>)}</div>;
 }
-export default function LunaGamerProfile({player,onClose}){
+export default function LunaGamerProfile({player,onClose,initialTab='overview'}){
  const {user}=useAuth(),navigate=useNavigate(),location=useLocation();
  const p=asSocialTarget(player),self=p.id===String(user?.id);
- const [tab,setTab]=useState('overview'),[more,setMore]=useState(false),[busy,setBusy]=useState(''),[friend,setFriend]=useState(p.is_friend),[following,setFollowing]=useState(false),[reporting,setReporting]=useState(false),[reason,setReason]=useState('harassment'),[details,setDetails]=useState(''),[requested,setRequested]=useState(false);
+ const [tab,setTab]=useState(initialTab),[more,setMore]=useState(false),[busy,setBusy]=useState(''),[friend,setFriend]=useState(p.is_friend),[following,setFollowing]=useState(false),[reporting,setReporting]=useState(false),[reason,setReason]=useState('harassment'),[details,setDetails]=useState(''),[requested,setRequested]=useState(false);
  const {data:profile,isLoading,error,refetch}=useQuery({
   queryKey:['friend-console-profile',user?.id,p.id],
   enabled:Boolean(user?.id&&p.id),retry:false,staleTime:30000,
@@ -74,7 +74,7 @@ export default function LunaGamerProfile({player,onClose}){
       {profile&&<div className="gamer-level"><span>AI AVATAR</span><strong>{profile.level}</strong><span>LEVEL</span></div>}
     </div>
     <div className="gamer-now"><small>CURRENT ACTIVITY</small><p>{profile?.current_game|| (profile?.online?'Exploring Atom XE':'Offline')}</p></div>
-    <button className="gamer-primary" onClick={()=>setTab('dashboard')} disabled={!profile}><LayoutDashboard size={16}/>View dashboard<ArrowUpRight size={14}/></button>
+    <button className="gamer-primary" onClick={()=>{navigate('/PlayerProfile?userId='+encodeURIComponent(p.id)+'&view=dashboard');onClose?.();}} disabled={!profile}><LayoutDashboard size={16}/>View dashboard<ArrowUpRight size={14}/></button>
     {!self&&<button onClick={join} disabled={!!busy||!user?.id}><LogIn size={16}/>Join dashboard</button>}
     {!self&&<div className="gamer-social-buttons"><button onClick={message} disabled={!user?.id}><MessageSquare size={15}/>Message</button><button onClick={voice} disabled={!user?.id}><Mic size={15}/>Voice</button></div>}
   </aside>

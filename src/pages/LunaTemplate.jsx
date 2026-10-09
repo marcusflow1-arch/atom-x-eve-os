@@ -962,6 +962,7 @@ export default function LunaTemplate() {
                       isEnvironmentActive={isEnvironmentActive}
                       onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)}
                       environmentWindowOpen={showEnvironmentCollection}
+                      defaultModelUrl={GAME1_ENV_URL}
                       selectedFocusGame={selectedFocusGame}
                       onSelectFocusGame={setSelectedFocusGame}
                       optionsGame={optionsGame}
