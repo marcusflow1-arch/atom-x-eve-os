@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { Game } from '../src/components/game2/engine/game.js';
 import { Fighter, emptyCmd } from '../src/components/game2/engine/fighter.js';
 import { Input } from '../src/components/game2/engine/input.js';
+import { HUD } from '../src/components/game2/engine/hud.js';
 import { parseRBSP, BSPCollision } from '../src/components/game2/engine/rbsp.js';
 
 // Real in-game input events + Game commands + Fighter movement + imported
@@ -65,6 +66,13 @@ function createTestScene() {
   return {game,player,input,canvas,win,spawn,key,tick,close};
 }
 
+test('Game 2 starts playable without requiring a mouse click before WASD works',()=>{
+  const gameSource=readFileSync('src/components/game2/engine/game.js','utf8');
+  assert.match(gameSource,/h\.help = false;[\s\S]*this\.started = true;/);
+  const hud=new HUD({getContext:()=>({})});
+  assert.equal(hud.help,true,'manual F1 controls panel stays available');
+});
+
 test('Game 2 WASD keys dismiss the old blocking help sheet and move on that very frame',()=>{
   const s=createTestScene();
   try {
@@ -114,6 +122,19 @@ test('movement remains responsive after opening the controls menu via F1',()=>{
     assert.equal(s.player.cmd.right,1);
     assert.ok(s.player.pos[0]<s.spawn[0]-0.02);
   }finally{s.close();}
+});
+
+test('clicking the canvas restores keyboard focus inside the Base44 editor',()=>{
+  const s=createTestScene();
+  try {
+    let focused=false;
+    s.canvas.focus=({preventScroll}={})=>{focused=preventScroll===true;};
+    const e=new Event('mousedown',{cancelable:true});
+    Object.defineProperty(e,'button',{value:0});
+    s.canvas.dispatchEvent(e);
+    assert.equal(focused,true);
+    assert.equal(s.input.btnPressed[0],true);
+  } finally{s.close();}
 });
 
 test('window focus loss clears stuck movement keys and normal keyboard controls resume',()=>{
