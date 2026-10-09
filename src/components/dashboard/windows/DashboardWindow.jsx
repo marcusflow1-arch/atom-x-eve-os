@@ -15,7 +15,7 @@ function workArea() {
   const bottom = Math.min(window.innerHeight, document.querySelector('.glass-page-bottom-bar')?.getBoundingClientRect().top ?? window.innerHeight - 48);
   return { x: 0, y: top, width: window.innerWidth, height: Math.max(40, bottom - top) };
 }
-export default function DashboardWindow({ id, title, children, onClose, onMinimizedChange, width = 720, height = 560, index = 0 }) {
+export default function DashboardWindow({ id, title, children, onClose, onMinimizedChange, width = 720, height = 560, index = 0, captureEscape = true }) {
   const { user } = useAuth();
   const storageKey = 'luna-window-v1:' + (user?.id || 'guest') + ':' + id;
   const initialRect = (key) => {
@@ -47,7 +47,7 @@ export default function DashboardWindow({ id, title, children, onClose, onMinimi
       shell.current?.focus({ preventScroll: true });
     };
     const escape = event => {
-      if (event.key !== 'Escape' || stack.top() !== id) return;
+      if (!captureEscape || event.key !== 'Escape' || stack.top() !== id) return;
       // Nested editor dialogs (such as Calendar event creation) handle
       // their own first Escape; only a second Escape closes the window.
       if (shell.current?.querySelector('[data-window-dismiss-layer]')) return;
@@ -63,7 +63,7 @@ export default function DashboardWindow({ id, title, children, onClose, onMinimi
       window.removeEventListener('lunaWindowFocus', focus);
       window.removeEventListener('keydown', escape, true);
     };
-  }, [id]);
+  }, [id, captureEscape]);
   useLayoutEffect(() => {
     const update = () => {
       const next = workArea();
