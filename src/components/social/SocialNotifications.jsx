@@ -53,7 +53,15 @@ export default function SocialNotifications({onlyId,hideHeading=false}={}){
    if(notice.action_kind==='party_invite'){
     result=unwrap(await base44.functions.invoke('partySystem',{action:accept?'accept_invite':'decline_invite',data:{inviteId:id}}));
     window.dispatchEvent(new Event('lunaSocialChanged'));
-    if(accept)window.dispatchEvent(new Event('openLunaParty'));
+    if(accept){
+      window.dispatchEvent(new Event('openLunaParty'));
+      // An accepted party member also enters the party leader's shared
+      // dashboard channel so their actual avatar can appear beside others.
+      const leaderId=String(result?.party?.leaderId||'');
+      if(leaderId&&leaderId!==String(user?.id)) {
+        await joinDashboard({id:leaderId,name:result.party?.leaderName||notice.actor_name||'Party Leader'});
+      }
+    }
    }else{
     result=unwrap(await base44.functions.invoke('socialActions',{action:notice.action_kind==='friend_request'?'respond_friend_request':'respond_dashboard_invite',data:{request_id:id,decision:accept?'accept':'decline'}}));
    }
