@@ -122,7 +122,7 @@ test('shortcut, environment icon, and existing party portraits remain independen
   assert.match(css,/\.luna-environment-party-group\{[^}]*margin-left:25px/);
   assert.match(css,/\.luna-environment-top-icon\{[^}]*border:0;border-radius:0;color:#78cfff;background:transparent;box-shadow:none/);
   assert.match(css,/\.luna-env-quickslot-shell\{[^}]*width:46px;height:46px/);
-  assert.match(css,/\.luna-party-five-slots\{[^}]*margin-left:calc\(clamp\(112px,15vw,247px\) \+ 12px - 25px\)/);
+  assert.match(css,/\.luna-party-five-slots\{[^}]*margin-left:calc\(clamp\(112px,15vw,247px\) \+ 12px - 25px \+ 42px\)/);
   assert.match(page,/defaultModelUrl=\{GAME1_ENV_URL\}/);
   assert.match(focus,/partySlots\.map\(\(member, index\) =>/);
   assert.match(focus,/mode: 'party'/);
