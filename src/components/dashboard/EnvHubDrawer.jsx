@@ -23,7 +23,8 @@ export default function EnvHubDrawer({ open = true, onClose, currentEnvId, onSel
     setError('');
     (async () => {
       try {
-        setEnvironments(await loadEnvironmentChoices(base44, user?.id));
+        const choices = await loadEnvironmentChoices(base44, user?.id);
+        if (!cancelled) setEnvironments(choices);
       } catch (cause) {
         if (!cancelled) setError(cause?.message || 'Could not load your environments.');
       } finally {
