@@ -297,6 +297,9 @@ export class Fighter {
     const a = this.actor, now = this.now, S = this.saber, out = !S.holstered; const speed = Math.hypot(this.vel[0], this.vel[2]);
     let twist = 0;
     if (!this.onGround) {
+      // Do not replace full-body flip, lunge or aerial saber strikes with
+      // INAIR until the original special-attack clip has finished playing.
+      if (now < this.legsLockUntil && S.inSpecial(S.move)) return;
       // Real JO Ghoul2 bank: finite JUMP/FORCEJUMP anticipation is followed
       // by the matching held INAIR pose, not a frozen last takeoff frame.
       if (this.airAnim && /^BOTH_(FORCE)?JUMP/.test(this.airAnim)) {
@@ -360,8 +363,8 @@ export class Fighter {
   onMoveChanged(m) {
     const S = this.saber, I = S.I, sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
     if (m === I.LS_A_LUNGE) { this.vel[0] = sy * 3.75; this.vel[2] = cy * 3.75; }
-    else if (m === I.LS_A_FLIP_STAB || m === I.LS_A_FLIP_SLASH) { this.vel[0] = sy * 1.4; this.vel[2] = cy * 1.4; this.vel[1] = 8.5; this.onGround = false; this.airAnim = 'BOTH_JUMP1'; this.g.sfxAt('jump', this.pos, 0.5); }
-    else if (m === I.LS_A_JUMP_T__B_) { this.vel[0] = sy * 7.5; this.vel[2] = cy * 7.5; this.vel[1] = 7.0; this.onGround = false; this.airAnim = 'BOTH_JUMP1'; this.g.sfxAt('jump', this.pos, 0.5); }
+    else if (m === I.LS_A_FLIP_STAB || m === I.LS_A_FLIP_SLASH) { this.vel[0] = sy * 1.4; this.vel[2] = cy * 1.4; this.vel[1] = 8.5; this.onGround = false; this.jumpAt = this.now; this.airAnim = 'BOTH_JUMP1'; this.g.sfxAt('jump', this.pos, 0.5); }
+    else if (m === I.LS_A_JUMP_T__B_) { this.vel[0] = sy * 7.5; this.vel[2] = cy * 7.5; this.vel[1] = 7.0; this.onGround = false; this.jumpAt = this.now; this.airAnim = 'BOTH_JUMP1'; this.g.sfxAt('jump', this.pos, 0.5); }
   }
   trySpecialJumpAttack() { // JO PM_CheckJump: jump while an attack just started -> flip attack (medium) / jump attack (strong)
     const S = this.saber, I = S.I, c = this.cmd; if (S.holstered || !(c.jumpPressed && this.onGround) || !(S.weaponTime > 0 || c.attack)) return false;
