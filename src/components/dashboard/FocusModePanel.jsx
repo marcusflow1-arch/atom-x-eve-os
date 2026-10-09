@@ -1523,7 +1523,9 @@ export function LibraryBannerSection({
           {/* ── PS5-style Top Row ── */}
           <div className="luna-header-status-row" data-luna-party-status-row>
 
-            {/* Skill-tree alignment anchor beside the avatar viewer. */}
+            {/* Retain the measurement anchor for the existing Skill Book and
+                Library, but do not reserve a large empty area before the
+                Environment button and five small party boxes. */}
             <div className="luna-header-skill-anchor">
               <SkillTreeAnchor />
             </div>
@@ -1583,7 +1585,9 @@ export function LibraryBannerSection({
 
 
               </div>
-            </div>
+              {/* Right-hand boundary: the five small portrait boxes are the
+                  only content between the two full-height silver lines. */}
+              <span className="luna-party-end-divider" aria-hidden="true" />
                 <AnimatePresence>
                   {showPvpRejoin && (
                     <motion.button
