@@ -1242,7 +1242,7 @@ function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
 // ── AI Avatar Home Section (PS5-style) ───────────────────────────────────────
 export function LibraryBannerSection({ 
   games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown, onQuickChangeToggle,
-  navBoxes, calendarBox, notificationsBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment,
+  navBoxes, calendarBox, notificationsBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment, environmentWindowOpen,
   activeFriend, onActiveFriendChange, selectedFocusGame
 }) {
   const envDropdownRef = useRef(null);
@@ -1528,11 +1528,22 @@ export function LibraryBannerSection({
               <SkillTreeAnchor />
             </div>
 
-            {/* Calendar icon + time/date FIRST, then an upright silver line,
-                then the same five confirmed party boxes and invite controls. */}
-            <div className="luna-party-clock-group">
-              <div className="luna-party-clock">{calendarBox}</div>
-              <span className="luna-party-clock-divider" aria-hidden="true" />
+            {/* Icon-only Environment Hub beside the viewer, then a silver
+                divider and the five original party slots. */}
+            <div className="luna-environment-party-group">
+              <button
+                type="button"
+                data-luna-environment-trigger
+                className="luna-environment-top-icon"
+                aria-label="Open Environment Hub"
+                title="Environment Hub"
+                aria-haspopup="dialog"
+                aria-expanded={Boolean(environmentWindowOpen)}
+                onClick={() => window.dispatchEvent(new Event('openEnvironmentHub'))}
+              >
+                <Globe size={23} strokeWidth={1.6} aria-hidden="true" />
+              </button>
+              <span className="luna-environment-party-divider" aria-hidden="true" />
               <div className="luna-party-five-slots" role="group" aria-label="Five party slots">
               {/* Confirmed members and clearly marked pending invitations
                   occupy five slots; plus opens a separate floating Friends window. */}
@@ -1592,10 +1603,15 @@ export function LibraryBannerSection({
                 </AnimatePresence>
             </div>
 
-            {/* Notification strip starts at the left edge of the 338px
-                AI Attribute Box and extends right with the same width. */}
-            <div className="luna-attribute-notifications" data-luna-ai-notifications>
-              {notificationsBox}
+            {/* Move the same unchanged calendar tile beside notifications.
+                The notification strip stays right-aligned above AI Attributes;
+                a separate upright line and small gap divide the two boxes. */}
+            <div className="luna-attribute-clock-group" data-luna-calendar-notification-row>
+              <div className="luna-party-clock">{calendarBox}</div>
+              <span className="luna-party-clock-divider" aria-hidden="true" />
+              <div className="luna-attribute-notifications" data-luna-ai-notifications>
+                {notificationsBox}
+              </div>
             </div>
           </div>
 
@@ -1927,7 +1943,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 );
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment, selectedFocusGame, onSelectFocusGame, optionsGame, onCloseOptionsGame, longPressGame, onCloseLongPress }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment, environmentWindowOpen = false, selectedFocusGame, onSelectFocusGame, optionsGame, onCloseOptionsGame, longPressGame, onCloseLongPress }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [activeFriend, setActiveFriend] = useState(null);
@@ -2049,6 +2065,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                  onQuickChangeToggle={() => setShowQuickChangeDrawer(true)}
                  isEnvironmentActive={isEnvironmentActive}
                  onToggleEnvironment={onToggleEnvironment}
+                 environmentWindowOpen={environmentWindowOpen}
                  activeFriend={activeFriend}
                  onActiveFriendChange={setActiveFriend}
                  selectedFocusGame={selectedFocusGame}
