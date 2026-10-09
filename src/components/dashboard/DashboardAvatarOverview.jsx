@@ -383,12 +383,12 @@ export default function DashboardAvatarOverview() {
         {socialDirectoryMode && <DashboardWindow id="social-directory" title={socialDirectoryMode === 'online' ? 'People Online' : socialDirectoryMode === 'party' ? 'Invite Friends to Party' : 'Friends Online'}
           width={420} height={590} anchor="ai-attributes" onClose={() => setSocialDirectoryMode(null)}>
           <div className="h-full min-h-0 overflow-auto bg-[linear-gradient(155deg,#1d3a54,#0a1727)] p-3">
-            <AIBoxSocialPanel mode={socialDirectoryMode} />
+            <AIBoxSocialPanel key={socialDirectoryMode} mode={socialDirectoryMode} />
           </div>
         </DashboardWindow>}
         {profileTarget && <DashboardWindow id="gamer-profile" title="Gamer Profile" width={505} height={585} index={2}
           onClose={() => setProfileTarget(null)}>
-          <LunaGamerProfile player={profileTarget} onClose={() => setProfileTarget(null)} />
+          <LunaGamerProfile key={String(profileTarget.id || profileTarget.friend_id)} player={profileTarget} onClose={() => setProfileTarget(null)} />
         </DashboardWindow>}
         {messagesMode && <DashboardWindow id="messages" title="Messages" width={820} height={580} index={3} onClose={() => setMessagesMode(false)}>
           <div className="luna-window__messages"><LunaMessageFriendsPanel /><section><MessengerHub threadOnly /></section></div>
