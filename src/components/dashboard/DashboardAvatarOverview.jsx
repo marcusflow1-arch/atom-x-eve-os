@@ -4,7 +4,7 @@ import RecordsWorkspace from '@/components/records/RecordsWorkspace';
 import { useRecordsCapture, stopRecording } from '@/components/records/recordsCapture';
 import AIStoryOverlay from './AIStoryOverlay';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, UserPlus, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
+import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, Swords, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, UserPlus, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
@@ -23,6 +23,7 @@ import LunaSkillXpHud from './LunaSkillXpHud';
 import LunaOrnateChrome from './LunaOrnateChrome';
 import './luna-ornate-attributes.css';
 import './luna-silver-attribute.css';
+import './luna-battle-launch.css';
 import LunaMessageFriendsPanel from './LunaMessageFriendsPanel';
 import MessengerHub from '@/components/friends/MessengerHub';
 import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
@@ -55,6 +56,27 @@ function GlassSlot({ icon: Icon, label, active, alert = false, badge = 0, onClic
       {Icon && <Icon className={`pointer-events-none absolute left-1/2 -translate-x-1/2 ${compact ? 'top-[7px] h-3.5 w-3.5' : 'top-[12px] h-4 w-4'} ${active || alert ? 'text-cyan-100' : 'text-white/55'}`} />}
       {badge > 0 && <span className={`pointer-events-none absolute grid place-items-center rounded-full bg-cyan-300 px-1 font-black text-slate-950 shadow-[0_0_14px_rgba(103,232,249,.35)] ${compact ? '-right-1 -top-1 min-h-[14px] min-w-[14px] text-[6px]' : '-right-1 -top-1 min-h-[16px] min-w-[16px] text-[7px]'}`}>{badge > 99 ? '99+' : badge}</span>}
       <span className={`pointer-events-none absolute left-0 right-0 text-center uppercase tracking-wider ${compact ? 'bottom-[4px] text-[5px]' : 'bottom-[5px] text-[6px]'} ${active || alert ? 'text-white/80' : 'text-white/45'}`}>{label}</span>
+    </button>
+  );
+}
+
+function BattleLaunchButton({ active, onClick }) {
+  return (
+    <button
+      type="button"
+      className="luna-battle-launch"
+      data-dashboard-quick-control
+      aria-label="AI Battle"
+      aria-haspopup="dialog"
+      aria-pressed={active}
+      title={active ? 'Return to AI Battle · PvP and PvE' : 'Open AI Battle · PvP and PvE'}
+      onClick={onClick}
+    >
+      <span className="luna-battle-launch__crest" aria-hidden="true">
+        <Swords size={19} strokeWidth={1.65} />
+      </span>
+      <span className="luna-battle-launch__label">AI Battle</span>
+      <span className="luna-battle-launch__status" aria-hidden="true" />
     </button>
   );
 }
@@ -530,7 +552,9 @@ export default function DashboardAvatarOverview() {
                 data-dashboard-attribute-actions
               >
                 <div className="grid grid-cols-4 gap-1.5">
-                  {slotItems.map(item => (
+                  {slotItems.map(item => item.id === 'ai-battle' ? (
+                    <BattleLaunchButton key={item.id} active={battleMode} onClick={() => handleQuickAction(item)} />
+                  ) : (
                     <GlassSlot
                       key={item.id}
                       icon={item.icon}
