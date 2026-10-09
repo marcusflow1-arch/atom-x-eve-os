@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Maximize2, RotateCcw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
+import { activeDashboardWindow } from '@/components/dashboard/windows/DashboardWindow';
 import { REQUIRED_JEDI_ARCHIVES, JEDI_ARCHIVE_CHUNK_BYTES, findRegisteredJediArchives, collectCachedArchiveChunks, missingRegisteredJediArchives } from './jediArchiveSources';
 
 const REQUIRED_PAKS = REQUIRED_JEDI_ARCHIVES;
@@ -264,6 +265,9 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign', embedded
   useEffect(() => {
     const forwardKey = event => {
       if (!frame.current?.contentWindow || state === 'error') return;
+      // A game inside a movable window must not steal hotkeys from Friends,
+      // Chat, Skill Book or other independently focused dashboard windows.
+      if (embedded && activeDashboardWindow() !== 'jedi-outcast-game') return;
       const target = event.target;
       if (target && /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName || '')) return;
       if (event.metaKey || (event.ctrlKey && !event.altKey)) return;
@@ -294,7 +298,7 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign', embedded
       window.removeEventListener('keydown', forwardKey, true);
       window.removeEventListener('keyup', forwardKey, true);
     };
-  }, [state]);
+  }, [state, embedded]);
 
   const leave = action => {
     if (leaving.current) return;
@@ -338,7 +342,7 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign', embedded
   };
 
   return (
-    <section className="jko-session" ref={shell} aria-label={sessionTitle}>
+    <section className="jko-session" data-jedi-embedded={embedded || undefined} ref={shell} aria-label={sessionTitle}>
       <header className="jko-session-bar">
         <button type="button" aria-label="Back to Luna" disabled={exiting} onClick={() => leave(onBack)}>
           <ArrowLeft size={16} /><span>Back to Luna</span>
@@ -379,6 +383,15 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign', embedded
       )}
 
       <div className="jko-engine-stage">
+        {embedded && state !== 'engine-ready' && state !== 'error' && (
+          <div className="jko-loading-cover pointer-events-none" role="status" aria-live="polite">
+            <span className="jko-loading-spinner" aria-hidden="true" />
+            <strong>{activeLabels[state] || 'Loading original game assets'}</strong>
+            <small>{progress || (state === 'starting'
+              ? 'Starting the original Raven engine. Rendering and shaders are initializing…'
+              : 'Checking original archives in Admin → Game Rebuilds and connected Google Drive…')}</small>
+          </div>
+        )}
         <iframe
           key={revision}
           ref={frame}
