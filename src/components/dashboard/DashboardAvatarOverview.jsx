@@ -1,9 +1,10 @@
 import PartyPortraitRail from './PartyPortraitRail';
 import DashboardWindow, { focusDashboardWindow } from './windows/DashboardWindow';
-import MemoriesDrawer from './MemoriesDrawer';
+import RecordsWorkspace from '@/components/records/RecordsWorkspace';
+import { useRecordsCapture, stopRecording } from '@/components/records/recordsCapture';
 import AIStoryOverlay from './AIStoryOverlay';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, UserPlus, Camera, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
+import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, UserPlus, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
@@ -98,6 +99,10 @@ function GenreRows({ genres }) {
 export default function DashboardAvatarOverview() {
   const { user } = useAuth();
   const companion = useCompanionIdentity();
+  const recordsCapture = useRecordsCapture();
+  useEffect(() => {
+    if (recordsCapture.active && recordsCapture.record?.user_id !== user?.id) stopRecording();
+  }, [user?.id, recordsCapture.active, recordsCapture.record?.user_id]);
   const { equipItem, equippedItems } = useEquipment();
   const {state:combatState}=useAvatarCombatStats();
   const progression=combatState?.progression;
@@ -224,14 +229,16 @@ export default function DashboardAvatarOverview() {
 
   useEffect(() => {
     const openInventory = () => { setInventoryMode(true); focusDashboardWindow('inventory'); };
-    const openMemories = () => { setMemoriesMode(true); focusDashboardWindow('memories'); };
+    const openMemories = () => { setMemoriesMode(true); focusDashboardWindow('records'); };
     const openFriends = () => { setFriendsMode(true); focusDashboardWindow('friends'); };
     window.addEventListener('openLunaInventoryWorkspace', openInventory);
     window.addEventListener('openLunaMemories', openMemories);
+    window.addEventListener('openLunaRecords', openMemories);
     window.addEventListener('openLunaFriends', openFriends);
     return () => {
       window.removeEventListener('openLunaInventoryWorkspace', openInventory);
       window.removeEventListener('openLunaMemories', openMemories);
+      window.removeEventListener('openLunaRecords', openMemories);
       window.removeEventListener('openLunaFriends', openFriends);
     };
   }, []);
@@ -294,6 +301,7 @@ export default function DashboardAvatarOverview() {
       lastInteractiveRef.current = null;
     };
     window.addEventListener('openLunaMessages', openMessages);
+    if (window.__lunaPendingMessageTarget) openMessages({ detail: { target: window.__lunaPendingMessageTarget } });
     window.addEventListener('lunaPresenceMenuOpened', clearForPresenceMenu);
     return () => {
       window.removeEventListener('openLunaMessages', openMessages);
@@ -304,7 +312,7 @@ export default function DashboardAvatarOverview() {
   const backgroundDimmed = !avatarFocusMode && surface !== 'dashboard';
   const slotItems = [
     { id: 'inventory', icon: PackageOpen, label: 'Inventory' },
-    { id: 'memories', icon: Camera, label: 'Memories' },
+    { id: 'records', icon: Gamepad2, label: 'Records', alert: recordsCapture.active },
     { id: 'messages', icon: MessageSquare, label: 'Message', alert: Number(socialInbox.unread_total || 0) > 0, badge: Number(socialInbox.unread_total || 0) },
     { id: 'cards', icon: Trophy, label: 'Cards' },
     { id: 'ai-story', icon: Sparkles, label: 'AI Story' },
@@ -329,7 +337,7 @@ export default function DashboardAvatarOverview() {
   const handleQuickAction = (item) => {
     const setters = {
       inventory: setInventoryMode, cards: setCardsMode, leaderboard: setLeaderboardMode,
-      messages: setMessagesMode, memories: setMemoriesMode, season: setSeasonMode,
+      messages: setMessagesMode, records: setMemoriesMode, season: setSeasonMode,
       'ai-battle': setBattleMode,
     };
     if (setters[item.id]) setters[item.id](true);
@@ -386,15 +394,15 @@ export default function DashboardAvatarOverview() {
             <AIBoxSocialPanel key={socialDirectoryMode} mode={socialDirectoryMode} />
           </div>
         </DashboardWindow>}
-        {profileTarget && <DashboardWindow id="gamer-profile" title="Gamer Profile" width={505} height={585} index={2}
+        {profileTarget && <DashboardWindow id="gamer-profile" title="Gamer Profile" width={1040} height={720} index={2}
           onClose={() => setProfileTarget(null)}>
           <LunaGamerProfile key={String(profileTarget.id || profileTarget.friend_id)} player={profileTarget} onClose={() => setProfileTarget(null)} />
         </DashboardWindow>}
         {messagesMode && <DashboardWindow id="messages" title="Messages" width={820} height={580} index={3} onClose={() => setMessagesMode(false)}>
           <div className="luna-window__messages"><LunaMessageFriendsPanel /><section><MessengerHub threadOnly /></section></div>
         </DashboardWindow>}
-        {memoriesMode && <DashboardWindow id="memories" title="Memories" width={980} height={700} index={4} onClose={() => setMemoriesMode(false)}>
-          <div className="luna-window__memories"><MemoriesDrawer embedded onClose={() => setMemoriesMode(false)} /></div>
+        {memoriesMode && <DashboardWindow id="records" title="Records" width={980} height={700} index={4} onClose={() => setMemoriesMode(false)}>
+          <RecordsWorkspace />
         </DashboardWindow>}
         {activeQuickPanel === 'ai-story' && <DashboardWindow id="ai-story" title="AI Story" width={850} height={620} index={5} onClose={() => setActiveQuickPanel(null)}>
           <div className="luna-window__story"><AIStoryOverlay onClose={() => setActiveQuickPanel(null)} /></div>
@@ -527,7 +535,7 @@ export default function DashboardAvatarOverview() {
                       key={item.id}
                       icon={item.icon}
                       label={item.label}
-                      active={item.id === 'memories' ? memoriesMode : item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : item.id === 'messages' ? messagesMode : item.id === 'season' ? seasonMode : item.id === 'ai-battle' ? battleMode : item.id === 'leaderboard' ? leaderboardMode : activeQuickPanel === item.id}
+                      active={item.id === 'records' ? memoriesMode : item.id === 'inventory' ? inventoryMode : item.id === 'cards' ? cardsMode : item.id === 'messages' ? messagesMode : item.id === 'season' ? seasonMode : item.id === 'ai-battle' ? battleMode : item.id === 'leaderboard' ? leaderboardMode : activeQuickPanel === item.id}
                       alert={item.alert}
                       badge={item.badge}
                       compact

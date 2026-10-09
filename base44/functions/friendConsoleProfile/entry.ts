@@ -13,6 +13,7 @@ function publicAvatar(row: Row | null) {
   const keys = [
     'name','gender','female_model_variant','model_url','base_body_gender','base_body_model_url',
     'appearance_version','style_preset','skin_tone','eye_color','hair_color','complexion',
+    'skin_tint_enabled','eye_tint_enabled','hair_tint_enabled',
     'facial_hair','facial_hair_color','tattoo_style','tattoo_placement','tattoo_color',
     'tattoo_opacity','hair_style','hair_length','hair_volume','face_shape','height_scale',
     'body_proportions','material_colors','morph_targets','eyelash_style','hood_enabled','weapon_visible',
@@ -78,6 +79,7 @@ Deno.serve(async (req) => {
       presenceRows,
       allAchievements,
       allGames,
+      playHistory,
     ] = await Promise.all([
       svc.User.get(targetId).catch(() => null),
       svc.Avatar.filter({ user_id: targetId }, '-updated_date', 1).catch(() => []),
@@ -89,6 +91,7 @@ Deno.serve(async (req) => {
       svc.PlayerState.filter({ player_id: targetId }, '-last_update', 10).catch(() => []),
       svc.Achievement.list('title', 5000).catch(() => []),
       svc.Game.list('title', 5000).catch(() => []),
+      svc.StorePlayHistory.filter({ user_id: targetId }, '-last_played', 250).catch(() => []),
     ]);
 
     const avatar = avatarRows?.[0] || null;
@@ -126,10 +129,20 @@ Deno.serve(async (req) => {
     for (const card of cards) if (card.game_id) gameIds.add(String(card.game_id));
     for (const achievement of achievements) if (achievement.game_id) gameIds.add(String(achievement.game_id));
 
+    const played = new Map(asArray(playHistory).map((r: Row) => [String(r.game_id), r.last_played]));
+    const acquired = new Map<string, string>();
+    for (const row of asArray(entitlementRows)) {
+      if (row.revoked) continue;
+      const id = String(row.game_id || row.item_id || '');
+      const previous = acquired.get(id);
+      if (!previous || Date.parse(row.granted_at || '') > Date.parse(previous)) acquired.set(id, row.granted_at || row.created_date || '');
+    }
+    for (const id of played.keys()) gameIds.add(id);
     const games = [...gameIds]
       .map((id) => gameMap.get(id))
       .filter(Boolean)
-      .map(publicGame)
+      .map((row: Row) => ({...publicGame(row),last_played:played.get(String(row.id))||null,acquired_at:acquired.get(String(row.id))||null}))
+      .sort((a: Row,b: Row) => Math.max(Date.parse(b.last_played||'')||0,Date.parse(b.acquired_at||'')||0) - Math.max(Date.parse(a.last_played||'')||0,Date.parse(a.acquired_at||'')||0))
       .slice(0, 24);
 
     const progressionGenres = asArray(progression?.genres).map((genre: Row) => ({
@@ -168,7 +181,7 @@ Deno.serve(async (req) => {
         online,
         status: online ? (presence?.status || 'online') : 'offline',
         current_game: currentGame,
-        avatar: publicAvatar(avatar) || (presence?.appearance ? { ...presence.appearance } : null),
+        avatar: publicAvatar(avatar) || publicAvatar(presence?.appearance),
         level: Number(progression?.global_level || avatar?.level || targetUser?.avatar_level || targetUser?.level || 1),
         xp: Number(progression?.global_xp || avatar?.experience || 0),
         prestige: Number(progression?.prestige_score || 0),

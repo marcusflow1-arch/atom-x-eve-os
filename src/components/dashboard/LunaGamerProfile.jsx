@@ -64,7 +64,7 @@ export default function LunaGamerProfile({player,onClose}){
  });
  const report=()=>act('Report',async()=>{unwrap(await base44.functions.invoke('forumSystem',{action:'report',data:{target_type:'user',target_id:p.id,reason,details:details.trim()}}));setReporting(false);setMore(false);},'Report submitted.');
  const tabs=[['overview','Overview'],['achievements','Achievements'],['cards','Cards'],['games','Games']];
- return <div className="gamer-profile" data-luna-gamer-profile={p.id}>
+ return <div className="gamer-profile" data-luna-gamer-profile={p.id}><div className="gamer-profile-layout">
   <aside className="gamer-identity">
     <div className="gamer-eyebrow">ATOM XE / PLAYER CONSOLE</div>
     <div className="gamer-identity-heading"><h1>{name}</h1><span className={'gamer-presence '+(profile?.online?'online':'')}><i/>{profile?.status||p.status}{self?' · You':friend?' · Friend':''}</span></div>
@@ -106,5 +106,5 @@ export default function LunaGamerProfile({player,onClose}){
       {reporting&&<div className="gamer-report"><label>Reason<select value={reason} onChange={e=>setReason(e.target.value)}>{['harassment','spam','hate','other'].map(r=><option key={r}>{r}</option>)}</select></label><textarea value={details} onChange={e=>setDetails(e.target.value)} placeholder="Optional details" aria-label="Report details" maxLength={1000}/><button onClick={report} disabled={!!busy||!user?.id}>Submit report</button></div>}
     </footer>}
   </main>
- </div>;
+ </div></div>;
 }
