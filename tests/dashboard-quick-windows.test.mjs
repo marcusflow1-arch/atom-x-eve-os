@@ -48,7 +48,7 @@ const compiled=await build({
     });
     builder.onLoad({filter:/.*/,namespace:'quick-fixture'},args=>({
       loader:'jsx',contents:fakeNames.has(args.path)
-        ? "export default function Placeholder(){return <div data-mock-panel='true'/>;}"
+        ? "export default function Placeholder(){return null;}"
         : fakeHooks[args.path],
     }));
   }}],
