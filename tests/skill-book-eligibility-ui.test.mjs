@@ -225,6 +225,19 @@ try {
   await run(() => render(false));
   assert.equal(document.querySelector('.luna-skill-book'),null);
   assert.equal(document.querySelectorAll('[data-hotkey]').length,10);
+  // The relocated Skill Tree icon is a separate button next to slot 1,
+  // only visible on the dashboard, and still opens the same Skill Tree.
+  const treeButton = document.querySelector('[data-luna-skill-tree-hotbar-button]');
+  assert.ok(treeButton, 'standalone dashboard Skill Tree icon is present');
+  assert.equal(treeButton.getAttribute('aria-label'), 'Open Skill Tree');
+  assert.ok(!document.querySelector('.luna-hotbar-skill-shell').contains(treeButton), 'icon is outside the skill slots');
+  let treeOpenEvents = 0;
+  const trackTree = () => treeOpenEvents++;
+  window.addEventListener('toggleSkillTree', trackTree);
+  await run(() => treeButton.click());
+  window.removeEventListener('toggleSkillTree', trackTree);
+  assert.equal(treeOpenEvents, 1, 'clicking the icon uses the existing Skill Tree action');
+  assert.equal(document.querySelectorAll('[data-hotkey]').length,10, 'all ten skill slots remain untouched');
   assert.equal(document.querySelector('[data-luna-skill-xp-hud]').dataset.embedded,undefined);
   assert(slot('2').disabled,'in-flight saving survives undocking');
   await run(() => { releaseEquip(); pauseEquip = null; }); await run();
@@ -236,6 +249,7 @@ try {
   assert.equal(keyboardCasts,1,'dashboard casting resumes after the book closes');
   await run(() => render(true)); await run();
   assert.equal(document.querySelectorAll('[data-hotkey]').length,10,'reopening never duplicates the hotkeys');
+  assert.equal(document.querySelectorAll('[data-luna-skill-tree-hotbar-button]').length,0,'the extra dashboard icon does not appear inside Skill Book');
   assert.equal(document.querySelector('.lsb-slot-dock').querySelectorAll('[data-hotkey]').length,10);
   assert.match(slot('2').getAttribute('aria-label'),/Chidori/);
   console.log('PASS: embedded single-instance slot dock, prefab/EXP visibility, cancel selection, in-flight save during close/reopen, cast suppression while editing, owned game/card browser, alphabetical/genre/search filters, compatibility, voice fallback, real drag-to-equip path, shared saving state, rapid-drop guard, moving/replacing cards, save errors, reload restoration and close cleanup.');
