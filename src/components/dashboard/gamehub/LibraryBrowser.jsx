@@ -64,8 +64,8 @@ export default function LibraryBrowser({ selectedGame, onSelectGame, onLongPress
         <button type="button" className="ll-viewer-toggle" aria-label={viewerHidden ? 'Restore avatar viewer and stats' : 'Expand Library and hide avatar viewer'} title={viewerHidden ? 'Restore avatar viewer' : 'Expand Library'} aria-pressed={viewerHidden} onClick={onToggleViewer}>{viewerHidden ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
       </header>
       <nav className="ll-forged-tabs" aria-label="Games and cards navigation">
-        <button type="button" className="ll-forged-tab" aria-pressed={!cardsView && !fullView} onClick={openGames}><Gamepad2 size={15} aria-hidden="true" /><span>Games</span></button>
-        <button type="button" className="ll-forged-tab" aria-pressed={cardsView && !fullView} onClick={openCards}><GalleryHorizontalEnd size={15} aria-hidden="true" /><span>Cards</span></button>
+        <button type="button" className="ll-forged-tab" aria-label="Return to game library" aria-pressed={!cardsView && !fullView} onClick={openGames}><Gamepad2 size={15} aria-hidden="true" /><span>Games</span></button>
+        <button type="button" className="ll-forged-tab" aria-label="Open card explorer" aria-pressed={cardsView && !fullView} onClick={openCards}><GalleryHorizontalEnd size={15} aria-hidden="true" /><span>Cards</span></button>
         <button type="button" className="ll-forged-tab" aria-label={cardsView ? 'Full card explorer' : 'Full game library'} aria-pressed={Boolean(fullView)} onClick={onToggleFullView}><Library size={15} aria-hidden="true" /><span>Library</span></button>
       </nav>
       {cardsView ? <LibraryCardExplorer filters={filters} onChange={change} fullViewOpen={fullView} /> : <>
