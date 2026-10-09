@@ -38,10 +38,11 @@
 .luna-attribute-clock-group{display:flex;align-items:center;gap:12px;height:100%;min-width:0;flex:none;margin-left:auto}
 .luna-party-clock{width:162px;height:77px;flex:none;min-width:0}
 .luna-party-clock-divider{align-self:center;flex:none;width:1px;height:62px;margin:0 3px;background:linear-gradient(to bottom,transparent,rgba(207,231,245,.68) 18%,rgba(217,236,249,.9) 50%,rgba(207,231,245,.68) 82%,transparent);box-shadow:0 0 7px rgba(167,216,246,.2)}
-/* Restore the five boxes to their pre-left-shift location by replacing the
-   old SkillTreeAnchor offset BEFORE the slots, not before the icon or line.
-   The old row started with a clamp(112px,15vw,247px) anchor and 12px gap. */
-.luna-party-five-slots{display:flex;align-items:center;gap:6px;min-width:0;flex:0 1 auto;margin-left:calc(clamp(112px,15vw,247px) + 12px - 25px);overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-inline:contain;height:100%}
+/* Shift only the five party portraits 3/4 of one portrait width to the
+   right (1/4 + 1/2 = 42px for a 56px portrait). The left Environment icon,
+   silver divider and four pinned scenes remain exactly where they are.
+   The party's right-hand divider naturally follows its five boxes. */
+.luna-party-five-slots{display:flex;align-items:center;gap:6px;min-width:0;flex:0 1 auto;margin-left:calc(clamp(112px,15vw,247px) + 12px - 25px + 42px);overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-inline:contain;height:100%}
 .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:56px;height:60px}
 .luna-party-five-slots::-webkit-scrollbar{display:none}
 .luna-attribute-notifications{width:min(338px,30vw);height:77px;flex:none;min-width:0;margin-left:auto}
@@ -84,12 +85,12 @@
   .luna-party-clock{width:145px}
   .luna-env-quickslots{gap:5px;left:calc(50px + 7px + 7px + 7px)}
   .luna-env-quickslot-shell{width:38px;height:38px}
-  .luna-party-five-slots{gap:6px;margin-left:calc(clamp(106px,13vw,188px) + 9px - 25px)}
+  .luna-party-five-slots{gap:6px;margin-left:calc(clamp(106px,13vw,188px) + 9px - 25px + 39px)}
   .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:52px;height:56px}
 }
 @media(max-width:1280px){
   .luna-party-clock{width:129px}
-  .luna-party-five-slots{margin-left:calc(clamp(65px,9vw,112px) + 9px - 21px)}
+  .luna-party-five-slots{margin-left:calc(clamp(65px,9vw,112px) + 9px - 21px + 34.5px)}
   .luna-environment-party-group{margin-left:21px}
   .luna-environment-top-icon{width:42px;height:52px}
   .luna-env-quickslots{left:calc(42px + 6px + 7px + 6px);gap:3px}
@@ -119,7 +120,7 @@
   .luna-env-quickslot>svg{width:9px;height:9px}
   .luna-environment-top-icon svg{width:19px;height:19px}
   .luna-environment-party-divider,.luna-party-end-divider{height:77px;margin:0 1px}
-  .luna-party-five-slots{gap:3px;margin-left:calc(75px - 18px)}
+  .luna-party-five-slots{gap:3px;margin-left:calc(75px - 18px + 25.5px)}
   .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:34px;height:44px}
   .luna-attribute-clock-group{gap:5px}
   .luna-attribute-notifications{width:min(338px,30vw)}
