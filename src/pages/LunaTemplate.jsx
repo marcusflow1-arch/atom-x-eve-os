@@ -69,7 +69,7 @@ import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
 import GameHubArea from '../components/dashboard/gamehub/GameHubArea';
 import GameList from '../components/dashboard/gamehub/GameList';
 import LibraryBrowser from '@/components/dashboard/gamehub/LibraryBrowser';
-import LibrarySectionDivider from '@/components/dashboard/LibrarySectionDivider';
+import LunaOrnateChrome from '@/components/dashboard/LunaOrnateChrome';
 import LibraryCardExplorer from '@/components/dashboard/gamehub/LibraryCardExplorer';
 import GameLandingPage from '../components/dashboard/gamehub/GameLandingPage';
 import GameProgressHub from '../components/dashboard/gamehub/GameProgressHub';
@@ -777,7 +777,8 @@ export default function LunaTemplate() {
                 <AvatarStatCard runtimeOnly />
               ) : (
                 <>
-                  <div className="pointer-events-auto flex-shrink-0" style={{ background: 'transparent' }}>
+                  <div className="luna-forged-profile pointer-events-auto flex-shrink-0">
+                    <LunaOrnateChrome variant="library-profile" />
                     <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} onModelFocus={() => setAvatarFocusMode(true)} />
                   </div>
                   <div style={{ height: '12px', flexShrink: 0 }} />
@@ -829,11 +830,6 @@ export default function LunaTemplate() {
           )}
         </div>
               }
-
-      {/* Stationary visual separator — the original 330px library width never changes. */}
-      {!avatarFocusMode && !uiVisible && !showConsoleMode && !showAchievements && homeSection === 'avatar' && (
-        <LibrarySectionDivider />
-      )}
 
       {/* Avatar Focus Hub — blank UI on avatar click; A/D rotates full-page section UIs */}
       <AnimatePresence>
