@@ -1,15 +1,16 @@
-import React, {useEffect,useMemo,useRef,useState} from 'react';
+/* eslint-disable react/no-unknown-property -- React Three Fiber mesh props */
+import {useEffect,useMemo,useRef,useState} from 'react';
 import * as THREE from 'three';
 import {Canvas,useFrame,useThree} from '@react-three/fiber';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
-import {stepRace, CARS} from './physics';
+import {stepRace} from './physics';
 
 function FallbackCar({color='#12cde4',ghost=false}){
  return <group>
   <mesh position={[0,0.56,0]} castShadow><boxGeometry args={[2,0.54,4.1]}/><meshStandardMaterial color={color} metalness={0.75} roughness={0.23} transparent={ghost} opacity={ghost?0.25:1}/></mesh>
   <mesh position={[0,1.02,-0.28]} castShadow><boxGeometry args={[1.64,0.56,1.96]}/><meshStandardMaterial color="#10253b" metalness={0.55} roughness={0.13} transparent opacity={ghost?0.2:0.94}/></mesh>
   <mesh position={[0,0.75,1.84]}><boxGeometry args={[1.65,0.12,0.1]}/><meshBasicMaterial color="#f34e69"/></mesh>
-  {[-1,1].flatMap(x=>[-1.25,1.35].map(z=><mesh key={x+':'+z} position={[x*0.97,0.36,z]} rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[0.43,0.43,0.24,12]}/><meshStandardMaterial color="#090b0d" roughness={0.85}/></mesh>))}
+  {[-1,1].flatMap(x=>[-1.25,1.35].map(z=><mesh key={x+':'+z} position={[x*0.97,0.36,z]} rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[0.43,0.43,0.24,12]}/><meshStandardMaterial color="#090b0d" roughness={0.85}/></mesh>))}
  </group>;
 }
 function ImportedCar({src,color}){
@@ -77,7 +78,7 @@ function CameraRig({stateRef}){
    point.set(s.lane+Math.sin(angle)*7,4.1+s.air,3+Math.cos(angle)*7);
    target.set(s.lane,0.85+s.air,2);
   } else {
-   const jitter=s.shake*0.08;
+   const jitter=(s.shakeEnabled===false?0:s.shake)*0.08;
    point.set(s.lane*0.66+(Math.random()-0.5)*jitter,4.3+s.air*0.18+(Math.random()-0.5)*jitter,12.8+s.speed*0.022);
    target.set(s.lane*0.47,0.86+s.air*0.35,-15);
   }
@@ -93,6 +94,7 @@ function WorldRuntime({stateRef,inputRef,car,carSrc,onSnapshot}){
   const s=stateRef.current;
   const input=inputRef.current;
   stepRace(s,input,dt,car);
+  s.shakeEnabled=input.shakeEnabled;
   if(input.dodge)input.dodge=false;
   if(carGroup.current){carGroup.current.position.set(s.lane,s.air,2);carGroup.current.rotation.y=-s.yaw;carGroup.current.rotation.z=-s.yaw*0.09;}
   if(enemyRef.current){enemyRef.current.position.set(s.opponentLane,0,2-s.opponentDistance);}
