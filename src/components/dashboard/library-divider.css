@@ -1,7 +1,4 @@
-/* Plain dark-gray draggable divider. No icon, box or cyan handle. */
-.luna-library-divider-track{position:absolute;z-index:79;top:64px;bottom:44px;width:14px;pointer-events:none;display:flex;align-items:center;justify-content:center}
-.luna-library-divider{position:relative;height:100%;width:14px;touch-action:none;cursor:col-resize;pointer-events:auto;outline:0;background:transparent}
-.luna-library-divider:before{content:'';position:absolute;top:0;bottom:0;left:6px;width:2px;background:linear-gradient(180deg,rgba(73,75,81,.58),rgba(90,93,100,.9) 18%,#55575e 49%,rgba(90,93,100,.9) 82%,rgba(73,75,81,.58));box-shadow:1px 0 1px rgba(0,0,0,.35);pointer-events:none}
-.luna-library-divider:hover:before,.luna-library-divider:focus-visible:before,.luna-library-divider[data-dragging]:before{background:linear-gradient(180deg,#60636a,#93969f 50%,#60636a);box-shadow:0 0 3px rgba(160,166,177,.3)}
-.luna-library-divider:focus-visible{outline:2px solid rgba(176,191,204,.9);outline-offset:-2px}
-@media(max-width:680px){.luna-library-divider-track,.luna-library-divider{width:18px}.luna-library-divider:before{left:8px}}
+/* Stationary divider at the original 330px library boundary.
+   Decorative only — cannot resize the page, library or Skill Tree. */
+.luna-library-divider-track{position:absolute;left:329px;top:64px;bottom:44px;z-index:79;width:2px;pointer-events:none;user-select:none}
+.luna-library-divider-line{display:block;width:2px;height:100%;background:linear-gradient(180deg,rgba(70,72,78,.36),rgba(89,91,97,.82) 18%,#55575e 50%,rgba(89,91,97,.82) 82%,rgba(70,72,78,.36));box-shadow:1px 0 1px rgba(0,0,0,.35)}
