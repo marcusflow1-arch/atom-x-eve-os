@@ -1,6 +1,6 @@
 import React,{useCallback,useEffect,useRef,useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {ArrowLeft,CarFront,Flag,Music2,SlidersHorizontal,Play,Upload,Volume2,VolumeX,Film,SkipForward,RotateCcw,Gauge,Wind,Settings2} from 'lucide-react';
+import {ArrowLeft,CarFront,Flag,Music2,Play,Upload,Volume2,VolumeX,Film,SkipForward,RotateCcw,Gauge} from 'lucide-react';
 import {createPageUrl} from '@/utils';
 import Game3Scene from '@/components/game3/Game3Scene';
 import {CARS,STORY_SCENES,makeRaceState,applyPerfectLaunch,shiftGear,activateGhost} from '@/components/game3/physics';
@@ -171,7 +171,7 @@ export default function Game3(){
   <div className="flex shrink-0 gap-1 border-b border-white/10 bg-[#081321] p-2 sm:hidden">{buttons.map(b=><button key={b.id} onClick={()=>setTab(b.id)} className={'flex-1 rounded-lg px-2 py-2 text-xs '+(tab===b.id?'bg-cyan-500/20 text-cyan-300':'text-white/60')}>{b.title}</button>)}</div>
   <audio ref={audio} src={audioUrl||undefined} loop preload="auto"/>
   <div className="relative min-h-0 flex-1">
-   <div className="absolute inset-0"><Game3Scene stateRef={race} inputRef={input} car={{...car,color:paint}} carSrc={modelUrls[car.id]||null} onSnapshot={setSnapshot}/></div>
+   <div className="absolute inset-0"><Game3Scene stateRef={race} inputRef={input} car={{...car,color:paint}} carSrc={modelUrls[car.id]||'/game3/models/'+car.file} onSnapshot={setSnapshot}/></div>
    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#03101a]/50 via-transparent to-[#03101a]/50"/>
    {snapshot.ghost>0&&<div className="pointer-events-none absolute inset-0 border-[7px] border-cyan-300/30" style={{boxShadow:'inset 0 0 90px '+slipColor+'55'}}/>}
    {snapshot.damageFlash>0&&<div className="pointer-events-none absolute inset-0 bg-red-500/20"/>}
