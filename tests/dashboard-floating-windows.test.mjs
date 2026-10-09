@@ -24,6 +24,7 @@ globalThis.ResizeObserver=class { observe() {} unobserve() {} disconnect() {} };
 Element.prototype.setPointerCapture=function(pointerId){this._pointerId=pointerId;};
 Element.prototype.hasPointerCapture=function(pointerId){return this._pointerId===pointerId;};
 Element.prototype.releasePointerCapture=function(pointerId){if(this._pointerId===pointerId)this._pointerId=null;};
+globalThis.mockWindowUserId='test-player';
 const React=await import('react'),{act}=React,{createRoot}=await import('react-dom/client');
 const bundle=await build({
   stdin:{contents:"export {default as DashboardWindow, focusDashboardWindow, activeDashboardWindow} from './src/components/dashboard/windows/DashboardWindow.jsx';",resolveDir:process.cwd(),loader:'jsx'},
@@ -35,7 +36,7 @@ const bundle=await build({
       "export const Grip=()=>null; export const Maximize2=()=>null; export const Minimize2=()=>null; export const Minus=()=>null; export const X=()=>null;"
     }));
     builder.onResolve({filter:/AuthContext$/},()=>({path:'auth',namespace:'fixture'}));
-    builder.onLoad({filter:/^auth$/,namespace:'fixture'},()=>({contents:"export const useAuth=()=>({user:{id:'test-player'}});",loader:'js'}));
+    builder.onLoad({filter:/^auth$/,namespace:'fixture'},()=>({contents:"export const useAuth=()=>({user:{id:globalThis.mockWindowUserId}});",loader:'js'}));
   }}],
 });
 const filename=process.cwd()+'/tests/__floating_window_runtime.cjs',module=new Module(filename);
@@ -79,6 +80,7 @@ try {
   });
   assert.equal(pos('inventory').x,before.x+140,'pointer drag moves inventory horizontally');
   assert.equal(pos('inventory').y,before.y+70,'pointer drag moves inventory vertically');
+  assert.equal(win('inventory').querySelector('[aria-label="Move Inventory window"]')._pointerId,null,'pointer capture is released after dragging');
   assert.deepEqual(pos('messages'),other,'dragging inventory does not move messages');
   const afterDrag=pos('inventory');
   await act(async()=>{
@@ -106,10 +108,18 @@ try {
   assert.ok(!win('messages'),'Escape closes only the topmost window');
   assert.ok(win('inventory'),'other windows remain open');
   assert.ok(sessionStorage.getItem('luna-window-v1:test-player:inventory'),'window geometry is saved separately');
-  console.log('PASS: independent portals, pointer drag, resize, minimize/restore, maximize/restore, focus stacking, topmost Escape, session geometry and viewport bounds');
+  const playerRect = JSON.parse(sessionStorage.getItem('luna-window-v1:test-player:inventory'));
+  const otherRect = {x:88,y:120,width:460,height:420};
+  sessionStorage.setItem('luna-window-v1:second-player:inventory',JSON.stringify(otherRect));
+  globalThis.mockWindowUserId='second-player';
+  await render();
+  assert.deepEqual(pos('inventory'),otherRect,'switching account loads that player’s own saved window geometry');
+  assert.deepEqual(JSON.parse(sessionStorage.getItem('luna-window-v1:test-player:inventory')),playerRect,'saved geometry of original player stays intact');
+  console.log('PASS: independent portals, pointer drag and capture release, resize, minimize/restore, maximize/restore, focus stacking, topmost Escape, account-specific session geometry and viewport bounds');
 } finally {
   await act(async()=>root.unmount());
   dom.window.close();
+  delete globalThis.mockWindowUserId;
 }
 
 const overview=readFileSync('src/components/dashboard/DashboardAvatarOverview.jsx','utf8');
