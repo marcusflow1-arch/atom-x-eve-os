@@ -137,6 +137,6 @@ export class HUD {
     x.fillStyle = 'rgba(5,7,16,0.86)'; rr(x, X, Y, bw, bh, 14); x.fill(); x.strokeStyle = 'rgba(140,180,255,0.45)'; x.lineWidth = 1; rr(x, X + .5, Y + .5, bw - 1, bh - 1, 14); x.stroke();
     x.textAlign = 'center'; x.fillStyle = '#fff'; x.font = '700 20px system-ui,sans-serif'; x.textBaseline = 'top'; x.fillText(this.title, W / 2, Y + 16); x.fillStyle = '#9fb8ff'; x.font = '12px system-ui,sans-serif'; x.fillText(this.subtitle, W / 2, Y + 44); x.textAlign = 'left';
     x.font = '13px system-ui,sans-serif'; HL.forEach((h, i) => { const yy = Y + 74 + i * 24; x.fillStyle = '#8fb4ff'; x.fillText(h[0], X + 24, yy); x.fillStyle = '#e8f0ff'; x.fillText(h[1], X + Math.min(this.helpW > 700 ? 250 : 230, bw * 0.34), yy); });
-    x.textAlign = 'center'; x.fillStyle = '#ffd76a'; x.fillText('Press Tab to close this panel', W / 2, Y + bh - 26); x.textAlign = 'left';
+    x.textAlign = 'center'; x.fillStyle = '#ffd76a'; x.fillText('Press F1, click, or use WASD to resume', W / 2, Y + bh - 26); x.textAlign = 'left';
   }
 }
