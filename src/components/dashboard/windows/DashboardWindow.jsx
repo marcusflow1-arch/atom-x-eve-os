@@ -18,12 +18,16 @@ function workArea() {
 export default function DashboardWindow({ id, title, children, onClose, onMinimizedChange, width = 720, height = 560, index = 0 }) {
   const { user } = useAuth();
   const storageKey = 'luna-window-v1:' + (user?.id || 'guest') + ':' + id;
-  const [rect, setRect] = useState(() => {
+  const initialRect = (key) => {
     const area = workArea();
     let saved;
-    try { saved = JSON.parse(sessionStorage.getItem(storageKey) || 'null'); } catch { /* fresh position */ }
+    try { saved = JSON.parse(sessionStorage.getItem(key) || 'null'); } catch { /* fresh position */ }
     return fitWindow(saved || { x: area.width / 2 - width / 2 + index * 24, y: area.y + 28 + index * 22, width, height }, area);
-  });
+  };
+  const [rect, setRect] = useState(() => initialRect(storageKey));
+  // Authentication may complete after this window opens. Never overwrite
+  // the signed-in player's saved geometry with a guest window position.
+  const [rectOwnerKey, setRectOwnerKey] = useState(storageKey);
   const [maximized, setMaximized] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [z, setZ] = useState(1500);
@@ -71,9 +75,15 @@ export default function DashboardWindow({ id, title, children, onClose, onMinimi
     window.addEventListener('resize', update);
     return () => { observer.disconnect(); window.removeEventListener('resize', update); };
   }, []);
+  useLayoutEffect(() => {
+    if (rectOwnerKey === storageKey) return;
+    setRect(initialRect(storageKey));
+    setRectOwnerKey(storageKey);
+  }, [storageKey, rectOwnerKey]);
   useEffect(() => {
+    if (rectOwnerKey !== storageKey) return;
     try { sessionStorage.setItem(storageKey, JSON.stringify(rect)); } catch { /* storage is optional */ }
-  }, [rect, storageKey]);
+  }, [rect, storageKey, rectOwnerKey]);
 
   const start = (event, kind) => {
     if (event.button !== 0 || maximized) return;
@@ -88,7 +98,15 @@ export default function DashboardWindow({ id, title, children, onClose, onMinimi
     const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
     setRect(drag.kind === 'resize' ? resizeWindow(drag.rect, dx, dy, workArea()) : moveWindow(drag.rect, dx, dy, workArea()));
   };
-  const end = () => { gesture.current = null; };
+  const end = (event) => {
+    const pointerId = gesture.current?.pointerId;
+    gesture.current = null;
+    // Release a completed gesture instead of holding pointer capture while
+    // another floating window is being moved or clicked.
+    if (pointerId != null && event?.currentTarget?.hasPointerCapture?.(pointerId)) {
+      event.currentTarget.releasePointerCapture(pointerId);
+    }
+  };
   const keyboardAdjust = (event, kind) => {
     const delta = { ArrowLeft: [-16,0], ArrowRight: [16,0], ArrowUp: [0,-16], ArrowDown: [0,16] }[event.key];
     if (!delta || maximized) return;
