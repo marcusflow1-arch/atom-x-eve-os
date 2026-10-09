@@ -1061,16 +1061,11 @@ function Large3DCard({ card, isActive }) {
   );
 }
 
-// Shared measured rail anchor for library and skill-book layout.
-function SkillTreeTile() {
-  return (
-    <div data-luna-environment-hub data-luna-skill-tree-launcher className="luna-skill-tree-launcher">
-      <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('toggleSkillTree'))}
-        aria-label="Open Skill Tree" className="luna-skill-tree-launcher__button">
-        <Network aria-hidden="true" /><span>Skill Tree</span><small>Avatar progression</small>
-      </button>
-    </div>
-  );
+// Preserve the original measured hub anchor for avatar-feature overlays
+// and Skill Book positioning. The *visible* Skill Tree button now lives
+// beside slot 1 in LunaSkillXpHud instead of occupying this top-left space.
+function SkillTreeAnchor() {
+  return <div data-luna-environment-hub data-luna-skill-tree-launcher className="luna-skill-tree-anchor" aria-hidden="true" />;
 }
 
 // Friend Reference - clickable friends that show join/invite options
@@ -1531,9 +1526,9 @@ export function LibraryBannerSection({
           {/* ── PS5-style Top Row ── */}
           <div className="flex items-center gap-4 w-full h-24">
 
-            {/* Environment Hub tile */}
+            {/* Invisible measurement anchor; the Skill Tree icon is beside slot 1. */}
             <div className="w-[247px] h-full flex-shrink-0">
-              <SkillTreeTile />
+              <SkillTreeAnchor />
             </div>
 
             {/* ── Party Bar: Five confirmed member slots ── */}
