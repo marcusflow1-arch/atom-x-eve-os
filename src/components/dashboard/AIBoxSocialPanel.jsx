@@ -27,7 +27,12 @@ export default function AIBoxSocialPanel({ mode = 'online' }) {
 
   const { data: presenceRows = [] } = useQuery({
     queryKey: ['all_users_for_online_list'],
-    queryFn: () => base44.entities.PlayerState.list('-last_update', 100),
+    queryFn: async () => {
+      const response = await base44.functions.invoke('dashboardSession', { action: 'online_players', data: {} });
+      const body = response?.data ?? response ?? {};
+      if (body.error) throw new Error(body.error);
+      return body.players || [];
+    },
     enabled: !!user?.id,
     staleTime: 4000,
     refetchInterval: 5000,
