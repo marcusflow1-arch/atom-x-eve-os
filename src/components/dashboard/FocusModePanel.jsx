@@ -1585,9 +1585,12 @@ export function LibraryBannerSection({
 
             </div>
 
-            {/* Calendar Box */}
-            <div className="flex-1 min-w-[400px] h-full">
-              {calendarBox}
+            {/* Status box is 35% narrower than its original slot. It stays
+                right-aligned without changing the party bar or dashboard layout. */}
+            <div className="flex-1 min-w-0 h-full flex justify-end">
+              <div className="luna-status-size-frame h-full min-w-0" style={{ width: '65%' }}>
+                {calendarBox}
+              </div>
             </div>
           </div>
 
