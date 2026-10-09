@@ -20,7 +20,7 @@ function eventStyle(event) {
 
 export default function DayPlanningView({ date, events = [], tasks = [], onAddEvent, onAiAssist, onEventClick }) {
   return (
-    <div className="absolute inset-0 flex min-h-0 flex-col bg-[#05080d]">
+    <div className="luna-calendar-dayview absolute inset-0 flex min-h-0 flex-col bg-[#05080d]">
       <div className="flex h-[56px] shrink-0 items-center justify-between border-b border-white/[0.05] px-4 md:px-6">
         <div><div className="text-[8px] font-bold uppercase tracking-[0.2em] text-white/22">Day plan</div><div className="mt-0.5 text-sm font-semibold text-white/65">{date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div></div>
         <div className="flex gap-1.5"><button type="button" onClick={onAiAssist} className="flex h-8 items-center gap-2 bg-cyan-200/[0.07] px-3 text-[8px] font-bold uppercase tracking-wider text-cyan-100/60 hover:bg-cyan-200/[0.11] hover:text-cyan-100"><Brain className="h-3.5 w-3.5" /> AI plan</button><button type="button" onClick={onAddEvent} className="flex h-8 items-center gap-2 bg-white/[0.045] px-3 text-[8px] font-bold uppercase tracking-wider text-white/45 hover:bg-white/[0.08] hover:text-white"><Plus className="h-3.5 w-3.5" /> Event</button></div>
