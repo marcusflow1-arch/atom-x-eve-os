@@ -21,12 +21,18 @@ export default function MultiplayerSystem({ envUrl, surface = 'dashboard' }) {
   const explicitlyJoinedRef = useRef(false); // true if joinMultiplayerChannel fired
   const hostGraceTimerRef = useRef(Date.now());
   const envUrlRef = useRef(envUrl);
+  const sharedGenresRef = useRef(user?.preferred_genres || []);
   const preBattleChannelRef = useRef(null);
   const battleChannelActiveRef = useRef(false);
 
   useEffect(() => {
     envUrlRef.current = envUrl;
   }, [envUrl]);
+  // The multiplayer heartbeat is intentionally long-lived; keep this separate
+  // ref fresh when a player edits their discoverable genres without reconnecting.
+  useEffect(() => {
+    sharedGenresRef.current = Array.isArray(user?.preferred_genres) ? user.preferred_genres : [];
+  }, [user?.preferred_genres]);
 
   const dashboardParticipants = useDashboardRoom(currentChannel, user, envUrl);
   useWebRTCVoice(currentChannel, user, !micEnabled || partyVoice, partyVoice, currentChannel?.startsWith("dashboard_") ? dashboardParticipants : participantIds);
@@ -417,7 +423,7 @@ export default function MultiplayerSystem({ envUrl, surface = 'dashboard' }) {
               env_url: envUrlCurrent,
               last_update: now,
               status: 'online',
-              preferred_genres: Array.isArray(user.preferred_genres) ? user.preferred_genres : [],
+              preferred_genres: sharedGenresRef.current,
               // We omit x,y,z,yaw,anim from DB to save payload size, but we keep them just in case
               x: state.x,
               y: state.y,
