@@ -233,7 +233,7 @@ export class Fighter {
     const fwd = [sinY, 0, cosY], right = [cosY, 0, -sinY];
     let f = c.fwd, r = c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }
     const crouched = this.ducked; const base = crouched ? 2.1 : c.walk ? 2.4 : 5.6; let sp = base * this.speedMul * (f < 0 ? 0.82 : 1);
-    if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY)) sp *= 0.0;
+    if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY) || this.heavyLandUntil > now) sp *= 0.0;
     if (this.elecUntil > now) sp *= 0.72;                              // lightning slows the victim (they keep control)
     const wish = [(fwd[0] * f + right[0] * r) * sp, (fwd[2] * f + right[2] * r) * sp];
     if (this.onGround) {
@@ -266,22 +266,33 @@ export class Fighter {
   startJump() {
     const c = this.cmd; this.vel[1] = 5.65; this.onGround = false; this.jumpAt = this.now; this.fjUsed = false;
     let an = 'BOTH_JUMP1'; if (c.fwd < 0) an = 'BOTH_JUMPBACK1'; else if (c.fwd === 0 && c.right > 0) an = 'BOTH_JUMPRIGHT1'; else if (c.fwd === 0 && c.right < 0) an = 'BOTH_JUMPLEFT1';
-    this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.06, loop: false }); this.actor.followLegs(); if (!this.saber.holstered && !this.saber.isActiveSwing()) { }
+    this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.06, loop: false });
+    // Jump legs should not kill an in-progress torso saber slash.
+    if (this.saber.holstered || !this.saber.isActiveSwing()) this.actor.followLegs();
     this.g.sfxAt && this.g.sfxAt('jump', this.pos, 0.0);
   }
   startForceJump() {
     const c = this.cmd; this.fjUsed = true; const h = FORCE_JUMP_HEIGHT[this.jumpLevel]; const v = Math.sqrt(2 * G * h); this.vel[1] = Math.max(this.vel[1], v);
     // JO: FORCEJUMP1/BACK/LEFT/RIGHT anim chosen by movement direction
     let an = 'BOTH_FORCEJUMP1'; if (c.fwd < 0) an = 'BOTH_FORCEJUMPBACK1'; else if (c.fwd === 0 && c.right > 0) an = 'BOTH_FORCEJUMPRIGHT1'; else if (c.fwd === 0 && c.right < 0) an = 'BOTH_FORCEJUMPLEFT1';
-    this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.05, loop: false }); this.fjStart = this.now; this.g.onForceJump && this.g.onForceJump(this);
+    this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.05, loop: false });
+    if (this.saber.holstered || !this.saber.isActiveSwing()) this.actor.followLegs();
+    this.fjStart = this.now; this.g.onForceJump && this.g.onForceJump(this);
   }
   land(impact) {
     const air = this.airAnim || 'BOTH_JUMP1'; let an = 'BOTH_LAND1';
     const forceJ = /FORCE/.test(air) || this.fjUsed;
     if (forceJ) an = air.includes('BACK') ? 'BOTH_FORCELANDBACK1' : air.includes('LEFT') ? 'BOTH_FORCELANDLEFT1' : air.includes('RIGHT') ? 'BOTH_FORCELANDRIGHT1' : 'BOTH_FORCELAND1';
     else an = air.includes('BACK') ? 'BOTH_LANDBACK1' : air.includes('LEFT') ? 'BOTH_LANDLEFT1' : air.includes('RIGHT') ? 'BOTH_LANDRIGHT1' : 'BOTH_LAND1';
-    if (impact > 14) an = 'BOTH_LAND2';
-    const info = this.actor.skel.anims[an]; this.landUntil = this.now + Math.min(0.5, animLen(info)); this.actor.setLegs(an, { restart: true, blend: 0.04, loop: false }); this.airAnim = null; this.fjUsed = false;
+    // A Force Jump has its own landing clip; never replace it with the
+    // generic heavy fall, which produced a conspicuous wrong landing bounce.
+    if (impact > 14 && !forceJ) an = 'BOTH_LAND2';
+    const info = this.actor.skel.anims[an];
+    const duration = info ? animLen(info) : 0.3;
+    this.landUntil = this.now + duration; // retain the complete source animation
+    this.heavyLandUntil = an === 'BOTH_LAND2' ? this.landUntil : 0;
+    this.actor.setLegs(an, { restart: true, blend: 0.04, loop: false });
+    this.airAnim = null; this.fjUsed = false;
     this.g.onLand && this.g.onLand(this, impact);
   }
   startRoll() {
