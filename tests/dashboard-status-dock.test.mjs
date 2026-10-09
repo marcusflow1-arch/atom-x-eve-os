@@ -93,8 +93,12 @@ try {
   await run();
   assert.equal(expanded(),false,'old items do not trigger arrival popups');
   assert.equal(document.querySelectorAll('.luna-status-selectors button').length,2);
-  assert.ok(document.querySelector('.luna-status-divider'));
-  assert.ok(document.querySelector('.luna-status-underline'));
+  const statusDock = document.querySelector('.luna-status');
+  const clock = statusDock.querySelector('.luna-status-calendar-side');
+  const notifications = statusDock.querySelector('.luna-status-announcements');
+  assert.ok(clock.compareDocumentPosition(notifications) & Node.DOCUMENT_POSITION_FOLLOWING,'clock is to the left of notification controls');
+  assert.equal(document.querySelector('.luna-status-divider'),null,'no separator line between calendar and notifications');
+  assert.equal(document.querySelector('.luna-status-underline'),null,'no line below notifications');
   assert.equal(document.querySelector('.luna-status .lucide-chevron-right'),null);
   assert.equal(document.querySelector('.luna-status-quick'),null);
   await run(()=>button('Open calendar').click());assert.equal(calendars,1);
