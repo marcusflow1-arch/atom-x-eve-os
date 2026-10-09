@@ -236,7 +236,7 @@ export default function JediOutcastRuntime({ onBack, mode = 'campaign', embedded
         const done = Number(event.data.done);
         const total = Number(event.data.total);
         if (Number.isFinite(done) && Number.isFinite(total) && total > 0) {
-          setProgress(`Loading original textures, maps and shaders · ${(done / 1048576).toFixed(1)} / ${(total / 1048576).toFixed(1)} MB`);
+          setProgress(`Downloading original game archives · ${(done / 1048576).toFixed(1)} / ${(total / 1048576).toFixed(1)} MB`);
         }
       }
 
