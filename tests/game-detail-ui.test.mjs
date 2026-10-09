@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { build } from 'esbuild';
 import { JSDOM } from 'jsdom';
 const dom = new JSDOM('<div id="root"></div>', { url: 'https://test.local/GameDetail?id=game-one' });
-for (const name of ['window', 'document', 'HTMLElement', 'Element', 'SVGElement', 'Node', 'NodeFilter', 'HTMLInputElement', 'MutationObserver', 'CustomEvent', 'Event', 'getComputedStyle']) {
+for (const name of ['window', 'document', 'HTMLElement', 'Element', 'Node', 'NodeFilter', 'HTMLInputElement', 'MutationObserver', 'CustomEvent', 'Event', 'getComputedStyle']) {
   globalThis[name] = name === 'getComputedStyle' ? dom.window.getComputedStyle.bind(dom.window) : dom.window[name];
 }
 Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, configurable: true });
