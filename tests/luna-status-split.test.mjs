@@ -15,16 +15,18 @@ test('top row places icon-only Environment Hub first, divider, party slots, then
   const markup=frame.slice(from,to);
   const environmentPos=markup.indexOf('className="luna-environment-top-icon"');
   const environmentDividerPos=markup.indexOf('<span className="luna-environment-party-divider" aria-hidden="true" />');
+  const favoritesPos=markup.indexOf('<EnvironmentFavoriteSlots currentEnvId={currentEnvId}');
   const slotsPos=markup.indexOf('<div className="luna-party-five-slots"');
   const partyEndDividerPos=markup.indexOf('<span className="luna-party-end-divider" aria-hidden="true" />');
   const clockGroupPos=markup.indexOf('<div className="luna-attribute-clock-group"');
   const clockPos=markup.indexOf('<div className="luna-party-clock">{calendarBox}</div>');
   const calendarDividerPos=markup.indexOf('<span className="luna-party-clock-divider" aria-hidden="true" />');
   const notificationPos=markup.indexOf('<div className="luna-attribute-notifications"');
-  assert.ok(environmentPos>0 && environmentPos<environmentDividerPos && environmentDividerPos<slotsPos
+  assert.ok(environmentPos>0 && environmentPos<environmentDividerPos && environmentDividerPos<favoritesPos && favoritesPos<slotsPos
     && slotsPos<partyEndDividerPos && partyEndDividerPos<clockGroupPos
     && clockGroupPos<clockPos && clockPos<calendarDividerPos && calendarDividerPos<notificationPos);
   assert.match(markup,/aria-label="Open Environment Hub"/);
+  assert.match(markup,/defaultModelUrl=\{defaultModelUrl\}/);
   assert.match(markup,/onClick=\{\(\) => window\.dispatchEvent\(new Event\('openEnvironmentHub'\)\)\}/);
   assert.match(markup,/<Globe size=\{23\} strokeWidth=\{1\.6\} aria-hidden="true" \/>/);
   assert.doesNotMatch(markup,/>\s*Environments\s*</);
@@ -37,15 +39,19 @@ test('top row places icon-only Environment Hub first, divider, party slots, then
   assert.match(markup,/lunaAIBattleRejoin/);
 });
 
-test('restored party-slot offset moves only five portraits and preserves the far-left divider and Environment icon',()=>{
+test('four new environment pins are separate from five party slots, preserving party coordinates',()=>{
   assert.match(css,/\.luna-header-skill-anchor\{position:absolute;top:0;left:0;width:1px/);
   assert.match(css,/\.luna-environment-party-group\{[^}]*gap:10px/);
+  assert.match(css,/\.luna-environment-party-group\{[^}]*margin-left:25px/);
   assert.match(css,/\.luna-environment-top-icon\{[^}]*width:50px;height:58px/);
+  assert.match(css,/\.luna-environment-top-icon\{[^}]*border:0;border-radius:0;color:#78cfff;background:transparent;box-shadow:none/);
+  assert.match(css,/\.luna-env-quickslots\{position:absolute/);
+  assert.match(css,/\.luna-env-quickslot-shell\{[^}]*width:46px;height:46px/);
   assert.match(css,/\.luna-environment-party-divider,\.luna-party-end-divider\{[^}]*height:77px/);
-  assert.match(css,/\.luna-party-five-slots\{[^}]*margin-left:calc\(clamp\(112px,15vw,247px\) \+ 12px\)/);
-  assert.match(css,/@media\(max-width:1470px\)\{[\s\S]*?margin-left:calc\(clamp\(106px,13vw,188px\) \+ 9px\)/);
-  assert.match(css,/@media\(max-width:1280px\)\{[\s\S]*?margin-left:calc\(clamp\(65px,9vw,112px\) \+ 9px\)/);
-  assert.match(css,/@media\(max-width:1040px\)\{[\s\S]*?margin-left:75px/);
+  assert.match(css,/\.luna-party-five-slots\{[^}]*margin-left:calc\(clamp\(112px,15vw,247px\) \+ 12px - 25px\)/);
+  assert.match(css,/@media\(max-width:1470px\)\{[\s\S]*?margin-left:calc\(clamp\(106px,13vw,188px\) \+ 9px - 25px\)/);
+  assert.match(css,/@media\(max-width:1280px\)\{[\s\S]*?margin-left:calc\(clamp\(65px,9vw,112px\) \+ 9px - 21px\)/);
+  assert.match(css,/@media\(max-width:1040px\)\{[\s\S]*?margin-left:calc\(75px - 18px\)/);
   const row=frame.slice(frame.indexOf('<div className="luna-header-status-row"'),frame.indexOf('{/* Bottom Row: Nav Boxes + Intelligence Feed */}'));
   assert.match(row,/data-luna-environment-trigger/);
   assert.match(row,/luna-environment-party-divider/);
