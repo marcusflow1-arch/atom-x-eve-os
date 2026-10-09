@@ -16,6 +16,25 @@ Deno.serve(async req => {
     if (!user) return Response.json({error:'Sign in to join a dashboard.'},{status:401});
     const {action='heartbeat',data={}} = await req.json();
     const svc = client.asServiceRole.entities;
+    if (action === 'online_players') {
+      // Presence is read through the authenticated backend because PlayerState
+      // client RLS exposes only the caller's own record. Return public fields
+      // only: no private profile data or arbitrary user-row access.
+      const records = latest(await svc.PlayerState.filter({}, '-last_update', 500));
+      const byPlayer = new Map();
+      for (const row of records) {
+        const id = String(row.player_id || '');
+        if (!id || id === String(user.id) || !live(row) || byPlayer.has(id)) continue;
+        byPlayer.set(id, {
+          player_id: id, display_name: row.display_name || 'Player',
+          avatar_url: row.avatar_url || '', status: row.status || 'online',
+          last_update: Number(row.last_update || 0),
+          preferred_genres: Array.isArray(row.preferred_genres) ? row.preferred_genres.slice(0,12) : [],
+        });
+        if (byPlayer.size >= 100) break;
+      }
+      return Response.json({ players: [...byPlayer.values()] });
+    }
     if (action === 'online_summary') {
       const [presence, queue, matches] = await Promise.all([
         svc.PlayerState.filter({}),
