@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import Module from 'node:module';
 import { build } from 'esbuild';
 import { JSDOM } from 'jsdom';
+import { libraryWidthFromRatio, libraryRatioFromWidth } from '../src/components/dashboard/libraryResize.js';
 
 const dom = new JSDOM('<div id="root"></div>', { url: 'https://test.local/LunaTemplate', pretendToBeVisual:true });
 for (const name of ['window','document','HTMLElement','Element','Node','SVGElement','MutationObserver','Event','MouseEvent','CustomEvent']) globalThis[name] = dom.window[name];
@@ -23,17 +24,20 @@ const bundled = await build({
 const filename=process.cwd()+'/tests/__library_resize.cjs', mod=new Module(filename);
 mod.paths=Module._nodeModulePaths(process.cwd());mod._compile(bundled.outputFiles[0].text,filename);
 const { Divider } = mod.exports;
-const container = { current:{getBoundingClientRect:()=>({left:100,width:1400,right:1500})} };
-function App() {
-  const [width,setWidth]=React.useState(330);
+let parentWidth = 1400;
+const container = { current:{getBoundingClientRect:()=>({left:100,width:parentWidth,right:100+parentWidth})} };
+function App({total}) {
+  const [ratio,setRatio]=React.useState(() => libraryRatioFromWidth(330,1400));
+  const width=libraryWidthFromRatio(ratio,total);
   return React.createElement(React.Fragment,null,
     React.createElement('div',{id:'library-width', 'data-width':width}),
-    React.createElement(Divider,{width,onResize:setWidth,containerRef:container}),
-    React.createElement('div',{id:'main-width','data-left':width})
+    React.createElement(Divider,{width,onResize:pixels=>setRatio(libraryRatioFromWidth(pixels,total)),containerRef:container}),
+    React.createElement('div',{id:'main-width','data-left':width,'data-width':total-width})
   );
 }
 const root=createRoot(document.getElementById('root'));
-await act(async()=>root.render(React.createElement(App)));
+const render=async()=>act(async()=>root.render(React.createElement(App,{total:parentWidth})));
+await render();
 const width=()=>Number(document.getElementById('library-width').getAttribute('data-width'));
 const handle=()=>document.querySelector('[role="separator"]');
 const pointer=(type,x)=> {
@@ -54,7 +58,19 @@ try {
   assert.equal(width(),330,'double-click resets');
   await act(async()=>{pointer('pointerdown',430);pointer('pointermove',-100);pointer('pointerup',-100);});
   assert.equal(width(),220,'minimum width is enforced');
-  console.log('PASS: live splitter pointer drag, actual pane resize, ARIA width, cursor cleanup, keyboard resize, reset and min clamp.');
+  await act(async()=>{pointer('pointerdown',430);pointer('pointermove',800);pointer('pointerup',800);});
+  assert.equal(width(),700,'user can make the two panes 50/50, not capped at 485px');
+  assert.equal(Number(document.getElementById('main-width').getAttribute('data-width')),700);
+  assert.match(handle().getAttribute('aria-valuetext'), /Library 50%, main area 50%/);
+  parentWidth = 1000;
+  await render();
+  assert.equal(width(),500,'ratio is maintained when viewport width changes');
+  assert.equal(Number(document.getElementById('main-width').getAttribute('data-width')),500);
+  parentWidth = 800;
+  await render();
+  assert.equal(width(),350,'right workspace minimum still applies');
+  assert.equal(Number(document.getElementById('main-width').getAttribute('data-width')),450);
+  console.log('PASS: live ratio resizing, 50/50 split, viewport adaptation, ARIA value, cursor cleanup, keyboard, reset and width bounds.');
 } finally {
   await act(async()=>root.unmount());
   dom.window.close();
