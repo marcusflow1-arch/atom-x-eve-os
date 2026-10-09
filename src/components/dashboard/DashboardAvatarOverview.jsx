@@ -16,6 +16,8 @@ import { useAIBattleSnapshot } from '@/components/battle/useAIBattleQueue';
 import LunaFriendsQuickAccessPanel from './LunaFriendsQuickAccessPanel';
 import LunaSeasonPassOverlay from './LunaSeasonPassOverlay';
 import LunaSkillXpHud from './LunaSkillXpHud';
+import LunaOrnateChrome from './LunaOrnateChrome';
+import './luna-ornate-attributes.css';
 import LunaMessageFriendsPanel from './LunaMessageFriendsPanel';
 import MessengerHub from '@/components/friends/MessengerHub';
 import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
@@ -36,7 +38,7 @@ function GlassSlot({ icon: Icon, label, active, alert = false, badge = 0, onClic
       aria-pressed={active}
       data-dashboard-quick-control
       onClick={onClick}
-      className={`relative flex-shrink-0 border backdrop-blur-2xl transition-all duration-200 hover:bg-white/[0.10] ${compact ? 'h-[42px] w-full rounded-lg' : 'h-[54px] w-[54px] rounded-xl hover:-translate-y-1'} ${active ? 'border-cyan-300/45 bg-cyan-300/[0.10]' : alert ? 'border-cyan-200/45 bg-cyan-300/[0.09] animate-pulse' : 'border-white/[0.16] bg-white/[0.055]'}`}
+      className={`axe-ornate-action relative flex-shrink-0 border backdrop-blur-2xl transition-all duration-200 hover:bg-white/[0.10] ${compact ? 'h-[42px] w-full rounded-lg' : 'h-[54px] w-[54px] rounded-xl hover:-translate-y-1'} ${active ? 'border-cyan-300/45 bg-cyan-300/[0.10]' : alert ? 'border-cyan-200/45 bg-cyan-300/[0.09] animate-pulse' : 'border-white/[0.16] bg-white/[0.055]'}`}
       style={{
         boxShadow: active
           ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 20px rgba(34,211,238,0.16), 0 6px 18px rgba(0,0,0,0.18)'
@@ -53,7 +55,7 @@ function GlassSlot({ icon: Icon, label, active, alert = false, badge = 0, onClic
 
 function StatRow({ icon, label, value, accent = 'text-cyan-300' }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-1 border-b border-white/[0.055] last:border-b-0 min-h-[20px]">
+    <div className="axe-stat-row flex items-center justify-between gap-3 py-1 border-b border-white/[0.055] last:border-b-0 min-h-[20px]">
       <div className="flex items-center gap-2 min-w-0">
         <span className={accent}>{icon}</span>
         <span className="text-white/55 text-[9px] uppercase tracking-wider truncate">{label}</span>
@@ -629,13 +631,14 @@ export default function DashboardAvatarOverview() {
         className={`absolute right-[-1px] top-[26px] z-50 w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
         aria-label="AI Attribute Box"
       >
-        <div className="relative h-full w-full bg-transparent border-b border-white/[0.06] shadow-[0_20px_45px_rgba(0,0,0,0.10)]">
-          <div className="relative flex h-full w-full flex-col bg-transparent backdrop-blur-[10px] overflow-hidden">
-            <div className="relative shrink-0 px-5 pt-3 pb-2 border-b border-white/[0.12]">
+        <div className="axe-attribute-shell relative h-full w-full bg-transparent border-b border-white/[0.06] shadow-[0_20px_45px_rgba(0,0,0,0.10)]">
+          <LunaOrnateChrome />
+          <div className="axe-attribute-content relative flex h-full w-full flex-col bg-transparent backdrop-blur-[10px] overflow-hidden">
+            <div className="axe-attribute-heading relative shrink-0 px-5 pt-3 pb-2 border-b border-white/[0.12]">
               <div className="flex items-center gap-2 pr-9">
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-white/45 text-[8px] uppercase tracking-[0.2em]">{aiBoxSocialMode === 'party' ? 'Party Invitations' : socialModeActive ? 'AI Social' : 'AI Attribute Box'}</div>
+                  <div data-axe-panel-label className="text-white/45 text-[8px] uppercase tracking-[0.2em]">{aiBoxSocialMode === 'party' ? 'Party Invitations' : socialModeActive ? 'AI Social' : 'AI Attribute Box'}</div>
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="truncate text-white font-bold text-base">
                       {companion?.name || 'AI Avatar'}
@@ -687,7 +690,7 @@ export default function DashboardAvatarOverview() {
             </div>
 
             <div
-              className={`relative min-h-0 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent ${socialModeActive ? 'px-3 py-2' : 'px-5 py-1'}`}
+              className={`axe-attribute-body relative min-h-0 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent ${socialModeActive ? 'px-3 py-2' : 'px-5 py-1'}`}
               style={socialModeActive ? {
                 background: 'linear-gradient(145deg, rgba(5,12,22,.48), rgba(2,7,14,.26))',
                 backdropFilter: 'blur(20px) saturate(125%)',
@@ -716,12 +719,12 @@ export default function DashboardAvatarOverview() {
 
                   {attributeView.startsWith('blank-') && <div className="min-h-[300px]" />}
 
-                  <div className="mt-1 pt-1 border-t border-white/[0.08]">
-                    <div className="flex justify-between mb-1"><span className="text-white/60 text-[7px] uppercase">Top Genres / Current Levels</span><span className="text-white/30 text-[6px]">XP / Level</span></div>
+                  <div className="axe-genre-block mt-1 pt-1 border-t border-white/[0.08]">
+                    <div className="flex justify-between mb-1"><span className="axe-genre-heading text-white/60 text-[7px] uppercase">Top Genres / Current Levels</span><span className="text-white/30 text-[6px]">XP / Level</span></div>
                     <GenreRows genres={progression?.genres} />
                   </div>
 
-                  <div className="mt-1 pt-1 border-t border-white/[0.08] grid grid-cols-2 gap-1">
+                  <div className="axe-stat-points mt-1 pt-1 border-t border-white/[0.08] grid grid-cols-2 gap-1">
                     {[['Strength', stats.strength], ['Intelligence', stats.intelligence], ['Wisdom', stats.wisdom], ['Vitality', stats.vitality]].map(([label, value]) => (
                       <div key={label} className="border border-white/[0.07] bg-transparent px-2 py-1"><div className="text-white/35 text-[7px] uppercase">{label}</div><div className="text-white text-[10px] font-semibold">{value}</div></div>
                     ))}
@@ -732,7 +735,7 @@ export default function DashboardAvatarOverview() {
 
             {surface === 'dashboard' && !socialModeActive && (
               <div
-                className="relative z-50 shrink-0 border-t border-white/[0.10] px-3 py-2 pointer-events-auto"
+                className="axe-attribute-actions relative z-50 shrink-0 border-t border-white/[0.10] px-3 py-2 pointer-events-auto"
                 data-dashboard-attribute-actions
               >
                 <div className="grid grid-cols-4 gap-1.5">
