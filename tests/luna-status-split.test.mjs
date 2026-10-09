@@ -37,6 +37,23 @@ test('top row places icon-only Environment Hub first, divider, party slots, then
   assert.match(markup,/lunaAIBattleRejoin/);
 });
 
+test('restored party-slot offset moves only five portraits and preserves the far-left divider and Environment icon',()=>{
+  assert.match(css,/\.luna-header-skill-anchor\{position:absolute;top:0;left:0;width:1px/);
+  assert.match(css,/\.luna-environment-party-group\{[^}]*gap:10px/);
+  assert.match(css,/\.luna-environment-top-icon\{[^}]*width:50px;height:58px/);
+  assert.match(css,/\.luna-environment-party-divider,\.luna-party-end-divider\{[^}]*height:77px/);
+  assert.match(css,/\.luna-party-five-slots\{[^}]*margin-left:calc\(clamp\(112px,15vw,247px\) \+ 12px\)/);
+  assert.match(css,/@media\(max-width:1470px\)\{[\s\S]*?margin-left:calc\(clamp\(106px,13vw,188px\) \+ 9px\)/);
+  assert.match(css,/@media\(max-width:1280px\)\{[\s\S]*?margin-left:calc\(clamp\(65px,9vw,112px\) \+ 9px\)/);
+  assert.match(css,/@media\(max-width:1040px\)\{[\s\S]*?margin-left:75px/);
+  const row=frame.slice(frame.indexOf('<div className="luna-header-status-row"'),frame.indexOf('{/* Bottom Row: Nav Boxes + Intelligence Feed */}'));
+  assert.match(row,/data-luna-environment-trigger/);
+  assert.match(row,/luna-environment-party-divider/);
+  assert.match(row,/luna-party-end-divider/);
+  assert.match(row,/partySlots\.map\(\(member, index\) =>/);
+  assert.match(row,/mode: 'party'/);
+});
+
 test('calendar tile has functional icon, live time, date and calendar-window action',()=>{
   assert.match(frame,/calendarBox=\{<DashboardClockTile onCalendarClick=\{onOpenCalendar \|\| openCalendar\} \/>\}/);
   assert.match(clock,/CalendarDays size=\{22\}/);
