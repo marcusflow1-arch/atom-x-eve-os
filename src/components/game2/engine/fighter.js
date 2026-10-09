@@ -174,7 +174,18 @@ export class Fighter {
     switch (this.status) {
       case 'dead': this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
       case 'flung': this.physicsFlung(dt); return this.finish(dt);
-      case 'down': this.frictionMove(dt, 8); if (this.statusT > (this.downTime || 1.1)) { this.status = 'getup'; this.statusT = 0; const g = Math.random() < 0.5 ? ['BOTH_GETUP1', 1] : Math.random() < 0.5 ? ['BOTH_FORCE_GETUP_B1', 2] : ['BOTH_FORCE_GETUP_B3', 3]; this.getupLen = this.playWhole(g[0], { blend: 0.1 }); this.yaw = this.yaw; } return this.finish(dt);
+      case 'down':
+        this.frictionMove(dt, 8);
+        // JO quick-rise: Space while grounded cancels the prone wait and uses
+        // the supplied Force Getup animation. Without input, use a normal getup.
+        if (this.onGround && (this.cmd.jumpPressed || this.statusT > (this.downTime || 1.1))) {
+          const quick = this.cmd.jumpPressed;
+          const anim = quick && a.skel.anims.BOTH_FORCE_GETUP_B1 ? 'BOTH_FORCE_GETUP_B1' : 'BOTH_GETUP1';
+          this.status = 'getup'; this.statusT = 0;
+          this.getupLen = this.playWhole(anim, { blend: 0.08 });
+          this.cmd.jumpPressed = false;
+        }
+        return this.finish(dt);
       case 'getup': this.frictionMove(dt, 8); if (this.statusT >= this.getupLen - 0.05) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; this.actor.setLegs(this.saber.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2', { blend: 0.15 }); } return this.finish(dt);
       case 'gripped': { const ty = this.gripLift ?? 1.3; this.pos[1] += (ty - this.pos[1]) * Math.min(1, dt * 4); this.vel[0] = this.vel[2] = 0; if (this.gripCarry) { const c = this.gripCarry(); const k = Math.min(1, dt * 3); this.pos[0] += (c[0] - this.pos[0]) * k; this.pos[2] += (c[2] - this.pos[2]) * k; this.g.world.collide(this.pos, this.radius); } this.pos[1] += Math.sin(now * 3.1) * 0.0025; this.yaw += Math.sin(now * 2.2) * 0.004; return this.finish(dt); }
       case 'shocked': {
@@ -373,11 +384,13 @@ export class Fighter {
       const T = this.thrown, d = [Math.cos(T.ang), 0, Math.sin(T.ang)]; const Y = v3.scale(d, -1), X = v3.norm(v3.cross([0, 1, 0], Y)), Z = v3.cross(X, Y);
       M.fill(0); M[0] = X[0]; M[1] = X[1]; M[2] = X[2]; M[4] = Y[0]; M[5] = Y[1]; M[6] = Y[2]; M[8] = Z[0]; M[9] = Z[1]; M[10] = Z[2]; M[12] = T.pos[0]; M[13] = T.pos[1]; M[14] = T.pos[2]; M[15] = 1; this.hiltScaleY = 1;
     }
-    // Aim the visible blade in pitch as well as yaw so the hit test and the rendered
-    // down-slash/up-slash occupy the same 3D path (including crouched or airborne targets).
+    // Saber attacks already use their actual Ghoul2 directional arm/bone clips.
+    // A limited camera correction helps third-person targeting without
+    // twisting the blade 50+ degrees away from the animated hand and hilt.
+    // Collision and rendering continue to sample this exact same direction.
     let bladeDir;
     if (this.isPlayer && this.hilt === 'hand' && this.swingActive()) {
-      const pitch = clamp(this.g.cam.pitch, -0.6, 1.1) * 0.85;
+      const pitch = clamp(this.g.cam.pitch * 0.24, -0.17, 0.25);
       const axis = [Math.cos(this.yaw), 0, -Math.sin(this.yaw)];
       const original = v3.norm([-M[4], -M[5], -M[6]]);
       const cross = v3.cross(axis, original), dot = v3.dot(axis, original);
