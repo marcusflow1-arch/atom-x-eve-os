@@ -89,7 +89,9 @@ Deno.serve(async req => {
     }
     return Response.json({success:true,channel_id:channel,host_id:hostId,
       host_name:host?.display_name || row.display_name,env_url:host?.env_url || row.env_url,
-      players:players.map((p,index) => publicPlayer({...p,x:-0.9*index,anim:'idle'}))});
+      // Space up to five connected players across the dashboard stage
+      // instead of assigning tightly stacked (-0.9 unit) spawn positions.
+      players:players.map((p,index) => publicPlayer({...p,x:(index-(players.length-1)/2)*1.65,anim:'idle'}))});
   } catch (error) {
     console.error('[dashboardSession]',error);
     return Response.json({error:error.message || 'Dashboard connection failed.'},{status:500});
