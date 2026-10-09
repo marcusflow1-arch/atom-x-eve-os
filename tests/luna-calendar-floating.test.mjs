@@ -36,6 +36,7 @@ test('embedded calendar renders actual month, day, and event creation without bo
     functions:{invoke:async(name,params)=>{assert.equal(name,'calendarAgent');if(params.action==='getState'){dataLoads++;return {data:{events:[],occurrences:[],tasks:[],notes:[]}};}return {data:{success:true}};}},
     entities:{UserEvent:{subscribe:()=>()=>{}},UserTask:{subscribe:()=>()=>{}},UserNote:{subscribe:()=>()=>{}}}
   }};
+  console.log('calendar-test: before bundle');
   const built=await build({
     stdin:{contents:"export {default as Calendar} from './src/components/calendar/IntelligentCalendarOverlay.jsx';",resolveDir:process.cwd(),loader:'jsx'},
     bundle:true,write:false,format:'cjs',platform:'node',packages:'external',jsx:'automatic',alias:{'@':process.cwd()+'/src'},loader:{'.css':'empty'},
@@ -46,6 +47,7 @@ test('embedded calendar renders actual month, day, and event creation without bo
       b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:'export const base44=globalThis.calendarFixture.sdk;',loader:'js'}));
     }}],
   });
+  console.log('calendar-test: after bundle');
   const filename=process.cwd()+'/tests/__calendar-float.cjs',mod=new Module(filename);
   mod.paths=Module._nodeModulePaths(process.cwd());mod._compile(built.outputFiles[0].text,filename);
   const {Calendar}=mod.exports;
@@ -54,7 +56,9 @@ test('embedded calendar renders actual month, day, and event creation without bo
   const run=fn=>act(async()=>{fn?.();await new Promise(resolve=>setTimeout(resolve,80));});
   try{
     document.body.style.overflow='auto';
+    console.log('calendar-test: before render');
     await run(()=>root.render(React.createElement(Calendar,{embedded:true,currentUserId:'player',onClose:()=>closed++})));
+    console.log('calendar-test: rendered');
     assert.ok(document.querySelector('.luna-calendar-window'),'calendar is mounted inside dashboard window body');
     assert.equal(document.querySelector('.luna-calendar-window').getAttribute('role'),'region');
     assert.equal(document.body.style.overflow,'auto','other dashboard windows are not scroll-locked');
