@@ -48,7 +48,7 @@ export function stepRace(s,input,dt,car=CARS[0]){
  const accelerate=input.forward?power:0;
  const airDrag=(0.012*s.speed+0.0012*s.speed*s.speed);
  const brake=input.back?28:0;
- s.speed=clamp(s.speed+(accelerate-airDrag-brake)*dt,0,limit+8);
+ s.speed=clamp(s.speed+(accelerate-airDrag-brake)*dt,0,Math.min(MAX_SPEED,limit+8));
  if(s.boost>0)s.speed=clamp(s.speed+7*dt,0,Math.min(MAX_SPEED,limit+10));
  if(input.nitro && s.nitrous>0){
   s.speed=clamp(s.speed+38*dt,0,Math.min(MAX_SPEED,limit+13));
