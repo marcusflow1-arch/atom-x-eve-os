@@ -102,6 +102,11 @@ try {
   assert.equal(document.querySelector('.luna-status .lucide-chevron-right'),null);
   assert.equal(document.querySelector('.luna-status-quick'),null);
   await run(()=>button('Open calendar').click());assert.equal(calendars,1);
+  assert.ok(document.querySelector('.luna-status-split'),'30/70 split divider is rendered');
+  assert.ok(document.querySelector('.luna-status-summary'),'70% pane shows system reminders and updates');
+  await run(()=>button('Open system updates and reminders').click());
+  assert.equal(document.querySelector('[role="dialog"]').getAttribute('aria-label'),'System Updates','status summary opens the matching updates panel');
+  await run(()=>button('Close status feed').click());
 
   notices.unshift({id:'n1',recipient_id:'player',title:'Friend request',body:'Nova sent you a friend request.',type:'friend_request',action_kind:'friend_request',related_entity_id:'friend-1',status:'unread',actionable:true,created_date:'2026-10-03T17:00:00Z'});
   await run(()=>signal('notifications',{data:{recipient_id:'player'}}));await run();
