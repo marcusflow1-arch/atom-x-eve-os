@@ -1,126 +1,75 @@
 /*
- * Luna top-right compact status capsule
- * Parent stays at 65% of its former width. Inside: 30% time/date, 70%
- * updates + notifications/reminders, with a visible vertical separation.
+ * Luna Dashboard header — three separate working regions:
+ * calendar/time | thin vertical rule | five party slots
+ * plus a notifications strip starting exactly at the AI Attribute rail.
  */
-.luna-status{
-  container-type:inline-size;position:relative;isolation:isolate;
-  display:grid;grid-template-columns:minmax(0,30%) minmax(0,70%);
-  align-items:stretch;gap:0;width:100%;height:100%;min-width:0;
-  color:#edf7ff;border:1px solid rgba(175,210,234,.38);
-  border-radius:8px;
-  background:linear-gradient(145deg,rgba(40,78,111,.63),rgba(18,44,72,.65));
-  box-shadow:inset 0 1px 0 rgba(233,246,255,.1),0 5px 18px rgba(2,10,23,.2);
-}
-.luna-status>.luna-light-edge{
-  inset:2px;border-radius:7px;opacity:.62;
-}
-.luna-status-split{
-  position:absolute;left:30%;top:11px;bottom:11px;z-index:5;
-  width:1px;pointer-events:none;
-  background:linear-gradient(180deg,transparent,rgba(198,222,237,.74) 20%,rgba(212,231,245,.85) 55%,rgba(198,222,237,.60) 82%,transparent);
-}
-.luna-status-calendar-side{
-  position:relative;grid-column:1;display:flex;align-items:center;
-  justify-content:center;min-width:0;padding:6px 5px;
-}
-.luna-status-clock{
-  display:flex;align-items:center;justify-content:center;gap:5px;
-  width:100%;min-width:0;max-width:100%;padding:5px 0;
-  text-align:center;border-radius:4px;background:transparent;
-}
-.luna-status-clock>svg{flex:none;color:#c0dbe9}
-.luna-status-clock>span{min-width:0;overflow:hidden}
-.luna-status-clock time{
-  display:block;font-size:17px;font-weight:650;line-height:1.12;
-  white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.055em;
-  color:#f2fbff;
-}
-.luna-status-clock small{
-  display:block;margin-top:6px;font-size:8px;font-weight:550;
-  color:#c5deef;text-transform:uppercase;letter-spacing:0;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.luna-status-announcements{
-  position:relative;grid-column:2;display:flex;align-items:center;
-  min-width:0;min-height:0;padding:7px 56px 7px 7px;
-}
-.luna-status-summary{
-  display:flex;min-width:0;width:100%;height:100%;
-  flex-direction:column;justify-content:center;align-items:flex-start;
-  gap:6px;padding:4px 2px;text-align:left;border:0;border-radius:4px;
-  color:#f2f9ff;background:transparent;
-}
-.luna-status-summary strong{
-  display:block;max-width:100%;font-size:10px;line-height:1.35;
-  font-weight:700;white-space:normal;overflow:hidden;
-  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
-}
-.luna-status-summary span{
-  display:block;max-width:100%;font-size:9px;line-height:1.35;
-  color:#bcd8e9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.luna-status-selectors{
-  position:absolute;right:5px;top:50%;transform:translateY(-50%);
-  display:flex;flex-direction:column;gap:4px;z-index:8;
-}
-.luna-status-icon{
-  position:relative;display:grid;place-items:center;
-  width:28px;height:27px;border-radius:5px;color:#c6ddea;
-  touch-action:manipulation;user-select:none;-webkit-user-select:none;
-  background:rgba(137,185,216,.09);
-}
+.luna-header-status-row{display:flex;align-items:center;gap:12px;width:100%;min-width:0;height:96px}
+.luna-header-skill-anchor{width:clamp(112px,15vw,247px);flex:none;height:100%}
+.luna-party-clock-group{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;height:100%}
+.luna-party-clock{width:162px;height:77px;flex:none;min-width:0}
+.luna-party-clock-divider{align-self:center;flex:none;width:1px;height:62px;margin:0 3px;background:linear-gradient(to bottom,transparent,rgba(207,231,245,.68) 18%,rgba(217,236,249,.9) 50%,rgba(207,231,245,.68) 82%,transparent);box-shadow:0 0 7px rgba(167,216,246,.2)}
+.luna-party-five-slots{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-inline:contain;height:100%}
+.luna-party-five-slots::-webkit-scrollbar{display:none}
+.luna-attribute-notifications{width:min(338px,30vw);height:77px;flex:none;min-width:0;margin-left:auto}
+
+.luna-calendar-tile,.luna-status{position:relative;isolation:isolate;display:flex;align-items:center;width:100%;height:100%;min-width:0;color:#edf7ff;border:1px solid rgba(175,210,234,.38);border-radius:7px;background:linear-gradient(145deg,rgba(44,82,116,.67),rgba(19,44,73,.72));box-shadow:inset 0 1px rgba(231,246,255,.12),0 5px 18px rgba(2,10,23,.18)}
+.luna-calendar-tile>.luna-light-edge,.luna-status>.luna-light-edge{inset:3px;border-radius:6px;opacity:.56}
+.luna-calendar-launch{position:relative;z-index:5;display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;height:100%;min-width:0;padding:9px 12px;border:0;background:transparent;text-align:left;color:#f1faff}
+.luna-calendar-launch:hover{background:rgba(194,231,249,.1)}
+.luna-calendar-launch__icon{flex:none;color:#c4e6f8}
+.luna-calendar-launch__time{display:flex;flex-direction:column;justify-content:center;gap:5px;min-width:0}
+.luna-calendar-launch time{font-size:21px;line-height:1.05;letter-spacing:-.035em;font-weight:650;white-space:nowrap;font-variant-numeric:tabular-nums}
+.luna-calendar-launch small{font-size:9px;letter-spacing:.015em;color:#c4dcec;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.luna-status-announcements{position:relative;display:flex;align-items:center;width:100%;height:100%;min-width:0;min-height:0;padding:6px 85px 6px 14px}
+.luna-status-summary{display:flex;position:relative;z-index:2;min-width:0;width:100%;height:100%;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;padding:4px 2px;text-align:left;border:0;border-radius:4px;color:#f2f9ff;background:transparent}
+.luna-status-summary strong{display:block;max-width:100%;font-size:12px;line-height:1.25;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.luna-status-summary span{display:block;max-width:100%;font-size:10px;line-height:1.35;color:#c6ddec;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.luna-status-selectors{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;flex-direction:row;gap:5px;z-index:8}
+.luna-status-icon{position:relative;display:grid;place-items:center;width:29px;height:30px;border:1px solid rgba(158,195,219,.19);border-radius:5px;color:#c6ddea;touch-action:manipulation;user-select:none;-webkit-user-select:none;background:rgba(137,185,216,.09)}
 .luna-status-icon[aria-expanded=true]{color:#e8faff;background:rgba(141,203,235,.22)}
-.luna-status-icon[data-unread]::before{
-  content:'';position:absolute;right:3px;top:3px;width:5px;height:5px;
-  border-radius:50%;background:#bcebf9;
-}
-.luna-status-icon::after{
-  content:'';position:absolute;left:5px;right:5px;bottom:1px;
-  height:1px;background:#beeaf3;transform:scaleX(0);transform-origin:left;
-}
+.luna-status-icon[data-unread]::before{content:'';position:absolute;right:2px;top:2px;width:5px;height:5px;border-radius:50%;background:#bcebf9}
+.luna-status-icon::after{content:'';position:absolute;left:5px;right:5px;bottom:1px;height:1px;background:#beeaf3;transform:scaleX(0);transform-origin:left}
 .luna-status-icon[data-holding]::after{transform:scaleX(1);transition:transform 1s linear}
-.luna-status-preview{
-  position:absolute;inset:4px 49px 4px 5px;min-width:0;z-index:6;
-  overflow:hidden;clip-path:inset(0 0 0 100%);
-  opacity:0;transform:translateX(8px);pointer-events:none;
-  border-radius:5px;background:rgba(29,64,94,.98);
-  transition:clip-path .26s ease,opacity .2s ease,transform .26s ease;
-}
-.luna-status-preview[data-expanded]{
-  clip-path:inset(0);opacity:1;transform:translateX(0);pointer-events:auto;
-}
-.luna-status-preview[data-expanded]~.luna-status-selectors{z-index:8}
-.luna-status-feed{
-  display:flex;align-items:center;width:100%;height:100%;
-  min-width:0;text-align:left;padding:6px 5px;border:0;background:transparent;
-}
+.luna-status-preview{position:absolute;inset:4px 79px 4px 8px;min-width:0;z-index:6;overflow:hidden;clip-path:inset(0 0 0 100%);opacity:0;transform:translateX(8px);pointer-events:none;border-radius:5px;background:rgba(29,64,94,.99);transition:clip-path .26s ease,opacity .2s ease,transform .26s ease}
+.luna-status-preview[data-expanded]{clip-path:inset(0);opacity:1;transform:translateX(0);pointer-events:auto}
+.luna-status-feed{display:flex;align-items:center;width:100%;height:100%;min-width:0;text-align:left;padding:6px 5px;border:0;background:transparent}
 .luna-status-feed-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
 .luna-status-feed-copy>small{color:#c1e1f2;text-transform:uppercase;letter-spacing:.04em;font-size:8px;line-height:1.2}
 .luna-status-feed strong{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .luna-status-feed-copy>span{font-size:9px;line-height:1.3;color:#c3d8e8;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .luna-status-icon:hover{background:rgba(193,233,250,.21);color:#fff}
-.luna-status-clock:hover,.luna-status-summary:hover{background:rgba(193,233,250,.10);color:#fff}
+.luna-status-summary:hover{background:rgba(193,233,250,.08)}
 .luna-status-feed:hover strong{color:#fff}
-.luna-status button:focus-visible{outline:2px solid #c4f0ff;outline-offset:-2px}
-@container (max-width:450px){
-  .luna-status-clock>svg{display:none}
-  .luna-status-clock time{font-size:16px}
-  .luna-status-calendar-side{padding:4px 2px}
-  .luna-status-announcements{padding-left:5px;padding-right:42px}
-  .luna-status-selectors{right:3px}
-  .luna-status-icon{width:26px;height:26px}
-  .luna-status-summary strong{font-size:9px}
-  .luna-status-summary span{font-size:8px}
-  .luna-status-preview{right:35px;left:3px}
+.luna-status button:focus-visible,.luna-calendar-tile button:focus-visible{outline:2px solid #c4f0ff;outline-offset:-2px}
+
+@media(max-width:1470px){
+  .luna-header-status-row{gap:9px}
+  .luna-header-skill-anchor{width:clamp(106px,13vw,188px)}
+  .luna-party-clock-group{gap:8px}
+  .luna-party-clock{width:145px}
+  .luna-party-five-slots{gap:6px}
+  .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:56px;height:60px}
 }
-@container (max-width:295px){
-  .luna-status-clock time{font-size:14px}
-  .luna-status-clock small{font-size:7px}
-  .luna-status-summary strong{font-size:8px}
-  .luna-status-summary span{display:none}
+@media(max-width:1280px){
+  .luna-header-skill-anchor{width:clamp(65px,9vw,112px)}
+  .luna-party-clock{width:129px}
+  .luna-calendar-launch{padding:8px;gap:6px}
+  .luna-calendar-launch time{font-size:18px}
+  .luna-calendar-launch small{font-size:8px}
+  .luna-party-five-slots [data-party-slot] button[data-party-portrait]{width:48px;height:55px}
+  .luna-status-announcements{padding:5px 73px 5px 8px}
+  .luna-status-selectors{right:5px;gap:3px}
+  .luna-status-icon{width:28px;height:28px}
 }
-@media(prefers-reduced-motion:reduce){
-  .luna-status-preview,.luna-status-icon::after{transition:none!important;transform:none!important}
-  .luna-status-icon:not([data-holding])::after{visibility:hidden}
+@media(max-width:1040px){
+  .luna-header-skill-anchor{width:66px}
+  .luna-party-clock{width:112px}
+  .luna-calendar-launch__icon{width:17px;height:17px}
+  .luna-calendar-launch time{font-size:16px}
+  .luna-party-clock-group{gap:5px}
+  .luna-attribute-notifications{width:min(338px,30vw)}
+  .luna-status-summary strong{font-size:10px}
+  .luna-status-summary span{font-size:9px}
 }
+@media(prefers-reduced-motion:reduce){.luna-status-preview,.luna-status-icon::after{transition:none!important;transform:none!important}.luna-status-icon:not([data-holding])::after{visibility:hidden}}
