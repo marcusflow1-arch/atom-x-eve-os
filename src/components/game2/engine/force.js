@@ -94,7 +94,8 @@ export class Force {
     if (this.holding) {
       const pw = POW(this.holding); let down;
       if (this.npc) down = !!this.want[pw.id]; else down = !!(input && input.held(this.holdVia));
-      if (!down || p.status !== 'normal') this.release(); else this.tickHold(this.holding, dt);
+      if (this.holding === 'heal') { if (p.status === 'dead' || this.fp <= 0) this.release(true); else this.tickHold('heal', dt); }
+      else if (!down || p.status !== 'normal') this.release(); else this.tickHold(this.holding, dt);
     }
     // timed powers
     for (const k of Object.keys(this.active)) { if (now >= this.active[k].until) this.endTimed(k); else this.tickTimed(k, dt); }
@@ -121,7 +122,7 @@ export class Force {
     const f = this['do_' + id]; if (f) f.call(this); if (this.g.net) this.g.net.onCast(this, id); return true;
   }
   onHurt(dmg) { if (this.npc && ((this.holding === 'heal' && dmg >= 4) || (this.holding === 'lightning' && dmg >= 10))) this.release(); } // a heal / lightning can be broken by a solid hit
-  interrupt() { this.pending.length = 0; this.release(); } // a push / pull that lands cancels what the target was casting
+  interrupt() { this.pending.length = 0; if (this.holding !== 'heal') this.release(); } // a push / pull that lands cancels what the target was casting
   release(silent) { const id = this.holding; if (!id) return; this['end_' + id] && this['end_' + id](silent); this.holding = null; this.beam = null; this.bolts.length = 0; if (this.loops.hold) { this.loops.hold.stop(0.1); this.loops.hold = null; } }
   releaseAll(silent) { this.release(silent); for (const k of Object.keys(this.active)) this.endTimed(k); }
   reset() { this.releaseAll(true); this.pending.length = 0; this.want = {}; this.fp = this.max; this.gcd = 0; this.target = null; this.bodyBolts = null; this.absorbMsgT = 0; }
@@ -330,16 +331,16 @@ export class Force {
   bodyArcs(n) { this.g.bodyArc(n); }
   end_lightning(silent) { if (!silent) this.p.playForce('BOTH_FORCELIGHTNING_RELEASE', { durMs: 420 }); this.ltTargets = []; this.g.lightFlash = 0; }
   do_heal() {
-    const g = this.g, p = this.p; this.holding = 'heal'; p.playForce('BOTH_FORCEHEAL_START', { durMs: 400, hold: true }); this.healT = 0; g.sfxAt('heal', p.pos, 1); // torso only: keep moving while healing
-    this.later(0.0, () => { }); this.loops.hold = g.sfx.loop('heal2', { vol: 0.0 });
+    const g = this.g, p = this.p; this.holding = 'heal'; p.forceHold = false; this.healT = 0; this.healCompleted = false;
   }
   tick_heal(dt) {
     const g = this.g, p = this.p; this.healT += dt; this.fp -= 10 * dt; p.hp = Math.min(p.maxHp, p.hp + this.healRate * dt); p.healFlash = 0.6;
+    p.forceHold = false;
     if (Math.random() < 0.9) { const a = rnd(0, 6.28), r = rnd(0.2, 0.8); g.fx.emit({ p: [p.pos[0] + Math.cos(a) * r, rnd(0.1, 0.6), p.pos[2] + Math.sin(a) * r], v: [0, rnd(0.7, 1.8), 0], life: rnd(0.8, 1.4), size: rnd(0.04, 0.1), c0: [0.4, 1, 0.55, 0.9], c1: [0.2, 0.9, 0.4, 0] }); }
-    if (Math.floor(this.healT * 1.4) !== Math.floor((this.healT - dt) * 1.4)) { g.fx.ring({ p: [p.pos[0], 0.05, p.pos[2]], n: [0, 1, 0], r0: 0.2, r1: 1.6, life: 0.9, w: 0.1, c: [0.35, 1, 0.5, 0.8] }); g.sfxAt('heal' + (1 + Math.floor(Math.random() * 4)), p.pos, 0.35); }
-    if (p.hp >= p.maxHp && this.healT > 1.2) this.release();
+    if (Math.floor(this.healT * 1.4) !== Math.floor((this.healT - dt) * 1.4)) { g.fx.ring({ p: [p.pos[0], 0.05, p.pos[2]], n: [0, 1, 0], r0: 0.2, r1: 1.6, life: 0.9, w: 0.1, c: [0.35, 1, 0.5, 0.8] });  }
+    if (p.hp >= p.maxHp) { this.healCompleted = true; this.release(); }
   }
-  end_heal(silent) { const p = this.p; p.forceHold = false; if (!silent) p.playForce('BOTH_FORCEHEAL_STOP', { durMs: 650 }); }
+  end_heal(silent) { this.p.forceHold = false; if (!silent && this.healCompleted) this.g.sfxAt('heal', this.p.pos, 1); this.healCompleted = false; }
   do_drain() {
     const g = this.g, p = this.p; const c = this.cone(10, 30, { npcOnly: true })[0]; if (!c) { this.fp += 10; this.say('Force Drain: no target'); return; }
     this.holding = 'drain'; this.target = c.t; this.anim('BOTH_FORCEGRIP_HOLD', { durMs: 300, hold: true }); g.sfxAt('drain', p.pos, 1); this.dt2 = 0;

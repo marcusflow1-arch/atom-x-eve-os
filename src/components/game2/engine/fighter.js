@@ -135,12 +135,13 @@ export class Fighter {
     if (!opts.keepYaw) this.yaw = Math.atan2(-dirXZ[0], -dirXZ[2]);
     this.statusAnim = anim; this.playWhole(anim, { blend: 0.06 });
   }
-  // w_force.c getup after HANDEXTEND_KNOCKDOWN: holding jump (Force Jump above level 1) springs up with a Force getup
-  // (800 ms); a Force-pushed fighter gets the quicker getup (600 ms); otherwise the normal getup (1000 ms).
+  // w_force.c getup animations after HANDEXTEND_KNOCKDOWN: holding jump (Force Jump above level 1) springs up with a Force
+  // getup (800 ms); a Force-pushed fighter gets the quicker getup (600 ms); otherwise the normal getup (1000 ms).
+  // The player's timing is Atom X Eve's responsive tuning: Space rises at once (else after 0.5 s), getup capped at 250 ms.
   startGetup() {
     const jump = this.isPlayer ? !!this.cmd.jump : (!!this.force && Math.random() < 0.5);
     const [anim, len] = jump && (this.isPlayer ? this.jumpLevel > 1 : true) ? ['BOTH_FORCE_GETUP_B1', 0.8] : this.quickerGetup ? ['BOTH_FORCE_GETUP_B3', 0.6] : ['BOTH_GETUP1', 1.0];
-    this.status = 'getup'; this.statusT = 0; this.quickerGetup = false; this.playWhole(anim, { blend: 0.1 }); this.getupLen = len;
+    this.status = 'getup'; this.statusT = 0; this.quickerGetup = false; this.playWhole(anim, { blend: 0.06 }); this.getupLen = this.isPlayer ? Math.min(len, 0.25) : len; // the player: Space rises at once (or after 0.5 s) with a quick 250 ms getup
     if (jump && anim === 'BOTH_FORCE_GETUP_B1') this.g.sfxAt && this.g.sfxAt('jump', this.pos, 0.6);
   }
   pullTo(dirXZ, speed) { // dragged toward caster
@@ -196,8 +197,8 @@ export class Fighter {
     switch (this.status) {
       case 'dead': this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
       case 'flung': this.physicsFlung(dt); return this.finish(dt);
-      case 'down': this.frictionMove(dt, 8); if (this.statusT > (this.downTime || 1.1)) this.startGetup(); return this.finish(dt);
-      case 'getup': this.frictionMove(dt, 8); if (this.statusT >= this.getupLen - 0.05) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; this.actor.setLegs(this.saber.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2', { blend: 0.15 }); } return this.finish(dt);
+      case 'down': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= (this.isPlayer ? 0.5 : (this.downTime || 1.1))) this.startGetup(); return this.finish(dt);
+      case 'getup': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= this.getupLen - 0.05) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; this.actor.setLegs(this.saber.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2', { blend: 0.15 }); } return this.finish(dt);
       case 'gripped': { const ty = this.gripLift ?? 1.3; this.pos[1] += (ty - this.pos[1]) * Math.min(1, dt * 4); this.vel[0] = this.vel[2] = 0; if (this.gripCarry) { const c = this.gripCarry(); const k = Math.min(1, dt * 3); this.pos[0] += (c[0] - this.pos[0]) * k; this.pos[2] += (c[2] - this.pos[2]) * k; this.g.world.collide(this.pos, this.radius); } this.pos[1] += Math.sin(now * 3.1) * 0.0025; this.yaw += Math.sin(now * 2.2) * 0.004; return this.finish(dt); }
       case 'shocked': {
         this.frictionMove(dt, 10); this.nextPain -= dt; if (this.nextPain <= 0) { this.nextPain = 0.28 + Math.random() * 0.2; const p = PAINS[Math.floor(Math.random() * PAINS.length)]; this.playWhole(p, { blend: 0.04 }); }
@@ -237,7 +238,7 @@ export class Fighter {
     const special = this.specialLocked();
     if (this.trySpecialJumpAttack()) { c.jumpPressed = false; }
     if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) this.startJump();
-    if (!special && !this.onGround && c.jump && !this.fjUsed && this.now - this.jumpAt > 0.16 && this.now - this.jumpAt < 0.6 && this.vel[1] > 0.5 && this.canForceJump()) this.startForceJump();
+    if (!special && !this.onGround && c.jump && !this.fjUsed && this.now - this.jumpAt >= 0.05 && this.now - this.jumpAt < 0.6 && this.vel[1] > 0.5 && this.canForceJump()) this.startForceJump();
     // wish velocity
     const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); const fwd = [sinY, 0, cosY], right = [-cosY, 0, sinY];
     let f = special ? 0 : c.fwd, r = special ? 0 : c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }

@@ -146,13 +146,14 @@ function knockStub(o = {}) {
   f.startGetup(); return { anim: played[0], len: f.getupLen, status: f.status };
 }
 
-test('knockdown get-up follows w_force.c: jump held = Force getup, pushed = quicker getup, otherwise normal', () => {
-  assert.deepEqual(knockStub({ cmd: { jump: true } }), { anim: 'BOTH_FORCE_GETUP_B1', len: 0.8, status: 'getup' });
-  assert.deepEqual(knockStub({ quickerGetup: true }), { anim: 'BOTH_FORCE_GETUP_B3', len: 0.6, status: 'getup' });
-  assert.deepEqual(knockStub({}), { anim: 'BOTH_GETUP1', len: 1.0, status: 'getup' });
+test('knockdown get-up anims follow w_force.c (jump = Force getup, pushed = quicker getup); the player rises on Space with a 250 ms getup', () => {
+  assert.deepEqual(knockStub({ cmd: { jump: true } }), { anim: 'BOTH_FORCE_GETUP_B1', len: 0.25, status: 'getup' });
+  assert.deepEqual(knockStub({ quickerGetup: true }), { anim: 'BOTH_FORCE_GETUP_B3', len: 0.25, status: 'getup' });
+  assert.deepEqual(knockStub({}), { anim: 'BOTH_GETUP1', len: 0.25, status: 'getup' });
   assert.equal(knockStub({ cmd: { jump: true }, jumpLevel: 1 }).anim, 'BOTH_GETUP1', 'needs Force Jump above level 1');
+  assert.equal(knockStub({ isPlayer: false, quickerGetup: true }).len, 0.6, 'NPCs keep the w_force.c getup lengths');
   const src = readFileSync(new URL('src/components/game2/engine/fighter.js', root), 'utf8');
-  assert.match(src, /this\.downTime = Math\.max\(0\.3, 1\.1 - \(this\.now - \(this\.knockAt \?\? this\.now\)\)\)/, 'down for 1.1 s from the knockdown; jump does not skip it');
+  assert.match(src, /case 'down': [^\n]*\(this\.isPlayer && this\.cmd\.jumpPressed\) \|\| this\.statusT >= \(this\.isPlayer \? 0\.5 : \(this\.downTime \|\| 1\.1\)\)\) this\.startGetup\(\)/, 'player: Space rises at once, otherwise after 0.5 s; NPCs stay down 1.1 s');
 });
 
 test('landing plays a short LAND1 (TIMER_LAND 130 ms) with no camera shake, also after a Force Jump', () => {

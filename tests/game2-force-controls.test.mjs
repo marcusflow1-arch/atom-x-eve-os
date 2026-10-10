@@ -66,8 +66,12 @@ test('F selects only the highlighted ability, not the old dedicated Force Push b
   assert.deepEqual(old.casts, []);
 });
 
-test('channelled powers remain active only while their activation key is held', () => {
-  for (const [id, key] of [['grip', 'Digit3'], ['lightning', 'Digit4'], ['heal', 'Digit5'], ['drain', 'KeyF']]) {
+test('channelled powers remain active only while their activation key is held; Force Heal is single-press', () => {
+  { // heal (single press): keeps healing after the key is released, until full health or out of Force
+    const h = harness(); h.force.update(1 / 60, h.input('Digit5', 'Digit5')); assert.equal(h.force.holding, 'heal');
+    h.force.update(1 / 60, h.input('', '')); assert.equal(h.force.holding, 'heal', 'released key: still healing'); assert.ok(h.ticks.length);
+  }
+  for (const [id, key] of [['grip', 'Digit3'], ['lightning', 'Digit4'], ['drain', 'KeyF']]) {
     const h = harness();
     if (key === 'KeyF') h.force.selectId(id);
     h.force.update(1 / 60, h.input(key, key));

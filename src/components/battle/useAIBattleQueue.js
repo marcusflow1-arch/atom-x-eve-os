@@ -1,3 +1,4 @@
+import { startPvPPingProbe } from './pvpPingProbe';
 // @refresh reset
 // Remount consumers on edits: matchmaking hook additions must not reuse old hook slots.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -394,6 +395,12 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     return () => { if (retryTimer) window.clearTimeout(retryTimer); };
   }, [sessionBridge, match?.id, match?.host_id, match?.host_name, match?.dashboard_channel, match?.status, match?.player_ids, match?.players, session.channel_id, session.status, session.players, user?.id, user?.full_name, user?.username, roomRetryTick, battleSurface.dashboardMode, battleSurface.matchId]);
 
+  // Optional two-browser Railway RTT comparison; no gameplay messages leave Base44.
+  useEffect(() => {
+    if (!sessionBridge || !match?.id || !user?.id || !ACTIVE_MATCH_STATUSES.includes(String(match.status || ''))) return undefined;
+    return startPvPPingProbe({ matchId: match.id });
+  }, [sessionBridge, match?.id, match?.status, user?.id]);
+
   // Reliable peer cast is only visual prediction. Damage remains server-owned.
   useEffect(() => {
     if (!sessionBridge || typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
@@ -402,10 +409,18 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       const detail = event?.detail || {};
       const sourcePlayerId = String(detail.player_id || detail.sourcePlayerId || '');
       if (!sourcePlayerId || sourcePlayerId === localId || !ids.has(sourcePlayerId) || String(detail.matchId || '') !== matchId) return;
-      // A dodge ends the opponent's turn: fetch the new turn right away.
-      if (String(detail.kind || '') === 'pvp_dodge') { refreshSignal.current?.(); return; }
-      if (!['pvp_cast', 'pvp_melee', 'ai_battle_card_cast'].includes(String(detail.kind || ''))) return;
-      window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', { detail: { ...detail, sourcePlayerId, targetPlayerId: localId, network: true } }));
+      // Every recognized combat event triggers an immediate authoritative state refresh.
+      // Peer packets only predict visuals; never use them to change HP or turn ownership.
+      const kind = String(detail.kind || '');
+      if (!['pvp_cast', 'pvp_melee', 'pvp_dodge', 'ai_battle_card_cast'].includes(kind)) return;
+      const receivedAt = performance.now();
+      window.dispatchEvent(new CustomEvent('atomxePvPLatency', { detail: {
+        kind: 'peer_combat_received', castId: String(detail.cast_id || ''),
+        actionKind: kind, matchId, receivedAt, at: receivedAt,
+      } }));
+      if (kind !== 'pvp_dodge') {
+        window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', { detail: { ...detail, sourcePlayerId, targetPlayerId: localId, network: true } }));
+      }
       refreshSignal.current?.();
     };
     window.addEventListener('webrtcRemoteAction', receive);

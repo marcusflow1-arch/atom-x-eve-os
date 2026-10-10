@@ -1,4 +1,11 @@
 import {AvatarCustomizationRuntime} from '@/components/onboarding/customizationRuntime';
+
+function recordPvPLatency(kind, castId, detail = {}) {
+  if (typeof window === 'undefined') return;
+  const event = { kind, castId: String(castId || ''), at: performance.now(), ...detail };
+  window.dispatchEvent(new CustomEvent('atomxePvPLatency', { detail: event }));
+  if (localStorage.getItem('atomxe_pvp_latency_debug') === '1') console.debug('[PvP latency]', event);
+}
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Flag, Home, Play, X } from 'lucide-react';
@@ -411,7 +418,11 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       // Line the palm strike up with the server's hit time (resolves_at), so the
       // HP drop and the stun arrive at the visible impact on both screens.
       const impactAt = cast.resolves_at ? toPerfTime(cast.resolves_at) : performance.now() + ARENA_CHIDORI.impact * 1000;
-      const startedAt = impactAt - ARENA_CHIDORI.impact * 1000;
+      // A delayed relay must not start the entire Chidori timeline in the past.
+      // Otherwise the remote client skips the dash/strike and only sees a late stun.
+      // Keep authoritative damage timing unchanged; this only repairs presentation.
+      const startedAt = Math.max(performance.now(), impactAt - ARENA_CHIDORI.impact * 1000);
+      recordPvPLatency('cast_visual_start', castId, { casterKey, relayLateMs: Math.max(0, performance.now() - (impactAt - ARENA_CHIDORI.impact * 1000)) });
       const target = runtimes.current[targetKey];
       if (caster) { caster.chidori = { start: startedAt, castId }; caster.lunge = null; }
       if (target) {
@@ -510,10 +521,12 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       predictedLocalCasts.current.add(String(castId));
       setLastCastSlot((state) => ({ ...state, local: Number(skill.slot) }));
     }
+    if (localStorage.getItem('atomxe_pvp_latency_debug') === '1') console.info('[PvP latency] cast_input', { castId, at: performance.now() });
     actionPending.current = true;
     try {
       const body = await invoke('use_skill', { match_id: match.id, slot: Number(slot), cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
+      if (localStorage.getItem('atomxe_pvp_latency_debug') === '1') console.info('[PvP latency] cast_server_ack', { castId: cast.cast_id || castId, at: performance.now() });
       showCast(user.id, skill, { ...cast, cast_id: cast.cast_id || castId, effect_id: cast.effect_id || skill.effect_id });
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_cast', matchId: match.id, cast_id: cast.cast_id || castId, slot: Number(slot), effect_id: skill.effect_id || '', effect: effectFromSkill(skill), resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, missed: Boolean(cast.missed), stun_ms: Number(cast.stun_ms || 0), targetPlayerId: opponent?.id } }));
       return true;
@@ -735,6 +748,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const remoteCast = (event) => {
       const d=event.detail||{}; const currentMatch=matchRef.current; const currentOpponent=opponentRef.current;
       if(String(d.matchId||'')!==String(currentMatch?.id||'')||String(d.sourcePlayerId||d.player_id||'')!==String(currentOpponent?.id||''))return;
+      if (localStorage.getItem('atomxe_pvp_latency_debug') === '1') console.info('[PvP latency] peer_cast_received', { castId: d.cast_id, at: performance.now() });
       // Peer relay is the fastest path; the server poll (hit_log / last_cast)
       // shows the same action if this message never arrives.
       if (String(d.kind || '') === 'pvp_melee' || String(d.effect_id || '') === 'basic_melee') {

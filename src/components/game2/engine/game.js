@@ -41,7 +41,16 @@ export class Game {
     this.playerSpawn = arena ? this.world.spawns.player.slice() : level ? level.playerSpawn.slice() : SPAWN.slice();
     this.enemySpawn = arena ? this.world.spawns.enemy.slice() : [0, 0, 8];
     this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
-    this.input.onFirstGesture = () => this.startAudio();
+    // Reuse Atom XE's configured battle theme from the moment the map loads.
+    // Browser autoplay restrictions may require the first player gesture.
+    this.battleMusic = null;
+    this.battleMusicUnlock = () => this.startMapMusic();
+    this.startMapMusic();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pointerdown', this.battleMusicUnlock, { once: true });
+      window.addEventListener('keydown', this.battleMusicUnlock, { once: true });
+    }
+    this.input.onFirstGesture = () => { this.startAudio(); this.startMapMusic(); };
     if (this.duel) {
       this.input.wheelThrottle = 90;
       const h = this.hud;
@@ -125,6 +134,36 @@ export class Game {
     if (f.hum) return; const base = f.isPlayer ? 0.17 : 0.07; f.humBase = base; f.hum = this.sfx.loop('hum' + (1 + (f.humId || 0) % 4), { vol: base, rate: 1 + (f.humId || 0) * 0.03 });
   }
   humStop(f) { if (f.hum) { f.hum.stop(0.1); f.hum = null; } }
+  startMapMusic() {
+    if (this.disposed || typeof window === 'undefined' || typeof Audio === 'undefined') return;
+    if (this.battleMusic) {
+      if (this.battleMusic.paused) this.battleMusic.play().catch(() => {});
+      return;
+    }
+    let url = '';
+    try {
+      const configured = JSON.parse(window.localStorage.getItem('combat_audio_map_v1') || '{}');
+      url = String(configured?.bgm_boss || '');
+    } catch (e) { console.warn('Game 2 battle music configuration unavailable', e); }
+    if (!url) return;
+    const audio = new Audio(url);
+    audio.loop = true;
+    audio.volume = 0.5;
+    this.battleMusic = audio;
+    audio.play().catch(() => { /* First player interaction retries playback. */ });
+  }
+  stopMapMusic() {
+    if (typeof window !== 'undefined' && this.battleMusicUnlock) {
+      window.removeEventListener('pointerdown', this.battleMusicUnlock);
+      window.removeEventListener('keydown', this.battleMusicUnlock);
+    }
+    if (this.battleMusic) {
+      this.battleMusic.pause();
+      this.battleMusic.removeAttribute('src');
+      this.battleMusic.load();
+      this.battleMusic = null;
+    }
+  }
   async startAudio() {
     this.sfx.resume(); try { await this.sfx.loading; } catch (e) { }
     for (const f of this.fighters()) if (!f.saber.holstered && f.hasSaber && f.blade.lit !== false) { f.hum = null; this.humStart(f); }
@@ -235,7 +274,7 @@ export class Game {
     for (const w of this.world.bodies) { w.pos = w.home.slice(); w.vel = [0, 0, 0]; w.w = [0, 0, 0]; w.grounded = true; w.lifted = 0; w.rot = [0, Math.random() * 6, 0]; w.hp = 100; }
     this.combat.bolts.length = 0; this.arcs.length = 0; this.scorches = []; this.hud.msgs.length = 0; this.hud.dmg = 0; this.round = { state: 'intro', t: 0 }; this.hud.msg('Rematch');
   }
-  dispose() { this.disposed = true; try { this.net && this.net.dispose(); } catch (e) { } try { this.input.dispose(); } catch (e) { } try { this.sfx.dispose(); } catch (e) { } }
+  dispose() { this.disposed = true; this.stopMapMusic(); try { this.net && this.net.dispose(); } catch (e) { } try { this.input.dispose(); } catch (e) { } try { this.sfx.dispose(); } catch (e) { } }
   aimDir() { const c = this.cam; const cp = Math.cos(c.pitch), d = [Math.sin(c.yaw) * cp, -Math.sin(c.pitch), Math.cos(c.yaw) * cp]; const o = this.player.chest(); const pt = v3.addS(c.eye, d, c.dist + 14); return v3.norm([pt[0] - o[0], pt[1] - o[1], pt[2] - o[2]]); }
   combatContext(f) {
     const foes = this.online ? this.foesOf(f) : f.team === 'player' ? this.npcs.filter(n => n.team === 'enemy' && n.status !== 'dead') : f.team === 'enemy' && this.player.status !== 'dead' ? [this.player] : [];
