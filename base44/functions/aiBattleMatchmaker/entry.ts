@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.51';
+import { combatReceipt } from '../../shared/railwayPvP.ts';
 import { MALE_MODEL, FEMALE_MODEL } from '../../shared/avatarDefaults.ts';
 import { BASIC_MELEE, DODGE, atbNow, skillStats, skillStunMs, SKILL_SLOT_COUNT } from '../../shared/pvpSkills.ts';
 // Freeze and validate the same ten skill slots exposed by the dashboard hotkeys.
@@ -694,12 +695,21 @@ async function statusFor(svc: any, userId: string, clientSessionId = '', pos: Ro
 Deno.serve(async (req) => {
   const receivedAt = Date.now();
   // Timestamp both ends of processing; clients can separate DB work from RTT.
-  const json = (body: any, status = 200) => Response.json({
-    ...body, server_received_at: receivedAt, server_time: Date.now(),
-  }, { status });
+  let authenticatedUserId = '';
+  const json = async (body: any, status = 200) => {
+    let railway_receipt = null;
+    const secret = Deno.env?.get('RAILWAY_PVP_TICKET_SECRET') || '';
+    if (status === 200 && secret.length >= 32 && authenticatedUserId && body?.match?.mode === 'pvp') {
+      try { railway_receipt = await combatReceipt(body.match, authenticatedUserId, secret); }
+      catch { console.warn('[AI Battle] Optional Railway attestation unavailable'); }
+    }
+    return Response.json({ ...body, ...(railway_receipt ? { railway_receipt } : {}),
+      server_received_at: receivedAt, server_time: Date.now() }, { status });
+  };
   try {
     const client = createClientFromRequest(req); const user = await client.auth.me();
     if (!user) return json({ error:'Sign in to use AI Battle.' },401);
+    authenticatedUserId = String(user.id);
     const svc = withQueueReadCache(client.asServiceRole.entities);
     const body = await req.json().catch(()=>({})); const action=String(body?.action||'status'); const data=body?.data||{}; const userId=String(user.id);
     const sessionId=String(data.client_session_id||'').slice(0,160);

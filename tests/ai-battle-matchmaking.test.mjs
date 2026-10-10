@@ -3,11 +3,13 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { webcrypto } from 'node:crypto';
 import { buildSync } from 'esbuild';
+import { verifyPvPClaims } from '../railway/pvp/verifyTicket.js';
 
 // In-memory Base44 entities. `failure(name, op)` can make any read fail the way
 // a rate limit or timeout would, to prove failed reads never cancel live state.
 const tables = new Map();
 let writes = [], failure = null, serial = 0, readHook = null, reads = [];
+let relaySecret = '';
 const clone = (value) => structuredClone(value);
 const rows = (name) => { if (!tables.has(name)) tables.set(name, []); return tables.get(name); };
 const users = { a: { id: 'a', full_name: 'Player A' }, b: { id: 'b', full_name: 'Player B' } };
@@ -56,8 +58,8 @@ let handler;
     bundle: true, write: false, platform: 'node', format: 'cjs', external: ['npm:*'],
   });
   vm.runInNewContext(outputFiles[0].text, {
-    Response, Date, crypto: webcrypto, console: { error() {}, warn() {} },
-    Deno: { serve: (fn) => { handler = fn; } },
+    Response, Date, TextEncoder, btoa, crypto: webcrypto, console: { error() {}, warn() {} },
+    Deno: { serve: (fn) => { handler = fn; }, env: { get: () => relaySecret } },
     require: (id) => {
       assert.match(id, /^npm:@base44\/sdk/);
       return { createClientFromRequest: (req) => ({
@@ -95,7 +97,7 @@ function prefightMatch(status, patch = {}) {
 const queueOf = (user) => rows('AIBattleQueueEntry').find((row) => row.user_id === user);
 
 beforeEach(() => {
-  tables.clear(); writes = []; failure = null; serial = 0; readHook = null; reads = [];
+  tables.clear(); writes = []; failure = null; serial = 0; readHook = null; reads = []; relaySecret = '';
   tables.set('Loadout', []);
   tables.set('Avatar', ['a', 'b'].map((id) => ({ id: 'avatar-' + id, user_id: id, gender: 'male', updated_date: iso() })));
 });
@@ -400,4 +402,22 @@ test('status exposes impact deadlines and timestamps both ends of request proces
   assert.deepEqual(body.match.pending_hits,[{cast_id:'c',resolves_at:impact}]);
   assert.ok(body.server_time>=body.server_received_at);
   assert.equal(body.match.players.find((player)=>player.id==='b').hp,1000);
+});
+
+test('optional Railway receipt attests the actual server damage without changing the combat result', async () => {
+  relaySecret = 'test-only-server-receipt-secret-1234567890';
+  prefightMatch('fighting', {
+    fight_starts_at: iso(-5000), fight_ends_at: iso(170000),
+    atb: { a: { value: 100, at: iso(), turn: true }, b: { value: 0, at: iso(), turn: false } },
+    cooldowns: {}, dodges: {}, pending_hits: [], hit_log: [], disconnects: {},
+  });
+  tables.set('AIBattleQueueEntry', [queueRow('a'), queueRow('b')]);
+  const result = await battle('basic_attack', { match_id: 'm1', cast_id: 'signed-hit', damage: 9999999 }, 'a');
+  const verified = await verifyPvPClaims(result.railway_receipt, relaySecret, 'atomxe-railway-combat');
+  assert.equal(verified.sub, 'a'); assert.equal(verified.matchId, 'm1');
+  assert.deepEqual(verified.state.hp, result.match.players.map(p => ({ id: p.id, hp: p.hp })));
+  assert.equal(verified.state.hit_log[0].damage, result.cast.damage);
+  assert.notEqual(result.cast.damage, 9999999);
+  const rejected = await battle('basic_attack', { match_id: 'm1', cast_id: 'out-of-turn' }, 'a', 409);
+  assert.equal(rejected.railway_receipt, undefined);
 });

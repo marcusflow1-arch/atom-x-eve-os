@@ -18,6 +18,13 @@ const transport = createBattleTransport({
       const response = await base44.functions.invoke('aiBattleMatchmaker', { action, data });
       const body = response?.data ?? response ?? {};
       if (body?.error) throw Object.assign(new Error(body.error), { status: response?.status || 400, body });
+      if (typeof window !== 'undefined' && body?.railway_receipt && body?.match?.id) {
+        window.dispatchEvent(new CustomEvent('atomxePvPReceipt', {
+          detail: { matchId: body.match.id, receipt: body.railway_receipt },
+        }));
+      }
+      // Signed bearer material is transient; it must not enter the query cache.
+      delete body.railway_receipt;
       return body;
     } catch (error) {
       const body = error?.response?.data?.data ?? error?.response?.data ?? error?.body ?? null;

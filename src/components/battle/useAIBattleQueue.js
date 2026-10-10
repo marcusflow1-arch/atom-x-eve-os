@@ -411,7 +411,12 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     };
     const diagnosticSocketCleanup = startPvPDiagnosticSocket({
       matchId, playerId: localId,
+      getTicket: async (id) => {
+        const response = await base44.functions.invoke('railwayPvPTicket', { matchId: id });
+        return response?.data ?? response;
+      },
       onAction: (detail) => receive({ detail }),
+      onSync: () => refreshSignal.current?.(),
     });
     window.addEventListener('webrtcRemoteAction', receive);
     return () => {

@@ -1,3 +1,5 @@
+> Update (2026-10-10): match-bound authentication and signed combat relay implementation are now on this testing branch. See [activation requirements and verification](RAILWAY_PVP_AUTHENTICATED_RELAY.md). Earlier endpoint/status notes below are historical. Live two-account acceptance is still pending.
+
 # PvP latency instrumentation: how to use
 
 Changes on this branch only:

@@ -1,3 +1,5 @@
+> Update (2026-10-10): match-bound authentication and signed combat relay implementation are now on this testing branch. See [activation requirements and verification](RAILWAY_PVP_AUTHENTICATED_RELAY.md). Earlier endpoint/status notes below are historical. Live two-account acceptance is still pending.
+
 # AI Battle latency experiment (isolated branch)
 
 This branch is for measuring the existing PvP event path before switching transport. It does not change production matchmaking or damage authority.
