@@ -14,7 +14,7 @@ function FallbackCar({color='#12cde4',ghost=false}){
   {[-1,1].flatMap(x=>[-1.25,1.35].map(z=><mesh key={x+':'+z} position={[x*0.97,0.36,z]} rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[0.43,0.43,0.24,12]}/><meshStandardMaterial color="#090b0d" roughness={0.85}/></mesh>))}
  </group>;
 }
-function ImportedCar({src,color}){
+function ImportedCar({src,color,rimColor='#c3d0db'}){
  const [model,setModel]=useState(null);
  useEffect(()=>{
   if(!src){setModel(null);return;}
@@ -43,6 +43,21 @@ function ImportedCar({src,color}){
   },undefined,(error)=>{console.warn('Game3 vehicle load failed',src,error);if(live)setModel(null);});
   return()=>{live=false;};
  },[src]);
+ useEffect(()=>{
+  if(!model)return;
+  model.traverse(mesh=>{
+   if(!mesh.isMesh||!mesh.material)return;
+   const materials=Array.isArray(mesh.material)?mesh.material:[mesh.material];
+   const mapped=materials.map(material=>{
+    const name=material.name||'';
+    if(!/(carpaint|car.paint|ext_paint|ext_rim|^rim[._]|^rim$)/i.test(name))return material;
+    if(!material.userData.game3PaintCopy){material=material.clone();material.userData.game3PaintCopy=true;}
+    if(material.color)material.color.set(/rim/i.test(name)?rimColor:color);
+    return material;
+   });
+   mesh.material=Array.isArray(mesh.material)?mapped:mapped[0];
+  });
+ },[model,color,rimColor]);
  return model?<primitive object={model}/>:<FallbackCar color={color}/>;
 }
 function ImportedEnvironment({route}){
@@ -76,15 +91,15 @@ function Building({x,z,index}){
   {Array.from({length:4},(_,j)=><mesh key={j} position={[x>0?-3.52:3.52,j*2.2-3,0]}><planeGeometry args={[0.04,1.1]}/><meshBasicMaterial color={j%2?'#2a6d87':'#56b4c7'} transparent opacity={0.5}/></mesh>)}
  </group>;
 }
-function RoadObjects({distance}){
+function RoadObjects({distance,route='city'}){
  const buildings=useMemo(()=>Array.from({length:36},(_,i)=>({x:(i%2===0?-1:1)*(13+((i*7)%9)),z:-320+Math.floor(i/2)*21,index:i})),[]);
  const offset=(distance%21);
  return <group>
-  <mesh position={[0,-0.18,-95]} rotation={[-Math.PI/2,0,0]} receiveShadow><planeGeometry args={[300,850]}/><meshStandardMaterial color="#071019" roughness={1}/></mesh>
-  <mesh position={[0,-0.07,-95]} rotation={[-Math.PI/2,0,0]} receiveShadow><planeGeometry args={[11.3,850]}/><meshStandardMaterial color="#1b2731" roughness={0.96}/></mesh>
+  <mesh position={[0,-0.18,-95]} rotation={[-Math.PI/2,0,0]} receiveShadow><planeGeometry args={[300,850]}/><meshStandardMaterial color={route==='dam'?'#7c6752':'#071019'} roughness={1}/></mesh>
+  <mesh position={[0,-0.07,-95]} rotation={[-Math.PI/2,0,0]} receiveShadow><planeGeometry args={[11.3,850]}/><meshStandardMaterial color={route==='dam'?'#55504e':'#1b2731'} roughness={0.96}/></mesh>
   {[-5.55,5.55].map(x=><mesh key={x} position={[x,-0.045,-95]} rotation={[-Math.PI/2,0,0]}><planeGeometry args={[0.12,850]}/><meshBasicMaterial color="#83aab1"/></mesh>)}
   {[-1.82,1.82].flatMap(x=>Array.from({length:32},(_,i)=><mesh key={x+':'+i} position={[x,-0.04,(-300+i*12+distance%12)]} rotation={[-Math.PI/2,0,0]}><planeGeometry args={[0.11,5]}/><meshBasicMaterial color="#9cabad" transparent opacity={0.65}/></mesh>))}
-  {buildings.map(b=><Building key={b.index} index={b.index} x={b.x} z={b.z+offset}/>)}
+  {route==='city'&&buildings.map(b=><Building key={b.index} index={b.index} x={b.x} z={b.z+offset}/>)}
   {Array.from({length:15},(_,i)=><group key={i} position={[0,0,-300+i*26+distance%26]}>
     <mesh position={[-6.9,6,0]}><boxGeometry args={[0.28,12,0.28]}/><meshStandardMaterial color="#4f6972" metalness={0.4}/></mesh>
     <mesh position={[6.9,6,0]}><boxGeometry args={[0.28,12,0.28]}/><meshStandardMaterial color="#4f6972" metalness={0.4}/></mesh>
@@ -143,7 +158,7 @@ function WorldRuntime({stateRef,inputRef,car,carSrc,onSnapshot,route='city',cust
   <directionalLight position={[20,35,-40]} intensity={2.3} color="#bbddff" castShadow/>
   <RoadObjects distance={stateRef.current.distance} route={route}/>
   <ImportedEnvironment route={route}/>
-  <group ref={carGroup} position={[0,0,2]}><ImportedCar src={carSrc} color={car.color}/><pointLight position={[0,0.35,0]} distance={4} intensity={3} color={customization.underglow||'#14d4e3'}/><group visible={stateRef.current.perfectShift>0}>{[-1,1].map(x=><mesh key={x} position={[x*1.18,0.45,2.4]}><boxGeometry args={[0.065,0.04,5.2]}/><meshBasicMaterial transparent opacity={0.65} color={customization.shiftColor||'#94f6fe'}/></mesh>)}</group></group>
+  <group ref={carGroup} position={[0,0,2]}><ImportedCar src={carSrc} color={car.color} rimColor={customization.rimColor}/><pointLight position={[0,0.35,0]} distance={4} intensity={3} color={customization.underglow||'#14d4e3'}/><group visible={stateRef.current.perfectShift>0}>{[-1,1].map(x=><mesh key={x} position={[x*1.18,0.45,2.4]}><boxGeometry args={[0.065,0.04,5.2]}/><meshBasicMaterial transparent opacity={0.65} color={customization.shiftColor||'#94f6fe'}/></mesh>)}</group></group>
   <group ref={enemyRef} position={[0,0,-30]}><FallbackCar color="#df4c64"/></group>
   <group ref={ghostRef} visible={false}>{[0,1,2].map(i=><group key={i} position={[0,0,(i+1)*1.8]}><FallbackCar color={customization.slipColor||'#9defff'} ghost/></group>)}</group>
   <CameraRig stateRef={stateRef}/>
