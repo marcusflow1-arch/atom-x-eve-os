@@ -31,7 +31,7 @@ Both modes share these rules; each line names the Raven source it follows.
 
 ## Start menu: Single Player and Multiplayer
 
-Game 2 opens on a menu. **Multiplayer** opens the online lobby (below); its *Practice* button starts the offline
+Game 2 opens on a menu. **Multiplayer** opens the free-for-all arena (below); its *Practice* button starts the offline
 Dark Jedi duel described here. **Single Player** runs story missions on the *same* combat code: the saber, Force, block, damage
 and bolt rules above are shared, not copied. A mission only adds a level, objectives and enemy behaviour around them.
 
@@ -50,19 +50,24 @@ To add a mission, write `missions/<name>.js` (layout + groups + objectives) and 
 `tests/game2-mission.test.mjs` builds the level headless, checks navigation and doors, and plays the mission
 through the real director, including a checkpoint restart.
 
-## Online multiplayer: Jedi vs Dark Jedi
+## Online multiplayer: the free-for-all arena
 
-Up to 10 players in the Lightsaber Training arena. Each player picks **Jedi** (blue blade) or **Dark Jedi** (red blade);
-the host adds 0 to 3 AI Reborn on the Dark side. Rounds: a side wins when the other has nobody standing; everyone
-respawns for the next round. The HUD shows the score, ping, players, kills / deaths and a kill feed.
+One Lightsaber Training arena everybody shares: up to 10 players plus the AI Reborn, every fighter for themselves.
+Players come in and leave whenever they like. A defeated fighter is back after 3 s at the spawn point farthest from
+everyone, with 1.5 s of spawn protection. Jedi or Dark Jedi is the look a player picks (blade and robes). The HUD shows
+your kills, the leader, ping, a scoreboard (kills / deaths) and a kill feed.
+
+There is no game server: the first player in opens the arena (keeps its record alive and admits newcomers), everyone
+after joins it, and when the host leaves the player who has been in longest takes over, so the arena lives as long as
+anyone is in it. Two players opening it at the same moment are merged into one arena.
 
 | Module | What it does |
 | --- | --- |
-| `Game2Lobby.jsx` | Callsign, side, room list, host a room (name, AI count), offline practice. Needs a signed-in account |
-| `net/signaling.js` | Room list and the WebRTC offer / answer through the app backend: `base44/entities/Game2Room.jsonc` and `Game2Signal.jsonc` (the pattern the voice chat uses with `VoiceSignal`). `?g2net=local` uses the tabs of one browser instead, for testing |
-| `net/mesh.js` | One WebRTC connection per pair of players (full mesh, no server hop). Channel `u` (unordered, no retransmits) for snapshots and pings, `r` (reliable) for hits, Force and rounds |
-| `net/session.js` | Host / guests, join handshake, 10-player cap, sides and spawn slots, relay through the host when two players cannot link directly |
-| `engine/netgame.js` | Game sync: snapshots (60/s, 30/s above 6 players), other players' fighters, remote hits and Force, host-run AI and rounds, online HUD |
+| `Game2Lobby.jsx` | Callsign, look, how many are in, Enter the arena, offline practice. Needs a signed-in account |
+| `net/signaling.js` | The arena record and the WebRTC offer / answer through the app backend: `base44/entities/Game2Room.jsonc` and `Game2Signal.jsonc` (the pattern the voice chat uses with `VoiceSignal`). `?g2net=local` uses the tabs of one browser instead, for testing |
+| `net/mesh.js` | One WebRTC connection per pair of players (full mesh, no server hop). Channel `u` (unordered, no retransmits) for snapshots and pings, `r` (reliable) for hits and Force |
+| `net/session.js` | Arena host / joiners, 10-player cap, host hand-over, merging two arenas, relay through the host when two players cannot link directly |
+| `engine/netgame.js` | Game sync: snapshots (60/s, 30/s above 6 players), other players' fighters, remote hits and Force, host-run AI Reborn, respawns, scoreboard, online HUD |
 
 Authority and latency: every player simulates their own fighter, so moves, swings and Force answer on the next frame and
 never wait for the network. Other fighters are shown at their extrapolated current position and updated every rendered

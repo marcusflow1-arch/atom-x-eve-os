@@ -216,7 +216,7 @@ export class Game {
   }
   applyThrow(F, victim, pull, o = {}) {
     const att = F.p, kind = pull ? 'pull' : 'push', vp = victim.isPlayer, ap = att.isPlayer, VF = this.forceOf(victim);
-    if (victim.status === 'dead' || victim.team === att.team) return null;
+    if (victim.status === 'dead' || !hostile(att, victim) || victim.spawnShield > this.t) return null;
     if (victim.remote && this.net) { this.net.rpc(victim, 'throw', [{ from: att, pull, lv: F.lv[kind], dmgScale: F.dmgScale ?? 1, dir: o.dir, dist: o.dist ?? 5, fall: o.fall, flatD: o.flatD }]); return null; } // resolved by that player's game
     const dist = o.dist ?? 5, fall = o.fall ?? clamp(1 - dist / 15, 0.2, 1), dir = o.dir;
     const def = this.defSnapshot(victim, att, pull);

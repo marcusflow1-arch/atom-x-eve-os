@@ -5,6 +5,7 @@
 // so the enemy really uses the same powers, effects and costs. Push / pull / grip / lightning outcomes come from
 // forcerules.js (ported from w_force.c) via Game.applyThrow().
 import { v3, clamp } from './math.js';
+import { hostile } from './combat.js';
 import { bolt, drawBolt } from './fx.js';
 import { GRIP_MAX_DIST, gripBlocker, gripPhase, gripEffectiveLevel, gripBroken, lightningMul } from './forcerules.js';
 
@@ -183,7 +184,7 @@ export class Force {
     this.later(0, () => {
       if (!this.alive()) return;
       this.mindFx();
-      for (const h of this.cone(14, 80, { npcOnly: true })) { const n = h.t.ref; if (n.team !== p.team) {
+      for (const h of this.cone(14, 80, { npcOnly: true })) { const n = h.t.ref; if (hostile(p, n)) {
         if (n.kind === 'darkjedi' || n.remote) { g.banner('MIND TRICK RESISTED', [1, 0.6, 0.6]); g.fx.ring({ p: [n.pos[0], n.pos[1] + 2.15, n.pos[2]], n: [0, 1, 0], r0: 0.1, r1: 0.5, life: 0.8, w: 0.05, c: [1, 0.3, 0.25, 1] }); g.sfxAt('distractstop', n.pos, 0.7); continue; }
         n.distracted = 8; g.fx.ring({ p: [n.pos[0], n.pos[1] + 2.15, n.pos[2]], n: [0, 1, 0], r0: 0.1, r1: 0.45, life: 1.2, w: 0.05, c: [0.8, 0.55, 1, 1] }); g.hud.msg('Mind trick: enemy confused'); } }
     });

@@ -47,7 +47,8 @@ export function sweptBladeContact(fromBlade, toBlade, fromBody, toBody, extraRad
   }
   return null;
 }
-export const hostile = (a, b) => (a.team === 'player' && b.team === 'enemy') || (a.team === 'enemy' && b.team === 'player');
+// player vs enemy; online free-for-all fighters (team 'ffa') are hostile to every other fighter except training allies
+export const hostile = (a, b) => (a.team === 'player' && b.team === 'enemy') || (a.team === 'enemy' && b.team === 'player') || (a !== b && (a.team === 'ffa' || b.team === 'ffa') && a.team !== 'ally' && b.team !== 'ally');
 
 export class Combat {
   constructor(g) {

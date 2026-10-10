@@ -3,7 +3,7 @@ import { AlertTriangle, ChevronRight, Loader2, Menu, Swords, Users } from 'lucid
 import { base44 } from '@/api/base44Client';
 import Game2Lobby, { getIceServers } from './Game2Lobby';
 
-// Game 2 start screen: Single Player (story missions) or Multiplayer (online Jedi vs Dark Jedi, lobby in Game2Lobby.jsx;
+// Game 2 start screen: Single Player (story missions) or Multiplayer (the online free-for-all arena, Game2Lobby.jsx;
 // the offline Dark Jedi duel is the lobby's practice mode).
 // The engine (src/components/game2/engine) is a small WebGL2 renderer + Ghoul2 style skeleton player with the original
 // Jedi Outcast animations; the Force rules (push / pull / grip / absorb / lightning) come from Raven's w_force.c,
@@ -17,8 +17,8 @@ const MODES = {
     blurb: 'Land in the canyon with Jan Ors, breach an Imperial outpost, pull its flight logs while the garrison counter-attacks, and face what waits in the hangar.',
   },
   online: {
-    tag: 'Multiplayer', title: 'Jedi vs Dark Jedi', loading: 'Joining the arena', icon: Users,
-    blurb: 'Online in the Lightsaber Training arena: up to 10 players choose Jedi or Dark Jedi and fight each other and the AI Reborn, with the same saber, Force powers and rules. Practice offline against the Reborn from the lobby.',
+    tag: 'Multiplayer', title: 'Free-for-all arena', loading: 'Entering the arena', icon: Users,
+    blurb: 'One online Lightsaber Training arena for everybody: up to 10 players, Jedi or Dark Jedi, everyone against everyone and the AI Reborn. Come in and leave whenever you like. Practice offline against the Reborn from the lobby.',
   },
 };
 const PRACTICE = { tag: 'Practice', title: 'Dark Jedi Duel', loading: 'Dark Jedi duel', icon: Swords };
@@ -30,7 +30,7 @@ function fillParent(el) {
 // Fills its nearest positioned parent (Game2.jsx gives it a relative flex-1 section).
 export default function Game2Duel() {
   const [choice, setChoice] = useState(null); // 'single' | 'online' | 'multi' (offline duel practice)
-  const [online, setOnline] = useState(null); // lobby result: { role, room | roomName, side, name, selfId, ai, local }
+  const [online, setOnline] = useState(null); // lobby result: { name, side, selfId, local }
   if (!choice) return <Game2Menu onPick={setChoice} />;
   if (choice === 'online' && !online) return <Game2Lobby onBack={() => setChoice(null)} onStart={setOnline} onPractice={() => setChoice('multi')} />;
   const exit = () => { if (choice === 'online') setOnline(null); else setChoice(choice === 'multi' ? 'online' : null); }; // online / practice go back to the lobby

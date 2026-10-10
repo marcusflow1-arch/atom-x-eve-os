@@ -127,6 +127,7 @@ export class Fighter {
   }
   // ---------- state transitions (reactions)
   push(dirXZ, speed, up = 4.5, opts = {}) { // knocked away (JO: HANDEXTEND_KNOCKDOWN)
+    if (this.spawnShield > this.now) return;
     if (this.status === 'dead') { this.vel[0] = dirXZ[0] * speed * 0.6; this.vel[2] = dirXZ[2] * speed * 0.6; return; }
     this.endForce(); this.cancelAttackState();
     this.status = 'flung'; this.statusT = 0; this.vel = [dirXZ[0] * speed, up, dirXZ[2] * speed]; this.onGround = false; this.ducked = false; this.knockAt = this.now; this.quickerGetup = !!opts.quicker;
@@ -145,7 +146,7 @@ export class Fighter {
     if (jump && anim === 'BOTH_FORCE_GETUP_B1') this.g.sfxAt && this.g.sfxAt('jump', this.pos, 0.6);
   }
   pullTo(dirXZ, speed) { // dragged toward caster
-    this.endForce(); this.cancelAttackState(); this.status = 'flung'; this.statusT = 0; this.vel = [dirXZ[0] * speed, 3.2, dirXZ[2] * speed]; this.onGround = false; this.ducked = false; this.knockAt = this.now; this.quickerGetup = false;
+    if (this.spawnShield > this.now) return; this.endForce(); this.cancelAttackState(); this.status = 'flung'; this.statusT = 0; this.vel = [dirXZ[0] * speed, 3.2, dirXZ[2] * speed]; this.onGround = false; this.ducked = false; this.knockAt = this.now; this.quickerGetup = false;
     this.yaw = Math.atan2(-dirXZ[0], -dirXZ[2]); this.statusAnim = 'BOTH_KNOCKDOWN3'; this.playWhole('BOTH_KNOCKDOWN3', { blend: 0.06 });
   }
   shove(dirXZ, speed) { // weak push: slide along the ground, keep control (separate from the knock-down fling)
@@ -159,7 +160,7 @@ export class Fighter {
   }
   electrify(sec) { this.elecUntil = Math.max(this.elecUntil, this.now + sec); }
   grip(on, liftTo = 1.35, o = {}) {
-    if (on) { if (this.status === 'dead') return; this.endForce(); this.cancelAttackState(); this.status = 'gripped'; this.gripLift = liftTo; this.gripCarry = o.carry || null; this.statusT = 0; this.onGround = false; this.shoveV = [0, 0, 0]; this.playWhole('BOTH_CHOKE1', { loop: true, blend: 0.12 }); }
+    if (on) { if (this.status === 'dead' || this.spawnShield > this.now) return; this.endForce(); this.cancelAttackState(); this.status = 'gripped'; this.gripLift = liftTo; this.gripCarry = o.carry || null; this.statusT = 0; this.onGround = false; this.shoveV = [0, 0, 0]; this.playWhole('BOTH_CHOKE1', { loop: true, blend: 0.12 }); }
     else if (this.status === 'gripped') {
       this.gripCarry = null; this.gripCripple = this.now + 1.2;
       if (o.free) { this.status = 'normal'; this.vel = [0, 0, 0]; this.onGround = this.pos[1] < 0.05; this.actor.followLegs(); this.actor.torso.cur = null; this.airAnim = null; return; } // broke free: drop to the feet
@@ -172,7 +173,7 @@ export class Fighter {
   }
   cancelAttackState() { this.saber.weaponTime = 0; this.saber.torsoTimer = 0; this.saber.blocked = null; if (this.thrown) this.catchSaber(); }
   hurt(dmg, from, opts = {}) {
-    if (this.status === 'dead' || this.hp <= 0) return false; dmg *= this.takeMul; this.hp -= dmg; this.lastHurt = this.now; this.dmgFlash = 1; this.flash = 0.25; if (this.force && this.force.onHurt) this.force.onHurt(dmg);
+    if (this.status === 'dead' || this.hp <= 0 || this.spawnShield > this.now) return false; dmg *= this.takeMul; this.hp -= dmg; this.lastHurt = this.now; this.dmgFlash = 1; this.flash = 0.25; if (this.force && this.force.onHurt) this.force.onHurt(dmg); // spawnShield: online respawn protection
     if (this.hp <= 0) { this.die(from, opts); return true; }
     if (!opts.noFlinch && this.status === 'normal' && this.now - (this.lastFlinch || -9) > 0.5 && !this.forceUntil && !(this.saber.isActiveSwing() && !this.isPlayer)) {
       this.lastFlinch = this.now; const a = PAINS[Math.floor(Math.random() * PAINS.length)];
