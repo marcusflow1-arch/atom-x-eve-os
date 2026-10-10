@@ -18,12 +18,19 @@ export function startPvPDiagnosticSocket({ matchId, playerId, onAction }) {
     const record = { kind, castId: String(castId || ''), at: performance.now(), ...detail };
     window.dispatchEvent(new CustomEvent('atomxePvPLatency', { detail: record }));
   };
+  socket.addEventListener('error', () => stamp('wss_error', '', { endpointConfigured: true }));
+  socket.addEventListener('close', (event) => stamp('wss_closed', '', { code: event.code }));
   socket.addEventListener('open', () => {
+    stamp('wss_connected', '');
     // The server MUST independently validate identity, authorization and match membership.
     socket.send(JSON.stringify({ t: 'join', matchId: match }));
   });
   socket.addEventListener('message', (event) => {
     let msg; try { msg = JSON.parse(event.data); } catch { return; }
+    if (msg?.t === 'error' && msg.code === 'AUTH_REQUIRED') {
+      stamp('wss_relay_unavailable', '', { reason: 'authentication_required' });
+      return;
+    }
     if (msg?.t === 'pong' && pending.has(msg.id)) {
       const started = pending.get(msg.id); pending.delete(msg.id);
       stamp('wss_rtt', msg.id, { elapsedMs: performance.now() - started });
