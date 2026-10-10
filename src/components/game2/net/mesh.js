@@ -76,7 +76,7 @@ export class Mesh {
   async onSignal(s) {
     if (this.closed || !s || s.to !== this.self) return;
     if (s.type === 'offer') {
-      const ok = this.accept(s); if (ok !== true) { this.sig.send(s.from, 'decline', { reason: ok || 'refused' }); return; }
+      const ok = this.accept(s); if (ok !== true) { await this.sig.send(s.from, 'decline', { reason: ok || 'refused' }); return; }
       const old = this.peers.get(s.from); if (old && old.pc) this.drop(s.from, 'reconnect', true);
       const p = this.peer(s.from); p.hello = s.payload; const pc = this.newPc(p);
       await pc.setRemoteDescription(s.payload.sdp); await pc.setLocalDescription(await pc.createAnswer()); await this.gathered(pc);
@@ -107,5 +107,5 @@ export class Mesh {
     try { p.u && p.u.close(); } catch { /* closed */ } try { p.r && p.r.close(); } catch { /* closed */ } try { p.pc && p.pc.close(); } catch { /* closed */ }
     if (!quiet || p.open) this.onClose(id, why);
   }
-  close() { if (this.closed) return; this.closed = true; clearInterval(this.pingTimer); for (const id of [...this.peers.keys()]) { this.sig.send(id, 'hangup', {}); this.drop(id, 'left', true); } }
+  close() { if (this.closed) return; this.closed = true; clearInterval(this.pingTimer); for (const id of [...this.peers.keys()]) { this.sig.send(id, 'hangup', {}).catch(() => { /* best-effort shutdown */ }); this.drop(id, 'left', true); } }
 }
