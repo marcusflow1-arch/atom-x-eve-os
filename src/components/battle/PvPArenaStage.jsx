@@ -510,6 +510,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       predictedLocalCasts.current.add(String(castId));
       setLastCastSlot((state) => ({ ...state, local: Number(skill.slot) }));
     }
+    if (localStorage.getItem('atomxe_pvp_latency_debug') === '1') console.info('[PvP latency] cast_input', { castId, at: performance.now() });
     actionPending.current = true;
     try {
       const body = await invoke('use_skill', { match_id: match.id, slot: Number(slot), cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
