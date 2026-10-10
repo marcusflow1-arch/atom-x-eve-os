@@ -3,6 +3,7 @@ import {useEffect,useMemo,useRef,useState} from 'react';
 import * as THREE from 'three';
 import {Canvas,useFrame,useThree} from '@react-three/fiber';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader.js';
 import {stepRace} from './physics';
 
 function FallbackCar({color='#12cde4',ghost=false}){
@@ -18,24 +19,55 @@ function ImportedCar({src,color}){
  useEffect(()=>{
   if(!src){setModel(null);return;}
   let live=true;
-  const loader=new GLTFLoader();
-  loader.load(src,(g)=>{
+  const manager=new THREE.LoadingManager();
+  manager.setURLModifier(url=>{
+   const basename=url.split(/[\\/]/).pop().split('?')[0];
+   if(/\\.(png|jpg|jpeg|tga|webp)$/i.test(basename)&&!url.startsWith('blob:'))return '/game3/alfa_textures/'+basename;
+   return url;
+  });
+  const isFbx=/\\.fbx(?:$|\\?)/i.test(src);
+  const loader=isFbx?new FBXLoader(manager):new GLTFLoader(manager);
+  loader.load(src,(asset)=>{
    if(!live)return;
-   const root=g.scene;
-   const b=new THREE.Box3().setFromObject(root);
-   const size=b.getSize(new THREE.Vector3());
+   const root=isFbx?asset:asset.scene;
+   const box=new THREE.Box3().setFromObject(root);
+   const size=box.getSize(new THREE.Vector3());
    const scale=4.25/Math.max(size.x,size.z,0.001);
-   const center=b.getCenter(new THREE.Vector3());
-   root.position.set(-center.x,-b.min.y,-center.z);
+   const center=box.getCenter(new THREE.Vector3());
+   root.position.set(-center.x,-box.min.y,-center.z);
    const wrapper=new THREE.Group();
    wrapper.add(root);wrapper.scale.setScalar(scale);
-   wrapper.rotation.y=size.x>size.z ? Math.PI/2 : 0;
+   wrapper.rotation.y=size.x>size.z?Math.PI/2:0;
    wrapper.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
    setModel(wrapper);
-  },undefined,()=>{if(live)setModel(null);});
-  return()=>{live=false;setModel(null);};
+  },undefined,(error)=>{console.warn('Game3 vehicle load failed',src,error);if(live)setModel(null);});
+  return()=>{live=false;};
  },[src]);
  return model?<primitive object={model}/>:<FallbackCar color={color}/>;
+}
+function ImportedEnvironment({route}){
+ const [model,setModel]=useState(null);
+ useEffect(()=>{
+  if(route!=='dam'){setModel(null);return;}
+  let active=true;
+  const manager=new THREE.LoadingManager();
+  manager.setURLModifier(url=>{
+   const filename=url.split(/[\\/]/).pop().split('?')[0];
+   return /\\.(png|jpg|jpeg|tga|webp)$/i.test(filename)?'/game3/dam_textures/'+filename:url;
+  });
+  new FBXLoader(manager).load('/game3/sources/glendam.fbx',(root)=>{
+   if(!active)return;
+   const bounds=new THREE.Box3().setFromObject(root);
+   const size=bounds.getSize(new THREE.Vector3());
+   const center=bounds.getCenter(new THREE.Vector3());
+   root.position.set(-center.x,-bounds.min.y,-center.z);
+   root.scale.setScalar(185/Math.max(size.x,size.z,0.001));
+   root.traverse(obj=>{if(obj.isMesh){obj.receiveShadow=true;}});
+   setModel(root);
+  },undefined,(err)=>{console.warn('Glen Canyon FBX map could not load',err);if(active)setModel(null);});
+  return()=>{active=false;};
+ },[route]);
+ return model?<group position={[0,-2,-145]}><primitive object={model}/></group>:null;
 }
 function Building({x,z,index}){
  const h=7+((index*17)%27);
@@ -87,7 +119,7 @@ function CameraRig({stateRef}){
  });
  return null;
 }
-function WorldRuntime({stateRef,inputRef,car,carSrc,onSnapshot}){
+function WorldRuntime({stateRef,inputRef,car,carSrc,onSnapshot,route='city',customization={}}){
  const roadRef=useRef(),carGroup=useRef(),enemyRef=useRef(),ghostRef=useRef();
  const time=useRef(0);
  useFrame((_,dt)=>{
@@ -109,15 +141,16 @@ function WorldRuntime({stateRef,inputRef,car,carSrc,onSnapshot}){
   <fog attach="fog" args={[fogColor,45,260]}/>
   <ambientLight intensity={0.85} color="#8eb7d4"/>
   <directionalLight position={[20,35,-40]} intensity={2.3} color="#bbddff" castShadow/>
-  <RoadObjects distance={stateRef.current.distance}/>
-  <group ref={carGroup} position={[0,0,2]}><ImportedCar src={carSrc} color={car.color}/></group>
+  <RoadObjects distance={stateRef.current.distance} route={route}/>
+  <ImportedEnvironment route={route}/>
+  <group ref={carGroup} position={[0,0,2]}><ImportedCar src={carSrc} color={car.color}/><pointLight position={[0,0.35,0]} distance={4} intensity={3} color={customization.underglow||'#14d4e3'}/><group visible={stateRef.current.perfectShift>0}>{[-1,1].map(x=><mesh key={x} position={[x*1.18,0.45,2.4]}><boxGeometry args={[0.065,0.04,5.2]}/><meshBasicMaterial transparent opacity={0.65} color={customization.shiftColor||'#94f6fe'}/></mesh>)}</group></group>
   <group ref={enemyRef} position={[0,0,-30]}><FallbackCar color="#df4c64"/></group>
-  <group ref={ghostRef} visible={false}><FallbackCar color="#9defff" ghost/></group>
+  <group ref={ghostRef} visible={false}>{[0,1,2].map(i=><group key={i} position={[0,0,(i+1)*1.8]}><FallbackCar color={customization.slipColor||'#9defff'} ghost/></group>)}</group>
   <CameraRig stateRef={stateRef}/>
  </>;
 }
-export default function Game3Scene({stateRef,inputRef,car,carSrc,onSnapshot}){
+export default function Game3Scene({stateRef,inputRef,car,carSrc,onSnapshot,route,customization}){
  return <Canvas shadows dpr={[1,1.7]} camera={{position:[0,4,13],fov:65,near:0.1,far:600}} gl={{antialias:true,powerPreference:'high-performance'}}>
-  <WorldRuntime stateRef={stateRef} inputRef={inputRef} car={car} carSrc={carSrc} onSnapshot={onSnapshot}/>
+  <WorldRuntime stateRef={stateRef} inputRef={inputRef} car={car} carSrc={carSrc} onSnapshot={onSnapshot} route={route} customization={customization}/>
  </Canvas>;
 }
