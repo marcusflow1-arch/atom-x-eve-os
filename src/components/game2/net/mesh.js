@@ -6,7 +6,9 @@
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 export const PING_MS = 500;
 export const PEER_TIMEOUT_MS = 6000;
-const GATHER_MS = 2000;
+// A two-second non-trickle ICE timeout omits slow TURN/server-reflexive candidates.
+// Never send an incomplete offer: distant players can otherwise enter separate fights.
+const GATHER_MS = 12000;
 
 export class Mesh {
   constructor({ selfId, signaling, iceServers, RTC, onOpen, onClose, onMessage, accept }) {
@@ -15,7 +17,13 @@ export class Mesh {
     this.onOpen = onOpen || (() => { }); this.onClose = onClose || (() => { }); this.onMessage = onMessage || (() => { });
     this.accept = accept || (() => true); // accept(offerSignal) -> true | 'reason' to decline
     this.peers = new Map(); this.closed = false; this.sent = 0; this.recv = 0;
-    this.sig.onSignal = (s) => this.onSignal(s);
+    this.sig.onSignal = (s) => this.onSignal(s).catch(error => {
+      console.warn('[game2 net] WebRTC negotiation failed', error?.message || error);
+      // Surface negotiation errors to NetSession so guests never treat an isolated
+      // local battle as a successfully connected multiplayer session.
+      this.onClose(s.from, 'negotiation failed: ' + (error?.message || error), 'negotiation');
+      this.drop(s.from, 'negotiation failed', true);
+    });
     this.pingTimer = setInterval(() => this.tick(), PING_MS);
   }
   peer(id) { let p = this.peers.get(id); if (!p) { p = { id, pc: null, u: null, r: null, open: false, rtt: null, last: now(), hello: null }; this.peers.set(id, p); } return p; }
@@ -35,17 +43,35 @@ export class Mesh {
     ch.onmessage = (e) => { p.last = now(); this.recv++; let m; try { m = JSON.parse(e.data); } catch { return; } this.handle(p, m, ch.label === 'r'); };
   }
   checkOpen(p) { if (!p.open && p.u && p.r && p.u.readyState === 'open' && p.r.readyState === 'open') { p.open = true; p.last = now(); this.onOpen(p.id, p.hello); } }
-  async gathered(pc) { // wait until ICE gathering is complete (or 2 s) so the description carries the candidates
+  async gathered(pc) { // Wait for all candidates, including slower TURN candidates.
     if (pc.iceGatheringState === 'complete') return;
-    await new Promise(res => { const t = setTimeout(res, GATHER_MS); pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); res(); } }); });
+    await new Promise((resolve, reject) => {
+      let finished = false;
+      const finish = error => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        pc.removeEventListener?.('icegatheringstatechange', check);
+        if (error) reject(error); else resolve();
+      };
+      const check = () => { if (pc.iceGatheringState === 'complete') finish(); };
+      const timer = setTimeout(() => finish(new Error('ICE candidate gathering timed out; check STUN/TURN configuration')), GATHER_MS);
+      pc.addEventListener('icegatheringstatechange', check);
+      check();
+    });
   }
   // initiate a link (the newer player offers to the older ones; extra = data the other side gets with the offer)
   async connect(id, extra = {}) {
     if (this.closed || id === this.self) return; const p = this.peer(id); if (p.pc) return;
     const pc = this.newPc(p); this.wire(p, pc.createDataChannel('u', { ordered: false, maxRetransmits: 0 })); this.wire(p, pc.createDataChannel('r', { ordered: true }));
-    await pc.setLocalDescription(await pc.createOffer()); await this.gathered(pc);
-    if (this.closed || p.pc !== pc) return;
-    await this.sig.send(id, 'offer', { ...extra, sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } });
+    try {
+      await pc.setLocalDescription(await pc.createOffer()); await this.gathered(pc);
+      if (this.closed || p.pc !== pc) return;
+      await this.sig.send(id, 'offer', { ...extra, sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } });
+    } catch (error) {
+      this.drop(id, 'could not signal offer', true);
+      throw error;
+    }
   }
   async onSignal(s) {
     if (this.closed || !s || s.to !== this.self) return;
@@ -73,7 +99,7 @@ export class Mesh {
     const t = now();
     for (const p of [...this.peers.values()]) {
       if (p.open) { this.raw(p, { k: '_pi', s: t }, false); if (t - p.last > PEER_TIMEOUT_MS) this.drop(p.id, 'timeout'); }
-      else if (p.pc && t - p.last > 20000) this.drop(p.id, 'could not connect');
+      else if (p.pc && t - p.last > 45000) this.drop(p.id, 'could not connect');
     }
   }
   drop(id, why, quiet) {
