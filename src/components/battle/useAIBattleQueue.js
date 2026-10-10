@@ -409,10 +409,18 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       const detail = event?.detail || {};
       const sourcePlayerId = String(detail.player_id || detail.sourcePlayerId || '');
       if (!sourcePlayerId || sourcePlayerId === localId || !ids.has(sourcePlayerId) || String(detail.matchId || '') !== matchId) return;
-      // A dodge ends the opponent's turn: fetch the new turn right away.
-      if (String(detail.kind || '') === 'pvp_dodge') { refreshSignal.current?.(); return; }
-      if (!['pvp_cast', 'pvp_melee', 'ai_battle_card_cast'].includes(String(detail.kind || ''))) return;
-      window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', { detail: { ...detail, sourcePlayerId, targetPlayerId: localId, network: true } }));
+      // Every recognized combat event triggers an immediate authoritative state refresh.
+      // Peer packets only predict visuals; never use them to change HP or turn ownership.
+      const kind = String(detail.kind || '');
+      if (!['pvp_cast', 'pvp_melee', 'pvp_dodge', 'ai_battle_card_cast'].includes(kind)) return;
+      const receivedAt = performance.now();
+      window.dispatchEvent(new CustomEvent('atomxePvPLatency', { detail: {
+        kind: 'peer_combat_received', castId: String(detail.cast_id || ''),
+        actionKind: kind, matchId, receivedAt, at: receivedAt,
+      } }));
+      if (kind !== 'pvp_dodge') {
+        window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', { detail: { ...detail, sourcePlayerId, targetPlayerId: localId, network: true } }));
+      }
       refreshSignal.current?.();
     };
     window.addEventListener('webrtcRemoteAction', receive);
