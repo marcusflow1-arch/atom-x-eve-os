@@ -1,4 +1,11 @@
 import {AvatarCustomizationRuntime} from '@/components/onboarding/customizationRuntime';
+
+function recordPvPLatency(kind, castId, detail = {}) {
+  if (typeof window === 'undefined') return;
+  const event = { kind, castId: String(castId || ''), at: performance.now(), ...detail };
+  window.dispatchEvent(new CustomEvent('atomxePvPLatency', { detail: event }));
+  if (localStorage.getItem('atomxe_pvp_latency_debug') === '1') console.debug('[PvP latency]', event);
+}
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Flag, Home, Play, X } from 'lucide-react';
