@@ -84,6 +84,23 @@ export class NetSession {
     this.status('Opening the arena'); this.isHost = true; this.hostId = this.self;
     this.me = { id: this.self, name: this.o.name, side: this.o.side, host: true, at: Date.now() }; this.roster = new Map([[this.self, this.me]]);
     this.room = await this.sig.createRoom(this.roomFields());
+    // The authenticated server may have elected a different host while we were
+    // loading. Never present our own AI fight as another "online" arena.
+    if (this.room.host_peer !== this.self) {
+      const elected = this.room;
+      this.isHost = false;
+      this.hostId = elected.host_peer;
+      this.me = null;
+      this.roster.clear();
+      if ((elected.players || 0) >= this.max) {
+        this.end('The shared arena is full (10 players)');
+        return;
+      }
+      if (!await this.join(elected) && !this.ended) {
+        this.end('Could not connect to the elected shared arena host (' + (this.lastJoinError || 'timeout') + '). Please retry.');
+      }
+      return;
+    }
     if (this.ended) { this.sig.deleteRoom(this.room.id); return; }
     this.state = 'live'; this.status('Confirming the shared arena'); clearInterval(this.hb); this.hb = setInterval(() => this.heartbeat(), HEARTBEAT_MS);
     this.onRoster(this.list()); this.onReady(this.me, null); this.onHostChange(this.self, true);
