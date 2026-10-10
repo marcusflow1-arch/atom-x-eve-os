@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Loader2, LogIn, Swords, Users, Wifi } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import { Base44Signaling, LocalSignaling, makePeerId, pickArena, MAX_PLAYERS } from './net/signaling.js';
 
 // Game 2 multiplayer: one free-for-all arena everybody shares. Pick a callsign and a look (Jedi or Dark Jedi) and enter;
@@ -33,6 +34,7 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
   const [auth, setAuth] = useState('checking');
   const [name, setName] = useState(() => store.get(NAME_KEY, ''));
   const [side, setSide] = useState(() => (store.get(SIDE_KEY, 'light') === 'dark' ? 'dark' : 'light'));
+  const [includeAi, setIncludeAi] = useState(false); // Multiplayer is human-first; host may opt into a bot.
   const [arena, setArena] = useState(undefined); // undefined = loading, null = nobody in yet
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -60,7 +62,7 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
 
   const callsign = (name || 'Jedi').trim().slice(0, 20) || 'Jedi';
   const players = arena ? arena.players || 1 : 0, full = players >= MAX_PLAYERS;
-  const enter = () => { if (error || arena === undefined || !user || busy || full) return; store.set(NAME_KEY, callsign); store.set(SIDE_KEY, side); setBusy(true); onStart({ name: callsign, side, selfId: makePeerId(user.id), local }); };
+  const enter = () => { if (error || arena === undefined || !user || busy || full) return; store.set(NAME_KEY, callsign); store.set(SIDE_KEY, side); setBusy(true); onStart({ name: callsign, side, ai: includeAi ? 1 : 0, selfId: makePeerId(user.id), local }); };
 
   return (
     <div className="absolute inset-0 overflow-y-auto bg-[radial-gradient(ellipse_at_top,#1a1530_0%,#070812_55%,#05060c_100%)] text-white">
@@ -71,7 +73,7 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
         <div className="mb-6">
           <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-300/80">Game 2 · Multiplayer</div>
           <h1 className="mt-1 text-2xl font-extrabold tracking-wide sm:text-3xl">Free-for-all arena</h1>
-          <p className="mt-1 max-w-2xl text-sm text-white/55">One Lightsaber Training arena for everybody: up to {MAX_PLAYERS} players and the AI Reborn, every fighter for themselves. Come in and leave whenever you like; defeated fighters are back in 3 seconds.</p>
+          <p className="mt-1 max-w-2xl text-sm text-white/55">One shared Lightsaber Training arena for up to {MAX_PLAYERS} human-controlled Jedi or Dark Jedi. Players from other browsers and countries join the same fight. An AI Reborn opponent is optional; a bot does not count as a human player.</p>
         </div>
 
         {auth === 'checking' && <div className="flex items-center gap-2 text-sm text-white/60"><Loader2 className="h-4 w-4 animate-spin" /> Checking your account…</div>}
@@ -100,7 +102,7 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
                 </div>
                 <button type="button" disabled={busy || full || arena === undefined || !!error} onClick={enter}
                   className="rounded-xl bg-cyan-400/90 px-5 py-2.5 text-base font-extrabold text-[#04121a] hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40">
-                  {full ? 'Arena full' : 'Enter the arena'}
+                  {full ? 'Arena full' : 'Join human players online'}
                 </button>
               </div>
 
@@ -122,6 +124,11 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
                   <div className="mt-1 text-[11px] text-white/45">{LOOK[side].blurb} · free-for-all: everyone fights everyone</div>
                 </div>
               </div>
+              {!arena && <label className="mt-4 flex cursor-pointer items-center gap-2 text-xs text-white/65">
+                <input type="checkbox" checked={includeAi} onChange={e => setIncludeAi(e.target.checked)} className="accent-cyan-300" />
+                Also spawn an AI Reborn opponent (optional, only when opening a new arena)
+              </label>}
+              <div className="mt-3 text-[11px] text-white/40">Shared Game 2 network: {String(appParams.appId || 'not configured').slice(-8)} · This ID must match in the editor and the live website.</div>
             </div>
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-white/45">
