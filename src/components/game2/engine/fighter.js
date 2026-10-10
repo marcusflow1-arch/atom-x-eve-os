@@ -180,8 +180,8 @@ export class Fighter {
     switch (this.status) {
       case 'dead': this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
       case 'flung': this.physicsFlung(dt); return this.finish(dt);
-      case 'down': this.frictionMove(dt, 8); if (this.statusT > (this.downTime || 1.1)) { this.status = 'getup'; this.statusT = 0; const g = Math.random() < 0.5 ? ['BOTH_GETUP1', 1] : Math.random() < 0.5 ? ['BOTH_FORCE_GETUP_B1', 2] : ['BOTH_FORCE_GETUP_B3', 3]; this.getupLen = this.playWhole(g[0], { blend: 0.1 }); this.yaw = this.yaw; } return this.finish(dt);
-      case 'getup': this.frictionMove(dt, 8); if (this.statusT >= this.getupLen - 0.05) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; this.actor.setLegs(this.saber.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2', { blend: 0.15 }); } return this.finish(dt);
+      case 'down': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= (this.isPlayer ? 0.5 : (this.downTime || 1.1))) { this.status = 'getup'; this.statusT = 0; const g = Math.random() < 0.5 ? ['BOTH_GETUP1', 1] : Math.random() < 0.5 ? ['BOTH_FORCE_GETUP_B1', 2] : ['BOTH_FORCE_GETUP_B3', 3]; this.getupLen = this.playWhole(g[0], { blend: 0.06 }); if (this.isPlayer) this.getupLen = Math.min(this.getupLen, 0.25); this.yaw = this.yaw; } return this.finish(dt);
+      case 'getup': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= this.getupLen - 0.05) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; this.actor.setLegs(this.saber.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2', { blend: 0.15 }); } return this.finish(dt);
       case 'gripped': { const ty = this.gripLift ?? 1.3; this.pos[1] += (ty - this.pos[1]) * Math.min(1, dt * 4); this.vel[0] = this.vel[2] = 0; if (this.gripCarry) { const c = this.gripCarry(); const k = Math.min(1, dt * 3); this.pos[0] += (c[0] - this.pos[0]) * k; this.pos[2] += (c[2] - this.pos[2]) * k; this.g.world.collide(this.pos, this.radius); } this.pos[1] += Math.sin(now * 3.1) * 0.0025; this.yaw += Math.sin(now * 2.2) * 0.004; return this.finish(dt); }
       case 'shocked': {
         this.frictionMove(dt, 10); this.nextPain -= dt; if (this.nextPain <= 0) { this.nextPain = 0.28 + Math.random() * 0.2; const p = PAINS[Math.floor(Math.random() * PAINS.length)]; this.playWhole(p, { blend: 0.04 }); }
@@ -220,7 +220,7 @@ export class Fighter {
     // jumping
     if (this.trySpecialJumpAttack()) { c.jumpPressed = false; }
     if (c.jumpPressed && this.onGround && !this.ducked && !frozen) this.startJump();
-    if (!this.onGround && c.jump && !this.fjUsed && this.now - this.jumpAt > 0.16 && this.now - this.jumpAt < 0.6 && this.vel[1] > 0.5 && this.canForceJump()) this.startForceJump();
+    if (!this.onGround && c.jump && !this.fjUsed && this.now - this.jumpAt >= 0.05 && this.now - this.jumpAt < 0.6 && this.vel[1] > 0.5 && this.canForceJump()) this.startForceJump();
     // wish velocity
     const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); const fwd = [sinY, 0, cosY], right = [-cosY, 0, sinY];
     let f = c.fwd, r = c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }
@@ -269,7 +269,7 @@ export class Fighter {
     if (forceJ) an = air.includes('BACK') ? 'BOTH_FORCELANDBACK1' : air.includes('LEFT') ? 'BOTH_FORCELANDLEFT1' : air.includes('RIGHT') ? 'BOTH_FORCELANDRIGHT1' : 'BOTH_FORCELAND1';
     else an = air.includes('BACK') ? 'BOTH_LANDBACK1' : air.includes('LEFT') ? 'BOTH_LANDLEFT1' : air.includes('RIGHT') ? 'BOTH_LANDRIGHT1' : 'BOTH_LAND1';
     if (impact > 14) an = 'BOTH_LAND2';
-    const info = this.actor.skel.anims[an]; this.landUntil = this.now + Math.min(0.5, animLen(info)); this.actor.setLegs(an, { restart: true, blend: 0.04, loop: false }); this.airAnim = null; this.fjUsed = false;
+    const info = this.actor.skel.anims[an]; this.landUntil = this.now + Math.min(0.12, animLen(info)); this.actor.setLegs(an, { restart: true, blend: 0.04, loop: false }); this.airAnim = null; this.fjUsed = false;
     this.g.onLand && this.g.onLand(this, impact);
   }
   startRoll() {
