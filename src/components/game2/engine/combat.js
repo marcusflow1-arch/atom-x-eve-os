@@ -54,7 +54,7 @@ export class Combat {
     this.g = g; this.bolts = []; this.pair = new Map(); this.remote = null; this.kills = 0; this.reflected = 0;
     const m = geo(); m.sphere(0, 0, 0, 0.27, [0.30, 0.31, 0.36, 1], 18).cyl(0, -0.02, 0, 0.30, 0.04, [0.18, 0.18, 0.22, 1], 18).sphere(0, 0, 0.22, 0.075, [0.9, 0.12, 0.08, 1], 8);
     this.remoteMesh = g.R.uploadStatic(m.build());
-    if (g.mode !== 'duel') this.spawnRemote(); // the floating practice remote belongs to the free-roam explorer only
+    if (g.mode === 'explorer') this.spawnRemote(); // the floating practice remote belongs to the free-roam explorer only
   }
   spawnRemote() { this.remote = { pos: [4, 2.4, 4], vel: [0, 0, 0], hp: 24, cool: 2.2, ang: Math.random() * 6, charge: 0, dead: false, respawn: 0, flash: 0, yaw: 0 }; }
   // ---------- geometry helpers
@@ -173,7 +173,7 @@ export class Combat {
     for (let i = this.bolts.length - 1; i >= 0; i--) {
       const b = this.bolts[i]; b.life -= dt; const sp = v3.len(b.v);
       let dead = b.life <= 0; const old = b.p.slice(); b.p = v3.addS(b.p, b.v, dt);
-      if (!dead && (b.p[1] < 0.02 || b.p[1] > 14 || Math.hypot(b.p[0], b.p[2]) > 24.2)) { dead = true; g.fx.sparks(b.p, [0, 1, 0], 5, [b.col[0], b.col[1], b.col[2], 1]); }
+      if (!dead && (b.p[1] < 0.02 || b.p[1] > 14 || g.world.boltBlocked(old, b.p))) { dead = true; g.fx.sparks(b.p, [0, 1, 0], 5, [b.col[0], b.col[1], b.col[2], 1]); }
       if (!dead) for (const pl of g.world.pillars) { if (b.p[1] < 8.5 && Math.hypot(b.p[0] - pl.x, b.p[2] - pl.z) < pl.r) { dead = true; g.fx.sparks(b.p, [0, 1, 0], 6, [b.col[0], b.col[1], b.col[2], 1]); break; } }
       if (!dead && b.team === 'enemy') { // vs player
         const cap = this.capsule(P);
