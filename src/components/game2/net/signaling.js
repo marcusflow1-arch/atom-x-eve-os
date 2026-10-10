@@ -28,11 +28,32 @@ export class Base44Signaling {
   }
   get Rooms() { return this.b.entities.Game2Room; }
   get Signals() { return this.b.entities.Game2Signal; }
-  // ---- lobby
-  async listRooms() { return freshRooms(await this.Rooms.list('-updated_date', 60)); }
-  async createRoom(fields) { return this.Rooms.create({ ...fields, host_id: this.user, host_peer: this.self, version: NET_VERSION, status: 'open', last_seen: Date.now() }); }
-  async updateRoom(id, fields) { return this.Rooms.update(id, { ...fields, last_seen: Date.now() }); }
-  async deleteRoom(id) { try { await this.Rooms.delete(id); } catch { /* already gone */ } }
+  // ---- lobby: the server reads all signed-in players' rooms with service-role.
+  // Browser entity queries may be owner-scoped: they caused two independent 1-player
+  // arenas even though both users were signed in to the same Base44 app.
+  async arenaCall(action, details = {}) {
+    const response = await this.b.functions.invoke('game2Arena', { action, ...details });
+    const result = response?.data ?? response;
+    if (!result || result.error) throw new Error(result?.error || 'Game 2 shared arena service not deployed');
+    return result;
+  }
+  async listRooms() {
+    const result = await this.arenaCall('list');
+    return freshRooms(result.rooms, result.server_time || Date.now());
+  }
+  async createRoom(fields) {
+    const result = await this.arenaCall('claim', { peer: this.self, fields });
+    if (!result.room) throw new Error('Game 2 arena coordinator returned no room');
+    return result.room;
+  }
+  async updateRoom(id, fields) {
+    const result = await this.arenaCall('heartbeat', { id, peer: this.self, fields });
+    return result.room;
+  }
+  async deleteRoom(id) {
+    try { await this.arenaCall('leave', { id, peer: this.self }); }
+    catch (error) { console.warn('[game2 net] room cleanup', error?.message || error); }
+  }
   // ---- offer / answer
   listen(roomId = ARENA) {
     this.room = roomId; this.stopListening();
