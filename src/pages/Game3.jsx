@@ -70,6 +70,10 @@ export default function Game3(){
  const [paint,setPaint]=useState('#24c9e4');
  const [slipColor,setSlipColor]=useState('#37d8ff');
  const [shiftColor,setShiftColor]=useState('#a7f7f7');
+ const [underglow,setUnderglow]=useState('#00d8ef');
+ const [route,setRoute]=useState('city');
+ const [winCount,setWinCount]=useState(()=>{try{return Math.max(0,Number(localStorage.getItem('game3-race-wins')||0));}catch{return 0;}});
+ const countedFinish=useRef(false);
  const [gaugeStyle,setGaugeStyle]=useState('sport');
  const [modelUrls,setModelUrls]=useState({});
  const objectUrls=useRef([]);
@@ -95,7 +99,7 @@ export default function Game3(){
  const scene=storyIndex>=0?STORY_SCENES[storyIndex]:null;
  const soundSource=audioUrl||TRACKS[trackIndex]?.url||'';
  const displayedTrack=soundName||TRACKS[trackIndex]?.title||'No song selected';
- const musicLevel=muted?0:(scene?scene.kind==='dialogue'?0.13:0.9:race.current.phase==='race'?0.78:0.5)*musicVolume;
+ const musicLevel=muted?0:(scene?scene.kind==='dialogue'?0.13:0.9:race.current.phase==='race'?0.78:0.5)*musicVolume*(snapshot.ghost>0?0.45:1);
  useEffect(()=>{
   input.current.shakeEnabled=shakeEnabled;
  },[shakeEnabled]);
@@ -115,7 +119,14 @@ export default function Game3(){
   objectUrls.current.push(url);
   setModelUrls(old=>({...old,[id]:url}));
  },[]);
+ useEffect(()=>{
+  if(snapshot.phase==='finish'&&!countedFinish.current){
+   countedFinish.current=true;
+   setWinCount(previous=>{const next=previous+1;try{localStorage.setItem('game3-race-wins',String(next));}catch{}return next;});
+  }
+ },[snapshot.phase]);
  const restart=useCallback(()=>{
+  countedFinish.current=false;
   clearInterval(countdownTimer.current);
   const s=makeRaceState();s.phase='countdown';
   race.current=s;setSnapshot({...s});setStoryIndex(-1);setTab('race');
@@ -154,7 +165,7 @@ export default function Game3(){
   return()=>clearInterval(id);
  },[count]);
  const onAudioFile=(file)=>{if(!file)return;setAudioUrl(file);setSoundName(file.name);setPlaying(true);};
- const chooseTrack=(index)=>{setAudioUrl(null);setSoundName('');setTrackIndex((index+TRACKS.length)%TRACKS.length);};
+ const chooseTrack=(index)=>{setAudioUrl(null);setSoundName('');setTrackIndex((index+TRACKS.length)%TRACKS.length);setPlaying(true);};
  const skipTrack=(direction)=>chooseTrack(trackIndex+direction);
  const onVideoFile=(file)=>{if(file){setSelectedVideoUrl('');setLocalVideoUrl(file);}};
  const selectVideoTrack=(src)=>{setLocalVideoUrl(null);setSelectedVideoUrl(src);};
@@ -186,9 +197,10 @@ export default function Game3(){
   <div className="flex shrink-0 gap-1 border-b border-white/10 bg-[#081321] p-2 sm:hidden">{buttons.map(b=><button key={b.id} onClick={()=>setTab(b.id)} className={'flex-1 rounded-lg px-2 py-2 text-xs '+(tab===b.id?'bg-cyan-500/20 text-cyan-300':'text-white/60')}>{b.title}</button>)}</div>
   <audio ref={audio} src={soundSource||undefined} preload="metadata" onEnded={()=>skipTrack(1)} onError={()=>setPlaying(false)}/>
   <div className="relative min-h-0 flex-1">
-   <div className="absolute inset-0"><Game3Scene stateRef={race} inputRef={input} car={{...car,color:paint}} carSrc={modelUrls[car.id]||'/game3/models/'+car.file} onSnapshot={setSnapshot}/></div>
+   <div className="absolute inset-0"><Game3Scene stateRef={race} inputRef={input} car={{...car,color:paint}} carSrc={modelUrls[car.id]||'/game3/models/'+car.file} route={route} customization={{slipColor,shiftColor,underglow}} onSnapshot={setSnapshot}/></div>
    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#03101a]/50 via-transparent to-[#03101a]/50"/>
-   {snapshot.ghost>0&&<div className="pointer-events-none absolute inset-0 border-[7px] border-cyan-300/30" style={{boxShadow:'inset 0 0 90px '+slipColor+'55'}}/>}
+   {snapshot.ghost>0&&<div className="pointer-events-none absolute inset-0 border-[7px] border-cyan-300/30 bg-black/10" style={{boxShadow:'inset 0 0 90px '+slipColor+'55'}}/>}
+   {snapshot.perfectLanding>0&&<div className="pointer-events-none absolute left-1/2 top-1/4 -translate-x-1/2 text-xl font-black italic tracking-widest text-cyan-300">PERFECT LANDING + NITROUS</div>}
    {snapshot.damageFlash>0&&<div className="pointer-events-none absolute inset-0 bg-red-500/20"/>}
    {snapshot.perfectShift>0&&<div className="pointer-events-none absolute inset-y-10 left-0 w-1/3 opacity-50" style={{background:'linear-gradient(90deg,'+shiftColor+'88,transparent)'}}/>}
    {snapshot.shiftFlash>0&&<div className="pointer-events-none absolute left-1/2 top-[18%] -translate-x-1/2 whitespace-nowrap text-xl font-black italic tracking-[.15em]" style={{color:snapshot.shiftStatus==='PERFECT SHIFT'?shiftColor:'#ffffff'}}>{snapshot.launchStatus&&snapshot.raceTime<2?snapshot.launchStatus:snapshot.shiftStatus}</div>}
