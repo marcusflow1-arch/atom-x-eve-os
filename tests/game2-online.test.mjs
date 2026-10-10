@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { NetSession, sideCounts } from '../src/components/game2/net/session.js';
+import { Mesh } from '../src/components/game2/net/mesh.js';
 import { Base44Signaling, freshRooms, pickArena, makePeerId, userOfPeer, NET_VERSION, MAX_PLAYERS, ROOM_STALE_MS, ARENA } from '../src/components/game2/net/signaling.js';
 import { NetGame, SN, packArgs, unpackArgs, pickSpawn, RESPAWN_S, SHIELD_S } from '../src/components/game2/engine/netgame.js';
 import { hostile } from '../src/components/game2/engine/combat.js';
@@ -126,6 +127,43 @@ test('Base44 signaling: records go to the target account on the arena channel, o
   s.take(row({ id: 'stale', created_date: new Date(Date.now() - 120000).toISOString() }));
   assert.equal(got.length, 1, 'one signal for this session, once'); assert.equal(got[0].from, other);
   assert.ok(deleted.includes('ok')); s.close();
+});
+
+test('a guest cannot fall into an isolated fight when Base44 signaling rejects the WebRTC offer', async () => {
+  const bus = new Bus(), host = await arrive(bus, 'Host', 'light');
+  const guest = player(bus, 'Guest', 'dark');
+  guest.sig.send = async () => { throw new Error('Game2Signal write rejected'); };
+  await guest.start();
+  assert.equal(guest.state, 'ended');
+  assert.match(guest.endReason, /Game2Signal write rejected/);
+  assert.equal(bus.rooms.size, 1, 'the failed guest does not silently host a second arena');
+  assert.equal(host.roster.size, 1, 'the guest was not falsely marked connected');
+  host.leave();
+});
+
+test('a failed Base44 signaling write propagates instead of appearing delivered', async () => {
+  const api = { entities: {
+    Game2Signal: { create: async () => { throw new Error('backend refused signaling'); } },
+    Game2Room: {},
+  } };
+  const sig = new Base44Signaling(api, makePeerId('alice'));
+  await assert.rejects(sig.send(makePeerId('bob'), 'offer', { sdp: { type: 'offer', sdp: 'x' } }), /backend refused signaling/);
+});
+
+test('non-trickle ICE waits for slow candidates instead of sending an incomplete offer at two seconds', async () => {
+  let state = 'gathering', listener = null, settled = false;
+  const pc = {
+    get iceGatheringState() { return state; },
+    addEventListener(type, fn) { assert.equal(type, 'icegatheringstatechange'); listener = fn; },
+    removeEventListener(type, fn) { if (listener === fn) listener = null; },
+  };
+  const pending = Mesh.prototype.gathered.call({}, pc).then(() => { settled = true; });
+  await wait(2200);
+  assert.equal(settled, false, 'do not proceed without candidates after the old 2s timeout');
+  state = 'complete';
+  listener();
+  await pending;
+  assert.equal(settled, true);
 });
 
 test('remote calls pack fighters as ids and unpack them on the other side', () => {
