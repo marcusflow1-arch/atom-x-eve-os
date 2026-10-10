@@ -15,7 +15,7 @@ export async function loadBank(base, progress = () => { }) {
   const pbuf = await fetchBuf(base + 'bank_pel.bin');
   return { q: new Int16Array(qbuf), pel: new Float32Array(pbuf) };
 }
-export async function loadAll(base = 'assets/', progress = () => { }) {
+export async function loadAll(base = 'assets/', progress = () => { }, o = {}) { // o.map === false: missions build their own level
   progress('rig'); const rigJson = await (await fetch(base + 'rig.json')).json();
   const bank = await loadBank(base, progress);
   progress('model'); const glb = parseGLB(await fetchBuf(base + 'Explorer_G2_Game.glb'));
@@ -29,6 +29,7 @@ export async function loadAll(base = 'assets/', progress = () => { }) {
   const holster = node('Saber_Hilt'), grip = node('Saber_Grip_R');
   const attach = { holster: { t: holster.translation, q: holster.rotation, bone: 'rfemurYZ' }, grip: { t: grip.translation, q: grip.rotation, s: grip.extras.hilt_scale, bone: 'rhand' }, hiltLen: holster.extras.length_m };
   progress('saber moves'); const saberData = await (await fetch(base + 'sabermoves.json')).json();
+  if (o.map === false) return { rigJson, skel, body, lod, hilt, attach, glb, saberData, duelMap: null };
   progress('Lightsaber Training map');
   const raw = await fetch(base + 'maps/duel_training.bsp');
   if (!raw.ok) throw new Error('Game 2 Lightsaber Training map missing: HTTP ' + raw.status);

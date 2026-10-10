@@ -10,9 +10,12 @@ import { Force, SELECT_ORDER, SELECT_ALL, FORCE_QUICK_BINDINGS } from './force.j
 import { STYLE_NAMES } from './saber.js';
 import { resolveThrow } from './forcerules.js';
 import { Combat } from './combat.js';
-import { HUD, HELP_DUEL } from './hud.js';
-import { aiDroid, aiDuelist, aiAlly } from './ai.js';
-import { aiDarkJedi } from './darkjedi.js';
+import { HUD, HELP_DUEL, HELP_MISSION } from './hud.js';
+import { BRAINS } from './brains/index.js';
+import { ARCHETYPES } from './archetypes.js';
+import { buildLevel } from './level/builder.js';
+import { MissionDirector } from './mission/director.js';
+import { MISSIONS } from './missions/index.js';
 import { bolt, drawBolt } from './fx.js';
 import { geo } from './gl.js';
 
@@ -24,12 +27,16 @@ const clearCmd = c => { c.fwd = c.right = c.up = 0; c.walk = c.crouch = c.attack
 export class Game {
   constructor(R, A, canvas, hudCanvas, opts = {}) {
     this.opts = opts; this.mode = opts.mode || 'explorer'; this.duel = this.mode === 'duel'; this.boss = null; this.round = { state: 'intro', t: 0 }; this.arcs = []; this.disposed = false;
+    this.missionDef = this.mode === 'mission' ? MISSIONS[opts.mission || 'kejim'] : null;
+    if (this.mode === 'mission' && !this.missionDef) throw new Error('Unknown Game 2 mission: ' + opts.mission);
+    this.forceMenu = this.duel || !!this.missionDef; // wheel / F Force selector and the ten quick-cast powers
     this.R = R; this.A = A; this.skel = A.skel; this.saberData = A.saberData; this.attach = A.attach; this.canvas = canvas;
     this.t = 0; this.dtFrame = STEP; this.fps = 60; this.acc = 0; this.started = false; this.flashes = []; this.lightFlash = 0; this.lightFlashPos = [0, 2, 0]; this.shakeAmt = 0; this.frameNo = 0;
     this.bodyMesh = R.uploadSkinned(A.body); this.hiltMesh = R.uploadStatic(A.hilt); this.lodMesh = A.lod ? R.uploadSkinned(A.lod) : this.bodyMesh;
     const gun = geo(); gun.box(0, 0.03, 0, 0.05, 0.13, 0.06, [0.16, 0.16, 0.19, 1]).box(0, -0.12, 0, 0.045, 0.2, 0.05, [0.32, 0.33, 0.38, 1]).box(0, -0.235, 0, 0.03, 0.05, 0.03, [0.9, 0.25, 0.15, 1]); this.gunMesh = R.uploadStatic(gun.build());
-    this.world = new World(R, this.duel ? A.duelMap : null);
-    this.playerSpawn = this.duel ? this.world.spawns.player.slice() : SPAWN.slice();
+    const level = this.missionDef ? buildLevel(this.missionDef.layout) : null;
+    this.world = new World(R, this.duel ? A.duelMap : null, level);
+    this.playerSpawn = this.duel ? this.world.spawns.player.slice() : level ? level.playerSpawn.slice() : SPAWN.slice();
     this.enemySpawn = this.duel ? this.world.spawns.enemy.slice() : [0, 0, 8];
     this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
     this.input.onFirstGesture = () => this.startAudio();
@@ -47,12 +54,18 @@ export class Game {
       h.help = false;
       this.started = true;
       h.msg('WASD to move · F1 for controls');
+    } else if (this.missionDef) {
+      const h = this.hud;
+      this.input.wheelThrottle = 90;
+      h.helpList = HELP_MISSION; h.helpW = 820; h.title = this.missionDef.title.toUpperCase(); h.subtitle = this.missionDef.subtitle + ' · F1 = controls';
+      h.debug = false; h.help = false; this.started = true;
     }
-    this.player = new Fighter(this, { name: 'player', isPlayer: true, team: 'player', pos: this.playerSpawn, yaw: 0, hp: 100, bladeColor: [0.22, 0.52, 1] }); this.player.label = 'You'; this.player.humId = 0;
-    this.force = new Force(this, this.player, { list: this.duel ? SELECT_ORDER : SELECT_ALL }); this.player.force = this.force; this.combat = new Combat(this);
+    const startYaw = level ? level.playerYaw : 0;
+    this.player = new Fighter(this, { name: 'player', isPlayer: true, team: 'player', pos: this.playerSpawn, yaw: startYaw, hp: 100, bladeColor: [0.22, 0.52, 1] }); this.player.label = 'You'; this.player.humId = 0;
+    this.force = new Force(this, this.player, { list: this.forceMenu ? SELECT_ORDER : SELECT_ALL }); this.player.force = this.force; this.combat = new Combat(this);
     this.world.onThud = b => { if (b.vel[1] < -4) this.sfxAt('hit1', b.pos, 0.5); };
     this.populate();
-    this.cam = { yaw: 0, pitch: 0.2, dist: 3.7, pos: [this.playerSpawn[0], this.playerSpawn[1] + 1.4, this.playerSpawn[2]], eye: [this.playerSpawn[0], this.playerSpawn[1] + 2, this.playerSpawn[2] - 4], target: [this.playerSpawn[0], this.playerSpawn[1] + 1.4, this.playerSpawn[2]], fov: 62 * Math.PI / 180 };
+    this.cam = { yaw: startYaw, pitch: 0.2, dist: 3.7, pos: [this.playerSpawn[0], this.playerSpawn[1] + 1.4, this.playerSpawn[2]], eye: [this.playerSpawn[0], this.playerSpawn[1] + 2, this.playerSpawn[2] - 4], target: [this.playerSpawn[0], this.playerSpawn[1] + 1.4, this.playerSpawn[2]], fov: 62 * Math.PI / 180 };
     this.firstSub = true;
     const I = this.input;
     this.inp = { pressed: c => this.firstSub && I.pressed(c), held: c => I.held(c), released: c => I.released(c) };
@@ -60,13 +73,14 @@ export class Game {
   }
   populate() {
     if (this.duel) return this.populateDuel();
+    if (this.missionDef) { this.director = new MissionDirector(this, this.missionDef); return; }
     const droidTints = [[0.55, 0.75, 1.0], [0.9, 0.8, 0.5], [0.7, 1.0, 0.75]];
     [[9, 3], [-9, 6], [4, 15]].forEach(([x, z], i) => this.addNpc('droid', x, z, { name: 'droid' + i, label: 'Training Droid', team: 'enemy', hp: 70, tint: droidTints[i], tintAmt: 0.42, saber: false, yaw: Math.PI + 0.4 * i }));
     this.duelist = this.addNpc('duelist', 0, 7, { name: 'duelist', label: 'Sith Duelist', team: 'enemy', hp: 170, tint: [0.62, 0.22, 0.22], tintAmt: 0.3, saber: true, blade: [1, 0.08, 0.06], yaw: Math.PI, dmgScale: 0.55, blockSkill: 0.5 });
     this.ally = this.addNpc('ally', -7, -4, { name: 'ally', label: 'Jedi Ally', team: 'ally', hp: 100, tint: [0.35, 0.7, 0.45], tintAmt: 0.3, saber: true, blade: [0.2, 1, 0.3], yaw: 0.6 }); this.ally.hp = 50;
   }
   populateDuel() {
-    // one opponent: a Dark Jedi with the same Force powers, costs and rules as the player
+    // one opponent: a Dark Jedi with the same Force powers, costs and rules as the player (missions spawn the same values from archetypes.js 'reborn')
     const b = this.addNpc('darkjedi', this.enemySpawn[0], this.enemySpawn[2], { name: 'darkjedi', label: 'Reborn', team: 'enemy', hp: 220, tint: [0.12, 0.09, 0.17], tintAmt: 0.66, saber: true, blade: [1, 0.05, 0.04], yaw: Math.PI, dmgScale: 0.6, blockSkill: 0.55 });
     b.pos[1] = this.enemySpawn[1]; b.reaction = 0.7; b.maxHp = 220; b.hp = 220; b.spawn = this.enemySpawn.slice(); b.setStyle(2);
     b.force = new Force(this, b, { npc: true, fp: 100, regen: 7, dmgScale: 0.75, healRate: 18, speedGain: 1.4, protectMul: 0.4, list: SELECT_ORDER });
@@ -76,10 +90,21 @@ export class Game {
   readySaber(f) { f.saber.holstered = true; f.blade.set(false); f.blade.len = 0; f.hilt = 'thigh'; f.igniteNow(); }
   addNpc(kind, x, z, o) {
     const f = new Fighter(this, { name: o.name, kind, team: o.team, pos: [x, 0, z], yaw: o.yaw || 0, hp: o.hp, tint: o.tint, tintAmt: o.tintAmt, hasSaber: o.saber, bladeColor: o.blade });
-    f.label = o.label; f.blockSkill = o.blockSkill; f.dmgScale = o.dmgScale; f.targetYaw = f.yaw; f.humId = this.npcs.length + 1; f.healFlash = 0; f.provoked = true;
+    f.label = o.label; f.blockSkill = o.blockSkill; f.dmgScale = o.dmgScale; f.targetYaw = f.yaw; f.humId = this.npcs.length + 1; f.healFlash = 0; f.provoked = true; f.gun = kind === 'droid' || !!o.gun;
     if (kind === 'duelist' || kind === 'darkjedi') f.setStyle(2);
     this.npcs.push(f); if (o.saber) { f.igniteNow(); f.quickIgnited = true; } return f;
   }
+  // archetypes.js entry -> Fighter (Force, saber style, AI settings). pos = [x, y, z]
+  spawnArchetype(id, pos, yaw = 0, extra = {}) {
+    const A = ARCHETYPES[id]; if (!A) throw new Error('Unknown archetype ' + id);
+    const f = this.addNpc(A.kind, pos[0], pos[2], { name: extra.name || id + '_' + this.npcs.length, label: extra.label || A.label, team: A.team, hp: A.hp, tint: A.tint, tintAmt: A.tintAmt, saber: A.saber, blade: A.blade, yaw, dmgScale: A.dmgScale, blockSkill: A.blockSkill, gun: A.gun });
+    f.pos[1] = pos[1] ?? 0; if (A.reaction != null) f.reaction = A.reaction; f.maxHp = A.hp; f.hp = A.hp; f.spawn = pos.slice(); if (A.style) f.setStyle(A.style);
+    if (A.force) f.force = new Force(this, f, { ...A.force, list: SELECT_ORDER });
+    if (A.takeMul != null) f.takeMul = A.takeMul; if (A.brain) f.brainCfg = A.brain; f.archetype = id;
+    return f;
+  }
+  removeNpc(f) { const i = this.npcs.indexOf(f); if (i < 0) return; this.humStop(f); if (f.force) f.force.releaseAll?.(true); this.npcs.splice(i, 1); }
+  bark(f, text) { if (this.director) this.director.bark(f, text); }
   // ---------------- hooks used by Fighter / Force / Combat
   sfxAt(name, pos, vol = 1) { if (vol <= 0) return; this.sfx.play(name, { pos, vol, vary: 0.06 }); }
   humStart(f) {
@@ -93,7 +118,7 @@ export class Game {
   onSwing(f, move) { const lv = f.saber.level; this.sfx.play(Math.random() < 0.5 ? 'swing1' : 'swing2', { pos: f.pos, vol: f.isPlayer ? 0.8 : 0.55, rate: (lv === 1 ? 1.12 : lv === 3 ? 0.88 : 1) * (f.saber.rageMul > 1 ? 1.1 : 1), vary: 0.1 }); }
   onThud(f) { this.sfxAt('hit1', f.pos, 0.7); this.dust(f.pos, 0.9, 10); if (f.isPlayer) this.shake(0.18); }
   onLand(f, impact) { if (impact > 8) { this.dust(f.pos, 0.6 + impact * 0.03, 8); } if (f.isPlayer && impact > 12) this.shake(0.12 + impact * 0.01); if (impact > 15) this.sfxAt('hit1', f.pos, 0.5); }
-  onDeath(f) { this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (f.isPlayer) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } }
+  onDeath(f) { this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (f.isPlayer) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
   endRound(state) { if (this.round.state === 'won' || this.round.state === 'lost') return; this.round = { state, t: 0 }; this.hud.banners.length = 0; } // the result overlay in hud.js replaces any banner
   onForceJump(f) { this.sfxAt('jump', f.pos, 0.9); this.sfxAt('jumpbuild', f.pos, 0.5); this.fx.ring({ p: [f.pos[0], 0.05, f.pos[2]], n: [0, 1, 0], r0: 0.3, r1: 2.2, life: 0.5, w: 0.14, c: [0.6, 0.85, 1, 0.9] }); this.dust(f.pos, 1.0, 14); if (f.isPlayer) this.shake(0.12); }
   dust(p, size = 0.8, n = 8) { for (let i = 0; i < n; i++) { const a = rnd(0, 6.28); this.fx.emit({ p: [p[0] + Math.cos(a) * 0.3, 0.08, p[2] + Math.sin(a) * 0.3], v: [Math.cos(a) * rnd(0.8, 2.6) * size, rnd(0.2, 0.9), Math.sin(a) * rnd(0.8, 2.6) * size], life: rnd(0.4, 0.9), size: rnd(0.12, 0.28), grow: 0.5, c0: [0.5, 0.48, 0.55, 0.22], c1: [0.4, 0.38, 0.45, 0], drag: 2.5 }); } }
@@ -215,12 +240,13 @@ export class Game {
     if (i.dx || i.dy) { c.yaw -= i.dx * i.sens; c.pitch += i.dy * i.sens; }
     const ar = 2.2 * dt; if (i.held('ArrowLeft')) c.yaw += ar; if (i.held('ArrowRight')) c.yaw -= ar; if (i.held('ArrowUp')) c.pitch -= ar * 0.7; if (i.held('ArrowDown')) c.pitch += ar * 0.7;
     c.pitch = clamp(c.pitch, -0.5, 1.3);
-    if (this.duel) { // wheel / [ ] cycle the selected Force power; Ctrl+wheel or - = zoom
+    if (this.duel || this.missionDef) { // wheel / [ ] cycle the selected Force power; Ctrl+wheel or - = zoom
       if (i.wheel && !h.help) this.force.select(Math.max(-3, Math.min(3, i.wheel))); if (i.pressed('BracketRight') && !h.help) this.force.select(1); if (i.pressed('BracketLeft') && !h.help) this.force.select(-1);
       c.dist = clamp(c.dist + (i.zoom + (i.held('Equal') ? -dt * 4 : 0) + (i.held('Minus') ? dt * 4 : 0)) * 0.35, 1.9, 8.5);
     } else c.dist = clamp(c.dist + (i.wheel + i.zoom) * 0.35, 1.9, 8.5);
     if (h.help) return;
-    if (this.duel) { if ((this.round.state === 'won' || this.round.state === 'lost') && this.round.t > 0.8 && i.pressed('Enter')) { this.resetDuel(); return; } if (p.status === 'dead') return; }
+    if (this.director) { if (this.director.frameInput(i)) return; if (p.status === 'dead') return; }
+    else if (this.duel) { if ((this.round.state === 'won' || this.round.state === 'lost') && this.round.t > 0.8 && i.pressed('Enter')) { this.resetDuel(); return; } if (p.status === 'dead') return; }
     else if (p.status === 'dead') { if (i.pressed('Enter') || this.t - p.deadAt > 12) this.respawnPlayer(); return; }
     if (i.pressed('KeyR')) p.toggleSaber();
     if (i.pressed('Tab')) { p.setStyle(p.saber.level % 3 + 1); h.msg('Saber style: ' + STYLE_NAMES[p.saber.level]); }
@@ -229,6 +255,10 @@ export class Game {
   }
   respawnPlayer() {
     const p = this.player; this.force.releaseAll(); this.force.fp = this.force.max; p.revive(this.playerSpawn.slice()); p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1; p.blade.set(false); p.blade.len = 0; p.yaw = p.targetYaw = 0; this.cam.yaw = 0; this.cam.pitch = 0.2; this.hud.msg('You rise again');
+  }
+  respawnPlayerAt(pos, yaw = 0) { // mission checkpoints: full health and Force, saber holstered
+    const p = this.player; this.force.reset(); p.revive(pos.slice()); p.status = 'normal'; p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1;
+    p.blade.set(false); p.blade.len = 0; this.humStop(p); p.actor.animSpeed = 1; p.yaw = p.targetYaw = yaw; this.cam.yaw = yaw; this.cam.pitch = 0.2; this.cam.pos = [pos[0], pos[1] + 1.4, pos[2]];
   }
   respawnNpc(n) {
     n.revive(n.spawn.slice()); n.hilt = n.hasSaber ? 'thigh' : 'none'; n.saber.holstered = true; n.blade.len = 0; n.hitSet.clear(); n.ai = null; n.thrown = null; n.energized = 0; n.glow = 0;
@@ -239,12 +269,13 @@ export class Game {
     this.t += dt; this.dtFrame = dt; const p = this.player;
     this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.inp);
     for (const n of this.npcs) {
-      if (this.aiOff) { clearCmd(n.cmd); } else if (n.kind === 'droid') aiDroid(this, n, dt); else if (n.kind === 'duelist') aiDuelist(this, n, dt); else if (n.kind === 'darkjedi') aiDarkJedi(this, n, dt); else if (n.kind === 'ally') aiAlly(this, n, dt);
+      const brain = BRAINS[n.kind];
+      if (this.aiOff) { clearCmd(n.cmd); } else if (brain) brain(this, n, dt);
       n.update(dt); if (n.force) n.force.update(dt); if (n.healFlash > 0) n.healFlash = Math.max(0, n.healFlash - dt);
-      if (n.status === 'dead' && this.t - n.deadAt > 8 && !this.duel) this.respawnNpc(n);
+      if (n.status === 'dead' && this.t - n.deadAt > 8 && this.mode === 'explorer') this.respawnNpc(n);
     }
     if (this.duel) this.updateRound(dt);
-    this.combat.step(dt); this.world.update(dt); this.fx.update(dt); this.firstSub = false;
+    this.combat.step(dt); this.world.update(dt); this.fx.update(dt); if (this.director) this.director.update(dt); this.firstSub = false;
     for (const f of this.flashes) f.t -= dt; this.flashes = this.flashes.filter(f => f.t > 0); this.lightFlash = Math.max(0, this.lightFlash - dt * 3);
     if (p.healFlash > 0 && this.force.holding !== 'heal') p.healFlash = Math.max(0, p.healFlash - dt);
     // brazier fire
@@ -266,7 +297,8 @@ export class Game {
     const cp = Math.cos(c.pitch), d = [Math.sin(c.yaw) * cp, -Math.sin(c.pitch), Math.cos(c.yaw) * cp]; const right = [-Math.cos(c.yaw), 0, Math.sin(c.yaw)];
     const tgt = [c.pos[0] + right[0] * 0.3, c.pos[1], c.pos[2] + right[2] * 0.3]; let eye = v3.addS(tgt, d, -c.dist);
     this.shakeAmt *= Math.exp(-5 * dt); const s = this.shakeAmt * 0.12; eye = [eye[0] + rnd(-s, s), eye[1] + rnd(-s, s), eye[2] + rnd(-s, s)];
-    const rr = Math.hypot(eye[0], eye[2]); if (!this.world.map && rr > 24.2) { eye[0] *= 24.2 / rr; eye[2] *= 24.2 / rr; } eye[1] = Math.max(0.25, eye[1]);
+    const rr = Math.hypot(eye[0], eye[2]); if (!this.world.map && !this.world.level && rr > 24.2) { eye[0] *= 24.2 / rr; eye[2] *= 24.2 / rr; } eye[1] = Math.max(0.25, eye[1]);
+    if (this.world.level) eye = this.world.cameraClip(tgt, eye); // walls and ceilings pull the camera in
     c.eye = eye; c.target = tgt; const wantFov = (62 + (this.force.active.speed ? 8 : 0) + (this.force.active.rage ? 4 : 0)) * Math.PI / 180; c.fov += (wantFov - c.fov) * Math.min(1, dt * 5);
     this.sfx.listener = eye;
   }
@@ -280,6 +312,10 @@ export class Game {
     let best = null, bd = 1e9; for (const n of this.npcs) if (n.hasSaber && n.blade.len > 0.3) { const d = v3.dist(n.pos, P.pos); if (d < bd) { bd = d; best = n; } } if (best) bl(best, 2, 0.7 * best.blade.len);
     let bb = null, bbd = 1e9; for (const b of this.world.braziers) { const d = Math.hypot(b[0] - P.pos[0], b[2] - P.pos[2]); if (d < bbd) { bbd = d; bb = b; } }
     if (bb) { L[3].p = [bb[0], bb[1] + 0.4, bb[2]]; L[3].r = 14; const fk = 0.85 + 0.15 * Math.sin(this.t * 17) * Math.sin(this.t * 7.3); L[3].c = [1.5 * fk, 0.75 * fk, 0.28 * fk]; }
+    else if (this.world.lamps.length) { // authored levels: the nearest lamp lights the scene around the player
+      let lp = null, ld = 1e9; for (const l of this.world.lamps) { const d = v3.dist(l, P.pos); if (d < ld) { ld = d; lp = l; } }
+      if (ld < 22) { L[3].p = lp; L[3].r = 12; L[3].c = [1.1, 0.72, 0.4]; }
+    }
   }
   drawFighter(f) {
     const R = this.R, a = f.actor; let tint = a.tint, amt = a.tintAmt, glow = 0;
@@ -291,7 +327,7 @@ export class Game {
     const far = !f.isPlayer && v3.dist(this.cam.eye, f.pos) > 9;
     R.drawSkinned(far ? this.lodMesh : this.bodyMesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha });
     if (f.hasSaber && f.hilt !== 'none') R.drawMesh(this.hiltMesh, f.hiltMat, { spec: 0.7 });
-    else if (!f.hasSaber && f.kind === 'droid') { const bm = a.boneMatrix(this.attach.grip.bone); const loc = m4.trs(this.attach.grip.t, this.attach.grip.q, [1, 1, 1]); R.drawMesh(this.gunMesh, m4.mul(bm, loc), { spec: 0.6 }); }
+    else if (!f.hasSaber && f.gun) { const bm = a.boneMatrix(this.attach.grip.bone); const loc = m4.trs(this.attach.grip.t, this.attach.grip.q, [1, 1, 1]); R.drawMesh(this.gunMesh, m4.mul(bm, loc), { spec: 0.6 }); }
     const sh = f.status === 'dead' || f.status === 'down' ? 0.8 : 0.55; if (f.pos[1] < 3) this.fx.disc([f.pos[0], 0, f.pos[2]], sh * (1 - Math.min(0.5, f.pos[1] * 0.15)), [0, 0, 0, 0.42], 1);
   }
   render() {
@@ -302,7 +338,7 @@ export class Game {
     for (const b of this.world.braziers) R.billboard([b[0], b[1] + 0.35, b[2]], 0.9 + 0.1 * Math.sin(this.t * 13 + b[0]), [1, 0.5, 0.15, 0.22], 0);
     this.fx.draw();
     for (const f of all) f.blade.draw(R, 1 + 0.05 * Math.sin(this.t * 41 + (f.humId || 0) * 2));
-    this.force.draw(R); for (const n of this.npcs) if (n.force) n.force.draw(R); this.drawArcs(R); this.combat.drawBolts(R);
+    this.force.draw(R); for (const n of this.npcs) if (n.force) n.force.draw(R); this.drawArcs(R); this.combat.drawBolts(R); if (this.director) this.director.draw(R);
     R.flushFx(); this.hud.draw(this, this.dtFrame);
   }
   frame(nowMs) { const now = nowMs / 1000; const dt = this.last ? now - this.last : STEP; this.last = now; this.update(dt); this.render(); }

@@ -13,6 +13,27 @@ The duel is a small WebGL2 engine in `engine/` (plain ES modules, loaded lazily 
 | `darkjedi.js` | Dark Jedi brain: saber fencing + Force use picked by range, Force left and cooldowns |
 | `game.js`, `hud.js`, `input.js`, `audio.js`, `fx.js`, `world.js` | Game loop, rounds, HUD, input, sounds, effects, arena |
 
+## Start menu: Single Player and Multiplayer
+
+Game 2 opens on a menu. **Multiplayer** is the Dark Jedi duel described here (played against the AI; there is no
+online play yet). **Single Player** runs story missions on the *same* combat code: the saber, Force, block, damage
+and bolt rules above are shared, not copied. A mission only adds a level, objectives and enemy behaviour around them.
+
+| Module | What it does |
+| --- | --- |
+| `level/builder.js`, `level/kit.js` | Plain-data floor plans (walls with doorways, rooms with ceilings, ramps, cliffs, doors) → collision triangles, ray boxes and meshes |
+| `level/space.js` | Walking collision (the same `BSPCollision` the Raven arena uses), sliding doors, ceilings, zones, line of sight, bolt and camera rays |
+| `level/nav.js` | Navigation grid built from that collision, A* with path smoothing, door aware |
+| `brains/` | Brain registry (`kind` → AI). `trooper.js`: sight / hearing, firing distance, repositioning to spots with a clear shot, bursts, rolls away from swings, search, officers rally. `companion.js`: Jan Ors follows and shoots. The duel brains are registered unchanged |
+| `archetypes.js` | Combatant data (stormtrooper, officer, Jan, and `reborn` = the duel's Reborn value for value) |
+| `mission/director.js` | Objectives (zone / clear groups / use console / hold a terminal), triggers, spawn groups, doors, checkpoints, dialogue, barks, mission HUD, results |
+| `missions/kejimPost.js` | Mission 1 · Kejim Post (Expanded Remaster), original geometry and dialogue |
+
+Brains only press the same buttons the player does (`Fighter.cmd`), so every character obeys the same rules.
+To add a mission, write `missions/<name>.js` (layout + groups + objectives) and register it in `missions/index.js`.
+`tests/game2-mission.test.mjs` builds the level headless, checks navigation and doors, and plays the mission
+through the real director, including a checkpoint restart.
+
 ## Controls
 
 Move with WASD, hold Shift to walk, Space to jump (hold for Force Jump), C to crouch/roll,

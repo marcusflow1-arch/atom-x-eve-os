@@ -104,9 +104,12 @@ test('input listeners are removable and never swallow typing in text fields', ()
 });
 
 test('engine folder is plain ES modules without eval or network calls beyond its own assets', () => {
-  const dir = new URL('src/components/game2/engine/', root);
-  for (const f of readdirSync(dir)) {
-    const src = readFileSync(new URL(f, dir), 'utf8');
-    assert.doesNotMatch(src, /\beval\(|new Function\(|XMLHttpRequest|https?:\/\//, f);
-  }
+  const scan = dir => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) { scan(new URL(e.name + '/', dir)); continue; } // level/, brains/, mission/, missions/
+      const src = readFileSync(new URL(e.name, dir), 'utf8');
+      assert.doesNotMatch(src, /\beval\(|new Function\(|XMLHttpRequest|https?:\/\//, e.name);
+    }
+  };
+  scan(new URL('src/components/game2/engine/', root));
 });
