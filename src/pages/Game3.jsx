@@ -74,7 +74,9 @@ export default function Game3(){
  const [modelUrls,setModelUrls]=useState({});
  const objectUrls=useRef([]);
  const [audioUrl,setAudioUrl]=useUrlFile();
- const [videoUrl,setVideoUrl]=useUrlFile();
+ const [localVideoUrl,setLocalVideoUrl]=useUrlFile();
+ const [selectedVideoUrl,setSelectedVideoUrl]=useState('');
+ const videoUrl=selectedVideoUrl||localVideoUrl;
  const [soundName,setSoundName]=useState('');
  const [trackIndex,setTrackIndex]=useState(Math.max(0,TRACKS.findIndex(t=>t.title==='Set It Off.mp3')));
  const [musicVolume,setMusicVolume]=useState(0.85);
@@ -154,7 +156,8 @@ export default function Game3(){
  const onAudioFile=(file)=>{if(!file)return;setAudioUrl(file);setSoundName(file.name);setPlaying(true);};
  const chooseTrack=(index)=>{setAudioUrl(null);setSoundName('');setTrackIndex((index+TRACKS.length)%TRACKS.length);};
  const skipTrack=(direction)=>chooseTrack(trackIndex+direction);
- const onVideoFile=(file)=>{if(file)setVideoUrl(file);};
+ const onVideoFile=(file)=>{if(file){setSelectedVideoUrl('');setLocalVideoUrl(file);}};
+ const selectVideoTrack=(src)=>{setLocalVideoUrl(null);setSelectedVideoUrl(src);};
  useEffect(()=>{
   const a=audio.current;if(!a||!soundSource)return;
   a.load();
@@ -229,17 +232,28 @@ export default function Game3(){
    </div>}
    {tab==='music'&&<div className="absolute inset-y-0 right-0 w-[min(520px,100%)] overflow-y-auto border-l border-white/10 bg-[#091522]/95 p-5 backdrop-blur-xl">
     <div className="mb-3 flex items-center gap-2"><Music2 size={19} className="text-cyan-300"/><h2 className="text-xl font-bold">Music / Cinematic audio</h2></div>
-    <p className="mb-4 text-xs text-white/60">Music rises in story cinematics, fades under conversation and plays at driving volume during races. Import your own local media to audition the mix. Media is not uploaded or redistributed.</p>
+    <p className="mb-4 text-xs text-white/60">Choose from your imported playlist, skip tracks during a race, and control volume. Music rises for cinematics and ducks softly beneath conversations.</p>
     <div className={cardBase+' space-y-3'}>
-     <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-cyan-400/30 bg-cyan-400/10 p-3 text-sm text-cyan-200"><Upload size={15}/> Load a music file <input type="file" accept="audio/*,.mp3" className="hidden" onChange={e=>onAudioFile(e.target.files?.[0])}/></label>
-     <div className="text-xs text-white/60">{soundName||'No local audio loaded yet'}</div>
-     <button disabled={!audioUrl} className={buttonBase+' w-full bg-white/10 disabled:opacity-40'} onClick={toggleAudio}>{isPlaying?'Pause music':'Play music'}</button>
-     <Meter title="Current music mix" value={musicLevel*100} note={scene?.kind==='dialogue'?'Dialogue ducking':scene?'Cinematic':race.current.phase==='race'?'Driving':'Menu'}/>
-     <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-3 text-sm"><Film size={15}/> Preview a reference video <input type="file" accept="video/*,.mp4" className="hidden" onChange={e=>onVideoFile(e.target.files?.[0])}/></label>
+      <p className="truncate text-sm font-semibold text-cyan-200" title={displayedTrack}>{displayedTrack.replace(/\\.mp3$/i,'')}</p>
+      <div className="flex justify-center gap-3">
+        <button aria-label="Previous song" onClick={()=>skipTrack(-1)} className={buttonBase+' border-white/15 bg-white/10'}><SkipBack size={17}/></button>
+        <button aria-label={isPlaying?'Pause music':'Play music'} onClick={toggleAudio} className={buttonBase+' border-cyan-300/50 bg-cyan-400/20 px-6'}>{isPlaying?<Pause size={19}/>:<Play size={19}/>}</button>
+        <button aria-label="Next song" onClick={()=>skipTrack(1)} className={buttonBase+' border-white/15 bg-white/10'}><SkipForward size={17}/></button>
+      </div>
+      <label className="flex items-center justify-between gap-3 text-xs text-white/70">Music volume <input aria-label="Music volume" type="range" min="0" max="100" value={Math.round(musicVolume*100)} onChange={e=>setMusicVolume(Number(e.target.value)/100)} className="w-2/3 accent-cyan-400"/></label>
+      <Meter title="Active audio mix" value={musicLevel*100} note={scene?.kind==='dialogue'?'Dialogue ducking':scene?'Cinematic':race.current.phase==='race'?'Driving':'Menu'}/>
+      <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-3 text-xs"><Upload size={15}/> Play a personal local file instead <input type="file" accept="audio/*,.mp3" className="hidden" onChange={e=>onAudioFile(e.target.files?.[0])}/></label>
     </div>
-    <h3 className="mb-2 mt-5 text-sm font-semibold">Uploaded soundtrack references</h3><div className="space-y-1">{TRACKS.map((t,i)=><div className="flex gap-2 rounded-lg bg-white/5 px-3 py-2 text-xs text-white/70" key={i}><span className="font-mono text-cyan-400">{String(i+1).padStart(2,'0')}</span>{t}</div>)}</div>
-    <p className="mt-3 text-[11px] text-white/40">Reference track names only. Commercially released songs require synchronization/master-use permissions before publishing them within the game.</p>
-    <label className="mt-5 flex items-center gap-2 text-xs text-white/60"><input type="checkbox" checked={shakeEnabled} onChange={e=>setShakeEnabled(e.target.checked)}/> Allow high-speed camera shake</label>
+    <h3 className="mb-2 mt-5 text-sm font-semibold">Imported playlist · {TRACKS.length} songs</h3>
+    <div className="space-y-1">{TRACKS.map((track,i)=><button type="button" key={track.url} onClick={()=>chooseTrack(i)} className={'flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-xs transition '+(!audioUrl&&trackIndex===i?'border-cyan-400/50 bg-cyan-400/15 text-cyan-100':'border-transparent bg-white/5 text-white/70 hover:bg-white/10')}>
+      <span className="font-mono text-cyan-400">{String(i+1).padStart(2,'0')}</span><span className="min-w-0 flex-1 truncate">{track.title.replace(/\\.mp3$/i,'')}</span>{!audioUrl&&trackIndex===i?<Music2 size={14}/>:<Play size={12}/>}
+    </button>)}</div>
+    <h3 className="mb-2 mt-5 text-sm font-semibold">Reference cinematics</h3>
+    <div className="flex flex-wrap gap-2">{VIDEOS.map((video,i)=><button key={video.url} onClick={()=>selectVideoTrack(video.url)} className={buttonBase+' border-white/15 bg-white/5'}>Video {i+1}</button>)}</div>
+    <label className="mt-4 flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-3 text-xs"><Film size={15}/> Load another local video <input type="file" accept="video/*,.mp4" className="hidden" onChange={e=>onVideoFile(e.target.files?.[0])}/></label>
+    {videoUrl&&<video src={videoUrl} controls className="mt-3 w-full rounded-lg" />}
+    <p className="mt-4 text-[11px] text-white/40">Provided commercial recordings are for private prototyping. Obtain appropriate rights before releasing the soundtrack publicly.</p>
+    <label className="mt-4 flex items-center gap-2 text-xs text-white/60"><input type="checkbox" checked={shakeEnabled} onChange={e=>setShakeEnabled(e.target.checked)}/> Allow high-speed camera shake</label>
    </div>}
   </div>
  </main>;
