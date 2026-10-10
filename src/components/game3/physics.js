@@ -3,7 +3,10 @@ export const MAX_SPEED = 84;
 export const GEAR_LIMITS = [0, 24, 37, 50, 63, 75, 84];
 export const CARS = [
   { id: 'sls', name: '2010 Mercedes SLS AMG', file: '2010_mercedes_sls_amg.glb', color: '#b9c7d5', accel: 1.04, handling: 1.03, locked: false },
-  { id: 'scifi', name: 'Sci-Fi Sport Car', file: 'sci_fi_sport_car.glb', color: '#1bd2ee', accel: 1.11, handling: 1.14, locked: false }
+  { id: 'scifi', name: 'Sci-Fi Sport Car', file: 'sci_fi_sport_car.glb', color: '#1bd2ee', accel: 1.11, handling: 1.14, locked: false },
+  { id: 'bugatti', name: '1992 Bugatti EB110 Super Sport', file: 'bugatti_eb110_super_sport_1992.glb', color: '#3854f4', accel: 1.17, handling: 0.97, locked: true },
+  { id: 'porsche', name: '2024 Porsche 992 GT3 R', file: 'porsche_992_gt3_r.glb', color: '#e5f0ef', accel: 1.16, handling: 1.2, locked: true },
+  { id: 'alfa', name: '2024 Alfa Romeo 33 Stradale', file: 'alfa_romeo_33_stradale.fbx', color: '#dc3346', accel: 1.18, handling: 1.09, locked: true }
 ];
 export const STORY_SCENES = [
   { kind:'cinematic', title:'PROLOGUE · THE CITY NEVER STOPS', speaker:'NARRATOR', text:'At night, the city belongs to whoever can find an open road. Every street has a history. Every driver has a reason to run.' },
@@ -13,7 +16,7 @@ export const STORY_SCENES = [
 ];
 export function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
 export function makeRaceState(){
- return {phase:'idle',speed:0,gear:1,rpm:0,distance:0,lane:0,lateral:0,yaw:0,drift:false,nitrous:100,boost:0,slipSeconds:0,slipLevel:0,ghost:0,perfectShift:0,shiftStatus:'',shiftFlash:0,launchStatus:'',jump:0,air:0,shake:0,raceTime:0,opponentDistance:33,opponentLane:0,damageFlash:0,finish:false};
+ return {phase:'idle',speed:0,gear:1,rpm:0,distance:0,lane:0,lateral:0,yaw:0,drift:false,nitrous:100,boost:0,slipSeconds:0,slipLevel:0,ghost:0,perfectShift:0,shiftStatus:'',shiftFlash:0,launchStatus:'',jump:0,air:0,shake:0,raceTime:0,opponentDistance:33,opponentLane:0,damageFlash:0,finish:false,perfectLanding:0};
 }
 export function shiftGear(s){
  if(s.phase!=='race'||s.gear>=6) return false;
@@ -41,7 +44,7 @@ export function stepRace(s,input,dt,car=CARS[0]){
  s.ghost=Math.max(0,s.ghost-dt);s.boost=Math.max(0,s.boost-dt);
  s.perfectShift=Math.max(0,s.perfectShift-dt);
  s.shiftFlash=Math.max(0,s.shiftFlash-dt);
- s.damageFlash=Math.max(0,s.damageFlash-dt);
+ s.damageFlash=Math.max(0,s.damageFlash-dt);s.perfectLanding=Math.max(0,s.perfectLanding-dt);
  const steering=(input.right?1:0)-(input.left?1:0);
  const limit=GEAR_LIMITS[s.gear];
  const power=s.speed<limit ? 15.5*car.accel*(1-0.3*s.speed/MAX_SPEED):1.6;
@@ -78,7 +81,7 @@ export function stepRace(s,input,dt,car=CARS[0]){
  }
  const before=Math.floor((s.distance-s.speed*dt)/420),after=Math.floor(s.distance/420);
  if(after>before&&s.speed>17){s.jump=0.01;}
- if(s.jump>0){s.jump+=dt;s.air=Math.sin(Math.PI*Math.min(1,s.jump/2.2))*3.4;if(s.jump>=2.2){s.jump=0;s.air=0;s.nitrous=clamp(s.nitrous+10,0,100);}}
+ if(s.jump>0){s.jump+=dt;s.air=Math.sin(Math.PI*Math.min(1,s.jump/2.2))*3.4;if(s.jump>=2.2){s.jump=0;s.air=0;if(Math.abs(s.yaw)<0.22){s.perfectLanding=1.7;s.nitrous=clamp(s.nitrous+10,0,100);}}}
  s.shake=(s.speed>58&&s.perfectShift<=0)?clamp((s.speed-58)/26,0,1):0;
  if(s.distance>=1500){s.finish=true;s.phase='finish';}
  return s;
