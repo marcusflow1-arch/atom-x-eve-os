@@ -29,6 +29,12 @@ export class Sfx {
     const s = this.ctx.createBufferSource(); s.buffer = b; s.playbackRate.value = (o.rate ?? 1) * (o.vary ? 1 + (Math.random() - 0.5) * o.vary : 1); const g = this._gain(o.vol ?? 1, o.pos); s.connect(g); s.start(); return s;
   }
   pick(names, o) { return this.play(names[Math.floor(Math.random() * names.length)], o); }
+  // blaster shot synthesised in WebAudio (no game audio file needed): a short falling sawtooth chirp
+  blaster(o = {}) {
+    if (!this.ctx || this.muted) return; const t = this.ctx.currentTime, os = this.ctx.createOscillator(), e = this.ctx.createGain(), g = this._gain(o.vol ?? 0.4, o.pos);
+    const f0 = 1500 * (o.pitch ?? 1) * (1 + (Math.random() - 0.5) * 0.08); os.type = 'sawtooth'; os.frequency.setValueAtTime(f0, t); os.frequency.exponentialRampToValueAtTime(f0 * 0.12, t + 0.2);
+    e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(0.6, t + 0.008); e.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); os.connect(e); e.connect(g); os.start(t); os.stop(t + 0.25);
+  }
   loop(name, o = {}) {
     if (!this.ctx || this.muted) return { stop() { }, set() { } }; const b = this.buf[name]; if (!b) return { stop() { }, set() { } };
     const s = this.ctx.createBufferSource(); s.buffer = b; s.loop = true; s.playbackRate.value = o.rate ?? 1; const g = this.ctx.createGain(); g.gain.value = 0; g.connect(this.master); s.connect(g); s.start();

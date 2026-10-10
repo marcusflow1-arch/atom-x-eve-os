@@ -23,6 +23,9 @@ export class Skeleton {            // shared, immutable data
     this.isTorso = new Uint8Array(this.n);
     for (let i = 0; i < this.n; i++) { let c = i; while (c >= 0) { if (c === tr) { this.isTorso[i] = 1; break; } c = this.parent[c]; } }
     this.anims = {}; rigJson.anims.forEach(a => this.anims[a.name] = a);
+    // Jedi Outcast torso aim (cg_players.c CG_G2PlayerAngles): the torso/view offset from the legs is spread over the
+    // spine, 30% lower_lumbar, 30% upper_lumbar, 40% thoracic, so attack swings follow the mouse in yaw and pitch.
+    this.spineW = new Float32Array(this.n); for (const [b, w] of [['lower_lumbar', 0.3], ['upper_lumbar', 0.3], ['thoracic', 0.4]]) if (this.idx[b] != null) this.spineW[this.idx[b]] = w;
   }
 }
 
@@ -68,6 +71,7 @@ export class Actor {
     this.skel = skel; this.rig = new G2Rig(skel.rigJson, skel.qBank, skel.pelBank);
     this.legs = new Layer(); this.torso = new Layer(); this.torsoFollow = true;
     this.pos = [0, 0, 0]; this.yaw = 0; this.legYaw = 0; this.now = 0; this.animSpeed = 1;
+    this.spineYaw = 0; this.spinePitch = 0; // torso aim relative to the legs (radians; + yaw = left, + pitch = down)
     this.tint = opts.tint || [1, 1, 1]; this.tintAmt = 0;
     const N = skel.n; this.nBones = N;
     this.lq = Array.from({ length: N }, () => [0, 0, 0, 1]);     // local quats (blended)
@@ -137,6 +141,12 @@ export class Actor {
       Pw[i * 3 + 2] = Pw[p * 3 + 2] + Rw[pb + 6] * t[0] + Rw[pb + 7] * t[1] + Rw[pb + 8] * t[2];
       const o = i * 9;
       for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) Rw[o + r * 3 + c] = Rw[pb + r * 3] * R[c] + Rw[pb + r * 3 + 1] * R[3 + c] + Rw[pb + r * 3 + 2] * R[6 + c];
+      const sw = sk.spineW[i];
+      if (sw && (this.spineYaw || this.spinePitch)) { // E = Ry(yaw) * Rx(pitch), applied about this bone in model space
+        const a = this.spineYaw * sw, b = this.spinePitch * sw, cy = Math.cos(a), sy = Math.sin(a), cx = Math.cos(b), sx = Math.sin(b);
+        const E0 = cy, E1 = sy * sx, E2 = sy * cx, E4 = cx, E5 = -sx, E6 = -sy, E7 = cy * sx, E8 = cy * cx;
+        for (let c = 0; c < 3; c++) { const m0 = Rw[o + c], m1 = Rw[o + 3 + c], m2 = Rw[o + 6 + c]; Rw[o + c] = E0 * m0 + E1 * m1 + E2 * m2; Rw[o + 3 + c] = E4 * m1 + E5 * m2; Rw[o + 6 + c] = E6 * m0 + E7 * m1 + E8 * m2; }
+      }
     }
     // legs yaw twist (torso keeps facing, legs/pelvis turn by legYaw)
     if (Math.abs(this.legYaw) > 1e-4) {

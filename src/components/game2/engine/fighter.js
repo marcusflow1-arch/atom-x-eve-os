@@ -12,6 +12,11 @@ export const emptyCmd = () => ({ fwd: 0, right: 0, up: 0, walk: false, crouch: f
 const DEATHS = ['BOTH_DEATH1', 'BOTH_DEATH2', 'BOTH_DEATH3', 'BOTH_DEATH4', 'BOTH_DEATH5', 'BOTH_DEATH6', 'BOTH_DEATH7', 'BOTH_DEATH8', 'BOTH_DEATH9'];
 const PAINS = ['BOTH_PAIN2', 'BOTH_PAIN3', 'BOTH_PAIN1', 'BOTH_PAIN4', 'BOTH_PAIN5', 'BOTH_PAIN6'];
 const animLen = (a) => a.n / Math.abs(a.fps);
+// leg / torso aim constants from cg_players.c (CG_G2PlayerAngles, CG_SwingAngles)
+const LEG_TURN_MAX = 60 * DEG, LEG_SWING_TOL = 40 * DEG, LEG_CLAMP = 89 * DEG, LEG_SWING_SPEED = 300 * DEG; // legs: 0.3 deg/ms
+const TORSO_PITCH_TOL = 15 * DEG, TORSO_PITCH_CLAMP = 30 * DEG, TORSO_PITCH_SPEED = 100 * DEG;              // torso pitch: 0.1 deg/ms
+// CG_SwingAngles: move toward dest at speed (x0.5 within tol/2, x1 within tol, x2 beyond), never more than clampTol behind
+function swingTo(cur, dest, tol, clampTol, speed, dt) { let sw = dest - cur; const a = Math.abs(sw), k = a < tol * 0.5 ? 0.5 : a < tol ? 1 : 2, st = speed * k * dt; cur = a <= st ? dest : cur + Math.sign(sw) * st; sw = dest - cur; if (Math.abs(sw) > clampTol) cur = dest - Math.sign(sw) * clampTol; return cur; }
 
 export class Fighter {
   constructor(game, o = {}) {
@@ -76,7 +81,8 @@ export class Fighter {
   setStyle(lv) { this.saber.level = lv; if (!this.saber.holstered && this.saber.weaponTime <= 0 && this.saber.move === this.saber.I.LS_READY) this.saber.setMove(this.saber.I.LS_READY, this.now); }
   bladeSeg() { return this.blade.len > 0.3 ? [this.blade.base, this.blade.tip] : null; }
   swingPhase() { const s = this.saber; if (!s.isActiveSwing() || s.moveLen <= 0) return -1; return (this.now - s.moveStart) * 1000 / s.moveLen; }
-  swingActive() { const p = this.swingPhase(); return p > 0.12 && p < 0.9 && (this.saber.inAttack(this.saber.move) || this.saber.inStart(this.saber.move) || this.saber.inTransition(this.saber.move)); }
+  swingActive() { return !this.saber.holstered && this.saber.isActiveSwing(); } // start / attack / transition: the blade is moving with intent
+  attacking() { const s = this.saber; return !s.holstered && s.inAttack(s.move); } // BG_SaberInAttack: full attack damage (w_saber.c)
   throwSaber(dir) {
     if (this.thrown || this.saber.holstered || !this.hasSaber) return false;
     const hp = this.actor.bonePos('rhand'); this.thrown = { pos: hp.slice(), prevPos: hp.slice(), dir: v3.norm(dir), t: 0, phase: 'out', ang: 0, hit: new Map() };
@@ -204,7 +210,7 @@ export class Fighter {
   normalUpdate(dt) {
     const c = this.cmd, a = this.actor, now = this.now, S = this.saber;
     // facing
-    const diff = wrapPi(this.targetYaw - this.yaw); const rate = (this.forceUntil > now || S.weaponTime > 0 || !S.holstered || Math.hypot(this.vel[0], this.vel[2]) > 0.5) ? 14 : 5; this.yaw += clamp(diff, -rate * dt, rate * dt);
+    const diff = wrapPi(this.targetYaw - this.yaw); const rate = this.isPlayer ? 60 : (this.forceUntil > now || S.weaponTime > 0 || !S.holstered || Math.hypot(this.vel[0], this.vel[2]) > 0.5) ? 14 : 5; this.yaw += clamp(diff, -rate * dt, rate * dt);
     const frozen = this.status === 'whole';
     const busyForce = this.forceUntil > now && this.forceHold === 'freeze';
     // crouch / roll
@@ -287,22 +293,35 @@ export class Fighter {
     if (this.fidgetUntil > now && (moving || out || this.ducked || this.cmd.attack || this.cmd.jumpPressed || this.forceUntil > now)) this.cancelFidget();
     if (now < this.legsLockUntil || now < this.landUntil) return;
     let an;
-    if (this.ducked) an = !moving ? 'BOTH_CROUCH1IDLE' : (f < 0 ? 'BOTH_CROUCH1WALKBACK' : 'BOTH_CROUCH1WALK');
+    const back = f < -0.25; // PMF_BACKWARDS_RUN (bg_pmove.c PM_Footsteps): backpedal cycles while moving backwards
+    if (this.ducked) an = !moving ? 'BOTH_CROUCH1IDLE' : (back ? 'BOTH_CROUCH1WALKBACK' : 'BOTH_CROUCH1WALK');
     else if (!moving) { an = out ? 'BOTH_STAND2' : 'BOTH_STAND1'; }
-    else {
-      const run = !this.cmd.walk; const fw = f > 0.25, bk = f < -0.25; const theta = Math.atan2(-r, f); // + = moving to the left of facing
-      if (!fw && !bk) { an = r > 0 ? 'BOTH_RUNSTRAFE_RIGHT1' : 'BOTH_RUNSTRAFE_LEFT1'; if (!run) an = r > 0 ? 'BOTH_RUNSTRAFE_RIGHT1' : 'BOTH_RUNSTRAFE_LEFT1'; }
-      else if (bk) { an = run ? 'BOTH_RUNBACK1' : 'BOTH_WALKBACK1'; twist = clamp(theta > 0 ? theta - Math.PI : theta + Math.PI, -0.7, 0.7); }
-      else { an = run ? (out ? 'BOTH_RUN2' : 'BOTH_RUN1') : 'BOTH_WALK1'; twist = clamp(theta, -0.7, 0.7); }
-    }
+    else { const run = !this.cmd.walk; an = back ? (run ? 'BOTH_RUNBACK1' : 'BOTH_WALKBACK1') : run ? (out ? 'BOTH_RUN2' : 'BOTH_RUN1') : 'BOTH_WALK1'; }
+    // Jedi Outcast has no strafe cycles: sideways and diagonal movement play run / walk with the legs turned toward the
+    // direction of travel while the torso keeps facing the view (cg_players.c CG_G2PlayerAngles).
+    const turning = this.swingLegs(dt, moving, an);
+    if (!moving && !this.ducked && turning) an = out ? 'BOTH_TURNSTAND2' : 'BOTH_TURNSTAND1'; // step while the legs catch up with the view
     if (this.speedMul > 1.05 && /RUN|WALK|STRAFE/.test(an)) a.animSpeed = 1 + (this.speedMul - 1) * 0.55; else a.animSpeed = 1;
     if (this.status === 'normal' && this.airAnim) this.airAnim = null;
     a.setLegs(an, { blend: 0.14, loop: true });
-    this.legYawT = twist; this.legYaw += (twist - this.legYaw) * Math.min(1, dt * 10); a.legYaw = this.legYaw;
+    this.legYaw = 0; a.legYaw = 0; // the leg/torso split is done by the spine aim (Actor.spineYaw)
     if (!moving && !this.ducked && !out) { // holstered idle fidget
       this.idleSince += dt; if (this.idleSince > 9 && !this.forceUntil) { this.idleSince = 0; const len = this.playWhole('BOTH_STAND1IDLE1', {}); this.legsLockUntil = this.fidgetUntil = now + len; }
     } else this.idleSince = 0;
-    if (twist === 0 && Math.abs(this.legYaw) < 0.01) a.legYaw = 0;
+  }
+  // legs yaw: toward the travel direction (at most 60 deg off the view; running backwards faces away from the motion).
+  // Settled in a ready stance the legs only start turning once the view is 40 deg away; they swing at 300 deg/s
+  // (x0.5 near, x2 far) and never trail the view by more than 90 deg. Returns true while they are still turning.
+  swingLegs(dt, moving, an) {
+    const view = this.yaw; let dest = view;
+    if (moving && this.onGround) { let d = wrapPi(Math.atan2(this.vel[0], this.vel[2]) - view); if (Math.abs(d) > Math.PI / 2) d = wrapPi(d + Math.PI); dest = view + clamp(d, -LEG_TURN_MAX, LEG_TURN_MAX); }
+    if (this.legsYaw == null) this.legsYaw = view;
+    const S = this.saber, settled = !moving && an === (S.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2') && S.move === S.I.LS_READY && S.weaponTime <= 0 && this.forceUntil <= this.now;
+    const sw = wrapPi(dest - this.legsYaw);
+    if (!this.legsSwinging && (!settled || Math.abs(sw) > LEG_SWING_TOL)) this.legsSwinging = true;
+    if (this.legsSwinging) { const nl = swingTo(0, sw, LEG_SWING_TOL, LEG_CLAMP, LEG_SWING_SPEED, dt); this.legsYaw = wrapPi(this.legsYaw + nl); if (Math.abs(nl - sw) < 1e-4) this.legsSwinging = false; }
+    else if (Math.abs(sw) > LEG_CLAMP) this.legsYaw = wrapPi(dest - Math.sign(sw) * LEG_CLAMP);
+    return this.legsSwinging && Math.abs(wrapPi(dest - this.legsYaw)) > 0.05;
   }
   updateSaber(dt) {
     const S = this.saber, now = this.now, a = this.actor;
@@ -321,7 +340,13 @@ export class Fighter {
         const want = this.torsoIdle(S.stanceAnim()); if (want === a.legs.name) { if (!a.torsoFollow) { a.followLegs(); a.torso.cur = null; } } else if (!a.torso.cur || a.torsoFollow || a.torso.name !== want) a.setTorso(want, { blend: 0.12, loop: true });
       }
       if (S.moveLen > 0 && S.move !== S.I.LS_READY && S.torsoTimer <= 0 && S.weaponTime <= 0 && false) { }
-    } else { S.update(dt * 1000, { attack: false, busy: true }, now); if (!busy && !a.torsoFollow && !this.thrown && S.move === S.I.LS_READY) { a.followLegs(); a.torso.cur = null; } }
+    } else {
+      S.update(dt * 1000, { attack: false, busy: true }, now);
+      if (!busy && !this.thrown && S.move === S.I.LS_READY) {
+        if (this.weaponPose) { if (a.torsoFollow || a.torso.name !== this.weaponPose) a.setTorso(this.weaponPose, { blend: 0.15, loop: true }); } // e.g. TORSO_WEAPONREADY2 holding the Bryar
+        else if (!a.torsoFollow) { a.followLegs(); a.torso.cur = null; }
+      }
+    }
     // special: moves that need whole-body physics
     const m = S.move; if (S.isActiveSwing() || S.inAttack(m)) { if (m === S.I.LS_A_LUNGE && this.statusT0 !== now) { } }
   }
@@ -340,9 +365,19 @@ export class Fighter {
   }
   ctxInfo() { return this.g.combatContext ? this.g.combatContext(this) : { front: false, behind: false }; }
   finish(dt) {
-    const a = this.actor; a.pos[0] = this.pos[0]; a.pos[1] = this.pos[1]; a.pos[2] = this.pos[2]; a.yaw = this.yaw;
+    const a = this.actor; a.pos[0] = this.pos[0]; a.pos[1] = this.pos[1]; a.pos[2] = this.pos[2];
+    this.aimTorso(dt);
     a.update(this.now);
     this.updateHilt(dt);
+  }
+  // model faces the legs; the spine turns the torso to the view and pitches it by 75% of the view pitch (cg_players.c).
+  // Switched off for knockdowns, rolls, whole-body moves and death, as in CG_G2ClientSpineAngles.
+  aimTorso(dt) {
+    const a = this.actor, free = this.status === 'normal' && this.now >= this.legsLockUntil && this.legsYaw != null;
+    if (!free) { this.legsYaw = this.yaw; this.legsSwinging = false; }
+    a.yaw = free ? this.legsYaw : this.yaw; a.spineYaw = free ? wrapPi(this.yaw - this.legsYaw) : 0;
+    const pitch = this.isPlayer ? (this.cmd.aimPitch || 0) : (this.aimPitch || 0), dest = free ? clamp(pitch, -0.6, 1.3) * 0.75 : 0;
+    this.torsoPitch = swingTo(this.torsoPitch || 0, dest, TORSO_PITCH_TOL, TORSO_PITCH_CLAMP, TORSO_PITCH_SPEED, dt); a.spinePitch = this.torsoPitch;
   }
   updateHilt(dt) {
     const A = this.g.attach, a = this.actor; let M = this.hiltMat;
@@ -352,17 +387,8 @@ export class Fighter {
       const T = this.thrown, d = [Math.cos(T.ang), 0, Math.sin(T.ang)]; const Y = v3.scale(d, -1), X = v3.norm(v3.cross([0, 1, 0], Y)), Z = v3.cross(X, Y);
       M.fill(0); M[0] = X[0]; M[1] = X[1]; M[2] = X[2]; M[4] = Y[0]; M[5] = Y[1]; M[6] = Y[2]; M[8] = Z[0]; M[9] = Z[1]; M[10] = Z[2]; M[12] = T.pos[0]; M[13] = T.pos[1]; M[14] = T.pos[2]; M[15] = 1; this.hiltScaleY = 1;
     }
-    // Aim the visible blade in pitch as well as yaw so the hit test and the rendered
-    // down-slash/up-slash occupy the same 3D path (including crouched or airborne targets).
-    let bladeDir;
-    if (this.isPlayer && this.hilt === 'hand' && this.swingActive()) {
-      const pitch = clamp(this.g.cam.pitch, -0.6, 1.1) * 0.85;
-      const axis = [Math.cos(this.yaw), 0, -Math.sin(this.yaw)];
-      const original = v3.norm([-M[4], -M[5], -M[6]]);
-      const cross = v3.cross(axis, original), dot = v3.dot(axis, original);
-      bladeDir = v3.norm(v3.add(v3.add(v3.scale(original, Math.cos(pitch)), v3.scale(cross, Math.sin(pitch))), v3.scale(axis, dot * (1 - Math.cos(pitch)))));
-    }
-    this.blade.update(dt, M, this.g.attach.hiltLen * (this.hiltScaleY || 1), 1, this.now, bladeDir);
+    // the torso aim (Actor spineYaw / spinePitch) already turns the arm, so blade and hit test follow the mouse
+    this.blade.update(dt, M, this.g.attach.hiltLen * (this.hiltScaleY || 1), 1, this.now);
     this.blade.trailOn = (this.swingActive() || (this.thrown ? 0 : 0)) ? 1 : Math.max(0, this.blade.trailOn - dt * 6);
     if (this.swingActive()) this.blade.trailOn = 1;
   }

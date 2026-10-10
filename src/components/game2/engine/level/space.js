@@ -17,6 +17,9 @@ export class LevelSpace {
     this.zones = new Map(level.zones.map(z => [z.id, z]));
     this.doors = new Map(level.doors.map(d => [d.id, { ...d, want: !!d.open, lift: d.open ? 1 : 0 }]));
     this.interactables = new Map(level.interactables.map(i => [i.id, i]));
+    // 4 m buckets of solid / clip boxes for fast point tests (navigation asks a lot of them)
+    this.cell = 4; this.grid = new Map();
+    for (const s of [...this.solids, ...this.clips]) for (let i = Math.floor(s.min[0] / 4); i <= Math.floor(s.max[0] / 4); i++) for (let j = Math.floor(s.min[2] / 4); j <= Math.floor(s.max[2] / 4); j++) { const k = i + ',' + j; if (!this.grid.has(k)) this.grid.set(k, []); this.grid.get(k).push(s); }
   }
   // ---------- doors
   setDoor(id, open) { const d = this.doors.get(id); if (!d) throw new Error('unknown door ' + id); d.want = !!open; }
@@ -57,8 +60,10 @@ export class LevelSpace {
     return [target[0] + (eye[0] - target[0]) * k, target[1] + (eye[1] - target[1]) * k, target[2] + (eye[2] - target[2]) * k];
   }
   insideSolid(x, y, z, pad = 0) {
-    for (const s of this.solids) if (x > s.min[0] - pad && x < s.max[0] + pad && z > s.min[2] - pad && z < s.max[2] + pad && y > s.min[1] && y < s.max[1]) return true;
-    for (const s of this.clips) if (x > s.min[0] - pad && x < s.max[0] + pad && z > s.min[2] - pad && z < s.max[2] + pad && y > s.min[1] && y < s.max[1]) return true;
+    const c = this.cell;
+    for (let i = Math.floor((x - pad) / c); i <= Math.floor((x + pad) / c); i++) for (let j = Math.floor((z - pad) / c); j <= Math.floor((z + pad) / c); j++) {
+      for (const s of this.grid.get(i + ',' + j) || []) if (x > s.min[0] - pad && x < s.max[0] + pad && z > s.min[2] - pad && z < s.max[2] + pad && y > s.min[1] && y < s.max[1]) return true;
+    }
     return false;
   }
   // ---------- zones / interactables

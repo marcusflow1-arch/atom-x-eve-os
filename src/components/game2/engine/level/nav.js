@@ -5,6 +5,7 @@
 const SQRT2 = Math.SQRT2;
 const MAX_STEP = 0.6;        // height difference two neighbouring cells may have and still be walkable
 const AGENT_R = 0.42;        // same radius Fighter uses
+const PASS_R = 0.36;         // clearance a straight walk keeps from solid boxes
 
 export class NavGrid {
   constructor(space, bounds, step = 1, probe = 3.2) {
@@ -60,7 +61,7 @@ export class NavGrid {
       for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
         if (!di && !dj) continue; const ni = i + di, nj = j + dj; if (ni < 0 || nj < 0 || ni >= W || nj >= this.h) continue;
         const nk = nj * W + ni; if (closed[nk] === st || !this.open(nk) || Math.abs(this.y[nk] - yk) > MAX_STEP) continue;
-        if (di && dj && (!this.open(j * W + ni) || !this.open(nj * W + i))) continue; // no corner cutting
+        if (di && dj && (!this.open(j * W + ni) || !this.open(nj * W + i) || this.space.insideSolid(this.cx(i) + di * this.step / 2, yk + 0.9, this.cz(j) + dj * this.step / 2, PASS_R))) continue; // no corner cutting, not through thin posts
         const g = G[k] + (di && dj ? SQRT2 : 1) * this.step + Math.abs(this.y[nk] - yk) * 0.5;
         if (seen[nk] !== st || g < G[nk]) { seen[nk] = st; G[nk] = g; F[nk] = g + hfn(nk); from[nk] = k; push(nk); }
       }
@@ -76,6 +77,7 @@ export class NavGrid {
     for (let s = 0; s <= n; s++) {
       const x = a[0] + (b[0] - a[0]) * s / n, z = a[2] + (b[2] - a[2]) * s / n, k = this.cell(x, z); if (!this.open(k)) return false;
       const y = this.y[k]; if (prevY !== null && Math.abs(y - prevY) > MAX_STEP) return false; prevY = y;
+      if (this.space.insideSolid(x, y + 0.9, z, PASS_R)) return false; // posts and pillars thinner than a cell
       // stay off walls: the four neighbours at half a cell must be open too
       for (const [ox, oz] of [[0.3, 0], [-0.3, 0], [0, 0.3], [0, -0.3]]) if (!this.open(this.cell(x + ox, z + oz))) return false;
     }
