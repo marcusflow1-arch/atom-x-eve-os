@@ -123,7 +123,17 @@ export class NetGame {
     S.onHostChange = (id, mine) => { const was = this.isHost; this.isHost = mine; if (mine && !was) { this.spawnAI(); if (this.me && this.session.roster.size > 1) this.msg('You are hosting the arena now'); } else if (!mine && was) this.removeAI(); };
     S.onJoin = (e) => { this.msg(e.name + ' entered the arena'); };
     S.onLeave = (id, e) => this.dropPeer(id, e);
-    S.onRoster = () => { for (const [fid, f] of [...this.byId]) if (f.remote && !S.roster.has(f.owner)) this.removePuppet(fid); };
+    S.onRoster = () => {
+      // Each human entry represents an actual player-controlled fighter, not
+      // the Reborn bot. Create their 3D model immediately when the room roster
+      // arrives; the first owner snapshot then moves and animates the puppet.
+      for (const entry of S.list()) {
+        if (entry.id === this.self) continue;
+        const fid = entry.id + ':p';
+        if (!this.byId.has(fid)) this.makePuppet(fid, entry.id, entry.side === 'dark' ? 'dark' : 'light', entry.name, false);
+      }
+      for (const [fid, f] of [...this.byId]) if (f.remote && !S.roster.has(f.owner)) this.removePuppet(fid);
+    };
     S.onMessage = (from, m, rel) => this.recv(from, m, rel);
     S.onEnd = (why) => { this.ended = why; g.hud.msg(why); };
     S.onStatus = (t) => { this.statusText = t; };
