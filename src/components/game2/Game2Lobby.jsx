@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Loader2, LogIn, Swords, Users, Wifi } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
-import { Base44Signaling, LocalSignaling, makePeerId, pickArena, MAX_PLAYERS } from './net/signaling.js';
+import { LocalSignaling, makePeerId, pickArena, MAX_PLAYERS } from './net/signaling.js';
+import { game2RailwayStatus } from './net/railway.js';
 
 // Game 2 multiplayer: one free-for-all arena everybody shares. Pick a callsign and a look (Jedi or Dark Jedi) and enter;
 // the first player in opens the arena, everyone after joins it, and anyone can leave at any time.
-// The arena beacon and the WebRTC offer / answer go through the app's Base44 backend (Game2Room / Game2Signal); the match
-// itself runs peer to peer. ?g2net=local switches to same-browser signaling for testing with several tabs.
+// Live / editor sessions query the same Railway server; gameplay is relayed by
+// persistent WebSocket, with Base44 only verifying login at admission.
+// ?g2net=local is reserved for localhost automated/test development.
 const NAME_KEY = 'atomxe.game2.callsign';
 const SIDE_KEY = 'atomxe.game2.side';
 const store = {
@@ -47,18 +49,31 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
   }, [local]);
   useEffect(() => { if (user && !name) setName(((user.full_name || '').split(' ')[0] || 'Jedi').slice(0, 20)); }, [user, name]);
 
-  const sig = useMemo(() => { // one signaling client to watch the arena
-    if (!user) return null; const id = makePeerId(user.id);
-    return local ? new LocalSignaling(id) : new Base44Signaling(base44, id);
+  const sig = useMemo(() => { // browser-local mode is allowed ONLY on localhost
+    if (!local || !user) return null;
+    return new LocalSignaling(makePeerId(user.id));
   }, [user, local]);
   useEffect(() => () => { try { sig?.close(); } catch { /* closed */ } }, [sig]);
   useEffect(() => {
-    if (!sig) return undefined; let off = false;
-    const load = () => sig.listRooms().then(r => { if (!off) { setArena(pickArena(r)); setError(''); } }).catch(e => { if (off) return; const m = String(e?.message || e);
-      setError(/404|not found|entity/i.test(m) ? 'Online play is not set up on the server yet: publish the latest version of the app in Base44 so its Game2Room and Game2Signal tables are created.' : 'Could not reach the arena: ' + m); });
-    load(); const t = setInterval(load, 3000);
+    if (!user || (local && !sig)) return undefined;
+    let off = false;
+    const load = async () => {
+      try {
+        // Railway owns the single arena and exposes the actual HUMAN player count.
+        // No Base44 Game2Room/Game2Signal reads or polling during multiplayer.
+        const room = local
+          ? pickArena(await sig.listRooms())
+          : await game2RailwayStatus().then(status => status.players > 0 ? status : null);
+        if (!off) { setArena(room); setError(''); }
+      } catch (e) {
+        if (off) return;
+        setError('Could not reach the Railway multiplayer server: ' + String(e?.message || e));
+      }
+    };
+    load();
+    const t = setInterval(load, 3000);
     return () => { off = true; clearInterval(t); };
-  }, [sig]);
+  }, [user, sig, local]);
 
   const callsign = (name || 'Jedi').trim().slice(0, 20) || 'Jedi';
   const players = arena ? arena.players || 1 : 0, full = players >= MAX_PLAYERS;
@@ -128,11 +143,11 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
                 <input type="checkbox" checked={includeAi} onChange={e => setIncludeAi(e.target.checked)} className="accent-cyan-300" />
                 Also spawn an AI Reborn opponent (optional, only when opening a new arena)
               </label>}
-              <div className="mt-3 text-[11px] text-white/40">Shared Game 2 network: {String(appParams.appId || 'not configured').slice(-8)} · This ID must match in the editor and the live website.</div>
+              <div className="mt-3 text-[11px] text-white/40">Railway shared arena · Base44 login app: {String(appParams.appId || 'not configured').slice(-8)} · Editor and live must authenticate against this same app.</div>
             </div>
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-white/45">
-              <span className="inline-flex items-center gap-1.5"><Wifi className="h-3.5 w-3.5" /> Players connect to each other directly. Your own moves never wait for the network; ping depends on the distance between players.</span>
+              <span className="inline-flex items-center gap-1.5"><Wifi className="h-3.5 w-3.5" /> Player positions, saber strikes and Force powers travel over Railway's persistent real-time connection, not the Base44 database.</span>
               <button type="button" onClick={onPractice} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 font-semibold text-white/75 hover:bg-white/[0.06]"><Swords className="h-3.5 w-3.5" /> Practice offline vs the Reborn</button>
             </div>
             {error && <div className="mt-3 rounded-lg border border-amber-300/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">{error}</div>}
