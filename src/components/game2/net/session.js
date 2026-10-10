@@ -20,7 +20,7 @@ export class NetSession {
     this.isHost = false; this.hostId = null; this.room = null; this.roster = new Map(); this.me = null; this.state = 'idle'; this.ended = false; this.hb = null;
     // hooks (set by the game): onReady(me, welcome), onJoin(entry), onLeave(id, entry), onMessage(from, msg, reliable),
     // onHostChange(hostId, isMe), onRoster(list), onEnd(reason), onStatus(text), welcomeExtra(entry) -> object
-    this.onReady = this.onJoin = this.onLeave = this.onMessage = this.onEnd = this.onStatus = this.onRoster = this.onHostChange = () => { }; this.welcomeExtra = () => ({});
+    this.onReady = this.onJoin = this.onLeave = this.onMessage = this.onEnd = this.onStatus = this.onRoster = this.onHostChange = () => { }; this.welcomeExtra = () => ({})
     this.mesh = new Mesh({ selfId: this.self, signaling: this.sig, iceServers: o.iceServers, RTC: o.RTC,
       accept: (s) => this.accept(s), onOpen: (id, hello) => this.linkUp(id, hello), onClose: (id, why, reason) => this.linkDown(id, why, reason), onMessage: (id, m, r) => this.recv(id, m, r) });
   }
@@ -61,7 +61,7 @@ export class NetSession {
           return;
         }
         await this.host();
-      catch (e) {
+      } catch (e) {
         console.warn('[game2 net] arena create', e?.message || e);
         this.end('Could not open the shared arena. Please retry.');
       }
@@ -153,7 +153,7 @@ export class NetSession {
         for (const e of this.list()) if (e.id !== this.self && e.id !== this.hostId && !this.mesh.isOpen(e.id)) this.mesh.connect(e.id, { room: ARENA });
         this.onReady(this.me, m); this.onHostChange(this.hostId, false); this.joined(true); return;
       case 'roster':
-        if (from === this.hostId) { const before = new Set(this.roster.keys()); this.setRoster(m.roster); for (const id of before) if (!this.roster.has(id)) { this.mesh.drop(id, 'left', true); this.onLeave(id, null); } }
+        if (from === this.hostId) { const before = new Set(this.roster.keys()); this.setRoster(m.roster); for (const id of before) if (!this.roster.has(id)) { this.mesh.drop(id, 'left', true); this.mesh.drop(id, 'left', true); } }
         return;
       case 'full': if (this.state === 'joining') { this.end('The arena is full (10 players)'); this.joined(true); } return;
       case 'bye': if (this.isHost) this.mesh.drop(from, 'left'); else if (from === this.hostId) this.hostGone(from); return;
@@ -182,5 +182,5 @@ export class NetSession {
   direct(id) { return this.mesh.isOpen(id); }
   end(reason) { if (this.ended) return; this.ended = true; this.state = 'ended'; this.status(reason); this.cleanup(); this.onEnd(reason); }
   leave() { if (this.ended) return; this.ended = true; this.state = 'ended'; try { this.mesh.broadcast({ k: 'bye' }, true); } catch { /* closing */ } this.cleanup(); }
-  cleanup() { clearInterval(this.hb); clearTimeout(this.joinTimer); clearTimeout(this.settleTimer); this.mesh.close(); if (this.isHost && this.room && this.room.host_peer === this.self) this.sig.deleteRoom(this.room.id); if (this.sig.close) this.sig.close(); } // deletes only our own arena record
+  cleanup() { clearInterval(this.hb); clearTimeout(this.joinTimer); clearTimeout(this.settleTimer); this.mesh.close(); if (this.isHost && this.room && this.room.host_peer === this.self) this.sig.deleteRoom(this.room.id); }
 }
