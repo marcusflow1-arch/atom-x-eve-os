@@ -11,6 +11,7 @@
 //   - grip, lightning and drain damage come from the caster; the victim's owner applies the lift / hurt / shock.
 // Puppets get these Fighter methods replaced by messages to their owner, so the shared combat and Force code runs unchanged.
 import { NetSession } from '../net/session.js';
+import { RailwayGameSession } from '../net/railway.js';
 import { MAX_PLAYERS } from '../net/signaling.js';
 import { Fighter } from './fighter.js';
 import { Force, SELECT_ORDER } from './force.js';
@@ -116,10 +117,11 @@ export class NetGame {
     this.animNames = g.skel.rigJson.anims.map(a => a.name); this.animIdx = Object.fromEntries(this.animNames.map((n, i) => [n, i]));
     this.spawns = arenaSpawns(g.world);
     g.net = this; g.remotes = []; g.round = { state: 'fight', t: 0 }; g.noDamage = false; // no rounds: a continuous deathmatch
-    const S = this.session = new NetSession({ selfId: o.selfId, name: o.name, side: this.side, ai: this.ai, signaling: o.signaling, iceServers: o.iceServers, RTC: o.RTC });
+    const Session = o.transport === 'railway' ? RailwayGameSession : NetSession;
+    const S = this.session = new Session({ ...o, selfId: o.selfId, name: o.name, side: this.side, ai: this.ai });
     this.self = o.selfId;
     const P = g.player; P.fid = this.self + ':p'; applySide(P, this.side); P.label = o.name; this.byId.set(P.fid, P);
-    S.onReady = (me, w) => { this.me = me; if (w && w.kd) this.kd = new Map(w.kd); this.spawnSelf(); this.msg('Entered the arena'); };
+    S.onReady = (me, w) => { this.me = me; if (w && w.kd) this.kd = new Map(w.kd); if (Number.isInteger(w?.ai)) this.ai = clamp(w.ai, 0, 3); this.spawnSelf(); this.msg('Entered the arena'); };
     S.onHostChange = (id, mine) => { const was = this.isHost; this.isHost = mine; if (mine && !was) { this.spawnAI(); if (this.me && this.session.roster.size > 1) this.msg('You are hosting the arena now'); } else if (!mine && was) this.removeAI(); };
     S.onJoin = (e) => { this.msg(e.name + ' entered the arena'); };
     S.onLeave = (id, e) => this.dropPeer(id, e);
@@ -335,7 +337,7 @@ export class NetGame {
     x.font = '600 11px system-ui,sans-serif'; x.fillStyle = '#c8d4f0'; x.fillText(st, cx, by + 30); x.textAlign = 'left';
     // ping + players (top right) and the scoreboard
     const ping = this.myPing(), col = ping == null ? '#9aa6c8' : ping < 65 ? '#7dffa0' : ping < 120 ? '#ffd76a' : '#ff7a6a';
-    x.textAlign = 'right'; x.font = '700 13px ui-monospace,Menlo,Consolas,monospace'; x.fillStyle = col; x.fillText(live ? (S.roster.size < 2 ? 'ARENA OPEN' : 'PING ' + (ping == null ? '--' : ping) + ' ms') : 'OFFLINE', W - 18, 36);
+    x.textAlign = 'right'; x.font = '700 13px ui-monospace,Menlo,Consolas,monospace'; x.fillStyle = col; x.fillText(live ? (S.roster.size < 2 ? 'ARENA OPEN' : (this.o.transport === 'railway' ? 'SERVER ' : 'PING ') + (ping == null ? '--' : ping) + ' ms') : 'OFFLINE', W - 18, 36);
     x.font = '11px system-ui,sans-serif'; x.fillStyle = '#9aa6c8'; x.fillText(S.roster.size + '/' + MAX_PLAYERS + ' players' + (this.ai ? ' · ' + this.ai + ' AI' : '') + ' · ' + (60 / this.sendEvery) + ' Hz', W - 18, 54);
     let y = 74; for (const r of rows) {
       const p = r.me || r.ai ? null : this.pingTo(r.peer);
@@ -348,6 +350,6 @@ export class NetGame {
     hud.drawBanners(x, W, H, dt); hud.drawGripHint(g, x, W, H);
     if (P.status === 'dead' && live) { x.textAlign = 'center'; x.font = '700 22px system-ui,sans-serif'; x.fillStyle = '#ffd8d0'; x.fillText('Defeated — back in ' + Math.max(1, Math.ceil(RESPAWN_S - (g.t - P.deadAt))), W / 2, H * 0.36); x.textAlign = 'left'; }
     else if (P.spawnShield > g.t) { x.textAlign = 'center'; x.font = '600 13px system-ui,sans-serif'; x.fillStyle = '#bfe3ff'; x.fillText('Spawn protection', W / 2, H * 0.36); x.textAlign = 'left'; }
-    if (!live) { x.fillStyle = 'rgba(5,6,12,0.55)'; x.fillRect(0, H * 0.4, W, 64); x.textAlign = 'center'; x.font = '700 18px system-ui,sans-serif'; x.fillStyle = this.ended ? '#ffb4a8' : '#dfeaff'; x.fillText(this.ended || (this.statusText || 'Connecting') + '…', W / 2, H * 0.4 + 24); x.font = '12px system-ui,sans-serif'; x.fillStyle = '#9aa6c8'; x.fillText(this.ended ? 'Use the Lobby button to go back' : 'Direct peer-to-peer connection', W / 2, H * 0.4 + 46); x.textAlign = 'left'; }
+    if (!live) { x.fillStyle = 'rgba(5,6,12,0.55)'; x.fillRect(0, H * 0.4, W, 64); x.textAlign = 'center'; x.font = '700 18px system-ui,sans-serif'; x.fillStyle = this.ended ? '#ffb4a8' : '#dfeaff'; x.fillText(this.ended || (this.statusText || 'Connecting') + '…', W / 2, H * 0.4 + 24); x.font = '12px system-ui,sans-serif'; x.fillStyle = '#9aa6c8'; x.fillText(this.ended ? 'Use the Lobby button to go back' : (this.o.transport === 'railway' ? 'Railway real-time WebSocket connection' : 'Direct peer-to-peer connection'), W / 2, H * 0.4 + 46); x.textAlign = 'left'; }
   }
 }
