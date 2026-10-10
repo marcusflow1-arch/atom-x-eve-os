@@ -19,6 +19,11 @@ export const HELP_DUEL = [
   ['Break a Grip', 'press 1 (Push), 2 (Pull), 0 (Absorb) or select one with wheel + F'], ['Block a push / pull', 'stand still on the ground with Force left, not mid-swing; moving = weaker'],
   ['Zoom · rematch · controls · mute', 'Ctrl + wheel or - = · Enter · F1 · M'],
 ];
+export const HELP_ONLINE = [
+  ...HELP_DUEL.slice(0, 11),
+  ['Online', 'Jedi vs Dark Jedi, rounds: a side wins when the other has nobody standing · top right = ping and players'],
+  ['Zoom · controls · mute', 'Ctrl + wheel or - =  ·  F1  ·  M  ·  Main menu leaves the match'],
+];
 export const HELP_MISSION = [
   ...HELP_DUEL.slice(0, 11),
   ['Weapons', 'Q switches Bryar pistol / lightsaber · R lights the saber · LMB fire · hold RMB = charged shot'],
@@ -49,7 +54,7 @@ export class HUD {
     if (F.active.rage) { const gr = x.createRadialGradient(W / 2, H / 2, H * 0.4, W / 2, H / 2, H * 0.9); gr.addColorStop(0, 'rgba(255,0,0,0)'); gr.addColorStop(1, 'rgba(255,40,10,0.28)'); x.fillStyle = gr; x.fillRect(0, 0, W, H); }
     // enemy / ally bars
     for (const n of g.npcs) {
-      if (n.status === 'dead' && !F.active.see) continue; if (g.duel && !F.active.see) continue; const hp = n.headPos(); const s = this.project(g.R, [hp[0], hp[1] + 0.35, hp[2]]); if (!s) continue; if (s[0] < -50 || s[0] > W + 50 || s[1] < -50 || s[1] > H + 50) continue;
+      if (n.status === 'dead' && !F.active.see) continue; if ((g.duel || g.net) && !F.active.see) continue; const hp = n.headPos(); const s = this.project(g.R, [hp[0], hp[1] + 0.35, hp[2]]); if (!s) continue; if (s[0] < -50 || s[0] > W + 50 || s[1] < -50 || s[1] > H + 50) continue;
       const d = Math.hypot(n.pos[0] - P.pos[0], n.pos[2] - P.pos[2]); if (d > 26 && !F.active.see) continue; const sc = Math.max(0.55, Math.min(1.1, 9 / (s[2] + 4)));
       const col = n.team === 'ally' ? ['#2bd96b', '#8dffb7'] : ['#d92b2b', '#ff8f6a']; const w = 54 * sc; x.globalAlpha = n.status === 'dead' ? 0.35 : 0.95;
       this.bar(x, s[0] - w / 2, s[1] - 14 * sc, w, 5 * sc + 1, n.hp / n.maxHp, col);
@@ -102,10 +107,11 @@ export class HUD {
     // messages
     x.textAlign = 'center'; x.font = '600 14px system-ui,sans-serif'; this.msgs.forEach((m, i) => { const a = Math.min(1, m.life); x.globalAlpha = a; x.fillStyle = 'rgba(8,10,22,0.55)'; const tw = x.measureText(m.t).width + 24; const my = g.duel || (g.director && g.director.boss) ? 92 : 58; rr(x, W / 2 - tw / 2, my + i * 28, tw, 24, 12); x.fill(); x.fillStyle = '#e6f0ff'; x.textBaseline = 'middle'; x.fillText(m.t, W / 2, my + 12 + i * 28); }); x.globalAlpha = 1; x.textAlign = 'left';
     // kills
-    x.textAlign = 'right'; x.fillStyle = '#9aa6c8'; x.font = '12px system-ui,sans-serif'; x.textBaseline = 'top'; x.fillText(g.duel ? 'reflected ' + g.combat.reflected + '   ·   F1 = controls' : 'defeated ' + g.combat.kills + ' · reflected ' + g.combat.reflected + '   ·   F1 = controls', W - 18, 16); x.textAlign = 'left';
+    x.textAlign = 'right'; x.fillStyle = '#9aa6c8'; x.font = '12px system-ui,sans-serif'; x.textBaseline = 'top'; if (!g.net) x.fillText(g.duel ? 'reflected ' + g.combat.reflected + '   ·   F1 = controls' : 'defeated ' + g.combat.kills + ' · reflected ' + g.combat.reflected + '   ·   F1 = controls', W - 18, 16); x.textAlign = 'left';
     // pointer lock hint
     if (!g.input.locked && !this.help && g.started) { x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '600 13px system-ui,sans-serif'; const tw = x.measureText('Click to capture the mouse').width + 28; x.fillStyle = 'rgba(8,10,22,0.72)'; rr(x, W / 2 - tw / 2, H * 0.62 + 20, tw, 26, 13); x.fill(); x.fillStyle = '#dfeaff'; x.fillText('Click to capture the mouse', W / 2, H * 0.62 + 33); x.textAlign = 'left'; }
     if (g.duel) this.drawDuel(g, x, W, H, dt);
+    else if (g.net) g.net.drawHud(this, x, W, H, dt);
     else if (g.director) g.director.drawHud(this, x, W, H, dt);
     else if (P.status === 'dead') { x.fillStyle = 'rgba(30,0,0,0.5)'; x.fillRect(0, 0, W, H); x.fillStyle = '#ffd8d0'; x.textAlign = 'center'; x.font = '700 34px system-ui,sans-serif'; x.fillText('You have fallen', W / 2, H * 0.42); x.font = '16px system-ui,sans-serif'; x.fillText('Press Enter to rise again', W / 2, H * 0.42 + 44); x.textAlign = 'left'; }
     if (this.help) this.drawHelp(x, W, H);

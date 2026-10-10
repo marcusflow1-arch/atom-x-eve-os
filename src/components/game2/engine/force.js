@@ -58,12 +58,14 @@ export class Force {
   use(cost) { if (this.fp < cost) { this.say('Not enough Force'); return false; } this.fp -= cost; return true; }
   aim() {
     if (!this.npc) return this.g.aimDir();
-    const o = this.origin(), c = this.g.player.chest(); return v3.norm([c[0] - o[0], c[1] - o[1] - 0.1, c[2] - o[2]]);
+    const T = this.g.aiTarget ? this.g.aiTarget(this.p) : this.g.player; if (!T) return [Math.sin(this.p.yaw), 0, Math.cos(this.p.yaw)];
+    const o = this.origin(), c = T.chest(); return v3.norm([c[0] - o[0], c[1] - o[1] - 0.1, c[2] - o[2]]);
   }
   origin() { const c = this.p.chest(); return [c[0], c[1] + 0.25, c[2]]; }
   hands() { const a = this.p.actor; const l = a.bonePos('lhand'), r = a.bonePos('rhand'); const d = this.aim(); return [v3.addS(l, d, 0.12), v3.addS(r, d, 0.12)]; }
   targets() {
     const g = this.g; if (!this.npc) return g.targets();
+    if (g.online) return g.foesOf(this.p).map(f => ({ type: 'npc', ref: f, center: () => f.chest() }));
     const P = g.player; return P.status === 'dead' ? [] : [{ type: 'npc', ref: P, center: () => P.chest() }];
   }
   cone(range, deg, opts = {}) {
@@ -74,6 +76,7 @@ export class Force {
   }
   flat(v) { const l = Math.hypot(v[0], v[2]) || 1; return [v[0] / l, 0, v[2] / l]; }
   absorbDef(f) { const F = this.g.forceOf(f); return { absorbActive: !!(F && F.active.absorb), absorbLevel: F ? F.lv.absorb : 0 }; }
+  addFp(n) { this.fp = Math.min(this.max, this.fp + n); } // Force gained (Absorb); another player's Force is updated by their own game
   // ---------------- per frame
   update(dt, input) {
     const g = this.g, p = this.p, now = g.t; this.gcd -= dt; this.selShow = Math.max(0, this.selShow - dt); this.absorbMsgT -= dt;
@@ -115,7 +118,7 @@ export class Force {
     const pw = POW(id); if (!pw) return false;
     if (!this.use(pw.cost)) { this.gcd = 0.3; return false; }
     this.gcd = 0.25; this.holdVia = via;
-    const f = this['do_' + id]; if (f) f.call(this); return true;
+    const f = this['do_' + id]; if (f) f.call(this); if (this.g.net) this.g.net.onCast(this, id); return true;
   }
   onHurt(dmg) { if (this.npc && ((this.holding === 'heal' && dmg >= 4) || (this.holding === 'lightning' && dmg >= 10))) this.release(); } // a heal / lightning can be broken by a solid hit
   interrupt() { this.pending.length = 0; this.release(); } // a push / pull that lands cancels what the target was casting
@@ -139,11 +142,7 @@ export class Force {
     this.anim('BOTH_FORCEPUSH', { durMs: 680 }); g.sfxAt('push', p.pos, 1); this.shake(0.22);
     this.later(0, () => { // w_force.c ForceThrow: the push lands on the frame it is cast, no wind-up delay
       if (!this.alive()) return;
-      const hands = this.hands(); const mid = v3.lerp(hands[0], hands[1], 0.5);
-      g.fx.ring({ p: v3.addS(mid, d, 0.3), n: d, r0: 0.25, r1: 2.8, life: 0.55, w: 0.2, c: [col[0], col[1], col[2], 0.95], move: v3.scale(d, 15) });
-      g.fx.ring({ p: v3.addS(mid, d, 0.1), n: d, r0: 0.15, r1: 2.0, life: 0.4, w: 0.12, c: [1, 1, 1, 0.8], move: v3.scale(d, 11) });
-      for (let i = 0; i < 46; i++) { const sp = v3.norm([d[0] + rnd(-0.35, 0.35), d[1] + rnd(-0.25, 0.3), d[2] + rnd(-0.35, 0.35)]); g.fx.emit({ p: v3.addS(mid, d, 0.3), v: v3.scale(sp, rnd(8, 20)), life: rnd(0.25, 0.55), size: rnd(0.04, 0.1), c0: [col[0], col[1] + 0.05, col[2] + 0.1, 0.8], c1: [col[0] * 0.7, col[1] * 0.8, 1, 0], drag: 1.8 }); }
-      for (let i = 0; i < 26; i++) { const a = rnd(-0.5, 0.5), dd = this.flat(d); const dir = [dd[0] * Math.cos(a) - dd[2] * Math.sin(a), 0, dd[0] * Math.sin(a) + dd[2] * Math.cos(a)]; g.fx.emit({ p: [p.pos[0] + dir[0] * rnd(0.5, 5), 0.1, p.pos[2] + dir[2] * rnd(0.5, 5)], v: [dir[0] * rnd(4, 12), rnd(0.5, 2), dir[2] * rnd(4, 12)], life: rnd(0.5, 1), size: rnd(0.15, 0.35), grow: 0.8, c0: [0.45, 0.42, 0.5, 0.3], c1: [0.4, 0.38, 0.45, 0], drag: 2.5, mode: 0 }); }
+      const hands = this.hands(); const mid = v3.lerp(hands[0], hands[1], 0.5); this.pushFx(mid, d, col);
       for (const h of this.cone(13, 52)) {
         const t = h.t, fall = clamp(1 - h.L / 15, 0.2, 1); const dir = this.flat(h.v);
         if (t.type === 'npc') g.applyThrow(this, t.ref, false, { dir, dist: h.L, fall });
@@ -151,15 +150,26 @@ export class Force {
       }
     });
   }
+  pushFx(mid, d, col) {
+    const g = this.g, p = this.p;
+    g.fx.ring({ p: v3.addS(mid, d, 0.3), n: d, r0: 0.25, r1: 2.8, life: 0.55, w: 0.2, c: [col[0], col[1], col[2], 0.95], move: v3.scale(d, 15) });
+    g.fx.ring({ p: v3.addS(mid, d, 0.1), n: d, r0: 0.15, r1: 2.0, life: 0.4, w: 0.12, c: [1, 1, 1, 0.8], move: v3.scale(d, 11) });
+    for (let i = 0; i < 46; i++) { const sp = v3.norm([d[0] + rnd(-0.35, 0.35), d[1] + rnd(-0.25, 0.3), d[2] + rnd(-0.35, 0.35)]); g.fx.emit({ p: v3.addS(mid, d, 0.3), v: v3.scale(sp, rnd(8, 20)), life: rnd(0.25, 0.55), size: rnd(0.04, 0.1), c0: [col[0], col[1] + 0.05, col[2] + 0.1, 0.8], c1: [col[0] * 0.7, col[1] * 0.8, 1, 0], drag: 1.8 }); }
+    for (let i = 0; i < 26; i++) { const a = rnd(-0.5, 0.5), dd = this.flat(d); const dir = [dd[0] * Math.cos(a) - dd[2] * Math.sin(a), 0, dd[0] * Math.sin(a) + dd[2] * Math.cos(a)]; g.fx.emit({ p: [p.pos[0] + dir[0] * rnd(0.5, 5), 0.1, p.pos[2] + dir[2] * rnd(0.5, 5)], v: [dir[0] * rnd(4, 12), rnd(0.5, 2), dir[2] * rnd(4, 12)], life: rnd(0.5, 1), size: rnd(0.15, 0.35), grow: 0.8, c0: [0.45, 0.42, 0.5, 0.3], c1: [0.4, 0.38, 0.45, 0], drag: 2.5, mode: 0 }); }
+  }
+  pullFx(mid, d, col) {
+    const g = this.g;
+    for (let k = 0; k < 3; k++) g.fx.ring({ p: v3.addS(mid, d, 5 - k * 0.7), n: d, r0: 2.0, r1: 0.2, life: 0.5, w: 0.14, c: [col[0], col[1], col[2], 0.8], move: v3.scale(d, -9) });
+    for (let i = 0; i < 40; i++) { const dist = rnd(2, 9); const sp = v3.norm([d[0] + rnd(-0.5, 0.5), d[1] + rnd(-0.3, 0.4), d[2] + rnd(-0.5, 0.5)]); g.fx.emit({ p: v3.addS(mid, sp, dist), v: v3.scale(sp, -rnd(10, 22)), life: dist / 16, size: rnd(0.03, 0.08), c0: [col[0] + 0.1, col[1] + 0.05, 1, 0.9], c1: [col[0] + 0.1, col[1] + 0.05, 1, 0.2] }); }
+  }
+  mindFx() { const g = this.g, o = this.origin(); g.fx.ring({ p: [o[0], 1.0, o[2]], n: [0, 1, 0], r0: 0.4, r1: 7, life: 0.9, w: 0.12, c: [0.75, 0.5, 1, 0.9] }); g.fx.ring({ p: [o[0], 1.3, o[2]], n: [0, 1, 0], r0: 0.4, r1: 5, life: 0.7, w: 0.08, c: [0.9, 0.8, 1, 0.8] }); }
   do_pull() {
     const g = this.g, p = this.p; this.freeFromGrip('pull');
     const d = this.aim(); const col = this.npc ? [1, 0.55, 0.5] : [0.6, 0.8, 1];
     this.anim('BOTH_FORCEPULL', { durMs: 560 }); g.sfxAt('pull', p.pos, 1); this.shake(0.12);
     this.later(0, () => { // immediate, like the push
       if (!this.alive()) return;
-      const hands = this.hands(); const mid = v3.lerp(hands[0], hands[1], 0.5);
-      for (let k = 0; k < 3; k++) g.fx.ring({ p: v3.addS(mid, d, 5 - k * 0.7), n: d, r0: 2.0, r1: 0.2, life: 0.5, w: 0.14, c: [col[0], col[1], col[2], 0.8], move: v3.scale(d, -9) });
-      for (let i = 0; i < 40; i++) { const dist = rnd(2, 9); const sp = v3.norm([d[0] + rnd(-0.5, 0.5), d[1] + rnd(-0.3, 0.4), d[2] + rnd(-0.5, 0.5)]); g.fx.emit({ p: v3.addS(mid, sp, dist), v: v3.scale(sp, -rnd(10, 22)), life: dist / 16, size: rnd(0.03, 0.08), c0: [col[0] + 0.1, col[1] + 0.05, 1, 0.9], c1: [col[0] + 0.1, col[1] + 0.05, 1, 0.2] }); }
+      const hands = this.hands(); const mid = v3.lerp(hands[0], hands[1], 0.5); this.pullFx(mid, d, col);
       for (const h of this.cone(13, 52)) {
         const t = h.t, dir = this.flat(h.v); const flatD = Math.max(0.5, Math.hypot(t.center()[0] - p.pos[0], t.center()[2] - p.pos[2]));
         if (t.type === 'npc') g.applyThrow(this, t.ref, true, { dir, dist: h.L, flatD });
@@ -171,9 +181,9 @@ export class Force {
     const g = this.g, p = this.p; this.anim('BOTH_MINDTRICK1', { durMs: 700 }); g.sfxAt('distract', p.pos, 1);
     this.later(0, () => {
       if (!this.alive()) return;
-      const o = this.origin(); g.fx.ring({ p: [o[0], 1.0, o[2]], n: [0, 1, 0], r0: 0.4, r1: 7, life: 0.9, w: 0.12, c: [0.75, 0.5, 1, 0.9] }); g.fx.ring({ p: [o[0], 1.3, o[2]], n: [0, 1, 0], r0: 0.4, r1: 5, life: 0.7, w: 0.08, c: [0.9, 0.8, 1, 0.8] });
-      for (const h of this.cone(14, 80, { npcOnly: true })) { const n = h.t.ref; if (n.team === 'enemy') {
-        if (n.kind === 'darkjedi') { g.banner('MIND TRICK RESISTED', [1, 0.6, 0.6]); g.fx.ring({ p: [n.pos[0], n.pos[1] + 2.15, n.pos[2]], n: [0, 1, 0], r0: 0.1, r1: 0.5, life: 0.8, w: 0.05, c: [1, 0.3, 0.25, 1] }); g.sfxAt('distractstop', n.pos, 0.7); continue; }
+      this.mindFx();
+      for (const h of this.cone(14, 80, { npcOnly: true })) { const n = h.t.ref; if (n.team !== p.team) {
+        if (n.kind === 'darkjedi' || n.remote) { g.banner('MIND TRICK RESISTED', [1, 0.6, 0.6]); g.fx.ring({ p: [n.pos[0], n.pos[1] + 2.15, n.pos[2]], n: [0, 1, 0], r0: 0.1, r1: 0.5, life: 0.8, w: 0.05, c: [1, 0.3, 0.25, 1] }); g.sfxAt('distractstop', n.pos, 0.7); continue; }
         n.distracted = 8; g.fx.ring({ p: [n.pos[0], n.pos[1] + 2.15, n.pos[2]], n: [0, 1, 0], r0: 0.1, r1: 0.45, life: 1.2, w: 0.05, c: [0.8, 0.55, 1, 1] }); g.hud.msg('Mind trick: enemy confused'); } }
     });
   }
@@ -232,12 +242,12 @@ export class Force {
       if (why) { this.fp += 12; this.say(GRIP_WHY[why] || ('Force Grip: ' + why)); this.gcd = 0.35; if (why === 'out of range') g.banner('OUT OF GRIP RANGE', [1, 0.8, 0.5]); return; }
       const eff = gripEffectiveLevel(this.absorbDef(v), this.lv.grip, 12);
       if (eff.level <= 0) { // Force Absorb cancels the grip before it takes hold
-        if (VF) VF.fp = Math.min(VF.max, VF.fp + eff.fpGain); g.banner('GRIP ABSORBED', [0.78, 0.5, 1]); g.sfxAt('absorbhit', v.pos, 1); g.fx.sparks(v.chest(), [0, 1, 0], 10, [0.7, 0.4, 1, 1]);
+        if (VF) VF.addFp(eff.fpGain); g.banner('GRIP ABSORBED', [0.78, 0.5, 1]); g.sfxAt('absorbhit', v.pos, 1); g.fx.sparks(v.chest(), [0, 1, 0], 10, [0.7, 0.4, 1, 1]);
         this.anim('BOTH_FORCEGRIP_HOLD', { durMs: 450 }); this.gcd = 0.6; return;
       }
       this.gripBase = this.lv.grip; this.gripLevel = eff.level;
       const ph = gripPhase(this.gripLevel, 0);
-      v.grip(true, ph.lift ? 1.45 : 0, { carry: ph.carry ? () => this.carryPoint() : null });
+      v.grip(true, ph.lift ? 1.45 : 0, { carry: ph.carry ? () => this.carryPoint() : null, from: p });
     }
     this.holding = 'grip'; this.target = t; this.gripT = 0; this.gripCracked = false; this.brokenFree = false;
     this.anim('BOTH_FORCEGRIP_HOLD', { durMs: 300, hold: true }); g.sfxAt('grip', p.pos, 1); this.loops.hold = g.sfx.loop('heal', { vol: 0.0 });
@@ -250,10 +260,10 @@ export class Force {
     const c = t.center(), hands = this.hands(), h = v3.lerp(hands[0], hands[1], 0.5);
     if (t.type === 'npc') {
       const v = t.ref, VF = g.forceOf(v);
-      if (v.status !== 'gripped') { this.release(); return; } // knocked out of it some other way
+      if (v.status !== 'gripped' && !(v.remote && this.gripT < 0.6)) { this.release(); return; } // knocked out of it some other way (another player's fighter shows 'gripped' a moment later)
       if (VF && VF.active.absorb) { // Force Absorb raised while gripped lowers (or cancels) the grip
         const eff = gripEffectiveLevel(this.absorbDef(v), this.gripBase, 12);
-        if (eff.level < this.gripLevel) { this.gripLevel = eff.level; if (eff.level <= 0) { VF.fp = Math.min(VF.max, VF.fp + eff.fpGain); g.banner('GRIP ABSORBED', [0.78, 0.5, 1]); g.sfxAt('absorbhit', v.pos, 1); this.brokenFree = true; this.release(); return; } }
+        if (eff.level < this.gripLevel) { this.gripLevel = eff.level; if (eff.level <= 0) { VF.addFp(eff.fpGain); g.banner('GRIP ABSORBED', [0.78, 0.5, 1]); g.sfxAt('absorbhit', v.pos, 1); this.brokenFree = true; this.release(); return; } }
       }
       const ph = gripPhase(this.gripLevel, this.gripT);
       v.gripLift = ph.lift ? 1.45 : 0; if (ph.carry && !v.gripCarry) v.gripCarry = () => this.carryPoint();
@@ -272,7 +282,7 @@ export class Force {
   }
   end_grip(silent) {
     const t = this.target; this.target = null;
-    if (t && t.type === 'npc' && t.ref.status === 'gripped') t.ref.grip(false, 0, { free: this.brokenFree, soft: this.gripLevel <= 1 });
+    if (t && t.type === 'npc' && (t.ref.status === 'gripped' || t.ref.remote)) t.ref.grip(false, 0, { free: this.brokenFree, soft: this.gripLevel <= 1 });
     if (t && t.type === 'prop') { t.ref.lifted = 0; }
     this.brokenFree = false; this.p.endForce();
   }
@@ -296,11 +306,11 @@ export class Force {
       if (t.type === 'npc') {
         const v = t.ref; if (v.status === 'dead') continue;
         const VF = g.forceOf(v), lm = lightningMul(this.absorbDef(v), this.lv.lightning, 1);
-        if (lm.mul <= 0) { if (VF) VF.fp = Math.min(VF.max, VF.fp + 12 * dt); this.absorbFx(v, dt); continue; } // Force Absorb: no damage, the absorber gains Force
-        if (v.kind === 'darkjedi' || v.isPlayer) v.electrify(0.25); else v.shock(true); // fighters keep control, training droids are stunned
+        if (lm.mul <= 0) { if (VF) VF.addFp(12 * dt); this.absorbFx(v, dt); continue; } // Force Absorb: no damage, the absorber gains Force
+        if (v.kind === 'darkjedi' || v.isPlayer || v.remote) v.electrify(0.25); else v.shock(true); // fighters keep control, training droids are stunned
         v.hurt(26 * dt * p.damageMul * this.dmgScale * lm.mul, p, { noFlinch: true });
         if (v.status === 'dead' && !v.zapped) { v.zapped = true; }
-        if (!v.isPlayer && v.kind !== 'darkjedi') this.bodyArcs(v);
+        if (!v.isPlayer && v.kind !== 'darkjedi' && !v.remote) this.bodyArcs(v);
         if (this.hitT <= 0) { g.sfxAt('lhit' + (1 + Math.floor(Math.random() * 3)), t.center(), 0.7); }
         if (Math.random() < 0.6) g.fx.sparks(t.center(), [0, 1, 0], 2, [0.6, 0.8, 1, 1]);
       } else {
@@ -338,8 +348,8 @@ export class Force {
     const g = this.g, p = this.p, t = this.target; if (!t || t.ref.status === 'dead') { this.release(); return; }
     const v = t.ref, VF = g.forceOf(v), lm = lightningMul(this.absorbDef(v), this.lv.drain, 1);
     const c = t.center(), hands = this.hands(), h = v3.lerp(hands[0], hands[1], 0.5);
-    if (lm.mul <= 0) { if (VF) VF.fp = Math.min(VF.max, VF.fp + 12 * dt); g.banner('DRAIN ABSORBED', [0.78, 0.5, 1]); this.release(); return; }
-    this.fp += 3 * dt; p.hp = Math.min(p.maxHp, p.hp + 9 * dt * lm.mul); v.hurt(15 * dt * p.damageMul * this.dmgScale * lm.mul, p, { noFlinch: true }); if (v.kind === 'darkjedi' || v.isPlayer) v.electrify(0.25); else v.shock(true); this.dt2 += dt;
+    if (lm.mul <= 0) { if (VF) VF.addFp(12 * dt); g.banner('DRAIN ABSORBED', [0.78, 0.5, 1]); this.release(); return; }
+    this.fp += 3 * dt; p.hp = Math.min(p.maxHp, p.hp + 9 * dt * lm.mul); v.hurt(15 * dt * p.damageMul * this.dmgScale * lm.mul, p, { noFlinch: true }); if (v.kind === 'darkjedi' || v.isPlayer || v.remote) v.electrify(0.25); else v.shock(true); this.dt2 += dt;
     this.beam = { a: h, b: c, col: [0.8, 0.2, 1] };
     for (let i = 0; i < 2; i++) { const k = Math.random(); g.fx.emit({ p: v3.lerp(c, h, k), v: v3.scale(v3.norm(v3.sub(h, c)), 5), life: 0.3, size: 0.05, c0: [0.85, 0.3, 1, 0.9], c1: [0.5, 0.1, 0.8, 0] }); }
     if (this.dt2 > 0.5) { this.dt2 = 0; g.sfxAt('drained', v.pos, 0.5); }

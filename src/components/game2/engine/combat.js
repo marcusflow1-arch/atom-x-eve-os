@@ -87,7 +87,7 @@ export class Combat {
   bladeDamage(A) { const S = A.saber; let d = [0, 12, 18, 28][S.level]; if (S.inSpecial(S.move)) d *= 1.6; return d * A.damageMul * (A.isPlayer ? 1 : (A.dmgScale ?? 0.55)); }
   // ---------- per-step update
   step(dt) {
-    const g = this.g; const F = [g.player, ...g.npcs];
+    const g = this.g; const F = g.fighters ? g.fighters() : [g.player, ...g.npcs];
     const caps = new Map(F.map(f => [f, this.capsule(f)]));
     for (const [k, v] of this.pair) { if (v - dt <= 0) this.pair.delete(k); else this.pair.set(k, v - dt); }
     // Jedi Outcast CheckSaberDamage (w_saber.c): the ignited blade is traced every step and always cuts what it touches.
@@ -102,6 +102,7 @@ export class Combat {
       const swing = A.swingActive() || (A.thrown && false);
       const attacking = A.attacking ? A.attacking() : swing; // BG_SaberInAttack: attack and special moves
       if (attacking) this.groundStrike(A, prev, seg);
+      const own = !A.remote && !g.noDamage; // another player's blade is resolved in their game; no damage between rounds
       for (const B of F) {
         if (B === A || !hostile(A, B) || B.status === 'dead') continue;
         const bs = B.bladeSeg();
@@ -112,6 +113,7 @@ export class Combat {
             if (r.d < 0.2) { this.pair.set(key, 0.32); this.clash(A, B, v3.lerp(r.a, r.b, 0.5), swing, B.swingActive()); }
           }
         }
+        if (!own) continue;
         const wk = A.name + '>' + B.name; if ((wound.get(wk) ?? -1) > g.t) continue;
         const hit = sweptBladeContact(prev, seg, B._prevCap, caps.get(B));
         if (!hit) continue;
@@ -122,7 +124,7 @@ export class Combat {
       const rm = this.remote;
       if (attacking && rm && !rm.dead && !A.hitSet.has('remote') && A.team === 'player') { const r = segSeg(seg[0], seg[1], rm.pos, rm.pos); if (r.d < 0.42) { A.hitSet.add('remote'); this.hitRemote(40, rm.pos); } }
       // thrown saber
-      if (A.thrown) {
+      if (A.thrown && own) {
         const T = A.thrown; for (const B of F) {
           if (B === A || !hostile(A, B) || B.status === 'dead' || (T.hit.get(B) || 0) > g.t) continue;
           const contact = sweptBladeContact([T.prevPos || T.pos, T.prevPos || T.pos], [T.pos, T.pos], B._prevCap, caps.get(B), 0.45);
@@ -150,8 +152,8 @@ export class Combat {
   }
   clash(A, B, pt, aSwing, bSwing) {
     const g = this.g; g.fx.sparks(pt, [0, 1, 0], 18, [1, 0.92, 0.6, 1]); g.sfxAt(BLOCKS[Math.floor(Math.random() * BLOCKS.length)], pt, 1); g.flashLight(pt, A.blade.color, 0.25);
-    if (aSwing) A.saber.blocked = 'BOUNCE'; else A.saber.blocked = this.sideOf(A, pt);
-    if (bSwing) B.saber.blocked = 'BOUNCE'; else if (B.canParry !== false) B.saber.blocked = this.sideOf(B, pt);
+    if (!A.remote) { if (aSwing) A.saber.blocked = 'BOUNCE'; else A.saber.blocked = this.sideOf(A, pt); } // each game bounces its own fighters
+    if (!B.remote) { if (bSwing) B.saber.blocked = 'BOUNCE'; else if (B.canParry !== false) B.saber.blocked = this.sideOf(B, pt); }
     if (A.isPlayer || B.isPlayer) g.shake(0.12);
     if (aSwing && this.wound) this.wound.set(A.name + '>' + B.name, g.t + 0.3); // a clash spends the swing on the other blade
   }
@@ -160,7 +162,8 @@ export class Combat {
     const unblockable = !!I && (m === I.LS_A_BACK || m === I.LS_A_BACK_CR || m === I.LS_A_BACKSTAB || m === I.LS_A_JUMP_T__B_); // w_saber.c
     if (!unblockable && this.canBlock(B, A.pos) && Math.random() < this.blockProb(B)) { // blocked
       g.fx.sparks(pt, [0, 1, 0], 14, [1, 0.9, 0.55, 1]); g.sfxAt(BLOCKS[Math.floor(Math.random() * BLOCKS.length)], pt, 1); g.flashLight(pt, A.blade.color, 0.2);
-      B.saber.blocked = B.saber.isActiveSwing() ? 'BOUNCE' : this.sideOf(B, pt); A.saber.blocked = 'BOUNCE'; if (A.isPlayer || B.isPlayer) g.shake(0.1); return 'blocked';
+      const side = B.saber.isActiveSwing() ? 'BOUNCE' : this.sideOf(B, pt); if (B.remote && g.net) g.net.rpc(B, 'blocked', [side]); else B.saber.blocked = side; A.saber.blocked = 'BOUNCE'; if (A.isPlayer || B.isPlayer) g.shake(0.1);
+      if (g.net) g.net.onHit(A, B, pt, { blocked: true }); return 'blocked';
     }
     this.damage(A, B, pt, this.bladeDamage(A) * (B.hasSaber ? 1 : 1.5), { spark: true, saber: true }); // non-Jedi take 1.5x (w_saber.c)
     return 'hit';
@@ -169,15 +172,15 @@ export class Combat {
   touchDamage(A) { return [0, 2, 3, 4.5][A.saber.level || 2] * (A.damageMul ?? 1) * (A.isPlayer ? 1 : (A.dmgScale ?? 0.55)); }
   touchHit(A, B, pt) {
     const g = this.g;
-    if (this.canBlock(B, A.pos) && Math.random() < this.blockProb(B)) { g.fx.sparks(pt, [0, 1, 0], 6, [1, 0.9, 0.55, 1]); g.sfxAt(BLOCKS[Math.floor(Math.random() * BLOCKS.length)], pt, 0.45); return 'blocked'; }
+    if (this.canBlock(B, A.pos) && Math.random() < this.blockProb(B)) { g.fx.sparks(pt, [0, 1, 0], 6, [1, 0.9, 0.55, 1]); g.sfxAt(BLOCKS[Math.floor(Math.random() * BLOCKS.length)], pt, 0.45); if (g.net) g.net.onHit(A, B, pt, { blocked: true, touch: true }); return 'blocked'; }
     this.damage(A, B, pt, this.touchDamage(A), { touch: true }); return 'hit';
   }
   damage(A, B, pt, dmg, o = {}) {
     const g = this.g; if (B.isPlayer && g.force.active.protect) { g.sfxAt('protecthit', B.pos, 0.8); }
-    const died = B.hurt(dmg, A, o.touch ? { noFlinch: true } : {}); g.fx.sparks(pt, [0, 1, 0], o.touch ? 4 : 10, [1, 0.5, 0.2, 1]); g.sfxAt(['hit1', 'hit2', 'hit3'][Math.floor(Math.random() * 3)], pt, o.touch ? 0.3 : 0.9);
+    const died = B.hurt(dmg, A, o.touch ? { noFlinch: true, touch: true } : {}); g.fx.sparks(pt, [0, 1, 0], o.touch ? 4 : 10, [1, 0.5, 0.2, 1]); if (g.net) g.net.onHit(A, B, pt, o); g.sfxAt(['hit1', 'hit2', 'hit3'][Math.floor(Math.random() * 3)], pt, o.touch ? 0.3 : 0.9);
     if (o.saber && A.saber.level === 3 && !died && Math.random() < 0.35 && B.status === 'normal') { const d = v3.norm([B.pos[0] - A.pos[0], 0, B.pos[2] - A.pos[2]]); B.push(d, 4.5, 2.5); }
     if (B.isPlayer) { g.hud.hit(dmg); g.shake(o.touch ? 0.05 : 0.2); }
-    if (died && !B.isPlayer) { this.kills++; g.hud.msg('Defeated ' + B.label); }
+    if (died && !B.isPlayer && !g.net) { this.kills++; g.hud.msg('Defeated ' + B.label); }
   }
   // ---------- flung props hurt people
   props(dt) {

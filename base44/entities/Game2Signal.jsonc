@@ -1,0 +1,71 @@
+{
+  "name": "Game2Signal",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string",
+      "description": "Game2Room id the connection belongs to"
+    },
+    "sender_id": {
+      "type": "string"
+    },
+    "target_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "offer",
+        "answer",
+        "decline",
+        "hangup"
+      ]
+    },
+    "payload": {
+      "type": "object",
+      "description": "WebRTC session description and peer ids for the Game 2 multiplayer mesh"
+    }
+  },
+  "required": [
+    "room_id",
+    "sender_id",
+    "target_id",
+    "type",
+    "payload"
+  ],
+  "rls": {
+    "create": {
+      "data.sender_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.target_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.target_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.target_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

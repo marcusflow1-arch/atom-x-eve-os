@@ -12,7 +12,8 @@ const toward = (f, P) => Math.atan2(P.pos[0] - f.pos[0], P.pos[2] - f.pos[2]);
 const newBrain = () => ({ mode: 'approach', t: 0, think: 1.2, react: 0, strafe: 1, style: 2, atkDir: 0, holdT: 0, gripT: 0, gripPlan: undefined, gripWait: 0, cd: { push: 3, pull: 2, grip: 6, lightning: 5, heal: 0, speed: 8, rage: 0, protect: 10, absorb: 0 } });
 
 export function aiDarkJedi(g, f, dt) {
-  const P = g.player, c = f.cmd, F = f.force; clear(c);
+  const P = g.aiTarget ? g.aiTarget(f) : g.player, c = f.cmd, F = f.force; clear(c);
+  if (!P) { if (F) F.want = {}; if (f.status === 'normal' && f.saber.holstered) f.igniteNow(); return; } // nobody to fight
   const a = f.ai ??= newBrain();
   for (const k in a.cd) a.cd[k] = Math.max(0, a.cd[k] - dt);
   a.think -= dt; a.t -= dt; a.react -= dt;
@@ -35,7 +36,7 @@ export function aiDarkJedi(g, f, dt) {
   }
   F.want = {};
   // ---- reactive defence: the player is draining / zapping me -> raise Force Absorb
-  const PF = g.force, hostile = (PF.holding === 'lightning' && PF.ltTargets && PF.ltTargets.some(h => h.t.ref === f)) || (PF.holding === 'drain' && PF.target && PF.target.ref === f);
+  const PF = g.forceOf(P) || {}, hostile = (PF.holding === 'lightning' && PF.ltTargets && PF.ltTargets.some(h => h.t.ref === f)) || (PF.holding === 'drain' && PF.target && PF.target.ref === f);
   if (hostile && !F.active.absorb && F.fp >= 25 && f.forceUntil <= g.t && F.gcd <= 0 && a.react <= 0) {
     a.react = rnd(0.25, 0.7);
     if (Math.random() < 0.7) { F.cast('absorb'); return; }

@@ -17,14 +17,16 @@ const { MissionDirector } = await engine('mission/director.js');
 const M = MISSIONS.kejim;
 const freshLevel = () => { const level = buildLevel(M.layout); const space = new LevelSpace(level); const nav = new NavGrid(space, level.navBounds, 1); return { level, space, nav }; };
 
-test('Game 2 starts on a menu: Single Player runs the mission, Multiplayer runs the Dark Jedi duel', () => {
+test('Game 2 starts on a menu: Single Player runs the mission, Multiplayer opens the online lobby (with the Dark Jedi duel as practice)', () => {
   const src = read('src/components/game2/Game2Duel.jsx');
   assert.match(src, /tag: 'Single player'/);
-  assert.match(src, /tag: 'Multiplayer', title: 'Dark Jedi Duel'/);
+  assert.match(src, /tag: 'Multiplayer', title: 'Jedi vs Dark Jedi'/);
   assert.match(src, /mode: 'mission', mission: 'kejim'/);
-  assert.match(src, /choice === 'multi'/);
+  assert.match(src, /<Game2Lobby onBack=\{\(\) => setChoice\(null\)\} onStart=\{setOnline\} onPractice=\{\(\) => setChoice\('multi'\)\} \/>/);
+  assert.match(src, /choice === 'multi'/); // practice: the offline duel
+  assert.match(src, /mode: 'online'/);
   assert.match(src, /Main menu/);
-  assert.match(src, /\{ map: duel \}/); // the mission does not download the duel arena
+  assert.match(src, /arena = choice !== 'single'/); assert.match(src, /\{ map: arena \}/); // the mission does not download the duel arena
 });
 
 test("the mission's Reborn is the duel's Reborn value for value", () => {

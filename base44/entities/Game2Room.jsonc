@@ -1,0 +1,84 @@
+{
+  "name": "Game2Room",
+  "type": "object",
+  "properties": {
+    "host_id": {
+      "type": "string",
+      "description": "User ID of the player hosting the match"
+    },
+    "host_peer": {
+      "type": "string",
+      "description": "Network peer id of the host session (user id + session suffix); guests connect to it"
+    },
+    "name": {
+      "type": "string",
+      "description": "Room name shown in the Game 2 multiplayer lobby"
+    },
+    "host_name": {
+      "type": "string",
+      "description": "Callsign the host chose (not the account name)"
+    },
+    "players": {
+      "type": "number",
+      "default": 1,
+      "description": "Players currently in the match"
+    },
+    "max_players": {
+      "type": "number",
+      "default": 10
+    },
+    "light": {
+      "type": "number",
+      "default": 0,
+      "description": "Players on the Jedi side"
+    },
+    "dark": {
+      "type": "number",
+      "default": 0,
+      "description": "Players on the Dark Jedi side"
+    },
+    "ai": {
+      "type": "number",
+      "default": 1,
+      "description": "AI Reborn fighting on the Dark Jedi side"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "full",
+        "closed"
+      ],
+      "default": "open"
+    },
+    "last_seen": {
+      "type": "number",
+      "description": "Host heartbeat (ms since epoch); rooms without a recent heartbeat are hidden"
+    },
+    "version": {
+      "type": "number",
+      "description": "Game 2 network protocol version"
+    }
+  },
+  "required": [
+    "host_id",
+    "host_peer",
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "id": "{{user.id}}"
+      }
+    },
+    "create": {
+      "data.host_id": "{{user.id}}"
+    },
+    "update": {
+      "data.host_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.host_id": "{{user.id}}"
+    }
+  }
+}

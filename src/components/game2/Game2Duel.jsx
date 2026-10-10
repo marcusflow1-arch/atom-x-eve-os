@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, ChevronRight, Loader2, Menu, Swords, Users } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import Game2Lobby, { getIceServers } from './Game2Lobby';
 
-// Game 2 start screen: Single Player (story missions) or Multiplayer (the Dark Jedi duel).
+// Game 2 start screen: Single Player (story missions) or Multiplayer (online Jedi vs Dark Jedi, lobby in Game2Lobby.jsx;
+// the offline Dark Jedi duel is the lobby's practice mode).
 // The engine (src/components/game2/engine) is a small WebGL2 renderer + Ghoul2 style skeleton player with the original
 // Jedi Outcast animations; the Force rules (push / pull / grip / absorb / lightning) come from Raven's w_force.c,
 // see engine/forcerules.js. Both modes run the same combat code; missions add a level, objectives and enemy AI on top.
@@ -13,11 +16,12 @@ const MODES = {
     tag: 'Single player', title: 'Mission 1 · Kejim Post', loading: 'Kejim Post', icon: Swords,
     blurb: 'Land in the canyon with Jan Ors, breach an Imperial outpost, pull its flight logs while the garrison counter-attacks, and face what waits in the hangar.',
   },
-  multi: {
-    tag: 'Multiplayer', title: 'Dark Jedi Duel', loading: 'Dark Jedi duel', icon: Users,
-    blurb: 'The original Game 2 duel in the Lightsaber Training arena: one Reborn with the same saber, Force powers and rules as you. Plays against the AI — online opponents are not available yet.',
+  online: {
+    tag: 'Multiplayer', title: 'Jedi vs Dark Jedi', loading: 'Joining the arena', icon: Users,
+    blurb: 'Online in the Lightsaber Training arena: up to 10 players choose Jedi or Dark Jedi and fight each other and the AI Reborn, with the same saber, Force powers and rules. Practice offline against the Reborn from the lobby.',
   },
 };
+const PRACTICE = { tag: 'Practice', title: 'Dark Jedi Duel', loading: 'Dark Jedi duel', icon: Swords };
 
 function fillParent(el) {
   Object.assign(el.style, { position: 'absolute', inset: '0', width: '100%', height: '100%', display: 'block', outline: 'none' });
@@ -25,9 +29,12 @@ function fillParent(el) {
 
 // Fills its nearest positioned parent (Game2.jsx gives it a relative flex-1 section).
 export default function Game2Duel() {
-  const [choice, setChoice] = useState(null);
+  const [choice, setChoice] = useState(null); // 'single' | 'online' | 'multi' (offline duel practice)
+  const [online, setOnline] = useState(null); // lobby result: { role, room | roomName, side, name, selfId, ai, local }
   if (!choice) return <Game2Menu onPick={setChoice} />;
-  return <Game2Session key={choice} choice={choice} onExit={() => setChoice(null)} />;
+  if (choice === 'online' && !online) return <Game2Lobby onBack={() => setChoice(null)} onStart={setOnline} onPractice={() => setChoice('multi')} />;
+  const exit = () => { if (choice === 'online') setOnline(null); else setChoice(choice === 'multi' ? 'online' : null); }; // online / practice go back to the lobby
+  return <Game2Session key={choice + (online ? online.selfId : '')} choice={choice} online={online} onExit={exit} />;
 }
 
 function Game2Menu({ onPick }) {
@@ -69,9 +76,9 @@ function Game2Menu({ onPick }) {
   );
 }
 
-function Game2Session({ choice, onExit }) {
+function Game2Session({ choice, online, onExit }) {
   const hostRef = useRef(null);
-  const mode = MODES[choice];
+  const mode = MODES[choice] || PRACTICE;
   const [status, setStatus] = useState({ phase: 'loading', text: `Loading ${mode.loading}` });
 
   useEffect(() => {
@@ -89,8 +96,8 @@ function Game2Session({ choice, onExit }) {
     canvas.tabIndex = 0;
     hud.style.pointerEvents = 'none';
     host.append(canvas, hud);
-    const duel = choice === 'multi';
-    const engineOptions = duel
+    const duel = choice === 'multi', arena = choice !== 'single';
+    let engineOptions = duel
       ? { mode: 'duel', sfxBase: `${ASSET_BASE}sfx/` }
       : { mode: 'mission', mission: 'kejim', sfxBase: `${ASSET_BASE}sfx/` };
 
@@ -106,8 +113,15 @@ function Game2Session({ choice, onExit }) {
         renderer.maxDpr = 1.5;
         const assets = await loadAll(ASSET_BASE, (what) => {
           if (!cancelled) setStatus({ phase: 'loading', text: `Loading ${what}` });
-        }, { map: duel });
+        }, { map: arena });
         if (cancelled) return;
+        if (choice === 'online') { // peer-to-peer match: signaling through the app backend (or this browser's tabs in test mode)
+          const { Base44Signaling, LocalSignaling } = await import('./net/signaling.js');
+          const signaling = online.local ? new LocalSignaling(online.selfId) : new Base44Signaling(base44, online.selfId);
+          const iceServers = online.local ? [] : await getIceServers();
+          if (cancelled) { signaling.close(); return; }
+          engineOptions = { mode: 'online', sfxBase: `${ASSET_BASE}sfx/`, net: { ...online, signaling, iceServers } };
+        }
         game = new Game(renderer, assets, canvas, hud, engineOptions);
         setStatus({ phase: 'ready', text: '' });
         canvas.focus({ preventScroll: true });
@@ -135,7 +149,7 @@ function Game2Session({ choice, onExit }) {
       canvas.remove();
       hud.remove();
     };
-  }, [choice]);
+  }, [choice, online]);
 
   return (
     <div className="absolute inset-0 select-none overflow-hidden bg-[#05060c]" style={{ touchAction: 'none' }}>
@@ -146,7 +160,7 @@ function Game2Session({ choice, onExit }) {
         className="absolute left-3.5 top-[62px] z-20 flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#080a16]/70 px-2.5 py-1.5 text-[11px] font-semibold text-white/70 backdrop-blur transition hover:bg-[#101528]/90 hover:text-white"
       >
         <Menu className="h-3.5 w-3.5" />
-        Main menu
+        {choice === 'single' ? 'Main menu' : 'Lobby'}
       </button>
       {status.phase === 'loading' && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[#05060c] text-white/80">

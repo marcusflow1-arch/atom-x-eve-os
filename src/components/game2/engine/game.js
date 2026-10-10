@@ -9,8 +9,9 @@ import { Fighter } from './fighter.js';
 import { Force, SELECT_ORDER, SELECT_ALL, FORCE_QUICK_BINDINGS } from './force.js';
 import { STYLE_NAMES } from './saber.js';
 import { resolveThrow } from './forcerules.js';
-import { Combat } from './combat.js';
-import { HUD, HELP_DUEL, HELP_MISSION } from './hud.js';
+import { Combat, hostile } from './combat.js';
+import { NetGame } from './netgame.js';
+import { HUD, HELP_DUEL, HELP_MISSION, HELP_ONLINE } from './hud.js';
 import { BRAINS } from './brains/index.js';
 import { ARCHETYPES } from './archetypes.js';
 import { buildLevel } from './level/builder.js';
@@ -26,18 +27,19 @@ const clearCmd = c => { c.fwd = c.right = c.up = 0; c.walk = c.crouch = c.attack
 
 export class Game {
   constructor(R, A, canvas, hudCanvas, opts = {}) {
-    this.opts = opts; this.mode = opts.mode || 'explorer'; this.duel = this.mode === 'duel'; this.boss = null; this.round = { state: 'intro', t: 0 }; this.arcs = []; this.disposed = false;
+    this.opts = opts; this.mode = opts.mode || 'explorer'; this.duel = this.mode === 'duel'; this.online = this.mode === 'online'; this.boss = null; this.round = { state: 'intro', t: 0 }; this.arcs = []; this.disposed = false;
     this.missionDef = this.mode === 'mission' ? MISSIONS[opts.mission || 'kejim'] : null;
     if (this.mode === 'mission' && !this.missionDef) throw new Error('Unknown Game 2 mission: ' + opts.mission);
-    this.forceMenu = this.duel || !!this.missionDef; // wheel / F Force selector and the ten quick-cast powers
+    this.forceMenu = this.duel || this.online || !!this.missionDef; // wheel / F Force selector and the ten quick-cast powers
     this.R = R; this.A = A; this.skel = A.skel; this.saberData = A.saberData; this.attach = A.attach; this.canvas = canvas;
     this.t = 0; this.dtFrame = STEP; this.fps = 60; this.acc = 0; this.started = false; this.flashes = []; this.lightFlash = 0; this.lightFlashPos = [0, 2, 0]; this.shakeAmt = 0; this.frameNo = 0;
     this.bodyMesh = R.uploadSkinned(A.body); this.hiltMesh = R.uploadStatic(A.hilt); this.lodMesh = A.lod ? R.uploadSkinned(A.lod) : this.bodyMesh;
     const gun = geo(); gun.box(0, 0.03, 0, 0.05, 0.13, 0.06, [0.16, 0.16, 0.19, 1]).box(0, -0.12, 0, 0.045, 0.2, 0.05, [0.32, 0.33, 0.38, 1]).box(0, -0.235, 0, 0.03, 0.05, 0.03, [0.9, 0.25, 0.15, 1]); this.gunMesh = R.uploadStatic(gun.build());
     const level = this.missionDef ? buildLevel(this.missionDef.layout) : null;
-    this.world = new World(R, this.duel ? A.duelMap : null, level);
-    this.playerSpawn = this.duel ? this.world.spawns.player.slice() : level ? level.playerSpawn.slice() : SPAWN.slice();
-    this.enemySpawn = this.duel ? this.world.spawns.enemy.slice() : [0, 0, 8];
+    const arena = this.duel || this.online; // online matches use the Lightsaber Training arena too
+    this.world = new World(R, arena ? A.duelMap : null, level);
+    this.playerSpawn = arena ? this.world.spawns.player.slice() : level ? level.playerSpawn.slice() : SPAWN.slice();
+    this.enemySpawn = arena ? this.world.spawns.enemy.slice() : [0, 0, 8];
     this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
     this.input.onFirstGesture = () => this.startAudio();
     if (this.duel) {
@@ -54,6 +56,10 @@ export class Game {
       h.help = false;
       this.started = true;
       h.msg('WASD to move · F1 for controls');
+    } else if (this.online) {
+      const h = this.hud; this.input.wheelThrottle = 90;
+      h.helpList = HELP_ONLINE; h.helpW = 820; h.title = 'ONLINE · JEDI VS DARK JEDI'; h.subtitle = 'Lightsaber Training arena · up to 10 players · F1 = controls';
+      h.debug = false; h.help = false; this.started = true; h.msg('WASD to move · F1 for controls');
     } else if (this.missionDef) {
       const h = this.hud;
       this.input.wheelThrottle = 90;
@@ -65,6 +71,7 @@ export class Game {
     this.force = new Force(this, this.player, { list: this.forceMenu ? SELECT_ORDER : SELECT_ALL }); this.player.force = this.force; this.combat = new Combat(this);
     this.world.onThud = b => { if (b.vel[1] < -4) this.sfxAt('hit1', b.pos, 0.5); };
     this.populate();
+    if (this.online) this.net = new NetGame(this, opts.net || {}); // other players, rounds and the AI Reborn (host)
     if (this.missionDef) { // story mode: Kyle carries the Bryar pistol and his lightsaber (Q switches)
       this.pistol = { cool: 0, charge: 0 }; this.playerWeapon = 'bryar'; this.player.gun = true; this.player.weaponPose = 'TORSO_WEAPONREADY2';
     }
@@ -78,6 +85,7 @@ export class Game {
     this.fireT = 0;
   }
   populate() {
+    if (this.online) { this.remotes = []; this.readySaber(this.player); return; }
     if (this.duel) return this.populateDuel();
     if (this.missionDef) { this.director = new MissionDirector(this, this.missionDef); return; }
     const droidTints = [[0.55, 0.75, 1.0], [0.9, 0.8, 0.5], [0.7, 1.0, 0.75]];
@@ -119,12 +127,12 @@ export class Game {
   humStop(f) { if (f.hum) { f.hum.stop(0.1); f.hum = null; } }
   async startAudio() {
     this.sfx.resume(); try { await this.sfx.loading; } catch (e) { }
-    for (const f of [this.player, ...this.npcs]) if (!f.saber.holstered && f.hasSaber) { f.hum = null; this.humStart(f); }
+    for (const f of this.fighters()) if (!f.saber.holstered && f.hasSaber && f.blade.lit !== false) { f.hum = null; this.humStart(f); }
   }
   onSwing(f, move) { const lv = f.saber.level; this.sfx.play(Math.random() < 0.5 ? 'swing1' : 'swing2', { pos: f.pos, vol: f.isPlayer ? 0.8 : 0.55, rate: (lv === 1 ? 1.12 : lv === 3 ? 0.88 : 1) * (f.saber.rageMul > 1 ? 1.1 : 1), vary: 0.1 }); }
   onThud(f) { this.sfxAt('hit1', f.pos, 0.7); this.dust(f.pos, 0.9, 10); if (f.isPlayer) this.shake(0.18); }
   onLand(f, impact) { if (impact > 8) { this.dust(f.pos, 0.6 + impact * 0.03, 8); } } // no camera shake: Jedi Outcast lands with a short LAND1 only
-  onDeath(f) { this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (f.isPlayer) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
+  onDeath(f) { this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (this.net) this.net.onDeath(f); if (f.isPlayer && !this.online) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
   endRound(state) { if (this.round.state === 'won' || this.round.state === 'lost') return; this.round = { state, t: 0 }; this.hud.banners.length = 0; } // the result overlay in hud.js replaces any banner
   onForceJump(f) { this.sfxAt('jump', f.pos, 0.9); this.sfxAt('jumpbuild', f.pos, 0.5); this.fx.ring({ p: [f.pos[0], 0.05, f.pos[2]], n: [0, 1, 0], r0: 0.3, r1: 2.2, life: 0.5, w: 0.14, c: [0.6, 0.85, 1, 0.9] }); this.dust(f.pos, 1.0, 14); if (f.isPlayer) this.shake(0.12); }
   dust(p, size = 0.8, n = 8) { for (let i = 0; i < n; i++) { const a = rnd(0, 6.28); this.fx.emit({ p: [p[0] + Math.cos(a) * 0.3, 0.08, p[2] + Math.sin(a) * 0.3], v: [Math.cos(a) * rnd(0.8, 2.6) * size, rnd(0.2, 0.9), Math.sin(a) * rnd(0.8, 2.6) * size], life: rnd(0.4, 0.9), size: rnd(0.12, 0.28), grow: 0.5, c0: [0.5, 0.48, 0.55, 0.22], c1: [0.4, 0.38, 0.45, 0], drag: 2.5 }); } }
@@ -135,13 +143,23 @@ export class Game {
   }
   flashLight(p, c, dur = 0.2) { this.flashes.push({ p: p.slice(), c, t: dur, max: dur }); if (this.flashes.length > 6) this.flashes.shift(); }
   burstHeal(f) { const p = f.pos; for (let i = 0; i < 30; i++) { const a = rnd(0, 6.28), r = rnd(0.2, 0.7); this.fx.emit({ p: [p[0] + Math.cos(a) * r, rnd(0.1, 1.2), p[2] + Math.sin(a) * r], v: [0, rnd(0.8, 2.2), 0], life: rnd(0.8, 1.4), size: rnd(0.04, 0.1), c0: [0.4, 1, 0.55, 0.9], c1: [0.2, 0.9, 0.4, 0] }); } this.fx.ring({ p: [p[0], 0.05, p[2]], n: [0, 1, 0], r0: 0.2, r1: 1.6, life: 0.9, w: 0.1, c: [0.35, 1, 0.5, 0.8] }); }
+  // every fighter in the arena: the player, the AI and (online) the other players' fighters
+  fighters() { return this.remotes && this.remotes.length ? [this.player, ...this.npcs, ...this.remotes] : [this.player, ...this.npcs]; }
+  foesOf(f) { return this.fighters().filter(o => o !== f && o.status !== 'dead' && hostile(f, o)); }
+  aiTarget(f) { // who an AI fights: the player offline; online the nearest fighter on the other side (kept unless one is 3 m closer)
+    if (!this.online) return this.player;
+    const foes = this.foesOf(f); if (!foes.length) return null; const d = o => Math.hypot(o.pos[0] - f.pos[0], o.pos[2] - f.pos[2]);
+    let best = foes.reduce((a, b) => (d(b) < d(a) ? b : a)); const cur = f.aiFoe && foes.includes(f.aiFoe) ? f.aiFoe : null;
+    if (cur && d(cur) < d(best) + 3) best = cur; f.aiFoe = best; return best;
+  }
   targets() {
+    if (this.online) { const out = this.foesOf(this.player).map(n => ({ type: 'npc', ref: n, center: () => n.chest() })); for (const b of this.world.bodies) out.push({ type: 'prop', ref: b, center: () => [b.pos[0], b.pos[1] + 0.5, b.pos[2]] }); return out; }
     const out = []; for (const n of this.npcs) if (n.status !== 'dead') out.push({ type: 'npc', ref: n, center: () => n.chest() });
     for (const b of this.world.bodies) out.push({ type: 'prop', ref: b, center: () => [b.pos[0], b.pos[1] + 0.5, b.pos[2]] }); return out;
   }
   // ---------------- Force rules glue (rules live in forcerules.js; this builds the state they need and applies the outcome)
   forceOf(f) { return f.isPlayer ? this.force : (f.force || null); }
-  forces() { const a = [this.force]; for (const n of this.npcs) if (n.force) a.push(n.force); return a; }
+  forces() { const a = [this.force]; for (const n of this.npcs) if (n.force) a.push(n.force); if (this.remotes) for (const r of this.remotes) if (r.force) a.push(r.force); return a; }
   gripperOf(f) { for (const F of this.forces()) if (F.holding === 'grip' && F.target && F.target.type === 'npc' && F.target.ref === f) return F; return null; }
   banner(text, col = [1, 1, 1], life = 1.5) { this.hud.banner(text, col, life); }
   gripSnap(f, fp, cost) { // state for gripBlocker() (ForceGrip)
@@ -160,6 +178,7 @@ export class Game {
   applyThrow(F, victim, pull, o = {}) {
     const att = F.p, kind = pull ? 'pull' : 'push', vp = victim.isPlayer, ap = att.isPlayer, VF = this.forceOf(victim);
     if (victim.status === 'dead' || victim.team === att.team) return null;
+    if (victim.remote && this.net) { this.net.rpc(victim, 'throw', [{ from: att, pull, lv: F.lv[kind], dmgScale: F.dmgScale ?? 1, dir: o.dir, dist: o.dist ?? 5, fall: o.fall, flatD: o.flatD }]); return null; } // resolved by that player's game
     const dist = o.dist ?? 5, fall = o.fall ?? clamp(1 - dist / 15, 0.2, 1), dir = o.dir;
     const def = this.defSnapshot(victim, att, pull);
     const res = resolveThrow({ attackerLevel: F.lv[kind], pull, def, dist, forceSpent: 20 });
@@ -216,17 +235,17 @@ export class Game {
     for (const w of this.world.bodies) { w.pos = w.home.slice(); w.vel = [0, 0, 0]; w.w = [0, 0, 0]; w.grounded = true; w.lifted = 0; w.rot = [0, Math.random() * 6, 0]; w.hp = 100; }
     this.combat.bolts.length = 0; this.arcs.length = 0; this.scorches = []; this.hud.msgs.length = 0; this.hud.dmg = 0; this.round = { state: 'intro', t: 0 }; this.hud.msg('Rematch');
   }
-  dispose() { this.disposed = true; try { this.input.dispose(); } catch (e) { } try { this.sfx.dispose(); } catch (e) { } }
+  dispose() { this.disposed = true; try { this.net && this.net.dispose(); } catch (e) { } try { this.input.dispose(); } catch (e) { } try { this.sfx.dispose(); } catch (e) { } }
   aimDir() { const c = this.cam; const cp = Math.cos(c.pitch), d = [Math.sin(c.yaw) * cp, -Math.sin(c.pitch), Math.cos(c.yaw) * cp]; const o = this.player.chest(); const pt = v3.addS(c.eye, d, c.dist + 14); return v3.norm([pt[0] - o[0], pt[1] - o[1], pt[2] - o[2]]); }
   combatContext(f) {
-    const foes = f.team === 'player' ? this.npcs.filter(n => n.team === 'enemy' && n.status !== 'dead') : f.team === 'enemy' && this.player.status !== 'dead' ? [this.player] : [];
+    const foes = this.online ? this.foesOf(f) : f.team === 'player' ? this.npcs.filter(n => n.team === 'enemy' && n.status !== 'dead') : f.team === 'enemy' && this.player.status !== 'dead' ? [this.player] : [];
     let front = false, behind = false; const fw = [Math.sin(f.yaw), Math.cos(f.yaw)];
     for (const e of foes) { const dx = e.pos[0] - f.pos[0], dz = e.pos[2] - f.pos[2], d = Math.hypot(dx, dz); if (d > 2.7 || d < 0.01) continue; const dot = (fw[0] * dx + fw[1] * dz) / d; if (dot > 0.5) front = true; else if (dot < -0.45 && d < 2.3) behind = true; }
     return { front, behind };
   }
   separate(f) {
     if (f.status === 'dead' || f.status === 'gripped' || f.status === 'flung') return;
-    for (const o of [this.player, ...this.npcs]) {
+    for (const o of this.fighters()) {
       if (o === f || o.status === 'dead' || o.status === 'gripped') continue; if (Math.abs(o.pos[1] - f.pos[1]) > 1.3) continue;
       const dx = f.pos[0] - o.pos[0], dz = f.pos[2] - o.pos[2], d = Math.hypot(dx, dz), m = f.radius + o.radius; if (d < m && d > 1e-4) { const k = (m - d) * 0.5; f.pos[0] += dx / d * k; f.pos[2] += dz / d * k; o.pos[0] -= dx / d * k; o.pos[2] -= dz / d * k; }
     }
@@ -253,7 +272,7 @@ export class Game {
     if (i.dx || i.dy) { c.yaw -= i.dx * i.sens; c.pitch += i.dy * i.sens; if (!h.help) { const pm = this.pendingMouse ??= [0, 0]; pm[0] += i.dx; pm[1] += i.dy; } }
     const ar = 2.2 * dt; if (i.held('ArrowLeft')) c.yaw += ar; if (i.held('ArrowRight')) c.yaw -= ar; if (i.held('ArrowUp')) c.pitch -= ar * 0.7; if (i.held('ArrowDown')) c.pitch += ar * 0.7;
     c.pitch = clamp(c.pitch, -0.5, 1.3);
-    if (this.duel || this.missionDef) { // wheel / [ ] cycle the selected Force power; Ctrl+wheel or - = zoom
+    if (this.duel || this.online || this.missionDef) { // wheel / [ ] cycle the selected Force power; Ctrl+wheel or - = zoom
       if (i.wheel && !h.help) this.force.select(Math.max(-3, Math.min(3, i.wheel))); if (i.pressed('BracketRight') && !h.help) this.force.select(1); if (i.pressed('BracketLeft') && !h.help) this.force.select(-1);
       c.dist = clamp(c.dist + (i.zoom + (i.held('Equal') ? -dt * 4 : 0) + (i.held('Minus') ? dt * 4 : 0)) * 0.35, 1.9, 8.5);
     } else c.dist = clamp(c.dist + (i.wheel + i.zoom) * 0.35, 1.9, 8.5);
@@ -297,7 +316,7 @@ export class Game {
   }
   // NPC torso pitch toward their opponent so attacks track a crouching or jumping target (torso aim, cg_players.c)
   aimPitchToward(n) {
-    const T = n.team === 'enemy' ? this.player : null; if (!T || T.status === 'dead' || n.status !== 'normal') return 0;
+    const T = this.online ? this.aiTarget(n) : n.team === 'enemy' ? this.player : null; if (!T || T.status === 'dead' || n.status !== 'normal') return 0;
     const d = Math.hypot(T.pos[0] - n.pos[0], T.pos[2] - n.pos[2]); if (d > 12) return 0;
     return clamp(-Math.atan2(T.chest()[1] - n.chest()[1], Math.max(d, 0.6)), -0.6, 1.2);
   }
@@ -312,6 +331,7 @@ export class Game {
   // ---------------- simulation
   step(dt) {
     this.t += dt; this.dtFrame = dt; const p = this.player;
+    if (this.net) this.net.beforeStep(dt);
     this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.inp); if (this.playerWeapon) this.updatePistol(dt);
     for (const n of this.npcs) {
       const brain = BRAINS[n.kind]; n.aimPitch = this.aimPitchToward(n);
@@ -325,8 +345,9 @@ export class Game {
     if (p.healFlash > 0 && this.force.holding !== 'heal') p.healFlash = Math.max(0, p.healFlash - dt);
     // brazier fire
     this.fireT -= dt; if (this.fireT <= 0) { this.fireT = 0.03; for (const b of this.world.braziers) this.fx.emit({ p: [b[0] + rnd(-0.15, 0.15), b[1], b[2] + rnd(-0.15, 0.15)], v: [rnd(-0.2, 0.2), rnd(0.8, 1.6), rnd(-0.2, 0.2)], life: rnd(0.4, 0.8), size: rnd(0.08, 0.18), grow: -0.1, c0: [1, 0.55, 0.15, 0.55], c1: [0.8, 0.1, 0.02, 0] }); }
+    if (this.net) this.net.afterStep(dt); // snapshot of our fighters, sent as soon as the step is done
     // saber hum volume by distance
-    for (const f of [p, ...this.npcs]) if (f.hum && f.hum.set) { const d = v3.dist(f.pos, this.cam.eye); f.hum.set((f.humBase || 0.1) / (1 + d * 0.25) * (this.sfx.muted ? 0 : 1)); }
+    for (const f of this.fighters()) if (f.hum && f.hum.set) { const d = v3.dist(f.pos, this.cam.eye); f.hum.set((f.humBase || 0.1) / (1 + d * 0.25) * (this.sfx.muted ? 0 : 1)); }
   }
   update(dt) {
     dt = Math.min(dt, 0.1); this.fps += (1 / Math.max(dt, 1e-3) - this.fps) * 0.08;
@@ -335,6 +356,7 @@ export class Game {
     if (this.duel && this.hud.help) this.acc = 0; // controls panel open: the duel waits
     while (this.acc >= STEP && n++ < 6) { this.step(STEP); this.acc -= STEP; }
     if (n >= 6) this.acc = 0;
+    if (this.net) this.net.updatePuppets(dt); // other players every rendered frame: a snapshot shows as soon as it arrives, not at our next 60 Hz step
     this.updateCamera(dt); this.input.endFrame();
   }
   updateCamera(dt) {
@@ -355,7 +377,7 @@ export class Game {
     bl(P, 0, 0.75 * P.blade.len);
     let fl = null; if (this.lightFlash > 0.02) fl = { p: this.lightFlashPos, c: [0.35 * this.lightFlash * 2, 0.55 * this.lightFlash * 2, 1.0 * this.lightFlash * 2], r: 10 }; else if (this.flashes.length) { const f = this.flashes[this.flashes.length - 1]; const k = f.t / f.max * 2.2; fl = { p: f.p, c: [f.c[0] * k, f.c[1] * k, f.c[2] * k], r: 6 }; }
     if (fl) { L[1].p = fl.p; L[1].r = fl.r; L[1].c = fl.c; }
-    let best = null, bd = 1e9; for (const n of this.npcs) if (n.hasSaber && n.blade.len > 0.3) { const d = v3.dist(n.pos, P.pos); if (d < bd) { bd = d; best = n; } } if (best) bl(best, 2, 0.7 * best.blade.len);
+    let best = null, bd = 1e9; for (const n of this.fighters()) if (n !== P && n.hasSaber && n.blade.len > 0.3) { const d = v3.dist(n.pos, P.pos); if (d < bd) { bd = d; best = n; } } if (best) bl(best, 2, 0.7 * best.blade.len);
     let bb = null, bbd = 1e9; for (const b of this.world.braziers) { const d = Math.hypot(b[0] - P.pos[0], b[2] - P.pos[2]); if (d < bbd) { bbd = d; bb = b; } }
     if (bb) { L[3].p = [bb[0], bb[1] + 0.4, bb[2]]; L[3].r = 14; const fk = 0.85 + 0.15 * Math.sin(this.t * 17) * Math.sin(this.t * 7.3); L[3].c = [1.5 * fk, 0.75 * fk, 0.28 * fk]; }
     else if (this.world.lamps.length) { // authored levels: the nearest lamp lights the scene around the player
@@ -379,13 +401,13 @@ export class Game {
   render() {
     const R = this.R, c = this.cam; R.resize(); R.time = this.t; this.setLights(); R.setCamera(c.eye, c.target, c.fov); R.begin();
     this.world.draw();
-    const all = [this.player, ...this.npcs]; for (const f of all) this.drawFighter(f);
+    const all = this.fighters(); for (const f of all) this.drawFighter(f);
     this.combat.drawRemote(R);
     for (const b of this.world.braziers) R.billboard([b[0], b[1] + 0.35, b[2]], 0.9 + 0.1 * Math.sin(this.t * 13 + b[0]), [1, 0.5, 0.15, 0.22], 0);
     if (this.scorches) for (const m of this.scorches) { const a = Math.min(1, (8 - m.t) / 2); this.fx.disc(m.p, m.r, [0.04, 0.03, 0.03, 0.55 * a], 1); if (m.t < 0.6) this.fx.disc(m.p, m.r * 0.7, [m.c[0], m.c[1], m.c[2], 0.9 * (1 - m.t / 0.6)], 0); }
     this.fx.draw();
     for (const f of all) f.blade.draw(R, 1 + 0.05 * Math.sin(this.t * 41 + (f.humId || 0) * 2));
-    this.force.draw(R); for (const n of this.npcs) if (n.force) n.force.draw(R); this.drawArcs(R); this.combat.drawBolts(R); if (this.director) this.director.draw(R);
+    this.force.draw(R); for (const n of this.npcs) if (n.force) n.force.draw(R); if (this.remotes) for (const n of this.remotes) if (n.force) n.force.draw(R); this.drawArcs(R); this.combat.drawBolts(R); if (this.director) this.director.draw(R);
     R.flushFx(); this.hud.draw(this, this.dtFrame);
   }
   frame(nowMs) { const now = nowMs / 1000; const dt = this.last ? now - this.last : STEP; this.last = now; this.update(dt); this.render(); }

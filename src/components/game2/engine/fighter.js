@@ -181,7 +181,7 @@ export class Fighter {
   }
   die(from, opts = {}) {
     if (this.force && this.force.releaseAll) this.force.releaseAll(true);
-    this.hp = 0; this.endForce(); this.cancelAttackState(); const wasFlung = this.status === 'flung'; this.status = 'dead'; this.statusT = 0; this.deadAt = this.now; if (!this.saber.holstered) { this.saber.holstered = true; this.blade.set(false); this.g.humStop && this.g.humStop(this); }
+    this.hp = 0; this.killedBy = from || null; this.endForce(); this.cancelAttackState(); const wasFlung = this.status === 'flung'; this.status = 'dead'; this.statusT = 0; this.deadAt = this.now; if (!this.saber.holstered) { this.saber.holstered = true; this.blade.set(false); this.g.humStop && this.g.humStop(this); }
     if (!wasFlung) this.playWhole(opts.deathAnim || DEATHS[Math.floor(Math.random() * DEATHS.length)], { blend: 0.08 }); else this.playWhole('BOTH_KNOCKDOWN1', { blend: 0.05 });
     this.g.onDeath && this.g.onDeath(this);
   }

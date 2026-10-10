@@ -24,11 +24,15 @@ Both modes share these rules; each line names the Raven source it follows.
 | The torso follows the view: the view yaw and 75% of the view pitch are spread over `lower_lumbar` 30% · `upper_lumbar` 30% · `thoracic` 40%, so the mouse steers the swing and looking down drives it toward the ground. NPCs pitch toward their target | `cg_players.c` `CG_G2PlayerAngles` |
 | No strafe cycles: sideways and diagonal movement play run / walk with the legs turned up to 60° toward travel; backpedalling uses the back cycles. Standing, the legs hold until the view is 40° away, swing at 300°/s and never trail by more than 90° (turn-in-place steps while they catch up) | `bg_pmove.c` `PM_Footsteps`, `CG_SwingAngles` |
 | Story mode Bryar pistol: 10 damage, 40 m/s bolt, 400 ms between shots; hold alt fire to charge in 200 ms steps (up to 10 x 5 x 1.7 = 85) | `bg_weapons.c`, `g_weapon.c` `WP_FireBryarPistol` |
+| A strike is committed: once the attack itself plays (after the wind-up) the mouse no longer turns or pitches the body until it ends. During the wind-up a deliberate mouse flick (60 px) re-aims it: down = vertical, down-right / down-left = diagonal going right / left, sideways = horizontal | Game 2 addition (mouse-directed swings) |
+| Standing still, a swing plays on the whole body as authored. Over running or jumping legs the torso keeps the attack's own hip turn (`G2Rig.matchHips`), so a vertical chop lands in front instead of ~70 degrees to the side | Game 2 addition |
+| Leap slash: jump held in the first 500 ms of a strong attack with the feet within 32 units (0.8 m) of the floor; no move input during it, no landing animation | `bg_pmove.c` `PM_CheckJump`, `PM_CrashLand`, `bg_saber.c` `PM_SaberJumpAttackMove` |
+| A slash from the air holds its strike until 100 ms after landing and leans into the ground; a downward slash aimed at the floor does the same. A blade that reaches the floor sparks, plays the wall-hit sound and leaves a scorch | `w_saber.c` world trace + Game 2 addition |
 
 ## Start menu: Single Player and Multiplayer
 
-Game 2 opens on a menu. **Multiplayer** is the Dark Jedi duel described here (played against the AI; there is no
-online play yet). **Single Player** runs story missions on the *same* combat code: the saber, Force, block, damage
+Game 2 opens on a menu. **Multiplayer** opens the online lobby (below); its *Practice* button starts the offline
+Dark Jedi duel described here. **Single Player** runs story missions on the *same* combat code: the saber, Force, block, damage
 and bolt rules above are shared, not copied. A mission only adds a level, objectives and enemy behaviour around them.
 
 | Module | What it does |
@@ -45,6 +49,29 @@ Brains only press the same buttons the player does (`Fighter.cmd`), so every cha
 To add a mission, write `missions/<name>.js` (layout + groups + objectives) and register it in `missions/index.js`.
 `tests/game2-mission.test.mjs` builds the level headless, checks navigation and doors, and plays the mission
 through the real director, including a checkpoint restart.
+
+## Online multiplayer: Jedi vs Dark Jedi
+
+Up to 10 players in the Lightsaber Training arena. Each player picks **Jedi** (blue blade) or **Dark Jedi** (red blade);
+the host adds 0 to 3 AI Reborn on the Dark side. Rounds: a side wins when the other has nobody standing; everyone
+respawns for the next round. The HUD shows the score, ping, players, kills / deaths and a kill feed.
+
+| Module | What it does |
+| --- | --- |
+| `Game2Lobby.jsx` | Callsign, side, room list, host a room (name, AI count), offline practice. Needs a signed-in account |
+| `net/signaling.js` | Room list and the WebRTC offer / answer through the app backend: `base44/entities/Game2Room.jsonc` and `Game2Signal.jsonc` (the pattern the voice chat uses with `VoiceSignal`). `?g2net=local` uses the tabs of one browser instead, for testing |
+| `net/mesh.js` | One WebRTC connection per pair of players (full mesh, no server hop). Channel `u` (unordered, no retransmits) for snapshots and pings, `r` (reliable) for hits, Force and rounds |
+| `net/session.js` | Host / guests, join handshake, 10-player cap, sides and spawn slots, relay through the host when two players cannot link directly |
+| `engine/netgame.js` | Game sync: snapshots (60/s, 30/s above 6 players), other players' fighters, remote hits and Force, host-run AI and rounds, online HUD |
+
+Authority and latency: every player simulates their own fighter, so moves, swings and Force answer on the next frame and
+never wait for the network. Other fighters are shown at their extrapolated current position and updated every rendered
+frame. A blade contact is resolved by the attacker and applied by the victim's game; a push / pull is resolved by the
+victim's game with its exact state (counters and blocks per `w_force.c`). Measured on one machine over a real WebRTC link:
+0.45 ms round trip, a snapshot reaches the other player 1.3 ms after the action and shows on their screen within one frame
+(6 ms at 144 Hz); sending costs under 0.05 ms per step. Over the internet the ping is the distance between the players
+(typically under 65 ms in the same region). ICE servers come from the `getIceServers` backend function (STUN, plus TURN
+when configured; without TURN, two players behind strict NATs cannot connect directly).
 
 ## Controls
 
