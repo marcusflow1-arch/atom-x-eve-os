@@ -123,7 +123,21 @@ function Game2Session({ choice, online, onExit }) {
           engineOptions = { mode: 'online', sfxBase: `${ASSET_BASE}sfx/`, net: { ...online, signaling, iceServers } };
         }
         game = new Game(renderer, assets, canvas, hud, engineOptions);
-        setStatus({ phase: 'ready', text: '' });
+        if (choice !== 'online') setStatus({ phase: 'ready', text: '' });
+        // Online play must not look connected until the shared arena welcomes this player.
+        if (choice === 'online') {
+          setStatus({ phase: 'loading', text: 'Connecting to the shared arena…' });
+          const checkConnection = () => {
+            if (cancelled || !game) return;
+            const net = game.net;
+            if (net?.ended) setStatus({ phase: 'error', text: String(net.ended) });
+            else if (net?.me && net?.session?.state === 'ready') setStatus({ phase: 'ready', text: '' });
+            else if (net?.me) setStatus({ phase: 'ready', text: '' });
+            else setStatus({ phase: 'loading', text: net?.statusText || 'Connecting to the shared arena…' });
+          };
+          const connectionTimer = setInterval(checkConnection, 250);
+          game._connectionTimer = connectionTimer;
+        }
         canvas.focus({ preventScroll: true });
         const loop = (time) => {
           if (cancelled) return;
@@ -140,6 +154,7 @@ function Game2Session({ choice, online, onExit }) {
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
+      if (game?._connectionTimer) clearInterval(game._connectionTimer);
       if (game) game.dispose();
       try {
         renderer?.gl?.getExtension('WEBGL_lose_context')?.loseContext();
