@@ -53,7 +53,7 @@ export class Force {
   // ---------------- helpers
   say(t) { if (!this.npc) this.g.hud.msg(t); }
   shake(a) { if (!this.npc) this.g.shake(a); }
-  alive() { const s = this.p.status; return s === 'normal' || s === 'roll' || s === 'gripped'; }
+  alive() { const s = this.p.status; return s === 'normal' || s === 'roll' || s === 'gripped' || s === 'down' || s === 'getup'; }
   anim(name, o) { if (this.p.status === 'gripped') return; this.p.playForce(name, o); } // a gripped fighter keeps the choke pose
   canJump() { return this.fp >= 10; }
   use(cost) { if (this.fp < cost) { this.say('Not enough Force'); return false; } this.fp -= cost; return true; }
@@ -84,10 +84,10 @@ export class Force {
     if (p.status === 'dead') { this.releaseAll(true); return; }
     const free = p.status === 'normal' || p.status === 'roll', gripped = p.status === 'gripped';
     if (!this.npc && input) {
-      if (this.gcd <= 0 && !this.holding && (free || gripped)) {
+      if (this.gcd <= 0 && !this.holding && (free || gripped || p.status === 'down' || p.status === 'getup')) {
         const shortcut = FORCE_QUICK_BINDINGS.find(({ code, id }) => this.list.includes(id) && input.pressed(code));
-        if (shortcut) this.tryCast(shortcut.id, shortcut.code);
-        else if (input.pressed('KeyF')) this.tryCast(this.selId(), 'KeyF');
+        if (shortcut && (free || gripped || ['push', 'pull'].includes(shortcut.id))) this.tryCast(shortcut.id, shortcut.code);
+        else if (input.pressed('KeyF') && (free || gripped || ['push', 'pull'].includes(this.selId()))) this.tryCast(this.selId(), 'KeyF');
       }
       if (input.pressed('KeyJ')) { p.jumpLevel = p.jumpLevel % 3 + 1; g.hud.msg('Force Jump level ' + p.jumpLevel); }
     }
@@ -112,6 +112,7 @@ export class Force {
   }
   later(sec, fn) { this.pending.push({ t: this.g.t + sec, fn }); }
   tryCast(id, via) {
+    if ((this.p.status === 'down' || this.p.status === 'getup') && id !== 'push' && id !== 'pull') return false;
     if (this.p.status === 'gripped' && !GRIP_ALLOWED.has(id)) { this.say('Gripped: only Push, Pull, Absorb or Protect'); this.gcd = 0.3; return false; }
     return this.activate(id, via);
   }
@@ -293,7 +294,11 @@ export class Force {
     g.sfxAt('lightning', p.pos, 1); this.loops.hold = g.sfx.loop('lightning2', { vol: this.npc ? 0.18 : 0.35 }); this.regenBolts(); this.hitT = 0;
   }
   regenBolts() {
-    const g = this.g, hands = this.hands(); const d = this.aim(); const list = this.cone(11, 52).slice(0, 3); this.bolts.length = 0;
+    const g = this.g, hands = this.hands(); const d = this.aim();
+    // Lightning locks onto one hostile target in the player's forward aim cone,
+    // rather than indiscriminately damaging everything inside a radius.
+    const list = this.cone(14, 65, { npcOnly: true }).filter(h => hostile(this.p, h.t.ref)).slice(0, 1);
+    this.bolts.length = 0;
     const mk = (a, b, w = 1, jit = 0.22) => { const pts = bolt(a, b, 9, jit); const br = []; if (Math.random() < 0.6) { const k = 2 + Math.floor(Math.random() * 5), s = pts[k]; const e = v3.addS(s, v3.norm([rnd(-1, 1), rnd(-0.5, 1), rnd(-1, 1)]), rnd(0.5, 1.4)); br.push(bolt(s, e, 4, 0.12)); } this.bolts.push({ pts, br, w }); };
     if (list.length) { for (const h of list) { const c = h.t.center(); mk(hands[0], c, 1); mk(hands[1], v3.addS(c, [rnd(-0.2, 0.2), rnd(-0.3, 0.3), rnd(-0.2, 0.2)], 1), 0.9); } }
     else { for (let i = 0; i < 3; i++) { const e = v3.addS(v3.addS(hands[i % 2], d, rnd(3, 6.5)), [rnd(-2.2, 2.2), rnd(-1.6, 0.8), rnd(-2.2, 2.2)], 1); e[1] = Math.max(0.05, e[1]); mk(hands[i % 2], e, 0.9, 0.3); } }
@@ -303,6 +308,9 @@ export class Force {
     const g = this.g, p = this.p; this.fp -= 14 * dt; this.lt += dt;
     if (this.ltPhase === 'start' && this.lt > 0.16) { this.ltPhase = 'hold'; this.anim('BOTH_FORCELIGHTNING_HOLD', { durMs: 300, hold: true, loop: true }); }
     this.hitT -= dt; const hands = this.hands();
+    // Re-evaluate the lock as opponents move or die; the visual bolts use the
+    // same target selection on their next refresh.
+    this.ltTargets = this.cone(14, 65, { npcOnly: true }).filter(h => hostile(this.p, h.t.ref)).slice(0, 1);
     for (const h of (this.ltTargets || [])) {
       const t = h.t;
       if (t.type === 'npc') {
