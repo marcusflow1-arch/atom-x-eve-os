@@ -1,11 +1,13 @@
 import React,{useCallback,useEffect,useRef,useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {ArrowLeft,CarFront,Flag,Music2,Play,Upload,Volume2,VolumeX,Film,SkipForward,RotateCcw,Gauge} from 'lucide-react';
+import {ArrowLeft,CarFront,Flag,Music2,Play,Pause,SkipBack,Upload,Volume2,VolumeX,Film,SkipForward,RotateCcw,Gauge} from 'lucide-react';
 import {createPageUrl} from '@/utils';
 import Game3Scene from '@/components/game3/Game3Scene';
+import mediaManifest from '@/components/game3/mediaManifest.json';
 import {CARS,STORY_SCENES,makeRaceState,applyPerfectLaunch,shiftGear,activateGhost} from '@/components/game3/physics';
 
-const TRACKS=['Set It Off','ASAP','T.I. — About The Money (ft. Young Thug)','T.I. — U Don’t Know Me','Lil Durk — All My Life (ft. J. Cole)','Lukas Graham — 7 Years','James Arthur — Say You Won’t Let Go','Juice WRLD — Bandit','Polo G — RAPSTAR','LG Malique & Lukas Graham — Seven Years'];
+const TRACKS=mediaManifest.filter(item=>item.kind==='music');
+const VIDEOS=mediaManifest.filter(item=>item.kind==='video');
 const buttonBase='rounded-lg border px-3 py-2 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-400';
 const cardBase='rounded-2xl border border-white/10 bg-[#101c2c]/80 p-4';
 const useUrlFile = () => {
@@ -74,6 +76,8 @@ export default function Game3(){
  const [audioUrl,setAudioUrl]=useUrlFile();
  const [videoUrl,setVideoUrl]=useUrlFile();
  const [soundName,setSoundName]=useState('');
+ const [trackIndex,setTrackIndex]=useState(Math.max(0,TRACKS.findIndex(t=>t.title==='Set It Off.mp3')));
+ const [musicVolume,setMusicVolume]=useState(0.85);
  const [isPlaying,setPlaying]=useState(false);
  const [muted,setMuted]=useState(false);
  const [storyIndex,setStoryIndex]=useState(-1);
@@ -87,7 +91,9 @@ export default function Game3(){
  const goClock=useRef(0);const countdownTimer=useRef(null);const rev=useRef(0);
  const car=CARS.find(c=>c.id===selectedCar)||CARS[0];
  const scene=storyIndex>=0?STORY_SCENES[storyIndex]:null;
- const musicLevel=muted?0:scene?scene.kind==='dialogue'?0.12:0.86:race.current.phase==='race'?0.71:0.44;
+ const soundSource=audioUrl||TRACKS[trackIndex]?.url||'';
+ const displayedTrack=soundName||TRACKS[trackIndex]?.title||'No song selected';
+ const musicLevel=muted?0:(scene?scene.kind==='dialogue'?0.13:0.9:race.current.phase==='race'?0.78:0.5)*musicVolume;
  useEffect(()=>{
   input.current.shakeEnabled=shakeEnabled;
  },[shakeEnabled]);
@@ -146,13 +152,18 @@ export default function Game3(){
   return()=>clearInterval(id);
  },[count]);
  const onAudioFile=(file)=>{if(!file)return;setAudioUrl(file);setSoundName(file.name);setPlaying(true);};
+ const chooseTrack=(index)=>{setAudioUrl(null);setSoundName('');setTrackIndex((index+TRACKS.length)%TRACKS.length);};
+ const skipTrack=(direction)=>chooseTrack(trackIndex+direction);
  const onVideoFile=(file)=>{if(file)setVideoUrl(file);};
  useEffect(()=>{
-  const a=audio.current;if(!a||!audioUrl)return;
-  a.load();a.play().then(()=>setPlaying(true)).catch(()=>setPlaying(false));
- },[audioUrl]);
+  const a=audio.current;if(!a||!soundSource)return;
+  a.load();
+  if(isPlaying) a.play().catch(()=>setPlaying(false));
+ // The track changes independently from the user's explicit play/pause intent.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[soundSource]);
  const toggleAudio=()=>{
-  const a=audio.current;if(!a||!audioUrl)return;
+  const a=audio.current;if(!a||!soundSource)return;
   if(a.paused)a.play().then(()=>setPlaying(true)).catch(()=>{});else{a.pause();setPlaying(false);}
  };
  const enterStory=()=>{setStoryIndex(0);setTab('story');};
@@ -166,10 +177,11 @@ export default function Game3(){
    <button onClick={()=>navigate(createPageUrl('LunaTemplate'))} className={buttonBase+' flex items-center gap-1 border-white/15 bg-white/5 text-white/75 hover:bg-white/10'}><ArrowLeft size={15}/> Luna</button>
    <div className="min-w-0 flex-1"><div className="truncate text-sm font-bold tracking-wider">GAME 3 <span className="text-cyan-300">/ NIGHT RUN</span></div><div className="hidden text-[10px] text-white/45 sm:block">Original street-racing prototype · Story / Garage / Race</div></div>
    <div className="hidden gap-1 sm:flex">{buttons.map(b=><button key={b.id} onClick={()=>setTab(b.id)} className={buttonBase+' flex items-center gap-1.5 '+(tab===b.id?'border-cyan-400/40 bg-cyan-400/20 text-cyan-200':'border-white/10 bg-white/5 text-white/60 hover:bg-white/10')}><b.Icon size={14}/>{b.title}</button>)}</div>
+   <div className="hidden max-w-[225px] items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 p-1 md:flex"><button title="Previous song" aria-label="Previous song" onClick={()=>skipTrack(-1)} className="p-1 text-cyan-200"><SkipBack size={16}/></button><button title={isPlaying?'Pause':'Play'} aria-label={isPlaying?'Pause song':'Play song'} onClick={toggleAudio} className="p-1 text-cyan-200">{isPlaying?<Pause size={16}/>:<Play size={16}/>}</button><button title="Next song" aria-label="Next song" onClick={()=>skipTrack(1)} className="p-1 text-cyan-200"><SkipForward size={16}/></button><span title={displayedTrack} className="min-w-0 truncate text-[10px] text-white/60">{displayedTrack.replace(/\.mp3$/i,'')}</span></div>
    <button aria-label="Toggle music" onClick={()=>setMuted(x=>!x)} className="rounded-lg border border-white/10 p-2 text-cyan-200">{muted?<VolumeX size={17}/>:<Volume2 size={17}/>}</button>
   </header>
   <div className="flex shrink-0 gap-1 border-b border-white/10 bg-[#081321] p-2 sm:hidden">{buttons.map(b=><button key={b.id} onClick={()=>setTab(b.id)} className={'flex-1 rounded-lg px-2 py-2 text-xs '+(tab===b.id?'bg-cyan-500/20 text-cyan-300':'text-white/60')}>{b.title}</button>)}</div>
-  <audio ref={audio} src={audioUrl||undefined} loop preload="auto"/>
+  <audio ref={audio} src={soundSource||undefined} preload="metadata" onEnded={()=>skipTrack(1)} onError={()=>setPlaying(false)}/>
   <div className="relative min-h-0 flex-1">
    <div className="absolute inset-0"><Game3Scene stateRef={race} inputRef={input} car={{...car,color:paint}} carSrc={modelUrls[car.id]||'/game3/models/'+car.file} onSnapshot={setSnapshot}/></div>
    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#03101a]/50 via-transparent to-[#03101a]/50"/>
