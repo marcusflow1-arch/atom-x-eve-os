@@ -65,6 +65,9 @@ export class Game {
     this.force = new Force(this, this.player, { list: this.forceMenu ? SELECT_ORDER : SELECT_ALL }); this.player.force = this.force; this.combat = new Combat(this);
     this.world.onThud = b => { if (b.vel[1] < -4) this.sfxAt('hit1', b.pos, 0.5); };
     this.populate();
+    if (this.missionDef) { // story mode: Kyle carries the Bryar pistol and his lightsaber (Q switches)
+      this.pistol = { cool: 0, charge: 0 }; this.playerWeapon = 'bryar'; this.player.gun = true; this.player.weaponPose = 'TORSO_WEAPONREADY2';
+    }
     this.cam = { yaw: startYaw, pitch: 0.2, dist: 3.7, pos: [this.playerSpawn[0], this.playerSpawn[1] + 1.4, this.playerSpawn[2]], eye: [this.playerSpawn[0], this.playerSpawn[1] + 2, this.playerSpawn[2] - 4], target: [this.playerSpawn[0], this.playerSpawn[1] + 1.4, this.playerSpawn[2]], fov: 62 * Math.PI / 180 };
     this.firstSub = true;
     const I = this.input;
@@ -228,6 +231,7 @@ export class Game {
     c.fwd = (i.held('KeyW') ? 1 : 0) - (i.held('KeyS') ? 1 : 0); c.right = (i.held('KeyD') ? 1 : 0) - (i.held('KeyA') ? 1 : 0);
     c.aimPitch = this.cam.pitch; c.walk = i.held('ShiftLeft') || i.held('ShiftRight'); c.crouch = i.held('KeyC'); c.attack = !!i.btn[0]; c.alt = !!i.btn[2]; c.jump = i.held('Space');
     c.up = c.jump ? 1 : c.crouch ? -1 : 0; c.jumpPressed = this.firstSub && i.pressed('Space'); c.crouchPressed = this.firstSub && i.pressed('KeyC');
+    if (this.playerWeapon === 'bryar') { c.attack = false; c.alt = false; } // the mouse buttons fire the pistol instead (updatePistol)
     if (p.status === 'normal' || p.status === 'roll') p.targetYaw = this.cam.yaw;
   }
   frameInput(dt) {
@@ -248,13 +252,45 @@ export class Game {
     if (this.director) { if (this.director.frameInput(i)) return; if (p.status === 'dead') return; }
     else if (this.duel) { if ((this.round.state === 'won' || this.round.state === 'lost') && this.round.t > 0.8 && i.pressed('Enter')) { this.resetDuel(); return; } if (p.status === 'dead') return; }
     else if (p.status === 'dead') { if (i.pressed('Enter') || this.t - p.deadAt > 12) this.respawnPlayer(); return; }
-    if (i.pressed('KeyR')) p.toggleSaber();
+    if (i.pressed('KeyR')) { if (this.playerWeapon === 'bryar') this.switchWeapon('saber'); else p.toggleSaber(); }
+    if (i.pressed('KeyQ') && this.playerWeapon) this.switchWeapon();
     if (i.pressed('Tab')) { p.setStyle(p.saber.level % 3 + 1); h.msg('Saber style: ' + STYLE_NAMES[p.saber.level]); }
     if (i.btnPressed[2] && !p.saber.holstered && p.status === 'normal') { if (p.throwSaber(this.aimDir())) h.msg('Saber throw'); }
     if (p.status === 'normal' && (i.pressed('KeyF') || FORCE_QUICK_BINDINGS.some(({ code }) => i.pressed(code)))) p.yaw = p.targetYaw = c.yaw; // snap to aim on either cast path
   }
   respawnPlayer() {
     const p = this.player; this.force.releaseAll(); this.force.fp = this.force.max; p.revive(this.playerSpawn.slice()); p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1; p.blade.set(false); p.blade.len = 0; p.yaw = p.targetYaw = 0; this.cam.yaw = 0; this.cam.pitch = 0.2; this.hud.msg('You rise again');
+  }
+  // ---------------- weapons (story mode)
+  switchWeapon(to) {
+    const p = this.player; to = to || (this.playerWeapon === 'saber' ? 'bryar' : 'saber'); if (to === this.playerWeapon || p.status !== 'normal' || p.thrown) return;
+    if (to === 'saber') { this.playerWeapon = 'saber'; p.gun = false; p.weaponPose = null; if (p.saber.holstered) p.toggleSaber(); this.hud.msg('Lightsaber'); }
+    else { const wasOut = !p.saber.holstered; if (wasOut) p.toggleSaber(); this.playerWeapon = 'bryar'; p.after(wasOut ? 0.62 : 0, () => { if (this.playerWeapon === 'bryar') { p.gun = true; p.weaponPose = 'TORSO_WEAPONREADY2'; } }); this.hud.msg('Bryar pistol'); }
+  }
+  // Bryar pistol (bg_weapons.c / g_weapon.c): 10 damage, 40 m/s bolt, one shot per 400 ms; hold alt fire to charge
+  // in 200 ms steps (1-5); a charged bolt deals 10 x count x 1.7 (x1.5 for a single step).
+  updatePistol(dt) {
+    const p = this.player, i = this.input, W = this.pistol; W.cool -= dt;
+    if (this.playerWeapon !== 'bryar' || !p.gun || p.status !== 'normal' || this.hud.help) { W.charge = 0; return; }
+    if (i.btn[2]) { W.charge = Math.min(1.5, W.charge + dt); return; }
+    if (W.charge > 0) { const n = clamp(Math.floor(W.charge / 0.2), 1, 5); W.charge = 0; W.cool = 0; this.firePistol(n); return; }
+    if (i.btn[0] && W.cool <= 0) this.firePistol(0);
+  }
+  firePistol(charge) {
+    const p = this.player; this.pistol.cool = 0.4; p.yaw = p.targetYaw = this.cam.yaw;
+    const dmg = charge > 1 ? 10 * charge * 1.7 : charge === 1 ? 15 : 10;
+    p.playForce('BOTH_ATTACK2', { durMs: 300 });
+    this.combat.shoot(p, this.aimPoint(), { dmg, err: 0.003, speed: 40, vol: 0.45, pitch: charge ? 0.75 : 1.15, col: charge ? [1, 0.78, 0.35] : [1, 0.32, 0.16] });
+  }
+  aimPoint() { // where the crosshair points: camera ray clipped by the level
+    const c = this.cam, cp = Math.cos(c.pitch), d = [Math.sin(c.yaw) * cp, -Math.sin(c.pitch), Math.cos(c.yaw) * cp], far = v3.addS(c.eye, d, 80);
+    const t = this.world.space ? this.world.space.raycast(c.eye, far) : null; return t === null ? far : v3.lerp(c.eye, far, Math.max(0.02, t));
+  }
+  // NPC torso pitch toward their opponent so attacks track a crouching or jumping target (torso aim, cg_players.c)
+  aimPitchToward(n) {
+    const T = n.team === 'enemy' ? this.player : null; if (!T || T.status === 'dead' || n.status !== 'normal') return 0;
+    const d = Math.hypot(T.pos[0] - n.pos[0], T.pos[2] - n.pos[2]); if (d > 12) return 0;
+    return clamp(-Math.atan2(T.chest()[1] - n.chest()[1], Math.max(d, 0.6)), -0.6, 1.2);
   }
   respawnPlayerAt(pos, yaw = 0) { // mission checkpoints: full health and Force, saber holstered
     const p = this.player; this.force.reset(); p.revive(pos.slice()); p.status = 'normal'; p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1;
@@ -267,9 +303,9 @@ export class Game {
   // ---------------- simulation
   step(dt) {
     this.t += dt; this.dtFrame = dt; const p = this.player;
-    this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.inp);
+    this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.inp); if (this.playerWeapon) this.updatePistol(dt);
     for (const n of this.npcs) {
-      const brain = BRAINS[n.kind];
+      const brain = BRAINS[n.kind]; n.aimPitch = this.aimPitchToward(n);
       if (this.aiOff) { clearCmd(n.cmd); } else if (brain) brain(this, n, dt);
       n.update(dt); if (n.force) n.force.update(dt); if (n.healFlash > 0) n.healFlash = Math.max(0, n.healFlash - dt);
       if (n.status === 'dead' && this.t - n.deadAt > 8 && this.mode === 'explorer') this.respawnNpc(n);
@@ -327,7 +363,7 @@ export class Game {
     const far = !f.isPlayer && v3.dist(this.cam.eye, f.pos) > 9;
     R.drawSkinned(far ? this.lodMesh : this.bodyMesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha });
     if (f.hasSaber && f.hilt !== 'none') R.drawMesh(this.hiltMesh, f.hiltMat, { spec: 0.7 });
-    else if (!f.hasSaber && f.gun) { const bm = a.boneMatrix(this.attach.grip.bone); const loc = m4.trs(this.attach.grip.t, this.attach.grip.q, [1, 1, 1]); R.drawMesh(this.gunMesh, m4.mul(bm, loc), { spec: 0.6 }); }
+    if (f.gun && (!f.hasSaber || f.saber.holstered)) { const bm = a.boneMatrix(this.attach.grip.bone); const loc = m4.trs(this.attach.grip.t, this.attach.grip.q, [1, 1, 1]); R.drawMesh(this.gunMesh, m4.mul(bm, loc), { spec: 0.6 }); }
     const sh = f.status === 'dead' || f.status === 'down' ? 0.8 : 0.55; if (f.pos[1] < 3) this.fx.disc([f.pos[0], 0, f.pos[2]], sh * (1 - Math.min(0.5, f.pos[1] * 0.15)), [0, 0, 0, 0.42], 1);
   }
   render() {

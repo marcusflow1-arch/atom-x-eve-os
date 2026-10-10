@@ -21,6 +21,7 @@ export const HELP_DUEL = [
 ];
 export const HELP_MISSION = [
   ...HELP_DUEL.slice(0, 11),
+  ['Weapons', 'Q switches Bryar pistol / lightsaber · R lights the saber · LMB fire · hold RMB = charged shot'],
   ['Use / interact', 'E  (consoles, terminals)'], ['Objective', 'follow the marker · top right shows the current goal'],
   ['Zoom · checkpoint · controls · mute', 'Ctrl + wheel or - =  ·  Enter (after falling)  ·  F1  ·  M'],
 ];
@@ -91,7 +92,8 @@ export class HUD {
     // saber / style panel (top-left)
     const S = P.saber; x.font = '600 12px system-ui,sans-serif'; x.textBaseline = 'top'; let ty = 16;
     x.fillStyle = 'rgba(8,10,22,0.6)'; rr(x, 14, 10, 330, this.debug ? 118 : 44, 9); x.fill();
-    x.fillStyle = S.holstered ? '#9aa6c8' : '#fff'; x.fillText(S.holstered ? 'SABER  holstered   [R] draw' : 'SABER  ignited   [R] holster', 26, ty); ty += 18;
+    const wpn = g.playerWeapon === 'bryar' ? 'BRYAR PISTOL  LMB fire · RMB charge · [Q] saber' : (S.holstered ? 'SABER  holstered   [R] draw' : 'SABER  ignited   [R] holster') + (g.playerWeapon ? ' · [Q] pistol' : '');
+    x.fillStyle = S.holstered && g.playerWeapon !== 'bryar' ? '#9aa6c8' : '#fff'; x.fillText(wpn, 26, ty); ty += 18;
     x.fillStyle = STYLE_COL[S.level]; x.fillText('STYLE  ' + STYLE_NAMES[S.level] + '   [Tab] change stance', 26, ty); ty += 18;
     if (this.debug) {
       x.font = '11px ui-monospace,Menlo,Consolas,monospace'; x.fillStyle = '#9fd0ff'; const a = P.actor; const tn = a.torsoFollow || !a.torso.cur ? '(follows legs)' : a.torso.name;

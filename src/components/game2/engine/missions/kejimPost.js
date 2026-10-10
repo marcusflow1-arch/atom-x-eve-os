@@ -124,7 +124,7 @@ export const KEJIM_POST = {
   objectives: [
     {
       id: 'canyon', text: 'Advance up the canyon toward the Imperial outpost', marker: [0, 1.2, -30], checkpoint: { pos: [0, 0.3, -61], yaw: 0 },
-      onStart: [{ spawn: 'canyon' }, { say: [S('JAN', 'Kejim was supposed to be a dead outpost. Somebody forgot to tell the landing lights.'), S('KYLE', "Then let's go ask them why. Stay behind me — R lights the saber if they start shooting.")] }],
+      onStart: [{ spawn: 'canyon' }, { say: [S('JAN', 'Kejim was supposed to be a dead outpost. Somebody forgot to tell the landing lights.'), S('KYLE', "Then let's go ask them why. Stay behind me. Pistol first — Q if I need the saber.")] }],
       until: { zone: 'canyon_top' },
     },
     {
@@ -149,7 +149,7 @@ export const KEJIM_POST = {
       onComplete: [{ say: [S('JAN', "Got it. Cargo runs to Artus Prime... and one entry for the hangar that's been scrubbed. Somebody didn't want that logged."), S('KYLE', "Then that's where I'm going.")] }],
     },
     {
-      id: 'hangar', text: 'Investigate the hangar on the east side of the courtyard', marker: [36, 1.2, 0], checkpoint: { pos: [0, 0, 54], yaw: PI },
+      id: 'hangar', text: 'Investigate the hangar on the east side of the courtyard', marker: [41, 1.2, 0], checkpoint: { pos: [0, 0, 54], yaw: PI },
       onStart: [{ open: 'hangar_door' }],
       until: { zone: 'hangar_in' },
       onComplete: [{ close: 'hangar_door' }, { companion: 'hold', at: [28, 0, 0] }, { say: [S('JAN', 'Kyle, the door — it sealed behind you! I can\'t get through!')] }],

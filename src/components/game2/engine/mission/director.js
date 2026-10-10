@@ -216,6 +216,8 @@ export class MissionDirector {
       H.bar(x, px, py + 17, pw, 14, Math.max(0, B.hp) / B.maxHp, ['#8e1010', '#ff5a3a'], null); if (BF) H.bar(x, px, py + 36, pw, 8, BF.fp / BF.max, ['#2b3fa8', '#7ab8ff'], null); x.textAlign = 'left';
     }
     H.drawBanners(x, W, Hh, dt); H.drawGripHint(g, x, W, Hh);
+    const PW = g.pistol; // Bryar charge meter around the crosshair
+    if (g.playerWeapon === 'bryar' && PW && PW.charge > 0) { const k = Math.min(1, PW.charge / 1.0); x.save(); x.strokeStyle = k >= 1 ? '#ffd27a' : '#ff9a5a'; x.lineWidth = 3; x.beginPath(); x.arc(W / 2, Hh / 2, 14, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); x.stroke(); x.restore(); }
     // use prompt / download status
     const it = this.usable();
     let prompt = it ? '[E]  ' + it.prompt : null;

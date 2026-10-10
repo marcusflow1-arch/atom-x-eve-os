@@ -13,6 +13,18 @@ The duel is a small WebGL2 engine in `engine/` (plain ES modules, loaded lazily 
 | `darkjedi.js` | Dark Jedi brain: saber fencing + Force use picked by range, Force left and cooldowns |
 | `game.js`, `hud.js`, `input.js`, `audio.js`, `fx.js`, `world.js` | Game loop, rounds, HUD, input, sounds, effects, arena |
 
+## Saber, movement and aim rules (checked against the original source)
+
+Both modes share these rules; each line names the Raven source it follows.
+
+| Rule | Source |
+| --- | --- |
+| The ignited blade is traced every step and always cuts what it touches. Outside an attack, contact deals stance-scaled touch damage every 200 ms (Fast 2 · Medium 3 · Strong 4.5) | `w_saber.c` `CheckSaberDamage` (idle wound) |
+| During an attack move a contact deals the stance damage (12 / 18 / 28, x1.6 specials) and the same blade may hit that target again 100 ms later (300 ms after a block). Non-Jedi take x1.5; back attacks and the jump slash cannot be parried | `CheckSaberDamage` (attack wound), `WP_SaberCanBlock` |
+| The torso follows the view: the view yaw and 75% of the view pitch are spread over `lower_lumbar` 30% · `upper_lumbar` 30% · `thoracic` 40%, so the mouse steers the swing and looking down drives it toward the ground. NPCs pitch toward their target | `cg_players.c` `CG_G2PlayerAngles` |
+| No strafe cycles: sideways and diagonal movement play run / walk with the legs turned up to 60° toward travel; backpedalling uses the back cycles. Standing, the legs hold until the view is 40° away, swing at 300°/s and never trail by more than 90° (turn-in-place steps while they catch up) | `bg_pmove.c` `PM_Footsteps`, `CG_SwingAngles` |
+| Story mode Bryar pistol: 10 damage, 40 m/s bolt, 400 ms between shots; hold alt fire to charge in 200 ms steps (up to 10 x 5 x 1.7 = 85) | `bg_weapons.c`, `g_weapon.c` `WP_FireBryarPistol` |
+
 ## Start menu: Single Player and Multiplayer
 
 Game 2 opens on a menu. **Multiplayer** is the Dark Jedi duel described here (played against the AI; there is no
