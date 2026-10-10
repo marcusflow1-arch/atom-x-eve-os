@@ -7,7 +7,8 @@ import { Mesh } from './mesh.js';
 import { ARENA, MAX_PLAYERS, NET_VERSION, pickArena } from './signaling.js';
 
 const HEARTBEAT_MS = 4000;
-const JOIN_TIMEOUT_MS = 12000;
+// TURN and cross-network ICE negotiation need longer than the old 12-second join timeout.
+const JOIN_TIMEOUT_MS = 35000;
 const SETTLE_MS = 1500;
 const ELECTION_WAIT_MS = 900;
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -45,7 +46,7 @@ export class NetSession {
       if (this.ended) return;
       // Never silently open a second map just because WebRTC could not reach
       // the existing host. A player must join the same active arena or retry.
-      this.end('Could not connect to the shared arena host. Please retry joining.');
+      this.end('Could not connect to the shared arena host (' + (this.lastJoinError || 'timeout') + '). Check your network/TURN relay and retry.');
       return;
     }
     if (!this.ended) {
@@ -57,7 +58,7 @@ export class NetSession {
         if (existing && existing.host_peer !== this.self) {
           if ((existing.players || 0) >= this.max) { this.end('The arena is full (10 players)'); return; }
           if (await this.join(existing)) return;
-          if (!this.ended) this.end('Could not connect to the shared arena host. Please retry joining.');
+          if (!this.ended) this.end('Could not connect to the shared arena host (' + (this.lastJoinError || 'timeout') + '). Check your network/TURN relay and retry.');
           return;
         }
         await this.host();
@@ -71,11 +72,11 @@ export class NetSession {
     this.room = arena; this.hostId = arena.host_peer; this.isHost = false; this.state = 'joining'; this.status('Joining the arena');
     return new Promise((res) => {
       this.joinDone = res; clearTimeout(this.joinTimer); this.joinTimer = setTimeout(() => this.joinFailed('timeout'), JOIN_TIMEOUT_MS);
-      this.mesh.connect(this.hostId, { room: ARENA, hello: this.hello() }).catch(() => this.joinFailed('error'));
+      this.mesh.connect(this.hostId, { room: ARENA, hello: this.hello() }).catch(e => this.joinFailed(String(e?.message || 'network negotiation failed')));
     });
   }
   joinFailed(why) {
-    if (this.state !== 'joining') return; clearTimeout(this.joinTimer); const h = this.hostId; this.hostId = null; this.state = 'idle';
+    if (this.state !== 'joining') return; this.lastJoinError = why; clearTimeout(this.joinTimer); const h = this.hostId; this.hostId = null; this.state = 'idle';
     if (h) this.mesh.drop(h, why, true); const done = this.joinDone; this.joinDone = null; if (done) done(false);
   }
   joined(ok) { clearTimeout(this.joinTimer); const done = this.joinDone; this.joinDone = null; if (done) done(ok); }
