@@ -13,7 +13,8 @@ const store = {
   get(k, d) { try { return window.localStorage.getItem(k) || d; } catch { return d; } },
   set(k, v) { try { window.localStorage.setItem(k, v); } catch { /* private mode */ } },
 };
-const localNet = () => { try { return new URLSearchParams(window.location.search).get('g2net') === 'local'; } catch { return false; } };
+// Browser-local signaling is for localhost tests ONLY: published and editor websites must use the shared backend.
+const localNet = () => { try { return ['localhost', '127.0.0.1'].includes(window.location.hostname) && new URLSearchParams(window.location.search).get('g2net') === 'local'; } catch { return false; } };
 
 let icePromise = null;
 export function getIceServers() { // same helper as the voice chat: STUN, plus TURN when the backend has one configured
@@ -59,7 +60,7 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
 
   const callsign = (name || 'Jedi').trim().slice(0, 20) || 'Jedi';
   const players = arena ? arena.players || 1 : 0, full = players >= MAX_PLAYERS;
-  const enter = () => { store.set(NAME_KEY, callsign); store.set(SIDE_KEY, side); setBusy(true); onStart({ name: callsign, side, selfId: makePeerId(user.id), local }); };
+  const enter = () => { if (error || arena === undefined || !user || busy || full) return; store.set(NAME_KEY, callsign); store.set(SIDE_KEY, side); setBusy(true); onStart({ name: callsign, side, selfId: makePeerId(user.id), local }); };
 
   return (
     <div className="absolute inset-0 overflow-y-auto bg-[radial-gradient(ellipse_at_top,#1a1530_0%,#070812_55%,#05060c_100%)] text-white">
@@ -97,7 +98,7 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
                   </div>
                   {arena && <div className="mt-0.5 text-xs text-white/50"><span className="text-sky-300">{arena.light || 0} Jedi</span> · <span className="text-rose-300">{arena.dark || 0} Dark Jedi</span>{arena.ai ? ` · ${arena.ai} AI Reborn` : ''}</div>}
                 </div>
-                <button type="button" disabled={busy || full || arena === undefined} onClick={enter}
+                <button type="button" disabled={busy || full || arena === undefined || !!error} onClick={enter}
                   className="rounded-xl bg-cyan-400/90 px-5 py-2.5 text-base font-extrabold text-[#04121a] hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40">
                   {full ? 'Arena full' : 'Enter the arena'}
                 </button>
