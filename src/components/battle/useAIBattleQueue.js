@@ -1,3 +1,4 @@
+import { startPvPPingProbe } from './pvpPingProbe';
 // @refresh reset
 // Remount consumers on edits: matchmaking hook additions must not reuse old hook slots.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -393,6 +394,12 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     }
     return () => { if (retryTimer) window.clearTimeout(retryTimer); };
   }, [sessionBridge, match?.id, match?.host_id, match?.host_name, match?.dashboard_channel, match?.status, match?.player_ids, match?.players, session.channel_id, session.status, session.players, user?.id, user?.full_name, user?.username, roomRetryTick, battleSurface.dashboardMode, battleSurface.matchId]);
+
+  // Optional two-browser Railway RTT comparison; no gameplay messages leave Base44.
+  useEffect(() => {
+    if (!sessionBridge || !match?.id || !user?.id || !ACTIVE_MATCH_STATUSES.includes(String(match.status || ''))) return undefined;
+    return startPvPPingProbe({ matchId: match.id });
+  }, [sessionBridge, match?.id, match?.status, user?.id]);
 
   // Reliable peer cast is only visual prediction. Damage remains server-owned.
   useEffect(() => {
