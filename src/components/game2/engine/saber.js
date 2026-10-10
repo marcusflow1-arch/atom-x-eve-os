@@ -3,6 +3,9 @@
 // PM_SaberAnimTransitionAnim / PM_SaberAttackForMovement).  Pure logic: it asks the host to play torso anims.
 export const Q = { BR: 0, R: 1, TR: 2, T: 3, TL: 4, L: 5, BL: 6, B: 7 };
 export const STYLE_NAMES = ['', 'FAST', 'MEDIUM', 'STRONG'];
+export const GESTURE_MIN = 60; // mouse travel (px) during a swing's wind-up that re-aims it (a deliberate flick, not aim tracking)
+// mouse flick (screen dx, dy; +dy = down) -> attack direction, 45 degree sectors starting at "right"
+const GESTURE_MOVES = ['LS_A_L2R', 'LS_A_TL2BR', 'LS_A_T2B', 'LS_A_TR2BL', 'LS_A_R2L', 'LS_A_BR2TL', 'LS_A_BL2TR', 'LS_A_BL2TR'];
 export class SaberLogic {
   constructor(data, host) {
     this.M = data.moves; this.TR = data.transition; this.host = host;
@@ -22,7 +25,9 @@ export class SaberLogic {
   inTransition(m) { const I = this.I; return m >= I.LS_T1_BR__R && m <= I.LS_T1_BL__L; }
   inBounce(m) { const I = this.I; return (m >= I.LS_B1_BR && m <= I.LS_B1_BL) || (m >= I.LS_D1_BR && m <= I.LS_D1_BL); }
   inStart(m) { const I = this.I; return m >= I.LS_S_TL2BR && m <= I.LS_S_T2B; }
+  inReturn(m) { const I = this.I; return m >= I.LS_R_TL2BR && m <= I.LS_R_T2B; }
   isActiveSwing() { return this.inAttack(this.move) || this.inStart(this.move) || this.inTransition(this.move); }
+  isDownSlash(m) { const I = this.I; return m === I.LS_A_T2B || m === I.LS_A_TL2BR || m === I.LS_A_TR2BL; }
   stanceAnim() { return this.level === 2 ? 'BOTH_STAND2' : this.level === 3 ? 'BOTH_SABERSLOW_STANCE' : 'BOTH_SABERFAST_STANCE'; }
   kataDone() { const r = (a, b) => a + Math.floor(Math.random() * (b - a + 1)); return (this.level >= 3 && this.chain > r(0, 1)) || (this.level === 2 && this.chain > r(2, 5)); }
   // anim name for a move at the current style level
@@ -46,12 +51,16 @@ export class SaberLogic {
       anim = H.torsoIdleAnim(this.stanceAnim());
     }
     if ([I.LS_A_LUNGE, I.LS_A_JUMP_T__B_, I.LS_A_BACKSTAB, I.LS_A_BACK, I.LS_A_BACK_CR, I.LS_A_FLIP_STAB, I.LS_A_FLIP_SLASH].includes(newMove)) parts = 'both';
+    // Standing still, a swing (wind-up, strike, transition, return) plays on the whole body as authored. Each attack has its own
+    // hip turn; laid over the stance legs the torso lost it and a vertical chop landed ~70 degrees off to the side.
+    else if (hold && (this.inStart(newMove) || this.inAttack(newMove) || this.inTransition(newMove) || this.inReturn(newMove)) && H.standingStill && H.standingStill()) parts = 'whole';
     const lerp = 1000 / Math.abs(info.fps);
     let dur = hold ? info.n * lerp : 0; if (holdless) dur = Math.max(lerp, dur - 2 * lerp);
     dur /= this.rageMul;
-    const restart = this.M[this.move].anim === m.anim && newMove > I.LS_PUTAWAY;
-    H.playTorso(anim, { parts, restart: restart || flags.restart, blendMs: m.blend, durMs: dur, idle: !hold, rage: this.rageMul });
-    const was = this.move; this.move = newMove; this.torsoTimer = dur; this.moveAnim = anim; this.moveStart = now; this.moveLen = dur; this.curBlock = m.blocking;
+    const restart = this.M[this.move].anim === m.anim && newMove > I.LS_PUTAWAY, at = flags.startFrac || 0; // startFrac: begin part-way in (a re-aimed wind-up keeps its timing)
+    H.playTorso(anim, { parts, restart: restart || flags.restart, blendMs: m.blend, durMs: dur, idle: !hold, rage: this.rageMul, startAt: at ? at * info.n / Math.abs(info.fps) / this.rageMul : 0 });
+    this.airStrike = this.isDownSlash(newMove) && !!this.airborneNow; // a downward slash begun in the air follows through to the ground
+    const was = this.move; this.move = newMove; this.torsoTimer = dur * (1 - at); this.moveAnim = anim; this.moveStart = now - at * dur / 1000; this.moveLen = dur; this.curBlock = m.blocking;
     if (this.inAttack(newMove) && was !== newMove) H.event('swing', { move: newMove });
     if (this.weaponTime <= 0) this.blocked = null;
     return anim;
@@ -92,9 +101,21 @@ export class SaberLogic {
     else if (cur === I.LS_READY) nm = I.LS_A_TL2BR + Math.floor(Math.random() * 7);
     return nm;
   }
+  // Mouse-directed swings: a decisive mouse flick during the wind-up (LS_S_*) picks the slash direction; down = vertical,
+  // down-right = top-left to bottom-right, down-left = top-right to bottom-left. Once the strike itself starts it is locked.
+  attackForGesture(gs) {
+    if (!gs || Math.hypot(gs.dx, gs.dy) < GESTURE_MIN) return null;
+    const a = Math.atan2(gs.dy, gs.dx), k = ((Math.round(a / (Math.PI / 4)) % 8) + 8) % 8; return this.I[GESTURE_MOVES[k]];
+  }
+  redirectStart(att, now) { // swap the wind-up for another direction at the same progress
+    const I = this.I; if (!this.inStart(this.move) || att == null || att < I.LS_A_TL2BR || att > I.LS_A_T2B) return false;
+    const ns = I.LS_S_TL2BR + (att - I.LS_A_TL2BR); if (ns === this.move) return false;
+    const p = this.moveLen > 0 ? Math.min(0.9, Math.max(0, (now - this.moveStart) * 1000 / this.moveLen)) : 0;
+    this.setMove(ns, now, { startFrac: p }); this.weaponTime = this.torsoTimer; return true;
+  }
   // ---- main per-tick update (PM_WeaponLightsaber).  c = {attack, alt, fwd, right, up, ducked, velZ, groundDist, enemyFront, enemyBehind, busy}
   update(dtMs, c, now) {
-    const I = this.I, H = this.host; let newmove = I.LS_NONE, anim = null;
+    const I = this.I, H = this.host; let newmove = I.LS_NONE, anim = null; this.airborneNow = !!c.airborne;
     if (this.holstered) {
       if (this.move !== I.LS_READY) { this.move = I.LS_READY; }
       if (this.weaponTime > 0) this.weaponTime -= dtMs;
@@ -131,6 +152,13 @@ export class SaberLogic {
       if (mv != null) { this.setMove(mv, now); this.weaponTime = 250; this.torsoTimer = 250; this.state = 'blocking'; }
       return;
     }
+    if (c.gesture && this.weaponTime > 0 && this.inStart(this.move)) this.redirectStart(this.attackForGesture(c.gesture), now);
+    // an air slash holds its strike while falling and lands into the ground (100 ms after touch-down) before any return or chain
+    if (this.weaponTime <= 0 && this.airStrike && this.isDownSlash(this.move)) {
+      if (c.airborne) this.airHoldEnd = now + 0.1;
+      if (now < (this.airHoldEnd || 0) && now - this.moveStart < 2.5) { this.airHold = true; this.weaponTime = 1; return; }
+    }
+    this.airHold = false;
     if (this.weaponTime > 0) return; // still in the previous move
     // ---- attack selection
     let cur = (this.move > I.LS_NONE && this.move < this.M.length) ? this.move : I.LS_READY;

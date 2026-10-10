@@ -73,7 +73,7 @@ export class Game {
     const I = this.input;
     // Presses read inside the fixed 60 Hz simulation (jump, roll, Force keys, a quick click) are latched until a step
     // consumes them: on fast displays many rendered frames run no step, and those presses used to be dropped.
-    this.stepPresses = new Set();
+    this.stepPresses = new Set(); this.pendingMouse = [0, 0];
     this.inp = { pressed: c => this.stepPressed(c), held: c => I.held(c), released: c => I.released(c) };
     this.fireT = 0;
   }
@@ -129,6 +129,10 @@ export class Game {
   onForceJump(f) { this.sfxAt('jump', f.pos, 0.9); this.sfxAt('jumpbuild', f.pos, 0.5); this.fx.ring({ p: [f.pos[0], 0.05, f.pos[2]], n: [0, 1, 0], r0: 0.3, r1: 2.2, life: 0.5, w: 0.14, c: [0.6, 0.85, 1, 0.9] }); this.dust(f.pos, 1.0, 14); if (f.isPlayer) this.shake(0.12); }
   dust(p, size = 0.8, n = 8) { for (let i = 0; i < n; i++) { const a = rnd(0, 6.28); this.fx.emit({ p: [p[0] + Math.cos(a) * 0.3, 0.08, p[2] + Math.sin(a) * 0.3], v: [Math.cos(a) * rnd(0.8, 2.6) * size, rnd(0.2, 0.9), Math.sin(a) * rnd(0.8, 2.6) * size], life: rnd(0.4, 0.9), size: rnd(0.12, 0.28), grow: 0.5, c0: [0.5, 0.48, 0.55, 0.22], c1: [0.4, 0.38, 0.45, 0], drag: 2.5 }); } }
   shake(a) { this.shakeAmt = Math.max(this.shakeAmt, a); }
+  scorch(p, col) { // saber burn mark on the floor: glows in the blade colour, then fades to a dark scorch
+    const S = this.scorches ??= []; const near = S.find(m => Math.hypot(m.p[0] - p[0], m.p[2] - p[2]) < 0.12 && Math.abs(m.p[1] - p[1]) < 0.2);
+    if (near) { near.t = Math.min(near.t, 0.2); near.r = Math.min(0.2, near.r + 0.01); return; } S.push({ p: p.slice(), c: col || [1, 0.6, 0.3], t: 0, r: 0.1 }); if (S.length > 60) S.shift();
+  }
   flashLight(p, c, dur = 0.2) { this.flashes.push({ p: p.slice(), c, t: dur, max: dur }); if (this.flashes.length > 6) this.flashes.shift(); }
   burstHeal(f) { const p = f.pos; for (let i = 0; i < 30; i++) { const a = rnd(0, 6.28), r = rnd(0.2, 0.7); this.fx.emit({ p: [p[0] + Math.cos(a) * r, rnd(0.1, 1.2), p[2] + Math.sin(a) * r], v: [0, rnd(0.8, 2.2), 0], life: rnd(0.8, 1.4), size: rnd(0.04, 0.1), c0: [0.4, 1, 0.55, 0.9], c1: [0.2, 0.9, 0.4, 0] }); } this.fx.ring({ p: [p[0], 0.05, p[2]], n: [0, 1, 0], r0: 0.2, r1: 1.6, life: 0.9, w: 0.1, c: [0.35, 1, 0.5, 0.8] }); }
   targets() {
@@ -187,7 +191,7 @@ export class Game {
           note(vp ? 'PULLED' + (why ? '  ·  ' + why : '') : (res.outcome === 'knockdown' ? 'KNOCKDOWN' : 'PULL HIT'), vp ? [1, 0.5, 0.4] : [0.7, 1, 0.75]);
           if (vp) { this.shake(0.25); this.hud.hit(3); }
         } else if (res.outcome === 'knockdown') {
-          const k = 0.5 + 0.5 * sc; victim.push(dir, (6 + 7 * fall) * k, (3.6 + 2.4 * fall) * k, { keepYaw: false, quicker: true }); // w_force.c: pushed down -> quicker getup const dmg = 6 * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit2', victim.pos, 0.6);
+          const k = 0.5 + 0.5 * sc; victim.push(dir, (6 + 7 * fall) * k, (3.6 + 2.4 * fall) * k, { keepYaw: false, quicker: true }); const dmg = 6 * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit2', victim.pos, 0.6); // w_force.c: pushed down -> quicker getup
           note(vp ? 'KNOCKED DOWN' + (why ? '  ·  ' + why : '') : 'KNOCKDOWN', vp ? [1, 0.45, 0.35] : [0.7, 1, 0.75]); if (vp) { this.shake(0.35); this.hud.hit(dmg); }
         } else { // a hit that does not knock down: breaks the swing and slides the target back
           victim.stagger(dir, (9 + 4 * fall) * sc); const dmg = 3 * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit1', victim.pos, 0.6);
@@ -210,7 +214,7 @@ export class Game {
     p.revive(this.playerSpawn.slice()); p.status = 'normal'; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.rageMul = 1; p.yaw = p.targetYaw = 0; p.actor.animSpeed = 1; this.readySaber(p); this.cam.yaw = 0; this.cam.pitch = 0.2;
     this.respawnNpc(b); b.force.fp = b.force.max; b.reaction = 0.7;
     for (const w of this.world.bodies) { w.pos = w.home.slice(); w.vel = [0, 0, 0]; w.w = [0, 0, 0]; w.grounded = true; w.lifted = 0; w.rot = [0, Math.random() * 6, 0]; w.hp = 100; }
-    this.combat.bolts.length = 0; this.arcs.length = 0; this.hud.msgs.length = 0; this.hud.dmg = 0; this.round = { state: 'intro', t: 0 }; this.hud.msg('Rematch');
+    this.combat.bolts.length = 0; this.arcs.length = 0; this.scorches = []; this.hud.msgs.length = 0; this.hud.dmg = 0; this.round = { state: 'intro', t: 0 }; this.hud.msg('Rematch');
   }
   dispose() { this.disposed = true; try { this.input.dispose(); } catch (e) { } try { this.sfx.dispose(); } catch (e) { } }
   aimDir() { const c = this.cam; const cp = Math.cos(c.pitch), d = [Math.sin(c.yaw) * cp, -Math.sin(c.pitch), Math.cos(c.yaw) * cp]; const o = this.player.chest(); const pt = v3.addS(c.eye, d, c.dist + 14); return v3.norm([pt[0] - o[0], pt[1] - o[1], pt[2] - o[2]]); }
@@ -235,8 +239,9 @@ export class Game {
     c.fwd = (i.held('KeyW') ? 1 : 0) - (i.held('KeyS') ? 1 : 0); c.right = (i.held('KeyD') ? 1 : 0) - (i.held('KeyA') ? 1 : 0);
     c.aimPitch = this.cam.pitch; c.walk = i.held('ShiftLeft') || i.held('ShiftRight'); c.crouch = i.held('KeyC'); c.attack = !!i.btn[0] || this.stepPressed('Mouse0'); c.alt = !!i.btn[2]; c.jump = i.held('Space');
     c.up = c.jump ? 1 : c.crouch ? -1 : 0; c.jumpPressed = this.stepPressed('Space'); c.crouchPressed = this.stepPressed('KeyC');
+    const pm = this.pendingMouse ??= [0, 0]; c.mouseDX = this.firstSub ? pm[0] : 0; c.mouseDY = this.firstSub ? pm[1] : 0; if (this.firstSub) pm[0] = pm[1] = 0; // mouse flick for the swing wind-up
     if (this.playerWeapon === 'bryar') { c.attack = false; c.alt = false; } // the mouse buttons fire the pistol instead (updatePistol)
-    if (p.status === 'normal' || p.status === 'roll') p.targetYaw = this.cam.yaw;
+    if ((p.status === 'normal' || p.status === 'roll') && !p.swingLocked()) p.targetYaw = this.cam.yaw; // a committed strike keeps its facing until it ends
   }
   frameInput(dt) {
     const i = this.input, p = this.player, c = this.cam, h = this.hud;
@@ -245,7 +250,7 @@ export class Game {
       h.help = false; this.started = true;
     }
     if (!h.help) this.started = true;
-    if (i.dx || i.dy) { c.yaw -= i.dx * i.sens; c.pitch += i.dy * i.sens; }
+    if (i.dx || i.dy) { c.yaw -= i.dx * i.sens; c.pitch += i.dy * i.sens; if (!h.help) { const pm = this.pendingMouse ??= [0, 0]; pm[0] += i.dx; pm[1] += i.dy; } }
     const ar = 2.2 * dt; if (i.held('ArrowLeft')) c.yaw += ar; if (i.held('ArrowRight')) c.yaw -= ar; if (i.held('ArrowUp')) c.pitch -= ar * 0.7; if (i.held('ArrowDown')) c.pitch += ar * 0.7;
     c.pitch = clamp(c.pitch, -0.5, 1.3);
     if (this.duel || this.missionDef) { // wheel / [ ] cycle the selected Force power; Ctrl+wheel or - = zoom
@@ -316,7 +321,7 @@ export class Game {
     }
     if (this.duel) this.updateRound(dt);
     this.combat.step(dt); this.world.update(dt); this.fx.update(dt); if (this.director) this.director.update(dt); this.firstSub = false; if (this.stepPresses) this.stepPresses.clear();
-    for (const f of this.flashes) f.t -= dt; this.flashes = this.flashes.filter(f => f.t > 0); this.lightFlash = Math.max(0, this.lightFlash - dt * 3);
+    for (const f of this.flashes) f.t -= dt; this.flashes = this.flashes.filter(f => f.t > 0); if (this.scorches) { for (const m of this.scorches) m.t += dt; this.scorches = this.scorches.filter(m => m.t < 8); } this.lightFlash = Math.max(0, this.lightFlash - dt * 3);
     if (p.healFlash > 0 && this.force.holding !== 'heal') p.healFlash = Math.max(0, p.healFlash - dt);
     // brazier fire
     this.fireT -= dt; if (this.fireT <= 0) { this.fireT = 0.03; for (const b of this.world.braziers) this.fx.emit({ p: [b[0] + rnd(-0.15, 0.15), b[1], b[2] + rnd(-0.15, 0.15)], v: [rnd(-0.2, 0.2), rnd(0.8, 1.6), rnd(-0.2, 0.2)], life: rnd(0.4, 0.8), size: rnd(0.08, 0.18), grow: -0.1, c0: [1, 0.55, 0.15, 0.55], c1: [0.8, 0.1, 0.02, 0] }); }
@@ -377,6 +382,7 @@ export class Game {
     const all = [this.player, ...this.npcs]; for (const f of all) this.drawFighter(f);
     this.combat.drawRemote(R);
     for (const b of this.world.braziers) R.billboard([b[0], b[1] + 0.35, b[2]], 0.9 + 0.1 * Math.sin(this.t * 13 + b[0]), [1, 0.5, 0.15, 0.22], 0);
+    if (this.scorches) for (const m of this.scorches) { const a = Math.min(1, (8 - m.t) / 2); this.fx.disc(m.p, m.r, [0.04, 0.03, 0.03, 0.55 * a], 1); if (m.t < 0.6) this.fx.disc(m.p, m.r * 0.7, [m.c[0], m.c[1], m.c[2], 0.9 * (1 - m.t / 0.6)], 0); }
     this.fx.draw();
     for (const f of all) f.blade.draw(R, 1 + 0.05 * Math.sin(this.t * 41 + (f.humId || 0) * 2));
     this.force.draw(R); for (const n of this.npcs) if (n.force) n.force.draw(R); this.drawArcs(R); this.combat.drawBolts(R); if (this.director) this.director.draw(R);

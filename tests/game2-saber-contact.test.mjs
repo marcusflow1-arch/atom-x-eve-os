@@ -45,7 +45,7 @@ test('collision integrates swept swords against an opponent moving during a fram
   const engine = {
     g: { t: 4, player, npcs: [target] }, pair: new Map(), remote: null,
     capsule: Combat.prototype.capsule,
-    bladeHit() { hits++; }, props() {}, updateBolts() {}, updateRemote() {},
+    bladeHit() { hits++; }, groundStrike() {}, props() {}, updateBolts() {}, updateRemote() {},
   };
   Combat.prototype.step.call(engine, 1 / 60);
   assert.equal(hits, 1);

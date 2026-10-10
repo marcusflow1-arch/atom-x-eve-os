@@ -320,7 +320,7 @@ export class Force {
   bodyArcs(n) { this.g.bodyArc(n); }
   end_lightning(silent) { if (!silent) this.p.playForce('BOTH_FORCELIGHTNING_RELEASE', { durMs: 420 }); this.ltTargets = []; this.g.lightFlash = 0; }
   do_heal() {
-    const g = this.g, p = this.p; this.holding = 'heal'; p.playForce('BOTH_FORCEHEAL_START', { durMs: 400, hold: true }); this.healT = 0; // torso only: keep moving while healing g.sfxAt('heal', p.pos, 1);
+    const g = this.g, p = this.p; this.holding = 'heal'; p.playForce('BOTH_FORCEHEAL_START', { durMs: 400, hold: true }); this.healT = 0; g.sfxAt('heal', p.pos, 1); // torso only: keep moving while healing
     this.later(0.0, () => { }); this.loops.hold = g.sfx.loop('heal2', { vol: 0.0 });
   }
   tick_heal(dt) {

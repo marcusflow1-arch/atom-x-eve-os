@@ -40,9 +40,12 @@ export class G2Rig{
     this.localQ=this.nest.map(()=>new Float64Array(4)); this.pelvisPos=new Float64Array(3);
     this.Rroot=new Float64Array(9);
     this.pelParentLocal=[0,0,0];
+    this.llId=tr; this.Kt=new Float64Array(9); this.Ct=new Float64Array(9); this.D=new Float64Array(9);
   }
-  // frameLegs: frame for model_root/pelvis/legs ; frameTorso: for lower_lumbar subtree
-  evaluate(frameLegs, frameTorso){
+  // frameLegs: frame for model_root/pelvis/legs ; frameTorso: for lower_lumbar subtree.
+  // matchPelvis: a torso anim laid over other legs keeps the hip yaw it was authored with (the torso turns by the yaw
+  // between its own pelvis and the legs' pelvis), so a saber swing travels where it was aimed whatever the legs do.
+  evaluate(frameLegs, frameTorso, matchPelvis){
     const nB=this.nB,K=this.K,q=this.q,C=this.C;
     for(const b of this.order){
       const f=this.torso[b]?frameTorso:frameLegs; const o=(f*nB+b)*4;
@@ -50,6 +53,7 @@ export class G2Rig{
       const p=this.parent[b];
       if(p<0){ for(let i=0;i<9;i++)K[b*9+i]=C[i]; }
       else { const kp=K.subarray(p*9,p*9+9); mul(kp,C,this.tmp); for(let i=0;i<9;i++)K[b*9+i]=this.tmp[i]; }
+      if(b===this.llId && matchPelvis && frameTorso!==frameLegs) this.matchHips(frameTorso, b);
     }
     // S per nest bone
     for(let i=0;i<this.nest.length;i++){
@@ -75,6 +79,15 @@ export class G2Rig{
     }
   }
 }
+// rotate the torso root about the model up axis (G2 Z) by the yaw from the legs' pelvis to the torso anim's pelvis
+G2Rig.prototype.matchHips=function(frameTorso, b){
+  const nB=this.nB,q=this.q,Kt=this.Kt,Ct=this.Ct,D=this.D,K=this.K; let o=(frameTorso*nB+this.rootId)*4;
+  qToMat(q[o]/32767,q[o+1]/32767,q[o+2]/32767,q[o+3]/32767,Kt); o=(frameTorso*nB+this.pelId)*4;
+  qToMat(q[o]/32767,q[o+1]/32767,q[o+2]/32767,q[o+3]/32767,Ct); mul(Kt,Ct,this.tmp); for(let i=0;i<9;i++)Kt[i]=this.tmp[i];
+  const Kp=K.subarray(this.pelId*9,this.pelId*9+9); for(let i=0;i<3;i++)for(let j=0;j<3;j++)D[i*3+j]=Kt[i*3]*Kp[j*3]+Kt[i*3+1]*Kp[j*3+1]+Kt[i*3+2]*Kp[j*3+2]; // Kt * Kp^T
+  const a=Math.atan2(D[3],D[0]), c=Math.cos(a), s=Math.sin(a); this.hipYaw=a;
+  const kb=K.subarray(b*9,b*9+9); for(let j=0;j<3;j++){ const x=kb[j],y=kb[3+j]; kb[j]=c*x-s*y; kb[3+j]=s*x+c*y; }
+};
 export function frameOf(anim, t, loop){ // t seconds since start -> frame index inside the sequence
   const n=anim.n; if(n<=1) return anim.first; const fps=Math.abs(anim.fps)||20; let k=t*fps;
   if(anim.fps<0){ k=(n-1)-k; }

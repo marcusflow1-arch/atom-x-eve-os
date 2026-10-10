@@ -158,7 +158,7 @@ test('knockdown get-up follows w_force.c: jump held = Force getup, pushed = quic
 test('landing plays a short LAND1 (TIMER_LAND 130 ms) with no camera shake, also after a Force Jump', () => {
   const legs = [];
   const f = Object.create(Fighter.prototype);
-  Object.assign(f, { g: { t: 2, onLand() {} }, airAnim: 'BOTH_FORCEINAIR1', fjUsed: true, actor: { setLegs: a => legs.push(a) } });
+  Object.assign(f, { g: { t: 2, onLand() {} }, saber: { holstered: true }, legsLockUntil: 0, airAnim: 'BOTH_FORCEINAIR1', fjUsed: true, actor: { setLegs: a => legs.push(a) } });
   f.land(20); assert.deepEqual(legs, ['BOTH_LAND1']); assert.ok(Math.abs(f.landUntil - 2.13) < 1e-9);
   f.airAnim = 'BOTH_FORCEJUMPBACK1'; f.land(20); assert.equal(legs[1], 'BOTH_LANDBACK1');
   const game = readFileSync(new URL('src/components/game2/engine/game.js', root), 'utf8');

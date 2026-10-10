@@ -41,6 +41,7 @@ export class Fighter {
     return {
       hasAnim: n => !!me.actor.skel.anims[n], animInfo: n => me.actor.skel.anims[n], torsoIdleAnim: st => me.torsoIdle(st),
       playTorso: (a, o) => me.playTorso(a, o), event: (t, d) => me.onSaberEvent(t, d), requestDraw: () => me.quickDraw(),
+      standingStill: () => me.status === 'normal' && me.onGround && !me.ducked && !me.cmd.fwd && !me.cmd.right && Math.hypot(me.vel[0], me.vel[2]) < 1.5,
     };
   }
   // ---------- anim helpers
@@ -52,6 +53,7 @@ export class Fighter {
   playTorso(anim, o) {
     const a = this.actor, now = this.now;
     if (o.parts === 'both') { a.setBoth(anim, { blend: (o.blendMs || 100) / 1000, restart: true, loop: false, speed: o.rage || 1 }); this.legsLockUntil = now + o.durMs / 1000; return; }
+    if (o.parts === 'whole') { a.setBoth(anim, { blend: Math.max(0.04, (o.blendMs || 100) / 1000), restart: true, loop: false, speed: o.speed ?? (o.rage || 1), startAt: o.startAt || 0 }); this.swingLegsUntil = now + o.durMs / 1000; return; } // standing swing: legs follow it, torso aim stays on
     if (o.idle) {
       if (anim === a.legs.name) { a.followLegs(); a.torso.cur = null; } else a.setTorso(anim, { blend: (o.blendMs || 100) / 1000, loop: true, speed: 1 });
       return;
@@ -83,6 +85,10 @@ export class Fighter {
   swingPhase() { const s = this.saber; if (!s.isActiveSwing() || s.moveLen <= 0) return -1; return (this.now - s.moveStart) * 1000 / s.moveLen; }
   swingActive() { return !this.saber.holstered && this.saber.isActiveSwing(); } // start / attack / transition: the blade is moving with intent
   attacking() { const s = this.saber; return !s.holstered && s.inAttack(s.move); } // BG_SaberInAttack: full attack damage (w_saber.c)
+  // A committed strike (the attack itself, after the wind-up) finishes on the line it started: the mouse no longer turns
+  // or pitches the body until it ends. The wind-up can still be re-aimed with a mouse flick (SaberLogic.redirectStart).
+  swingLocked() { const s = this.saber; return !s.holstered && s.inAttack(s.move) && s.weaponTime > 0; }
+  specialLocked() { const s = this.saber, I = s.I, m = s.move; return !s.holstered && s.weaponTime > 0 && (m === I.LS_A_JUMP_T__B_ || m === I.LS_A_BACK || m === I.LS_A_BACK_CR || m === I.LS_A_BACKSTAB || m === I.LS_A_FLIP_STAB || m === I.LS_A_FLIP_SLASH); } // bg_pmove.c: no move / strafe / jump input during these
   throwSaber(dir) {
     if (this.thrown || this.saber.holstered || !this.hasSaber) return false;
     const hp = this.actor.bonePos('rhand'); this.thrown = { pos: hp.slice(), prevPos: hp.slice(), dir: v3.norm(dir), t: 0, phase: 'out', ang: 0, hit: new Map() };
@@ -228,12 +234,13 @@ export class Fighter {
     if (c.crouchPressed && this.onGround && (c.fwd || c.right) && !c.walk && !this.ducked && !(S.isActiveSwing() && S.weaponTime > 0 && !this.isPlayer) && this.canRoll()) { this.startRoll(); return; }
     if (wantDuck !== this.ducked && this.onGround) { this.ducked = wantDuck; }
     // jumping
+    const special = this.specialLocked();
     if (this.trySpecialJumpAttack()) { c.jumpPressed = false; }
-    if (c.jumpPressed && this.onGround && !this.ducked && !frozen) this.startJump();
-    if (!this.onGround && c.jump && !this.fjUsed && this.now - this.jumpAt > 0.16 && this.now - this.jumpAt < 0.6 && this.vel[1] > 0.5 && this.canForceJump()) this.startForceJump();
+    if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) this.startJump();
+    if (!special && !this.onGround && c.jump && !this.fjUsed && this.now - this.jumpAt > 0.16 && this.now - this.jumpAt < 0.6 && this.vel[1] > 0.5 && this.canForceJump()) this.startForceJump();
     // wish velocity
     const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); const fwd = [sinY, 0, cosY], right = [-cosY, 0, sinY];
-    let f = c.fwd, r = c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }
+    let f = special ? 0 : c.fwd, r = special ? 0 : c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }
     const crouched = this.ducked; const base = crouched ? 2.1 : c.walk ? 2.4 : 5.6; let sp = base * this.speedMul * (f < 0 ? 0.82 : 1);
     if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY)) sp *= 0.0;
     if (this.elecUntil > now) sp *= 0.72;                              // lightning slows the victim (they keep control)
@@ -242,7 +249,7 @@ export class Fighter {
       const tv = wish, acc = (f || r) ? 48 : 36; const dx = tv[0] - this.vel[0], dz = tv[1] - this.vel[2], dl = Math.hypot(dx, dz), st = acc * dt;
       if (dl <= st) { this.vel[0] = tv[0]; this.vel[2] = tv[1]; } else { this.vel[0] += dx / dl * st; this.vel[2] += dz / dl * st; }
       this.vel[1] = 0;
-    } else { const air = 7 * dt; this.vel[0] += (wish[0] - this.vel[0]) * Math.min(1, air * 0.35); this.vel[2] += (wish[1] - this.vel[1 + 1]) * Math.min(1, air * 0.35); }
+    } else if (!special) { const air = 7 * dt; this.vel[0] += (wish[0] - this.vel[0]) * Math.min(1, air * 0.35); this.vel[2] += (wish[1] - this.vel[1 + 1]) * Math.min(1, air * 0.35); } // a leap slash keeps its launch velocity (no air control)
     const wasGround = this.onGround; const preVy = this.vel[1];
     this.integrate(dt, true);
     if (this.shoveV[0] || this.shoveV[2]) { // slide from a weak / partly blocked push
@@ -274,8 +281,12 @@ export class Fighter {
     this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.05, loop: false }); this.fjStart = this.now; this.g.onForceJump && this.g.onForceJump(this);
   }
   land(impact) { // bg_pmove.c PM_CrashLand: a short LAND1 (LANDBACK1 after a backwards jump), legs held for TIMER_LAND (130 ms)
-    const air = this.airAnim || 'BOTH_JUMP1', an = /BACK/.test(air) ? 'BOTH_LANDBACK1' : 'BOTH_LAND1';
-    this.landUntil = this.now + 0.13; this.actor.setLegs(an, { restart: true, blend: 0.06, loop: false }); this.airAnim = null; this.fjUsed = false;
+    // No landing animation during a special saber move (BG_SaberInSpecial: the leap slash plays on to the ground) or while a
+    // strike is in progress: swapping the legs mid-swing turns the pelvis and bends the blade off its line.
+    const S = this.saber, keep = this.now < this.legsLockUntil || this.specialLocked() || this.swingLocked();
+    if (!keep) { const air = this.airAnim || 'BOTH_JUMP1', an = /BACK/.test(air) ? 'BOTH_LANDBACK1' : 'BOTH_LAND1'; this.landUntil = this.now + 0.13; this.actor.setLegs(an, { restart: true, blend: 0.06, loop: false }); }
+    else if (!S.holstered && S.inAttack(S.move)) this.landUntil = this.now + S.weaponTime / 1000; // legs hold their pose until the strike ends
+    this.airAnim = null; this.fjUsed = false;
     this.g.onLand && this.g.onLand(this, impact);
   }
   startRoll() {
@@ -298,6 +309,7 @@ export class Fighter {
     const moving = speed > 0.6 && (f || r);
     if (this.fidgetUntil > now && (moving || out || this.ducked || this.cmd.attack || this.cmd.jumpPressed || this.forceUntil > now)) this.cancelFidget();
     if (now < this.legsLockUntil || now < this.landUntil) return;
+    if (now < (this.swingLegsUntil || 0) && !moving && !this.ducked) return; // a standing swing is playing on the legs too
     let an;
     const back = f < -0.25; // PMF_BACKWARDS_RUN (bg_pmove.c PM_Footsteps): backpedal cycles while moving backwards
     if (this.ducked) an = !moving ? 'BOTH_CROUCH1IDLE' : (back ? 'BOTH_CROUCH1WALKBACK' : 'BOTH_CROUCH1WALK');
@@ -339,7 +351,9 @@ export class Fighter {
     if (!S.holstered) {
       const cmdAttack = c.attack, move = S.move;
       const pos = this.ctxInfo();
-      S.update(dt * 1000, { attack: cmdAttack && !this.thrown, alt: c.alt, aimPitch: c.aimPitch || 0, fwd: Math.sign(Math.round(c.fwd * 2) / 2), right: Math.sign(Math.round(c.right * 2) / 2), up: c.up, ducked: this.ducked, velZ: this.vel[1], groundDist: this.pos[1], enemyFront: pos.front, enemyBehind: pos.behind, busy }, now);
+      // mouse travel since the wind-up began (the player's flick re-aims the swing until the strike starts)
+      const gs = this.gesture ??= { dx: 0, dy: 0 }; if (S.inStart(S.move)) { gs.dx += c.mouseDX || 0; gs.dy += c.mouseDY || 0; } else gs.dx = gs.dy = 0;
+      S.update(dt * 1000, { attack: cmdAttack && !this.thrown, alt: c.alt, aimPitch: c.aimPitch || 0, fwd: Math.sign(Math.round(c.fwd * 2) / 2), right: Math.sign(Math.round(c.right * 2) / 2), up: c.up, ducked: this.ducked, velZ: this.vel[1], groundDist: this.pos[1], enemyFront: pos.front, enemyBehind: pos.behind, busy, gesture: this.isPlayer ? gs : null, airborne: !this.onGround }, now);
       if (S.move !== this.prevMove) { this.onMoveChanged(S.move); this.prevMove = S.move; }
       // idle torso: re-evaluate stance vs follow-legs each frame when nothing is playing
       if (S.move === S.I.LS_READY && S.torsoTimer <= 0 && !busy && !this.thrown) {
@@ -362,9 +376,10 @@ export class Fighter {
     else if (m === I.LS_A_FLIP_STAB || m === I.LS_A_FLIP_SLASH) { this.vel[0] = sy * 1.4; this.vel[2] = cy * 1.4; this.vel[1] = 8.5; this.onGround = false; this.airAnim = 'BOTH_JUMP1'; this.g.sfxAt('jump', this.pos, 0.5); }
     else if (m === I.LS_A_JUMP_T__B_) { this.vel[0] = sy * 7.5; this.vel[2] = cy * 7.5; this.vel[1] = 7.0; this.onGround = false; this.airAnim = 'BOTH_JUMP1'; this.g.sfxAt('jump', this.pos, 0.5); }
   }
-  trySpecialJumpAttack() { // JO PM_CheckJump: jump while an attack just started -> flip attack (medium) / jump attack (strong)
-    const S = this.saber, I = S.I, c = this.cmd; if (S.holstered || !(c.jumpPressed && this.onGround) || !(S.weaponTime > 0 || c.attack)) return false;
-    if (!S.inAttack(S.move) || S.inSpecial(S.move)) return false; if ((this.now - S.moveStart) > 0.5) return false;
+  trySpecialJumpAttack() { // bg_pmove.c PM_CheckJump: jump held in the first 500 ms of an attack, feet within 32 units (0.8 m) of the floor -> flip attack (medium) / leap slash (strong)
+    const S = this.saber, I = S.I, c = this.cmd; if (S.holstered || !c.jump || !(S.weaponTime > 0 || c.attack) || this.status !== 'normal') return false;
+    if (!S.inAttack(S.move) || S.inSpecial(S.move)) return false; if ((this.now - S.moveStart) >= 0.5) return false;
+    if (!this.onGround) { const fl = this.g.world && this.g.world.floorAt ? this.g.world.floorAt(this.pos[0], this.pos[2], this.pos[1] + 0.3) : null; if (fl == null || this.pos[1] - fl >= 0.8) return false; }
     if (S.level === 2 && this.ctxInfo().front) { S.weaponTime = 0; S.setMove(Math.random() < 0.5 ? I.LS_A_FLIP_STAB : I.LS_A_FLIP_SLASH, this.now); S.weaponTime = S.torsoTimer; return true; }
     if (S.level === 3 && c.fwd > 0) { S.weaponTime = 0; S.setMove(I.LS_A_JUMP_T__B_, this.now); S.weaponTime = S.torsoTimer; return true; }
     return false;
@@ -372,6 +387,7 @@ export class Fighter {
   ctxInfo() { return this.g.combatContext ? this.g.combatContext(this) : { front: false, behind: false }; }
   finish(dt) {
     const a = this.actor; a.pos[0] = this.pos[0]; a.pos[1] = this.pos[1]; a.pos[2] = this.pos[2];
+    const S = this.saber; a.matchPelvis = !S.holstered && S.move !== S.I.LS_READY && !a.torsoFollow; // a saber move on the torso over running / jumping legs keeps its authored hip turn
     this.aimTorso(dt);
     a.update(this.now);
     this.updateHilt(dt);
@@ -382,8 +398,25 @@ export class Fighter {
     const a = this.actor, free = this.status === 'normal' && this.now >= this.legsLockUntil && this.legsYaw != null;
     if (!free) { this.legsYaw = this.yaw; this.legsSwinging = false; }
     a.yaw = free ? this.legsYaw : this.yaw; a.spineYaw = free ? wrapPi(this.yaw - this.legsYaw) : 0;
-    const pitch = this.isPlayer ? (this.cmd.aimPitch || 0) : (this.aimPitch || 0), dest = free ? clamp(pitch, -0.6, 1.3) * 0.75 : 0;
-    this.torsoPitch = swingTo(this.torsoPitch || 0, dest, TORSO_PITCH_TOL, TORSO_PITCH_CLAMP, TORSO_PITCH_SPEED, dt); a.spinePitch = this.torsoPitch;
+    const locked = this.swingLocked(); if (!locked) this.lockPitch = null; else if (this.lockPitch == null) this.lockPitch = this.torsoPitch || 0; // a committed strike keeps the pitch it started with
+    const pitch = this.isPlayer ? (this.cmd.aimPitch || 0) : (this.aimPitch || 0), dest = !free ? 0 : locked ? this.lockPitch : clamp(pitch, -0.6, 1.3) * 0.75;
+    this.torsoPitch = swingTo(this.torsoPitch || 0, dest, TORSO_PITCH_TOL, TORSO_PITCH_CLAMP, TORSO_PITCH_SPEED, dt); a.spinePitch = this.torsoPitch + this.groundStrikeBend(dt);
+  }
+  // The leap slash (BOTH_FORCELEAP2_T__B_) is a whole-body move, so the view pitch does not bend it; on its own the blade
+  // stops ~0.6 m above the floor. Lean the spine into the downward strike (45-85% of the move) so it cuts into the ground.
+  // An air slash (a downward attack begun off the ground), or a downward slash aimed at the floor, does the same: from
+  // mid-strike (and while an air slash is held for the landing) the spine leans in until the blade tip sits just under the
+  // feet, so it cuts into the floor. A slash that already reaches the floor gets no extra lean.
+  groundStrikeBend(dt = 1 / 60) {
+    const S = this.saber; if (S.holstered) { this.airBend = 0; return 0; }
+    if (S.move === S.I.LS_A_JUMP_T__B_ && S.moveLen > 0) {
+      const p = (this.now - S.moveStart) * 1000 / S.moveLen, up = clamp((p - 0.45) / 0.23, 0, 1), down = clamp((p - 0.85) / 0.15, 0, 1);
+      return 0.5 * up * up * (3 - 2 * up) * (1 - down);
+    }
+    const p = S.moveLen > 0 ? (this.now - S.moveStart) * 1000 / S.moveLen : 1, aimDown = (this.isPlayer ? this.cmd.aimPitch || 0 : this.aimPitch || 0) > 0.45; // aiming down: the slash is meant for the floor
+    if ((S.airStrike || aimDown) && S.isDownSlash(S.move) && (p > 0.5 || S.airHold)) this.airBend = clamp((this.airBend || 0) + clamp(this.blade.tip[1] - this.pos[1] + 0.12, -0.3, 0.6) * 5 * dt, 0, 0.7);
+    else this.airBend = (this.airBend || 0) * Math.exp(-8 * dt);
+    return this.airBend;
   }
   updateHilt(dt) {
     const A = this.g.attach, a = this.actor; let M = this.hiltMat;

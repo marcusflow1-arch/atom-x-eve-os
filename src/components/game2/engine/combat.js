@@ -101,6 +101,7 @@ export class Combat {
       if (A.hitMove !== A.saber.moveStart) { A.hitSet.clear(); A.hitMove = A.saber.moveStart; }
       const swing = A.swingActive() || (A.thrown && false);
       const attacking = A.attacking ? A.attacking() : swing; // BG_SaberInAttack: attack and special moves
+      if (attacking) this.groundStrike(A, prev, seg);
       for (const B of F) {
         if (B === A || !hostile(A, B) || B.status === 'dead') continue;
         const bs = B.bladeSeg();
@@ -135,6 +136,17 @@ export class Combat {
     }
     for (const f of F) { const cap = caps.get(f); f._prevCap = { a: cap.a.slice(), b: cap.b.slice(), r: cap.r }; }
     this.props(dt); this.updateBolts(dt); this.updateRemote(dt);
+  }
+  // w_saber.c CheckSaberDamage also traces the blade against the world: an attacking blade that reaches the floor
+  // throws sparks, plays the wall-hit sound and leaves a scorch (CG_SaberHitWall / saber burn mark).
+  groundStrike(A, prev, seg) {
+    const g = this.g, [b, t] = seg; if (!g.world || !g.world.floorAt) return;
+    const fl = g.world.floorAt(t[0], t[2], Math.max(b[1], t[1]) + 0.3); if (fl == null || t[1] > fl + 0.03 || b[1] <= fl) return;
+    const was = prev && prev[1][1] <= fl + 0.03; if (was && (A.groundHitT ?? -1) > g.t) return; A.groundHitT = g.t + 0.15;
+    const k = clamp((b[1] - fl) / Math.max(1e-3, b[1] - t[1]), 0, 1), pt = [b[0] + (t[0] - b[0]) * k, fl + 0.02, b[2] + (t[2] - b[2]) * k];
+    g.fx.sparks(pt, [0, 1, 0], was ? 6 : 16, [1, 0.85, 0.55, 1]); g.sfxAt(['wall1', 'wall2', 'wall3'][Math.floor(Math.random() * 3)], pt, was ? 0.35 : 0.8);
+    if (!was) { g.flashLight && g.flashLight(pt, A.blade.color, 0.18); if (A.isPlayer && g.shake) g.shake(0.08); }
+    if (g.scorch) g.scorch(pt, A.blade.color); A.groundHits = (A.groundHits || 0) + 1;
   }
   clash(A, B, pt, aSwing, bSwing) {
     const g = this.g; g.fx.sparks(pt, [0, 1, 0], 18, [1, 0.92, 0.6, 1]); g.sfxAt(BLOCKS[Math.floor(Math.random() * BLOCKS.length)], pt, 1); g.flashLight(pt, A.blade.color, 0.25);

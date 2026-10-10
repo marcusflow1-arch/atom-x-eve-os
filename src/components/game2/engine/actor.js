@@ -72,6 +72,7 @@ export class Actor {
     this.legs = new Layer(); this.torso = new Layer(); this.torsoFollow = true;
     this.pos = [0, 0, 0]; this.yaw = 0; this.legYaw = 0; this.now = 0; this.animSpeed = 1;
     this.spineYaw = 0; this.spinePitch = 0; // torso aim relative to the legs (radians; + yaw = left, + pitch = down)
+    this.matchPelvis = false;           // G2Rig.evaluate: torso keeps its own anim's hip yaw over other legs (saber swings)
     this.tint = opts.tint || [1, 1, 1]; this.tintAmt = 0;
     const N = skel.n; this.nBones = N;
     this.lq = Array.from({ length: N }, () => [0, 0, 0, 1]);     // local quats (blended)
@@ -93,9 +94,9 @@ export class Actor {
   _evalPose(lSt, tSt, now, outQ, outPel) {
     const rig = this.rig, N = this.nBones;
     const l = this._sample(lSt, now), t = this._sample(tSt, now);
-    rig.evaluate(l[0], t[0]); this._grab(rig, this.poseA, this.pelA);
+    const mp = this.matchPelvis && lSt !== tSt; rig.evaluate(l[0], t[0], mp); this._grab(rig, this.poseA, this.pelA);
     if (l[2] > 1e-4 || t[2] > 1e-4) {
-      rig.evaluate(l[1], t[1]); this._grab(rig, this.poseB, this.pelB);
+      rig.evaluate(l[1], t[1], mp); this._grab(rig, this.poseB, this.pelB);
       for (let i = 1; i < N; i++) { const f = this.skel.isTorso[i] ? t[2] : l[2]; if (f > 1e-4) Q.slerp(this.poseA[i], this.poseB[i], f, outQ[i]); else { const a = this.poseA[i], o = outQ[i]; o[0] = a[0]; o[1] = a[1]; o[2] = a[2]; o[3] = a[3]; } }
       for (let k = 0; k < 3; k++) outPel[k] = this.pelA[k] + (this.pelB[k] - this.pelA[k]) * l[2];
     } else {
