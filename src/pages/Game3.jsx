@@ -71,6 +71,7 @@ export default function Game3(){
  const [slipColor,setSlipColor]=useState('#37d8ff');
  const [shiftColor,setShiftColor]=useState('#a7f7f7');
  const [underglow,setUnderglow]=useState('#00d8ef');
+ const [rimColor,setRimColor]=useState('#c3d0db');
  const [route,setRoute]=useState('city');
  const [winCount,setWinCount]=useState(()=>{try{return Math.max(0,Number(localStorage.getItem('game3-race-wins')||0));}catch{return 0;}});
  const countedFinish=useRef(false);
@@ -197,7 +198,7 @@ export default function Game3(){
   <div className="flex shrink-0 gap-1 border-b border-white/10 bg-[#081321] p-2 sm:hidden">{buttons.map(b=><button key={b.id} onClick={()=>setTab(b.id)} className={'flex-1 rounded-lg px-2 py-2 text-xs '+(tab===b.id?'bg-cyan-500/20 text-cyan-300':'text-white/60')}>{b.title}</button>)}</div>
   <audio ref={audio} src={soundSource||undefined} preload="metadata" onEnded={()=>skipTrack(1)} onError={()=>setPlaying(false)}/>
   <div className="relative min-h-0 flex-1">
-   <div className="absolute inset-0"><Game3Scene stateRef={race} inputRef={input} car={{...car,color:paint}} carSrc={modelUrls[car.id]||'/game3/models/'+car.file} route={route} customization={{slipColor,shiftColor,underglow}} onSnapshot={setSnapshot}/></div>
+   <div className="absolute inset-0"><Game3Scene stateRef={race} inputRef={input} car={{...car,color:paint}} carSrc={modelUrls[car.id]||'/game3/models/'+car.file} route={route} customization={{slipColor,shiftColor,underglow,rimColor}} onSnapshot={setSnapshot}/></div>
    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#03101a]/50 via-transparent to-[#03101a]/50"/>
    {snapshot.ghost>0&&<div className="pointer-events-none absolute inset-0 border-[7px] border-cyan-300/30 bg-black/10" style={{boxShadow:'inset 0 0 90px '+slipColor+'55'}}/>}
    {snapshot.perfectLanding>0&&<div className="pointer-events-none absolute left-1/2 top-1/4 -translate-x-1/2 text-xl font-black italic tracking-widest text-cyan-300">PERFECT LANDING + NITROUS</div>}
@@ -218,18 +219,27 @@ export default function Game3(){
     {snapshot.phase==='finish'&&<div className="absolute left-1/2 top-1/2 w-[min(480px,90vw)] -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-[#081523]/95 p-6 text-center shadow-2xl"><Flag size={36} className="mx-auto text-cyan-300"/><h2 className="my-3 text-3xl font-black">FINISH LINE</h2><p className="mb-4 text-white/65">{snapshot.raceTime.toFixed(1)}s · Chapter 1 complete</p><button className={buttonBase+' bg-cyan-500/30'} onClick={restart}><RotateCcw size={14} className="inline"/> Race again</button></div>}
     <div className="pointer-events-none absolute left-3 top-3 rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-[10px] text-white/70 backdrop-blur"><div className="text-cyan-300">W/↑ ACCEL · S/↓ BRAKE · A/D STEER</div><div>E SHIFT · SPACE DRIFT · N NITRO · N + DIRECTION DODGE · G GHOST</div></div>
    </React.Fragment>}
-   {tab==='garage'&&<div className="absolute inset-y-0 right-0 w-[min(480px,100%)] overflow-y-auto border-l border-white/10 bg-[#091522]/95 p-4 shadow-2xl backdrop-blur-xl">
-    <div className="mb-4 flex items-center gap-2"><CarFront size={20} className="text-cyan-300"/><h2 className="text-xl font-bold">Garage / Collection</h2></div>
-    <p className="mb-4 text-xs text-white/50">Choose your vehicle. Imported GLB models appear in the live 3D viewer; until then the game displays a drivable proxy.</p>
-    <div className="space-y-2">{CARS.map(c=><div key={c.id} className={'rounded-xl border p-3 '+(car.id===c.id?'border-cyan-400/60 bg-cyan-500/10':'border-white/10 bg-white/5')}>
-     <button className="w-full text-left" onClick={()=>setSelectedCar(c.id)}><span className="font-semibold">{c.name}</span><span className="ml-2 text-[10px] text-cyan-300">{car.id===c.id?'SELECTED':''}</span><div className="text-[10px] text-white/50">Acceleration {Math.round(c.accel*100)} · Handling {Math.round(c.handling*100)}</div></button>
-     <label className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs text-white/75"><Upload size={12}/>{modelUrls[c.id]?'Replace 3D model':'Import '+c.file}<input aria-label={'Import '+c.name+' 3D model'} type="file" accept=".glb,.gltf" className="hidden" onChange={e=>loadCar(c.id,e.target.files?.[0])}/></label>
-    </div>)}</div>
-    <div className={cardBase+' mt-4'}><h3 className="mb-3 text-sm font-semibold">Visual customization</h3>
-      {[[paint,setPaint,'Body paint'],[slipColor,setSlipColor,'Slipstream aura'],[shiftColor,setShiftColor,'Perfect Shift wind']].map(([value,setter,label])=><label key={label} className="mb-3 flex items-center justify-between gap-3 text-sm text-white/70">{label}<input type="color" value={value} onChange={e=>setter(e.target.value)} className="h-8 w-16 cursor-pointer rounded-md border-0 bg-transparent"/></label>)}
-      <label className="flex items-center justify-between gap-3 text-sm text-white/70">Speedometer style<select value={gaugeStyle} onChange={e=>setGaugeStyle(e.target.value)} className="rounded-lg border border-white/15 bg-slate-800 px-3 py-2 text-xs"><option value="sport">Sport</option><option value="classic">Classic</option><option value="minimal">Digital</option></select></label>
-    </div>
-    <p className="mt-4 text-xs text-white/40">Bumpers, rims, vinyls, underglow and upgrade inventories belong to the full garage expansion; this prototype establishes car selection and effect color configuration.</p>
+   {tab==='garage'&&<div className="absolute inset-y-0 right-0 w-[min(500px,100%)] overflow-y-auto border-l border-white/10 bg-[#091522]/95 p-4 shadow-2xl backdrop-blur-xl">
+     <div className="mb-3 flex items-center gap-2"><CarFront size={20} className="text-cyan-300"/><h2 className="text-xl font-bold">Garage / Collection</h2></div>
+     <p className="mb-3 text-xs text-white/60">Your five supplied car models are installed. Win races to unlock the advanced vehicles. Collection progress is currently saved on this device.</p>
+     <div className="mb-4 rounded-lg border border-cyan-300/20 bg-cyan-500/10 p-3 text-xs text-cyan-100">Race victories: <strong>{winCount}</strong> · Next unlock: {winCount>=3?'Collection complete':CARS[winCount+2]?.name||'Collection complete'}</div>
+     <div className="space-y-2">{CARS.map((c,i)=>{const required=Math.max(0,i-1);const unlocked=!c.locked||winCount>=required;return <div key={c.id} className={'rounded-xl border p-3 '+(car.id===c.id?'border-cyan-400/60 bg-cyan-500/10':'border-white/10 bg-white/5')}>
+       <button disabled={!unlocked} className="w-full text-left disabled:opacity-50" onClick={()=>setSelectedCar(c.id)}>
+         <div className="flex items-center justify-between gap-2"><span className="font-semibold">{c.name}</span><span className="text-[10px] text-cyan-300">{car.id===c.id?'SELECTED':unlocked?'AVAILABLE':required+' RACE '+(required===1?'WIN':'WINS')}</span></div>
+         <div className="mt-1 text-[10px] text-white/50">Acceleration {Math.round(c.accel*100)} · Handling {Math.round(c.handling*100)} · Provided 3D asset</div>
+       </button>
+       <label className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs text-white/75"><Upload size={12}/>{modelUrls[c.id]?'Restore personal imported model':'Replace supplied model'}<input aria-label={'Import '+c.name+' model'} type="file" accept=".glb,.gltf,.fbx" className="hidden" onChange={e=>loadCar(c.id,e.target.files?.[0])}/></label>
+     </div>;})}</div>
+     <div className={cardBase+' mt-4'}>
+       <h3 className="mb-3 text-sm font-semibold">Paint / Effect customization</h3>
+       {[[paint,setPaint,'Car paint'],[rimColor,setRimColor,'Rim color'],[underglow,setUnderglow,'Neon underglow'],[slipColor,setSlipColor,'Slipstream aura'],[shiftColor,setShiftColor,'Perfect Shift airflow']].map(([value,setter,label])=><label key={label} className="mb-2 flex items-center justify-between gap-3 text-xs text-white/70">{label}<input type="color" value={value} onChange={e=>setter(e.target.value)} className="h-8 w-14 cursor-pointer rounded border-0 bg-transparent"/></label>)}
+       <label className="mt-3 flex items-center justify-between gap-3 text-xs text-white/70">Speedometer style<select value={gaugeStyle} onChange={e=>setGaugeStyle(e.target.value)} className="rounded-lg border border-white/15 bg-slate-800 px-3 py-2 text-xs"><option value="sport">Sport</option><option value="classic">Classic</option><option value="minimal">Digital</option></select></label>
+       <p className="mt-3 text-[11px] text-white/40">Car-paint and rim tint apply where the model exposes separately named materials. Physical bumpers and custom vinyl placements require separate meshes or a UV editing workflow.</p>
+     </div>
+     <div className={cardBase+' mt-4'}><h3 className="mb-2 text-sm font-semibold">Race route / Environment</h3>
+       <select value={route} onChange={e=>setRoute(e.target.value)} className="w-full rounded-lg border border-white/15 bg-slate-800 px-3 py-2 text-sm"><option value="city">City Night · Arcade Test Course</option><option value="dam">Glen Canyon Dam · Supplied Environment Preview</option></select>
+       <p className="mt-2 text-[11px] text-white/50">Dam model and textures are included. Its precise road/collision layout still needs authoring before it can become a complete course.</p>
+     </div>
    </div>}
    {tab==='story'&&<div className="absolute inset-0 flex items-center justify-center bg-[#030813]/65 p-4 backdrop-blur-md">
      <div className="w-[min(700px,100%)] rounded-2xl border border-cyan-300/20 bg-[#081522]/95 p-5 shadow-2xl sm:p-8">
