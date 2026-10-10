@@ -69,6 +69,23 @@ test('the first player opens the arena; everybody after joins it and links direc
   for (const s of [g[0], g[2], host]) s.leave();
 });
 
+test('a host election that selects another user joins their existing fight instead of starting isolated AI combat', async () => {
+  const bus = new Bus(), first = await arrive(bus, 'First');
+  const newcomer = player(bus, 'Second', 'dark');
+  newcomer.sig.listRooms = async () => []; // simulate a stale client-side list
+  newcomer.sig.createRoom = async () => [...bus.rooms.values()][0]; // backend elected the real host
+  await newcomer.start();
+  await settle();
+  assert.equal(bus.rooms.size, 1);
+  assert.equal(first.roster.size, 2);
+  assert.equal(newcomer.roster.size, 2);
+  assert.equal(newcomer.state, 'live');
+  assert.equal(newcomer.isHost, false);
+  assert.equal(newcomer.hostId, first.self);
+  newcomer.leave();
+  first.leave();
+});
+
 test('the arena holds 10 players: the 11th is told it is full and no second arena opens', async () => {
   const bus = new Bus(), host = await arrive(bus, 'H'); const g = []; for (let i = 0; i < 9; i++) g.push(await arrive(bus, 'P' + i, i % 2 ? 'dark' : 'light'));
   assert.equal(host.roster.size, 10); assert.equal([...bus.rooms.values()][0].status, 'full');
