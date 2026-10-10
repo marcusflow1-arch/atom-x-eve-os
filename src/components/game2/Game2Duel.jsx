@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, ChevronRight, Loader2, Menu, Swords, Users } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
-import Game2Lobby, { getIceServers } from './Game2Lobby';
+import { getAccessToken } from '@base44/sdk';
+import { appParams } from '@/lib/app-params';
+import { game2RailwayUrl } from './net/railway.js';
+import Game2Lobby from './Game2Lobby';
 
 // Game 2 start screen: Single Player (story missions) or Multiplayer (the online free-for-all arena, Game2Lobby.jsx;
 // the offline Dark Jedi duel is the lobby's practice mode).
@@ -18,7 +20,7 @@ const MODES = {
   },
   online: {
     tag: 'Multiplayer', title: 'Free-for-all arena', loading: 'Entering the arena', icon: Users,
-    blurb: 'One online Lightsaber Training arena for everybody: up to 10 players, Jedi or Dark Jedi, everyone against everyone and the AI Reborn. Come in and leave whenever you like. Practice offline against the Reborn from the lobby.',
+    blurb: 'One real-time Railway arena for up to 10 human-controlled Jedi or Dark Jedi. Fight other players from different browsers and countries. Optional AI Reborn opponents; offline practice remains available.',
   },
 };
 const PRACTICE = { tag: 'Practice', title: 'Dark Jedi Duel', loading: 'Dark Jedi duel', icon: Swords };
@@ -116,12 +118,21 @@ function Game2Session({ choice, online, onExit }) {
           if (!cancelled) setStatus({ phase: 'loading', text: `Loading ${what}` });
         }, { map: arena });
         if (cancelled) return;
-        if (choice === 'online') { // peer-to-peer match: signaling through the app backend (or this browser's tabs in test mode)
-          const { Base44Signaling, LocalSignaling } = await import('./net/signaling.js');
-          const signaling = online.local ? new LocalSignaling(online.selfId) : new Base44Signaling(base44, online.selfId);
-          const iceServers = online.local ? [] : await getIceServers();
-          if (cancelled) { signaling.close(); return; }
-          engineOptions = { mode: 'online', sfxBase: `${ASSET_BASE}sfx/`, net: { ...online, signaling, iceServers } };
+        if (choice === 'online') {
+          if (online.local) { // isolated localhost developer test; never on editor/live
+            const { LocalSignaling } = await import('./net/signaling.js');
+            const signaling = new LocalSignaling(online.selfId);
+            if (cancelled) { signaling.close(); return; }
+            engineOptions = { mode: 'online', sfxBase: `${ASSET_BASE}sfx/`,
+              net: { ...online, signaling, iceServers: [] } };
+          } else {
+            // One Railway WebSocket carries realtime movement and combat. Base44
+            // only authenticates the account once, not each animation/attack.
+            const token = getAccessToken() || appParams.token;
+            if (!token) throw new Error('Sign in to your Atom XE account again before joining multiplayer.');
+            engineOptions = { mode: 'online', sfxBase: `${ASSET_BASE}sfx/`,
+              net: { ...online, transport: 'railway', url: game2RailwayUrl(), token } };
+          }
         }
         game = new Game(renderer, assets, canvas, hud, engineOptions);
         if (choice !== 'online') setStatus({ phase: 'ready', text: '' });
@@ -200,7 +211,7 @@ function Game2Session({ choice, online, onExit }) {
           <AlertTriangle className="h-7 w-7 text-amber-300" />
           <div className="text-sm font-semibold">Game 2 could not start</div>
           <div className="max-w-md text-xs text-white/50">{status.text}</div>
-          <div className="max-w-md text-xs text-white/35">{choice === 'online' ? 'Multiplayer requires the same published Game 2 backend for all players and a working WebRTC connection. Return to the lobby to retry.' : 'The game needs a browser with WebGL2 enabled. Reload after turning on hardware acceleration.'}</div>
+          <div className="max-w-md text-xs text-white/35">{choice === 'online' ? 'Multiplayer requires a Railway WebSocket connection and valid Atom XE login. Return to the lobby to retry.' : 'The game needs a browser with WebGL2 enabled. Reload after turning on hardware acceleration.'}</div>
         </div>
       )}
     </div>
