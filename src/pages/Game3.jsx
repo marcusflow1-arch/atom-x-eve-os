@@ -175,7 +175,6 @@ export default function Game3(){
   a.load();
   if(isPlaying) a.play().catch(()=>setPlaying(false));
  // The track changes independently from the user's explicit play/pause intent.
- // eslint-disable-next-line react-hooks/exhaustive-deps
  },[soundSource]);
  const toggleAudio=()=>{
   const a=audio.current;if(!a||!soundSource)return;
