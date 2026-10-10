@@ -514,6 +514,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     try {
       const body = await invoke('use_skill', { match_id: match.id, slot: Number(slot), cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
+      if (localStorage.getItem('atomxe_pvp_latency_debug') === '1') console.info('[PvP latency] cast_server_ack', { castId: cast.cast_id || castId, at: performance.now() });
       showCast(user.id, skill, { ...cast, cast_id: cast.cast_id || castId, effect_id: cast.effect_id || skill.effect_id });
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_cast', matchId: match.id, cast_id: cast.cast_id || castId, slot: Number(slot), effect_id: skill.effect_id || '', effect: effectFromSkill(skill), resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, missed: Boolean(cast.missed), stun_ms: Number(cast.stun_ms || 0), targetPlayerId: opponent?.id } }));
       return true;
@@ -735,6 +736,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const remoteCast = (event) => {
       const d=event.detail||{}; const currentMatch=matchRef.current; const currentOpponent=opponentRef.current;
       if(String(d.matchId||'')!==String(currentMatch?.id||'')||String(d.sourcePlayerId||d.player_id||'')!==String(currentOpponent?.id||''))return;
+      if (localStorage.getItem('atomxe_pvp_latency_debug') === '1') console.info('[PvP latency] peer_cast_received', { castId: d.cast_id, at: performance.now() });
       // Peer relay is the fastest path; the server poll (hit_log / last_cast)
       // shows the same action if this message never arrives.
       if (String(d.kind || '') === 'pvp_melee' || String(d.effect_id || '') === 'basic_melee') {
