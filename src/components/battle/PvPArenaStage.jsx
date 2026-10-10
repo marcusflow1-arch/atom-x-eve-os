@@ -1,3 +1,10 @@
+function recordPvPLatency(kind, castId, detail = {}) {
+  if (typeof window === 'undefined') return;
+  const event = { kind, castId: String(castId || ''), at: performance.now(), ...detail };
+  window.dispatchEvent(new CustomEvent('atomxePvPLatency', { detail: event }));
+  if (localStorage.getItem('atomxe_pvp_latency_debug') === '1') console.debug('[PvP latency]', event);
+}
+
 import {AvatarCustomizationRuntime} from '@/components/onboarding/customizationRuntime';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -499,6 +506,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (a.distanceTo(b) > Number(skill.range_m || 3) + 1.5) { setError('Out of range.'); return false; }
     setError('');
     const castId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    recordPvPLatency('cast_input', castId, { matchId: match.id });
     const facingYaw = Math.atan2(b.x - a.x, b.z - a.z);
     const localFighter = runtimes.current.local;
     // Start the authored attack on the input frame. Previously the client
@@ -514,6 +522,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     try {
       const body = await invoke('use_skill', { match_id: match.id, slot: Number(slot), cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
+      recordPvPLatency('cast_server_ack', cast.cast_id || castId, { matchId: match.id });
       showCast(user.id, skill, { ...cast, cast_id: cast.cast_id || castId, effect_id: cast.effect_id || skill.effect_id });
       window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: { kind: 'pvp_cast', matchId: match.id, cast_id: cast.cast_id || castId, slot: Number(slot), effect_id: skill.effect_id || '', effect: effectFromSkill(skill), resolves_at: cast.resolves_at, damage: cast.damage, crit: cast.crit, missed: Boolean(cast.missed), stun_ms: Number(cast.stun_ms || 0), targetPlayerId: opponent?.id } }));
       return true;
@@ -626,7 +635,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       return;
     }
     if (loaded !== 2) return;
-    log.forEach((hit) => showHitResult(hit));
+    log.forEach((hit) => { recordPvPLatency('hit_log_observed', hit.cast_id, { matchId: match?.id }); showHitResult(hit); });
   // showHitResult reads refs only; re-run when new hits arrive or fighters load.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match?.hit_log, loaded]);
@@ -642,6 +651,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     if (!resolvesAt || resolvesAt < Date.now() + serverOffsetRef.current - 300) return;
     const skill = (opponentRef.current?.skills || []).find((row) => Number(row.slot) === Number(cast.slot))
       || (opponentRef.current?.skills || []).find((row) => String(row.effect_id) === String(cast.effect_id));
+    recordPvPLatency('last_cast_fallback', cast.cast_id, { matchId: match?.id });
     showCast(cast.attacker_id, skill || null, cast);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match?.last_cast?.cast_id, loaded, user?.id]);
@@ -735,6 +745,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const remoteCast = (event) => {
       const d=event.detail||{}; const currentMatch=matchRef.current; const currentOpponent=opponentRef.current;
       if(String(d.matchId||'')!==String(currentMatch?.id||'')||String(d.sourcePlayerId||d.player_id||'')!==String(currentOpponent?.id||''))return;
+      recordPvPLatency('peer_cast_received', d.cast_id, { matchId: currentMatch?.id });
       // Peer relay is the fastest path; the server poll (hit_log / last_cast)
       // shows the same action if this message never arrives.
       if (String(d.kind || '') === 'pvp_melee' || String(d.effect_id || '') === 'basic_melee') {
