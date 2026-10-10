@@ -1156,17 +1156,6 @@ function LayoutContent({ children, currentPageName }) {
                             </svg>
                             Discord
                           </a>
-
-                          <button
-                            type="button"
-                            onClick={() => { setJediGameWindowOpen(true); focusDashboardWindow('jedi-outcast-game'); }}
-                            className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-amber-500/10 border-amber-300/20 text-amber-100/80 hover:bg-amber-500/20 hover:text-white items-center gap-2"
-                            title="Open Jedi Outcast Raven-engine game in its own floating window"
-                          >
-                            <Swords className="w-4 h-4" />
-                            Star Wars Jedi Knight II: Jedi Outcast
-                          </button>
-
                           {/* Original street-racing Game 3 is intentionally placed immediately before Game 2. */}
                           <button
                             type="button"
