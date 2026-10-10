@@ -6,7 +6,7 @@ export const GAME2_RAILWAY_MAX = 10;
 
 // Set by build-time configuration, or use the tested Railway service domain.
 // This is a PUBLIC service URL, not an authorization secret.
-export const DEFAULT_GAME2_RAILWAY_URL = '';
+export const DEFAULT_GAME2_RAILWAY_URL = 'wss://game2-arena-relay-test.up.railway.app/ws/game2';
 
 export function game2RailwayUrl() {
   const configured = typeof import.meta.env === 'object'
