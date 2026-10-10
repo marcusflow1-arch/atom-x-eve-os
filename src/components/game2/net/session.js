@@ -9,6 +9,8 @@ import { ARENA, MAX_PLAYERS, NET_VERSION, pickArena } from './signaling.js';
 const HEARTBEAT_MS = 4000;
 const JOIN_TIMEOUT_MS = 12000;
 const SETTLE_MS = 1500;
+const ELECTION_WAIT_MS = 900;
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export function sideCounts(roster) { const c = { light: 0, dark: 0 }; for (const e of roster.values()) c[e.side === 'dark' ? 'dark' : 'light']++; return c; }
 
@@ -47,7 +49,18 @@ export class NetSession {
       return;
     }
     if (!this.ended) {
-      try { await this.host(); }
+      // Let concurrent entrants publish their room before electing a host.
+      // Recheck rather than allowing each browser to independently start a battle.
+      await sleep(ELECTION_WAIT_MS);
+      try {
+        const existing = pickArena(await this.sig.listRooms());
+        if (existing && existing.host_peer !== this.self) {
+          if ((existing.players || 0) >= this.max) { this.end('The arena is full (10 players)'); return; }
+          if (await this.join(existing)) return;
+          if (!this.ended) this.end('Could not connect to the shared arena host. Please retry joining.');
+          return;
+        }
+        await this.host();
       catch (e) {
         console.warn('[game2 net] arena create', e?.message || e);
         this.end('Could not open the shared arena. Please retry.');
@@ -71,7 +84,7 @@ export class NetSession {
     this.me = { id: this.self, name: this.o.name, side: this.o.side, host: true, at: Date.now() }; this.roster = new Map([[this.self, this.me]]);
     this.room = await this.sig.createRoom(this.roomFields());
     if (this.ended) { this.sig.deleteRoom(this.room.id); return; }
-    this.state = 'live'; this.status(''); clearInterval(this.hb); this.hb = setInterval(() => this.heartbeat(), HEARTBEAT_MS);
+    this.state = 'live'; this.status('Confirming the shared arena'); clearInterval(this.hb); this.hb = setInterval(() => this.heartbeat(), HEARTBEAT_MS);
     this.onRoster(this.list()); this.onReady(this.me, null); this.onHostChange(this.self, true);
     clearTimeout(this.settleTimer); this.settleTimer = setTimeout(() => this.mergeCheck(), this.o.settleMs ?? SETTLE_MS); // two players opening the arena at the same moment: keep one
   }
@@ -89,8 +102,10 @@ export class NetSession {
     let best = null; try { best = pickArena(await this.sig.listRooms()); } catch { return; }
     if (!best || best.host_peer === this.self || !this.isHost || this.ended || this.roster.size !== 1 || (best.players || 0) >= this.max) return;
     this.merging = true; clearInterval(this.hb); const mine = this.room; this.isHost = false; this.onHostChange(best.host_peer, false);
-    this.sig.deleteRoom(mine.id);
+    // Keep the old beacon until the new host actually welcomes us; otherwise
+    // two concurrent hosts can both delete their beacons and strand everyone.
     const ok = await this.join(best); this.merging = false;
+    if (ok && mine) this.sig.deleteRoom(mine.id);
     if (!ok && !this.ended) this.end('Could not reconnect to the shared arena. Please retry.');
   }
   // ---- links
