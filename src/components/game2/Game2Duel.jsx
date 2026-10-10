@@ -80,6 +80,7 @@ function Game2Session({ choice, online, onExit }) {
   const hostRef = useRef(null);
   const mode = MODES[choice] || PRACTICE;
   const [status, setStatus] = useState({ phase: 'loading', text: `Loading ${mode.loading}` });
+  const [humanCount, setHumanCount] = useState(null);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -131,8 +132,10 @@ function Game2Session({ choice, online, onExit }) {
             if (cancelled || !game) return;
             const net = game.net;
             if (net?.ended) setStatus({ phase: 'error', text: String(net.ended) });
-            else if (net?.me && net?.session?.state === 'ready') setStatus({ phase: 'ready', text: '' });
-            else if (net?.me) setStatus({ phase: 'ready', text: '' });
+            else if (net?.me && net?.session?.state === 'live') {
+              setHumanCount(previous => previous === net.session.roster.size ? previous : net.session.roster.size);
+              setStatus(previous => previous.phase === 'ready' ? previous : { phase: 'ready', text: '' });
+            }
             else setStatus({ phase: 'loading', text: net?.statusText || 'Connecting to the shared arena…' });
           };
           const connectionTimer = setInterval(checkConnection, 250);
@@ -177,6 +180,14 @@ function Game2Session({ choice, online, onExit }) {
         <Menu className="h-3.5 w-3.5" />
         {choice === 'single' ? 'Main menu' : 'Lobby'}
       </button>
+      {choice === 'online' && status.phase === 'ready' && humanCount !== null && (
+        <div role="status" aria-live="polite" className="absolute right-3 top-[62px] z-20 rounded-lg border border-white/15 bg-[#080a16]/85 px-3 py-2 text-xs font-semibold text-white/90">
+          {humanCount === 1
+            ? 'ONLINE · 1 human player · Waiting for other players'
+            : `ONLINE · ${humanCount} human players · Real-time PvP`}
+          <div className="mt-0.5 text-[10px] font-normal text-white/50">AI Reborn enemies are separate from these players.</div>
+        </div>
+      )}
       {status.phase === 'loading' && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[#05060c] text-white/80">
           <Loader2 className="h-7 w-7 animate-spin text-cyan-300" />
@@ -189,7 +200,7 @@ function Game2Session({ choice, online, onExit }) {
           <AlertTriangle className="h-7 w-7 text-amber-300" />
           <div className="text-sm font-semibold">Game 2 could not start</div>
           <div className="max-w-md text-xs text-white/50">{status.text}</div>
-          <div className="max-w-md text-xs text-white/35">The game needs a browser with WebGL2 enabled. Reload the page after turning on hardware acceleration.</div>
+          <div className="max-w-md text-xs text-white/35">{choice === 'online' ? 'Multiplayer requires the same published Game 2 backend for all players and a working WebRTC connection. Return to the lobby to retry.' : 'The game needs a browser with WebGL2 enabled. Reload after turning on hardware acceleration.'}</div>
         </div>
       )}
     </div>
