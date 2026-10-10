@@ -411,7 +411,11 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       // Line the palm strike up with the server's hit time (resolves_at), so the
       // HP drop and the stun arrive at the visible impact on both screens.
       const impactAt = cast.resolves_at ? toPerfTime(cast.resolves_at) : performance.now() + ARENA_CHIDORI.impact * 1000;
-      const startedAt = impactAt - ARENA_CHIDORI.impact * 1000;
+      // A delayed relay must not start the entire Chidori timeline in the past.
+      // Otherwise the remote client skips the dash/strike and only sees a late stun.
+      // Keep authoritative damage timing unchanged; this only repairs presentation.
+      const startedAt = Math.max(performance.now(), impactAt - ARENA_CHIDORI.impact * 1000);
+      recordPvPLatency('cast_visual_start', castId, { casterKey, relayLateMs: Math.max(0, performance.now() - (impactAt - ARENA_CHIDORI.impact * 1000)) });
       const target = runtimes.current[targetKey];
       if (caster) { caster.chidori = { start: startedAt, castId }; caster.lunge = null; }
       if (target) {
