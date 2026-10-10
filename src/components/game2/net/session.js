@@ -29,13 +29,30 @@ export class NetSession {
   // ---- arrive: join the arena if it is open, otherwise open it
   async start() {
     this.sig.listen(ARENA); this.status('Looking for the arena');
-    let arena = null; try { arena = pickArena(await this.sig.listRooms()); } catch (e) { console.warn('[game2 net] arena lookup', e?.message || e); }
+    let arena = null;
+    try { arena = pickArena(await this.sig.listRooms()); }
+    catch (e) {
+      console.warn('[game2 net] arena lookup', e?.message || e);
+      this.end('Could not reach the shared arena service. Check your connection and retry.');
+      return;
+    }
     if (this.ended) return;
     if (arena && arena.host_peer !== this.self) {
       if ((arena.players || 0) >= this.max) { this.end('The arena is full (10 players)'); return; }
       if (await this.join(arena)) return;
+      if (this.ended) return;
+      // Never silently open a second map just because WebRTC could not reach
+      // the existing host. A player must join the same active arena or retry.
+      this.end('Could not connect to the shared arena host. Please retry joining.');
+      return;
     }
-    if (!this.ended) await this.host();
+    if (!this.ended) {
+      try { await this.host(); }
+      catch (e) {
+        console.warn('[game2 net] arena create', e?.message || e);
+        this.end('Could not open the shared arena. Please retry.');
+      }
+    }
   }
   join(arena) { // resolves true once welcomed (or refused as full), false if the host cannot be reached
     this.room = arena; this.hostId = arena.host_peer; this.isHost = false; this.state = 'joining'; this.status('Joining the arena');
@@ -73,7 +90,8 @@ export class NetSession {
     if (!best || best.host_peer === this.self || !this.isHost || this.ended || this.roster.size !== 1 || (best.players || 0) >= this.max) return;
     this.merging = true; clearInterval(this.hb); const mine = this.room; this.isHost = false; this.onHostChange(best.host_peer, false);
     this.sig.deleteRoom(mine.id);
-    const ok = await this.join(best); this.merging = false; if (!ok && !this.ended) await this.host();
+    const ok = await this.join(best); this.merging = false;
+    if (!ok && !this.ended) this.end('Could not reconnect to the shared arena. Please retry.');
   }
   // ---- links
   accept(s) {
