@@ -6,6 +6,7 @@ import { Skeleton, Actor } from '../src/components/game2/engine/actor.js';
 import { Combat } from '../src/components/game2/engine/combat.js';
 import { Fighter } from '../src/components/game2/engine/fighter.js';
 import { Game } from '../src/components/game2/engine/game.js';
+import { SaberLogic } from '../src/components/game2/engine/saber.js';
 
 // Behaviour checked against the original Jedi Outcast source (Raven, GPL): w_saber.c CheckSaberDamage,
 // cg_players.c CG_G2PlayerAngles / CG_SwingAngles, bg_pmove.c PM_Footsteps, bg_weapons.c / g_weapon.c (Bryar).
@@ -120,4 +121,63 @@ test('Q swaps pistol and lightsaber; R lights the saber straight from the pistol
   const src = readFileSync(new URL('src/components/game2/engine/game.js', root), 'utf8');
   assert.match(src, /if \(i\.pressed\('KeyR'\)\) \{ if \(this\.playerWeapon === 'bryar'\) this\.switchWeapon\('saber'\)/);
   assert.match(src, /if \(this\.playerWeapon === 'bryar'\) \{ c\.attack = false; c\.alt = false; \}/, 'mouse fires the pistol instead of drawing the saber');
+});
+
+// ---------- controls, knockdown, landing, saber throw, Force timing
+
+test('key presses are kept until a 60 Hz simulation step reads them (no dropped jumps / Force keys on fast displays)', () => {
+  const seen = [];
+  const g = Object.create(Game.prototype);
+  Object.assign(g, { fps: 60, frameNo: 0, acc: 0, duel: false, hud: { help: false }, stepPresses: new Set(),
+    input: { pressedSet: new Set(), btnPressed: [false, false, false], endFrame() { this.pressedSet.clear(); this.btnPressed.fill(false); } },
+    frameInput() {}, updateCamera() {},
+    step() { seen.push(this.stepPressed('Space'), this.stepPressed('Mouse0')); this.firstSub = false; this.stepPresses.clear(); } });
+  g.input.pressedSet.add('Space'); g.input.btnPressed[0] = true;
+  g.update(1 / 144); assert.equal(seen.length, 0, 'a 144 Hz frame may run no simulation step');
+  g.update(1 / 144); g.update(1 / 144);
+  assert.deepEqual(seen.slice(0, 2), [true, true], 'the press and the click reach the next step');
+  g.update(1 / 60); assert.deepEqual(seen.slice(2), [false, false], 'and are consumed only once');
+});
+
+function knockStub(o = {}) {
+  const played = [];
+  const f = Object.create(Fighter.prototype);
+  Object.assign(f, { isPlayer: true, cmd: { jump: false }, jumpLevel: 3, quickerGetup: false, g: { t: 5, sfxAt() {} }, playWhole: a => { played.push(a); return 1.5; } }, o);
+  f.startGetup(); return { anim: played[0], len: f.getupLen, status: f.status };
+}
+
+test('knockdown get-up follows w_force.c: jump held = Force getup, pushed = quicker getup, otherwise normal', () => {
+  assert.deepEqual(knockStub({ cmd: { jump: true } }), { anim: 'BOTH_FORCE_GETUP_B1', len: 0.8, status: 'getup' });
+  assert.deepEqual(knockStub({ quickerGetup: true }), { anim: 'BOTH_FORCE_GETUP_B3', len: 0.6, status: 'getup' });
+  assert.deepEqual(knockStub({}), { anim: 'BOTH_GETUP1', len: 1.0, status: 'getup' });
+  assert.equal(knockStub({ cmd: { jump: true }, jumpLevel: 1 }).anim, 'BOTH_GETUP1', 'needs Force Jump above level 1');
+  const src = readFileSync(new URL('src/components/game2/engine/fighter.js', root), 'utf8');
+  assert.match(src, /this\.downTime = Math\.max\(0\.3, 1\.1 - \(this\.now - \(this\.knockAt \?\? this\.now\)\)\)/, 'down for 1.1 s from the knockdown; jump does not skip it');
+});
+
+test('landing plays a short LAND1 (TIMER_LAND 130 ms) with no camera shake, also after a Force Jump', () => {
+  const legs = [];
+  const f = Object.create(Fighter.prototype);
+  Object.assign(f, { g: { t: 2, onLand() {} }, airAnim: 'BOTH_FORCEINAIR1', fjUsed: true, actor: { setLegs: a => legs.push(a) } });
+  f.land(20); assert.deepEqual(legs, ['BOTH_LAND1']); assert.ok(Math.abs(f.landUntil - 2.13) < 1e-9);
+  f.airAnim = 'BOTH_FORCEJUMPBACK1'; f.land(20); assert.equal(legs[1], 'BOTH_LANDBACK1');
+  const game = readFileSync(new URL('src/components/game2/engine/game.js', root), 'utf8');
+  assert.doesNotMatch(game.match(/onLand\(f, impact\) \{[^\n]*/)[0], /this\.shake\(/);
+});
+
+test('saber throw: the throw animation plays once and holds with the arm out (not restarted every frame)', () => {
+  const calls = [];
+  const s = Object.create(SaberLogic.prototype);
+  Object.assign(s, { holstered: false, inFlight: true, moveAnim: null, I: {}, host: { playTorso: (a, o) => calls.push([a, o.speed]) } });
+  for (let i = 0; i < 30; i++) s.update(16, { busy: false }, i * 0.016);
+  assert.deepEqual(calls, [['BOTH_SABERTHROW1START', 3]]);
+});
+
+test('Force Push / Pull land on the cast frame and Heal can be used on the move', () => {
+  const src = readFileSync(new URL('src/components/game2/engine/force.js', root), 'utf8');
+  for (const pw of ['push', 'pull', 'mind']) {
+    const body = src.slice(src.indexOf(`do_${pw}() {`)), delay = /this\.later\(([\d.]+),/.exec(body)[1];
+    assert.equal(Number(delay), 0, `${pw} takes effect immediately`);
+  }
+  assert.doesNotMatch(src.match(/do_heal\(\) \{[^\n]*/)[0], /freeze|whole: true/);
 });

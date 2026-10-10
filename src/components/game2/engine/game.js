@@ -71,7 +71,10 @@ export class Game {
     this.cam = { yaw: startYaw, pitch: 0.2, dist: 3.7, pos: [this.playerSpawn[0], this.playerSpawn[1] + 1.4, this.playerSpawn[2]], eye: [this.playerSpawn[0], this.playerSpawn[1] + 2, this.playerSpawn[2] - 4], target: [this.playerSpawn[0], this.playerSpawn[1] + 1.4, this.playerSpawn[2]], fov: 62 * Math.PI / 180 };
     this.firstSub = true;
     const I = this.input;
-    this.inp = { pressed: c => this.firstSub && I.pressed(c), held: c => I.held(c), released: c => I.released(c) };
+    // Presses read inside the fixed 60 Hz simulation (jump, roll, Force keys, a quick click) are latched until a step
+    // consumes them: on fast displays many rendered frames run no step, and those presses used to be dropped.
+    this.stepPresses = new Set();
+    this.inp = { pressed: c => this.stepPressed(c), held: c => I.held(c), released: c => I.released(c) };
     this.fireT = 0;
   }
   populate() {
@@ -120,7 +123,7 @@ export class Game {
   }
   onSwing(f, move) { const lv = f.saber.level; this.sfx.play(Math.random() < 0.5 ? 'swing1' : 'swing2', { pos: f.pos, vol: f.isPlayer ? 0.8 : 0.55, rate: (lv === 1 ? 1.12 : lv === 3 ? 0.88 : 1) * (f.saber.rageMul > 1 ? 1.1 : 1), vary: 0.1 }); }
   onThud(f) { this.sfxAt('hit1', f.pos, 0.7); this.dust(f.pos, 0.9, 10); if (f.isPlayer) this.shake(0.18); }
-  onLand(f, impact) { if (impact > 8) { this.dust(f.pos, 0.6 + impact * 0.03, 8); } if (f.isPlayer && impact > 12) this.shake(0.12 + impact * 0.01); if (impact > 15) this.sfxAt('hit1', f.pos, 0.5); }
+  onLand(f, impact) { if (impact > 8) { this.dust(f.pos, 0.6 + impact * 0.03, 8); } } // no camera shake: Jedi Outcast lands with a short LAND1 only
   onDeath(f) { this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (f.isPlayer) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
   endRound(state) { if (this.round.state === 'won' || this.round.state === 'lost') return; this.round = { state, t: 0 }; this.hud.banners.length = 0; } // the result overlay in hud.js replaces any banner
   onForceJump(f) { this.sfxAt('jump', f.pos, 0.9); this.sfxAt('jumpbuild', f.pos, 0.5); this.fx.ring({ p: [f.pos[0], 0.05, f.pos[2]], n: [0, 1, 0], r0: 0.3, r1: 2.2, life: 0.5, w: 0.14, c: [0.6, 0.85, 1, 0.9] }); this.dust(f.pos, 1.0, 14); if (f.isPlayer) this.shake(0.12); }
@@ -184,7 +187,7 @@ export class Game {
           note(vp ? 'PULLED' + (why ? '  ·  ' + why : '') : (res.outcome === 'knockdown' ? 'KNOCKDOWN' : 'PULL HIT'), vp ? [1, 0.5, 0.4] : [0.7, 1, 0.75]);
           if (vp) { this.shake(0.25); this.hud.hit(3); }
         } else if (res.outcome === 'knockdown') {
-          const k = 0.5 + 0.5 * sc; victim.push(dir, (6 + 7 * fall) * k, (3.6 + 2.4 * fall) * k, { keepYaw: false }); const dmg = 6 * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit2', victim.pos, 0.6);
+          const k = 0.5 + 0.5 * sc; victim.push(dir, (6 + 7 * fall) * k, (3.6 + 2.4 * fall) * k, { keepYaw: false, quicker: true }); // w_force.c: pushed down -> quicker getup const dmg = 6 * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit2', victim.pos, 0.6);
           note(vp ? 'KNOCKED DOWN' + (why ? '  ·  ' + why : '') : 'KNOCKDOWN', vp ? [1, 0.45, 0.35] : [0.7, 1, 0.75]); if (vp) { this.shake(0.35); this.hud.hit(dmg); }
         } else { // a hit that does not knock down: breaks the swing and slides the target back
           victim.stagger(dir, (9 + 4 * fall) * sc); const dmg = 3 * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit1', victim.pos, 0.6);
@@ -226,11 +229,12 @@ export class Game {
     if (f.pos[1] < 0.8) for (const b of this.world.bodies) { if (b.lifted > 0 || b.pos[1] > 0.9) continue; const dx = f.pos[0] - b.pos[0], dz = f.pos[2] - b.pos[2], d = Math.hypot(dx, dz), m = f.radius + b.r; if (d < m && d > 1e-4) { f.pos[0] = b.pos[0] + dx / d * m; f.pos[2] = b.pos[2] + dz / d * m; } }
   }
   // ---------------- player input
+  stepPressed(code) { return this.firstSub && (this.stepPresses ? this.stepPresses.has(code) : this.input.pressed(code)); }
   buildPlayerCmd() {
     const i = this.input, p = this.player, c = p.cmd; if (this.hud.help) { c.fwd = c.right = 0; c.attack = c.alt = c.jump = c.crouch = c.walk = false; c.jumpPressed = c.crouchPressed = false; return; }
     c.fwd = (i.held('KeyW') ? 1 : 0) - (i.held('KeyS') ? 1 : 0); c.right = (i.held('KeyD') ? 1 : 0) - (i.held('KeyA') ? 1 : 0);
-    c.aimPitch = this.cam.pitch; c.walk = i.held('ShiftLeft') || i.held('ShiftRight'); c.crouch = i.held('KeyC'); c.attack = !!i.btn[0]; c.alt = !!i.btn[2]; c.jump = i.held('Space');
-    c.up = c.jump ? 1 : c.crouch ? -1 : 0; c.jumpPressed = this.firstSub && i.pressed('Space'); c.crouchPressed = this.firstSub && i.pressed('KeyC');
+    c.aimPitch = this.cam.pitch; c.walk = i.held('ShiftLeft') || i.held('ShiftRight'); c.crouch = i.held('KeyC'); c.attack = !!i.btn[0] || this.stepPressed('Mouse0'); c.alt = !!i.btn[2]; c.jump = i.held('Space');
+    c.up = c.jump ? 1 : c.crouch ? -1 : 0; c.jumpPressed = this.stepPressed('Space'); c.crouchPressed = this.stepPressed('KeyC');
     if (this.playerWeapon === 'bryar') { c.attack = false; c.alt = false; } // the mouse buttons fire the pistol instead (updatePistol)
     if (p.status === 'normal' || p.status === 'roll') p.targetYaw = this.cam.yaw;
   }
@@ -274,7 +278,7 @@ export class Game {
     if (this.playerWeapon !== 'bryar' || !p.gun || p.status !== 'normal' || this.hud.help) { W.charge = 0; return; }
     if (i.btn[2]) { W.charge = Math.min(1.5, W.charge + dt); return; }
     if (W.charge > 0) { const n = clamp(Math.floor(W.charge / 0.2), 1, 5); W.charge = 0; W.cool = 0; this.firePistol(n); return; }
-    if (i.btn[0] && W.cool <= 0) this.firePistol(0);
+    if ((i.btn[0] || this.stepPressed('Mouse0')) && W.cool <= 0) this.firePistol(0);
   }
   firePistol(charge) {
     const p = this.player; this.pistol.cool = 0.4; p.yaw = p.targetYaw = this.cam.yaw;
@@ -311,7 +315,7 @@ export class Game {
       if (n.status === 'dead' && this.t - n.deadAt > 8 && this.mode === 'explorer') this.respawnNpc(n);
     }
     if (this.duel) this.updateRound(dt);
-    this.combat.step(dt); this.world.update(dt); this.fx.update(dt); if (this.director) this.director.update(dt); this.firstSub = false;
+    this.combat.step(dt); this.world.update(dt); this.fx.update(dt); if (this.director) this.director.update(dt); this.firstSub = false; if (this.stepPresses) this.stepPresses.clear();
     for (const f of this.flashes) f.t -= dt; this.flashes = this.flashes.filter(f => f.t > 0); this.lightFlash = Math.max(0, this.lightFlash - dt * 3);
     if (p.healFlash > 0 && this.force.holding !== 'heal') p.healFlash = Math.max(0, p.healFlash - dt);
     // brazier fire
@@ -322,6 +326,7 @@ export class Game {
   update(dt) {
     dt = Math.min(dt, 0.1); this.fps += (1 / Math.max(dt, 1e-3) - this.fps) * 0.08;
     this.frameNo++; this.frameInput(dt); this.acc += dt; let n = 0; this.firstSub = true;
+    if (this.hud.help) this.stepPresses.clear(); else for (const c of this.input.pressedSet) this.stepPresses.add(c); if (!this.hud.help && this.input.btnPressed[0]) this.stepPresses.add('Mouse0');
     if (this.duel && this.hud.help) this.acc = 0; // controls panel open: the duel waits
     while (this.acc >= STEP && n++ < 6) { this.step(STEP); this.acc -= STEP; }
     if (n >= 6) this.acc = 0;

@@ -137,7 +137,7 @@ export class Force {
     const g = this.g, p = this.p; this.freeFromGrip('push');
     const d = this.aim(); const col = this.npc ? [1, 0.5, 0.45] : [0.7, 0.86, 1];
     this.anim('BOTH_FORCEPUSH', { durMs: 680 }); g.sfxAt('push', p.pos, 1); this.shake(0.22);
-    this.later(0.14, () => {
+    this.later(0, () => { // w_force.c ForceThrow: the push lands on the frame it is cast, no wind-up delay
       if (!this.alive()) return;
       const hands = this.hands(); const mid = v3.lerp(hands[0], hands[1], 0.5);
       g.fx.ring({ p: v3.addS(mid, d, 0.3), n: d, r0: 0.25, r1: 2.8, life: 0.55, w: 0.2, c: [col[0], col[1], col[2], 0.95], move: v3.scale(d, 15) });
@@ -155,7 +155,7 @@ export class Force {
     const g = this.g, p = this.p; this.freeFromGrip('pull');
     const d = this.aim(); const col = this.npc ? [1, 0.55, 0.5] : [0.6, 0.8, 1];
     this.anim('BOTH_FORCEPULL', { durMs: 560 }); g.sfxAt('pull', p.pos, 1); this.shake(0.12);
-    this.later(0.12, () => {
+    this.later(0, () => { // immediate, like the push
       if (!this.alive()) return;
       const hands = this.hands(); const mid = v3.lerp(hands[0], hands[1], 0.5);
       for (let k = 0; k < 3; k++) g.fx.ring({ p: v3.addS(mid, d, 5 - k * 0.7), n: d, r0: 2.0, r1: 0.2, life: 0.5, w: 0.14, c: [col[0], col[1], col[2], 0.8], move: v3.scale(d, -9) });
@@ -169,7 +169,7 @@ export class Force {
   }
   do_mind() {
     const g = this.g, p = this.p; this.anim('BOTH_MINDTRICK1', { durMs: 700 }); g.sfxAt('distract', p.pos, 1);
-    this.later(0.28, () => {
+    this.later(0, () => {
       if (!this.alive()) return;
       const o = this.origin(); g.fx.ring({ p: [o[0], 1.0, o[2]], n: [0, 1, 0], r0: 0.4, r1: 7, life: 0.9, w: 0.12, c: [0.75, 0.5, 1, 0.9] }); g.fx.ring({ p: [o[0], 1.3, o[2]], n: [0, 1, 0], r0: 0.4, r1: 5, life: 0.7, w: 0.08, c: [0.9, 0.8, 1, 0.8] });
       for (const h of this.cone(14, 80, { npcOnly: true })) { const n = h.t.ref; if (n.team === 'enemy') {
@@ -320,17 +320,16 @@ export class Force {
   bodyArcs(n) { this.g.bodyArc(n); }
   end_lightning(silent) { if (!silent) this.p.playForce('BOTH_FORCELIGHTNING_RELEASE', { durMs: 420 }); this.ltTargets = []; this.g.lightFlash = 0; }
   do_heal() {
-    const g = this.g, p = this.p; this.holding = 'heal'; p.playForce('BOTH_FORCEHEAL_START', { durMs: 400, whole: true, hold: 'freeze' }); p.forceHold = 'freeze'; this.healT = 0; g.sfxAt('heal', p.pos, 1);
+    const g = this.g, p = this.p; this.holding = 'heal'; p.playForce('BOTH_FORCEHEAL_START', { durMs: 400, hold: true }); this.healT = 0; // torso only: keep moving while healing g.sfxAt('heal', p.pos, 1);
     this.later(0.0, () => { }); this.loops.hold = g.sfx.loop('heal2', { vol: 0.0 });
   }
   tick_heal(dt) {
     const g = this.g, p = this.p; this.healT += dt; this.fp -= 10 * dt; p.hp = Math.min(p.maxHp, p.hp + this.healRate * dt); p.healFlash = 0.6;
-    p.forceHold = 'freeze'; p.vel[0] *= 0.8; p.vel[2] *= 0.8;
     if (Math.random() < 0.9) { const a = rnd(0, 6.28), r = rnd(0.2, 0.8); g.fx.emit({ p: [p.pos[0] + Math.cos(a) * r, rnd(0.1, 0.6), p.pos[2] + Math.sin(a) * r], v: [0, rnd(0.7, 1.8), 0], life: rnd(0.8, 1.4), size: rnd(0.04, 0.1), c0: [0.4, 1, 0.55, 0.9], c1: [0.2, 0.9, 0.4, 0] }); }
     if (Math.floor(this.healT * 1.4) !== Math.floor((this.healT - dt) * 1.4)) { g.fx.ring({ p: [p.pos[0], 0.05, p.pos[2]], n: [0, 1, 0], r0: 0.2, r1: 1.6, life: 0.9, w: 0.1, c: [0.35, 1, 0.5, 0.8] }); g.sfxAt('heal' + (1 + Math.floor(Math.random() * 4)), p.pos, 0.35); }
     if (p.hp >= p.maxHp && this.healT > 1.2) this.release();
   }
-  end_heal(silent) { const p = this.p; p.forceHold = false; if (!silent) p.playForce('BOTH_FORCEHEAL_STOP', { durMs: 650, whole: true }); }
+  end_heal(silent) { const p = this.p; p.forceHold = false; if (!silent) p.playForce('BOTH_FORCEHEAL_STOP', { durMs: 650 }); }
   do_drain() {
     const g = this.g, p = this.p; const c = this.cone(10, 30, { npcOnly: true })[0]; if (!c) { this.fp += 10; this.say('Force Drain: no target'); return; }
     this.holding = 'drain'; this.target = c.t; this.anim('BOTH_FORCEGRIP_HOLD', { durMs: 300, hold: true }); g.sfxAt('drain', p.pos, 1); this.dt2 = 0;

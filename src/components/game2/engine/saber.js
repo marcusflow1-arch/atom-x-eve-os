@@ -105,7 +105,11 @@ export class SaberLogic {
     if (c.busy) { // other full-body actions (roll, force anims) pause the saber logic but time still runs
       if (this.weaponTime > 0) this.weaponTime -= dtMs; if (this.torsoTimer > 0) this.torsoTimer -= dtMs; return;
     }
-    if (this.inFlight) { H.playTorso('BOTH_SABERPULL', { parts: 'torso', blendMs: 100, durMs: 100, hold: true }); this.torsoTimer = 1; return; }
+    if (this.inFlight) { // guiding the thrown saber: play the throw once and hold its last frame, arm out
+      // single-player throw: BOTH_SABERTHROW1START from the throwing motion (frame 18) at 3x, held with the arm extended toward the saber
+      if (this.moveAnim !== 'BOTH_SABERTHROW1START') { H.playTorso('BOTH_SABERTHROW1START', { parts: 'torso', blendMs: 80, durMs: 100, hold: true, speed: 3, startAt: 0.3 }); this.moveAnim = 'BOTH_SABERTHROW1START'; }
+      this.torsoTimer = 1; return;
+    }
     if (this.torsoTimer > 0) this.torsoTimer -= dtMs;
     if (this.weaponTime > 0) this.weaponTime -= dtMs; else this.state = 'ready';
     if (this.state === 'ready' && this.move !== I.LS_READY && this.weaponTime <= 0 && !this.blocked) this.setMove(I.LS_READY, now);

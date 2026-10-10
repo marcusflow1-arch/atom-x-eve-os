@@ -56,7 +56,7 @@ export class Fighter {
       if (anim === a.legs.name) { a.followLegs(); a.torso.cur = null; } else a.setTorso(anim, { blend: (o.blendMs || 100) / 1000, loop: true, speed: 1 });
       return;
     }
-    a.setTorso(anim, { blend: Math.max(0.04, (o.blendMs || 100) / 1000), restart: true, loop: false, speed: (o.rage || 1) });
+    a.setTorso(anim, { blend: Math.max(0.04, (o.blendMs || 100) / 1000), restart: true, loop: false, speed: o.speed ?? (o.rage || 1), startAt: o.startAt || 0 });
   }
   playForce(anim, o = {}) { // force-power torso animation (JO: forceHandExtend)
     if (this.fidgetUntil > this.now) this.cancelFidget();
@@ -116,19 +116,29 @@ export class Fighter {
     // Reset per-target hit cooldowns only after they expire, not every return frame.
     for (const [target, next] of T.hit) if (next < this.now - 1) T.hit.delete(target);
   }
-  catchSaber() { this.thrown = null; this.saber.inFlight = false; this.hilt = 'hand'; this.g.sfxAt('catch', this.pos, 0.8); if (this.thrownLoop) { this.thrownLoop.stop(0.05); this.thrownLoop = null; } this.saber.setMove(this.saber.I.LS_READY, this.now); this.saber.weaponTime = 150; }
+  catchSaber() { this.thrown = null; this.saber.inFlight = false; this.hilt = 'hand'; this.g.sfxAt('catch', this.pos, 0.8); if (this.thrownLoop) { this.thrownLoop.stop(0.05); this.thrownLoop = null; } this.saber.setMove(this.saber.I.LS_READY, this.now); this.saber.weaponTime = 150;
+    if (this.playTorso) { this.playTorso('BOTH_SABERTHROW1STOP', { parts: 'torso', blendMs: 80, speed: 2 }); this.saber.torsoTimer = 650; } // catch: arm comes back to the stance (SP throw anims)
+  }
   // ---------- state transitions (reactions)
   push(dirXZ, speed, up = 4.5, opts = {}) { // knocked away (JO: HANDEXTEND_KNOCKDOWN)
     if (this.status === 'dead') { this.vel[0] = dirXZ[0] * speed * 0.6; this.vel[2] = dirXZ[2] * speed * 0.6; return; }
     this.endForce(); this.cancelAttackState();
-    this.status = 'flung'; this.statusT = 0; this.vel = [dirXZ[0] * speed, up, dirXZ[2] * speed]; this.onGround = false; this.ducked = false;
+    this.status = 'flung'; this.statusT = 0; this.vel = [dirXZ[0] * speed, up, dirXZ[2] * speed]; this.onGround = false; this.ducked = false; this.knockAt = this.now; this.quickerGetup = !!opts.quicker;
     const anim = opts.anim || ['BOTH_KNOCKDOWN1', 'BOTH_KNOCKDOWN2', 'BOTH_KNOCKDOWN4', 'BOTH_KNOCKDOWN5'][Math.floor(Math.random() * 4)];
     this.faceYaw = Math.atan2(-dirXZ[0], -dirXZ[2]) + Math.PI; // face the pusher (so they fall backward)
     if (!opts.keepYaw) this.yaw = Math.atan2(-dirXZ[0], -dirXZ[2]);
     this.statusAnim = anim; this.playWhole(anim, { blend: 0.06 });
   }
+  // w_force.c getup after HANDEXTEND_KNOCKDOWN: holding jump (Force Jump above level 1) springs up with a Force getup
+  // (800 ms); a Force-pushed fighter gets the quicker getup (600 ms); otherwise the normal getup (1000 ms).
+  startGetup() {
+    const jump = this.isPlayer ? !!this.cmd.jump : (!!this.force && Math.random() < 0.5);
+    const [anim, len] = jump && (this.isPlayer ? this.jumpLevel > 1 : true) ? ['BOTH_FORCE_GETUP_B1', 0.8] : this.quickerGetup ? ['BOTH_FORCE_GETUP_B3', 0.6] : ['BOTH_GETUP1', 1.0];
+    this.status = 'getup'; this.statusT = 0; this.quickerGetup = false; this.playWhole(anim, { blend: 0.1 }); this.getupLen = len;
+    if (jump && anim === 'BOTH_FORCE_GETUP_B1') this.g.sfxAt && this.g.sfxAt('jump', this.pos, 0.6);
+  }
   pullTo(dirXZ, speed) { // dragged toward caster
-    this.endForce(); this.cancelAttackState(); this.status = 'flung'; this.statusT = 0; this.vel = [dirXZ[0] * speed, 3.2, dirXZ[2] * speed]; this.onGround = false; this.ducked = false;
+    this.endForce(); this.cancelAttackState(); this.status = 'flung'; this.statusT = 0; this.vel = [dirXZ[0] * speed, 3.2, dirXZ[2] * speed]; this.onGround = false; this.ducked = false; this.knockAt = this.now; this.quickerGetup = false;
     this.yaw = Math.atan2(-dirXZ[0], -dirXZ[2]); this.statusAnim = 'BOTH_KNOCKDOWN3'; this.playWhole('BOTH_KNOCKDOWN3', { blend: 0.06 });
   }
   shove(dirXZ, speed) { // weak push: slide along the ground, keep control (separate from the knock-down fling)
@@ -180,7 +190,7 @@ export class Fighter {
     switch (this.status) {
       case 'dead': this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
       case 'flung': this.physicsFlung(dt); return this.finish(dt);
-      case 'down': this.frictionMove(dt, 8); if (this.statusT > (this.downTime || 1.1)) { this.status = 'getup'; this.statusT = 0; const g = Math.random() < 0.5 ? ['BOTH_GETUP1', 1] : Math.random() < 0.5 ? ['BOTH_FORCE_GETUP_B1', 2] : ['BOTH_FORCE_GETUP_B3', 3]; this.getupLen = this.playWhole(g[0], { blend: 0.1 }); this.yaw = this.yaw; } return this.finish(dt);
+      case 'down': this.frictionMove(dt, 8); if (this.statusT > (this.downTime || 1.1)) this.startGetup(); return this.finish(dt);
       case 'getup': this.frictionMove(dt, 8); if (this.statusT >= this.getupLen - 0.05) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; this.actor.setLegs(this.saber.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2', { blend: 0.15 }); } return this.finish(dt);
       case 'gripped': { const ty = this.gripLift ?? 1.3; this.pos[1] += (ty - this.pos[1]) * Math.min(1, dt * 4); this.vel[0] = this.vel[2] = 0; if (this.gripCarry) { const c = this.gripCarry(); const k = Math.min(1, dt * 3); this.pos[0] += (c[0] - this.pos[0]) * k; this.pos[2] += (c[2] - this.pos[2]) * k; this.g.world.collide(this.pos, this.radius); } this.pos[1] += Math.sin(now * 3.1) * 0.0025; this.yaw += Math.sin(now * 2.2) * 0.004; return this.finish(dt); }
       case 'shocked': {
@@ -199,7 +209,7 @@ export class Fighter {
     const before = [this.pos[0], this.pos[2]]; this.g.world.collide(this.pos, this.radius); if (before[0] !== this.pos[0] || before[1] !== this.pos[2]) { this.vel[0] *= -0.2; this.vel[2] *= -0.2; if (!this.hitWall) { this.hitWall = true; this.hurt(8, null, { noFlinch: true }); this.g.fx.sparks([this.pos[0], this.pos[1] + 1, this.pos[2]], [0, 1, 0], 6, [0.8, 0.8, 1, 1]); } }
     const floor = this.g.world.floorAt(this.pos[0], this.pos[2], this.pos[1] + 0.3);
     if (floor !== null && this.pos[1] <= floor) { this.pos[1] = floor; if (this.vel[1] < -1.5 && !this.bounced) { this.bounced = true; this.vel[1] = 0; this.g.onThud && this.g.onThud(this); } this.vel[1] = 0; this.onGround = true; const k = Math.max(0, 1 - 4 * dt); this.vel[0] *= k; this.vel[2] *= k;
-      if (this.statusT > 0.25 && Math.hypot(this.vel[0], this.vel[2]) < 1.2) { this.status = this.hp <= 0 ? 'dead' : 'down'; this.statusT = 0; this.bounced = false; this.hitWall = false; this.downTime = 1.0 + Math.random() * 0.5; } }
+      if (this.statusT > 0.25 && Math.hypot(this.vel[0], this.vel[2]) < 1.2) { this.status = this.hp <= 0 ? 'dead' : 'down'; this.statusT = 0; this.bounced = false; this.hitWall = false; this.downTime = Math.max(0.3, 1.1 - (this.now - (this.knockAt ?? this.now))); } } // down until 1.1 s after the knockdown
   }
   integrate(dt, gravity = true) {
     if (gravity && !this.onGround) this.vel[1] -= G * dt;
@@ -263,13 +273,9 @@ export class Fighter {
     let an = 'BOTH_FORCEJUMP1'; if (c.fwd < 0) an = 'BOTH_FORCEJUMPBACK1'; else if (c.fwd === 0 && c.right > 0) an = 'BOTH_FORCEJUMPRIGHT1'; else if (c.fwd === 0 && c.right < 0) an = 'BOTH_FORCEJUMPLEFT1';
     this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.05, loop: false }); this.fjStart = this.now; this.g.onForceJump && this.g.onForceJump(this);
   }
-  land(impact) {
-    const air = this.airAnim || 'BOTH_JUMP1'; let an = 'BOTH_LAND1';
-    const forceJ = /FORCE/.test(air) || this.fjUsed;
-    if (forceJ) an = air.includes('BACK') ? 'BOTH_FORCELANDBACK1' : air.includes('LEFT') ? 'BOTH_FORCELANDLEFT1' : air.includes('RIGHT') ? 'BOTH_FORCELANDRIGHT1' : 'BOTH_FORCELAND1';
-    else an = air.includes('BACK') ? 'BOTH_LANDBACK1' : air.includes('LEFT') ? 'BOTH_LANDLEFT1' : air.includes('RIGHT') ? 'BOTH_LANDRIGHT1' : 'BOTH_LAND1';
-    if (impact > 14) an = 'BOTH_LAND2';
-    const info = this.actor.skel.anims[an]; this.landUntil = this.now + Math.min(0.5, animLen(info)); this.actor.setLegs(an, { restart: true, blend: 0.04, loop: false }); this.airAnim = null; this.fjUsed = false;
+  land(impact) { // bg_pmove.c PM_CrashLand: a short LAND1 (LANDBACK1 after a backwards jump), legs held for TIMER_LAND (130 ms)
+    const air = this.airAnim || 'BOTH_JUMP1', an = /BACK/.test(air) ? 'BOTH_LANDBACK1' : 'BOTH_LAND1';
+    this.landUntil = this.now + 0.13; this.actor.setLegs(an, { restart: true, blend: 0.06, loop: false }); this.airAnim = null; this.fjUsed = false;
     this.g.onLand && this.g.onLand(this, impact);
   }
   startRoll() {
