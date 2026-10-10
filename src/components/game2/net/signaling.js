@@ -54,8 +54,8 @@ export class Base44Signaling {
     this.onSignal && this.onSignal({ type: row.type, from: p.from, to: p.to, payload: p });
   }
   send(toPeer, type, payload) {
-    return this.Signals.create({ room_id: this.room, sender_id: this.user, target_id: userOfPeer(toPeer), type, payload: { ...payload, from: this.self, to: toPeer } })
-      .catch(e => console.warn('[game2 net] signal send', e?.message || e));
+    // Preserve backend write errors so failed peer handshakes can be reported to the player.
+    return this.Signals.create({ room_id: this.room, sender_id: this.user, target_id: userOfPeer(toPeer), type, payload: { ...payload, from: this.self, to: toPeer } });
   }
   close() { this.closed = true; this.stopListening(); }
 }
