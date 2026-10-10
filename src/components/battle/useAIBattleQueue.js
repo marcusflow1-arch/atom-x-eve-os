@@ -1,3 +1,4 @@
+import { startPvPDiagnosticSocket } from './pvpDiagnosticSocket';
 // @refresh reset
 // Remount consumers on edits: matchmaking hook additions must not reuse old hook slots.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -408,8 +409,15 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', { detail: { ...detail, sourcePlayerId, targetPlayerId: localId, network: true } }));
       refreshSignal.current?.();
     };
+    const diagnosticSocketCleanup = startPvPDiagnosticSocket({
+      matchId, playerId: localId,
+      onAction: (detail) => receive({ detail }),
+    });
     window.addEventListener('webrtcRemoteAction', receive);
-    return () => window.removeEventListener('webrtcRemoteAction', receive);
+    return () => {
+      window.removeEventListener('webrtcRemoteAction', receive);
+      diagnosticSocketCleanup();
+    };
   }, [sessionBridge, match?.id, match?.player_ids, user?.id]);
 
   useEffect(() => {
