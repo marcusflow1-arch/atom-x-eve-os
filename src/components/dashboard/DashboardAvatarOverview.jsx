@@ -10,8 +10,8 @@ import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
 import { useCompanionIdentity } from '@/components/onboarding/CompanionIdentityContext';
 import { useQuery } from '@tanstack/react-query';
-import InventoryGrid from './InventoryGrid';
-import LunaSplitInventory from './LunaSplitInventory';
+import LunaElderScrollsInventory from './LunaElderScrollsInventory';
+
 import LunaCardsPanel from './LunaCardsPanel';
 import useDashboardSkillLayout from './useDashboardSkillLayout';
 import LunaLeaderboardOverlay from './LunaLeaderboardOverlay';
@@ -27,7 +27,7 @@ import './luna-battle-launch.css';
 import LunaMessageFriendsPanel from './LunaMessageFriendsPanel';
 import MessengerHub from '@/components/friends/MessengerHub';
 import { itemFitsSlot, getEquipmentSlotLabel } from './equipmentSlotRules';
-import { inventoryData } from '../profile/mockData';
+
 import { useEquipment } from '../luna/hooks/useEquipment';
 import { showError } from '@/components/error/ErrorToast';
 import useAvatarCombatStats from '@/components/avatar/useAvatarCombatStats';
@@ -125,7 +125,7 @@ export default function DashboardAvatarOverview() {
   useEffect(() => {
     if (recordsCapture.active && recordsCapture.record?.user_id !== user?.id) stopRecording();
   }, [user?.id, recordsCapture.active, recordsCapture.record?.user_id]);
-  const { equipItem, equippedItems } = useEquipment();
+  const { equipItem, unequipItem, equippedItems, isSaving } = useEquipment();
   const {state:combatState}=useAvatarCombatStats();
   const progression=combatState?.progression;
   const [inventoryMode, setInventoryMode] = useState(false);
@@ -346,14 +346,15 @@ export default function DashboardAvatarOverview() {
     setInventorySlot(slotId);
   };
 
-  const handleInventoryEquip = (item) => {
-    if (!inventorySlot || !item) return;
-    if (!itemFitsSlot(item, inventorySlot)) {
-      showError(`${item.name || 'That item'} cannot be equipped in ${getEquipmentSlotLabel(inventorySlot)}.`);
+  const handleInventoryEquip = (item, slotId = inventorySlot) => {
+    if (!slotId || !item) return;
+    if (!itemFitsSlot(item, slotId)) {
+      showError(`${item.name || 'That item'} cannot be equipped in ${getEquipmentSlotLabel(slotId)}.`);
       return;
     }
-    equipItem(inventorySlot, item);
-    setInventorySlot(null);
+    if (!equipItem(slotId, item)) {
+      showError('Only owned equipment cards can be equipped.');
+    }
   };
 
   const handleQuickAction = (item) => {
@@ -396,13 +397,18 @@ export default function DashboardAvatarOverview() {
           showcaseEditing={cardsMode && !cardsMinimized} embedded={cardsMode && !cardsMinimized}
           dockTarget={skillBookDock} combatMode={false} />
 
-        {inventoryMode && <DashboardWindow id="inventory" title="Inventory" width={640} height={600} onClose={() => setInventoryMode(false)}>
-          <div className="luna-window__inventory">
-            {inventorySlot ? <LunaSplitInventory inventory={inventoryData} selectedSlotId={inventorySlot}
-              onEquipItem={handleInventoryEquip} onBackToLoadout={() => setInventorySlot(null)} compactSlotMode /> :
-              <InventoryGrid equippedItems={equippedItems} handleBoxClick={handleInventorySlot} compact selectedSlotId={null} />}
+        {inventoryMode && <DashboardWindow id="inventory" title="Inventory" width={990} height={670} onClose={() => { setInventoryMode(false); setInventorySlot(null); }}>
+          <div className="h-full min-h-0 w-full">
+            <LunaElderScrollsInventory
+              equippedItems={equippedItems}
+              selectedSlotId={inventorySlot}
+              onSelectSlot={handleInventorySlot}
+              onEquipItem={handleInventoryEquip}
+              onUnequipSlot={unequipItem}
+              isSaving={isSaving}
+            />
           </div>
-        </DashboardWindow>}
+        </DashboardWindow>
         {cardsMode && <DashboardWindow id="cards" title="Cards · Skill Book" width={850} height={680} index={1}
           onMinimizedChange={setCardsMinimized} onClose={() => { setCardsMode(false); setCardsMinimized(false); }}>
           <LunaCardsPanel onClose={() => setCardsMode(false)} slotDockRef={setSkillBookDock} />
