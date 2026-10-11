@@ -8,14 +8,14 @@ The [GitHub issue tracker](https://github.com/marcusflow1-arch/atom-x-eve-os/iss
 ## Workstream issues
 | Priority | Issue | Scope | Proposed implementer | Status at creation |
 |---|---|---|---|---|
-| PM | [#35](../../issues/35) | Agency operating model | ChatGPT + owner | Tracking |
-| P0 | [#36](../../issues/36) | Camera, movement, knockdown/recovery, hit reactions | Claude combat specialist | Not dispatched |
-| P1 | [#37](../../issues/37) | Rig and animation QA | Claude + Aura | Not dispatched |
-| P1 | [#38](../../issues/38) | Three.js/WebGL2 feature-flagged benchmark | Claude rendering specialist | Not dispatched |
-| P2 | [#39](../../issues/39) | Force skill tree design | Claude systems specialist | Not dispatched |
-| P2 | [#40](../../issues/40) | Equipment, upgrades, sets design | Claude progression specialist | Not dispatched |
-| P2 | [#41](../../issues/41) | Legends continuity & optional missions | Research/lore specialist | Not dispatched |
-| QA | [#42](../../issues/42) | Repeatable regression test matrix | Claude QA + ChatGPT review | Not dispatched |
+| PM | [#35](https://github.com/marcusflow1-arch/atom-x-eve-os/issues/35) | Agency operating model | ChatGPT + owner | Tracking |
+| P0 | [#36](https://github.com/marcusflow1-arch/atom-x-eve-os/issues/36) | Camera, movement, knockdown/recovery, hit reactions | Claude combat specialist | Not dispatched |
+| P1 | [#37](https://github.com/marcusflow1-arch/atom-x-eve-os/issues/37) | Rig and animation QA | Claude + Aura | Not dispatched |
+| P1 | [#38](https://github.com/marcusflow1-arch/atom-x-eve-os/issues/38) | Three.js/WebGL2 feature-flagged benchmark | Claude rendering specialist | Not dispatched |
+| P2 | [#39](https://github.com/marcusflow1-arch/atom-x-eve-os/issues/39) | Force skill tree design | Claude systems specialist | Not dispatched |
+| P2 | [#40](https://github.com/marcusflow1-arch/atom-x-eve-os/issues/40) | Equipment, upgrades, sets design | Claude progression specialist | Not dispatched |
+| P2 | [#41](https://github.com/marcusflow1-arch/atom-x-eve-os/issues/41) | Legends continuity & optional missions | Research/lore specialist | Not dispatched |
+| QA | [#42](https://github.com/marcusflow1-arch/atom-x-eve-os/issues/42) | Repeatable regression test matrix | Claude QA + ChatGPT review | Not dispatched |
 
 ## RACI-like authority
 - Project owner: sets vision and approves scope, unusual deviations, merges, and live deployment.
