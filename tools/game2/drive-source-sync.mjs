@@ -12,7 +12,7 @@
  * an existing asset. Token stays in the process environment, not a repo file.
  */
 import { createHash } from 'node:crypto';
-import { readFile, writeFile, mkdir, rename, rm, stat } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, link, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -120,10 +120,15 @@ async function downloadMissing(file, token, target) {
   const temporary = target + '.game2-drive-pending-' + process.pid;
   try {
     await writeFile(temporary, bytes, { flag: 'wx' });
-    // Recheck before finalizing. No existing file is knowingly replaced.
-    if (existsSync(target)) return false;
-    await rename(temporary, target);
-    return true;
+    // Atomic hard-link creation fails if another process created the target.
+    // Unlike rename(), this can never replace an existing asset.
+    try {
+      await link(temporary, target);
+      return true;
+    } catch (error) {
+      if (error?.code === 'EEXIST') return false;
+      throw error;
+    }
   } finally {
     await rm(temporary, { force: true });
   }
