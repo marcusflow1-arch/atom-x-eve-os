@@ -324,7 +324,7 @@ export class Game {
     if (i.dx || i.dy) { c.yaw -= i.dx * i.sens; c.pitch += i.dy * i.sens; if (!h.help) { const pm = this.pendingMouse ??= [0, 0]; pm[0] += i.dx; pm[1] += i.dy; } }
     const ar = 2.2 * dt; if (i.held('ArrowLeft')) c.yaw += ar; if (i.held('ArrowRight')) c.yaw -= ar; if (i.held('ArrowUp')) c.pitch -= ar * 0.7; if (i.held('ArrowDown')) c.pitch += ar * 0.7;
     c.pitch = clamp(c.pitch, -0.5, 1.3);
-    if (this.duel || this.online || this.missionDef) { // wheel / [ ] cycle the selected Force power; Ctrl+wheel or - = zoom
+    if (this.duel || this.online || this.teamMode || this.missionDef) { // wheel / [ ] cycle Force for arena and mission modes
       if (i.wheel && !h.help) this.force.select(Math.max(-3, Math.min(3, i.wheel))); if (i.pressed('BracketRight') && !h.help) this.force.select(1); if (i.pressed('BracketLeft') && !h.help) this.force.select(-1);
       c.dist = clamp(c.dist + (i.zoom + (i.held('Equal') ? -dt * 4 : 0) + (i.held('Minus') ? dt * 4 : 0)) * 0.35, 1.9, 8.5);
     } else c.dist = clamp(c.dist + (i.wheel + i.zoom) * 0.35, 1.9, 8.5);
