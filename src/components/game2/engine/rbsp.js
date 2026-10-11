@@ -253,6 +253,31 @@ export class BSPCollision {
       }
       if(clear)return {player:start,enemy:other};
     }
+    // The original Hangar / Carbon arenas include dedicated deathmatch spawns,
+    // but some elevated platforms cannot support the 4.5 m radial test above.
+    // Fall back to two *authored* spawns on the same floor, not fake geometry or
+    // an arbitrary position that clips through a BSP wall.
+    const safe = entry => {
+      const original = entry.pos.slice();
+      const floor = this.floorAt(original[0], original[2], original[1] + 1.5);
+      if (floor === null || Math.abs(floor - original[1]) > 1.1) return null;
+      const pos = [original[0], floor, original[2]], before = pos.slice();
+      this.collide(pos, 0.42);
+      return Math.hypot(pos[0] - before[0], pos[2] - before[2]) < 0.23 ? pos : null;
+    };
+    const originalSpawns = this.map.spawns
+      .filter(entry => entry.kind === 'info_player_deathmatch')
+      .map(safe).filter(Boolean);
+    let pair = null, maxSep = 0;
+    for (let i = 0; i < originalSpawns.length; i++) {
+      for (let j = i + 1; j < originalSpawns.length; j++) {
+        const first = originalSpawns[i], second = originalSpawns[j];
+        if (Math.abs(first[1] - second[1]) > 0.8) continue;
+        const d = Math.hypot(first[0]-second[0], first[2]-second[2]);
+        if (d > 3 && d > maxSep) { maxSep = d; pair = [first, second]; }
+      }
+    }
+    if (pair) return { player: pair[0], enemy: pair[1] };
     throw new Error('Game 2 map: could not locate two safe spawn positions');
   }
 }
