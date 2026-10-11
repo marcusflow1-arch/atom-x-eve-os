@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { CircleDot, Footprints, Gem, Hand, HardHat, Layers3, Shirt, Shield, Sparkles, Swords } from 'lucide-react';
 import { EQUIPMENT_SLOT_DEFINITIONS, getEquipmentSlotDefinition } from './equipmentSlotRules';
 
-export default function InventoryGrid({ equippedItems = {}, handleBoxClick, compact = false, selectedSlotId = null }) {
+export default function InventoryGrid({ equippedItems = {}, handleBoxClick, compact = false, selectedSlotId = null, gearOnly = false }) {
   const SLOT_ICONS = {
     helmet: HardHat,
     armor: Shirt,
@@ -128,7 +128,7 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
               </div>
             </section>
 
-            <div className="grid w-full grid-cols-2 items-start gap-4 border-t border-white/[0.05] pt-4">
+            {!gearOnly && <div className="grid w-full grid-cols-2 items-start gap-4 border-t border-white/[0.05] pt-4">
               <section className="flex min-w-0 flex-col items-center gap-3">
                 <CompactHeader width="w-32">Genre</CompactHeader>
                 <div className="grid grid-cols-2 gap-3">
@@ -142,7 +142,7 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
                   {[1,2,3].map((i) => compactSlot(`aspect-${i}`, true))}
                 </div>
               </section>
-            </div>
+            </div>}
           </div>
         </div>
       </motion.div>
