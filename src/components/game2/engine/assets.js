@@ -5,6 +5,20 @@ import { Skeleton } from './actor.js';
 import { parseRBSP } from './rbsp.js';
 
 const fetchBuf = fetchGame2Binary;
+
+// Drive-sourced JSON must be real game data, not an HTML SPA fallback.
+// Fail visibly rather than silently launching Game Two with missing rig/moves.
+export async function fetchGame2Json(base, filename, request = (...args) => fetch(...args)) {
+  const response = await request(base + filename);
+  if (!response.ok || response.headers?.get?.('content-type')?.includes('text/html')) {
+    throw new Error('Game 2 required asset unavailable: ' + filename + ' (HTTP ' + response.status + ')');
+  }
+  try {
+    return await response.json();
+  } catch {
+    throw new Error('Game 2 required asset has invalid JSON: ' + filename);
+  }
+}
 async function gunzip(buf) {
   const ds = new DecompressionStream('gzip'); const stream = new Blob([buf]).stream().pipeThrough(ds); return new Response(stream).arrayBuffer();
 }
@@ -16,7 +30,7 @@ export async function loadBank(base, progress = () => { }) {
   return { q: new Int16Array(qbuf), pel: new Float32Array(pbuf) };
 }
 export async function loadAll(base = 'assets/', progress = () => { }, o = {}) { // o.map === false: missions build their own level
-  progress('rig'); const rigJson = await (await fetch(base + 'rig.json')).json();
+  progress('rig'); const rigJson = await fetchGame2Json(base, 'rig.json');
   const bank = await loadBank(base, progress);
   progress('model'); const glb = parseGLB(await fetchBuf(base + 'Explorer_G2_Game.glb'));
   const skel = new Skeleton(rigJson, bank.q, bank.pel, glb);
@@ -28,7 +42,7 @@ export async function loadAll(base = 'assets/', progress = () => { }, o = {}) { 
   const node = n => J.nodes.find(x => x.name === n);
   const holster = node('Saber_Hilt'), grip = node('Saber_Grip_R');
   const attach = { holster: { t: holster.translation, q: holster.rotation, bone: 'rfemurYZ' }, grip: { t: grip.translation, q: grip.rotation, s: grip.extras.hilt_scale, bone: 'rhand' }, hiltLen: holster.extras.length_m };
-  progress('saber moves'); const saberData = await (await fetch(base + 'sabermoves.json')).json();
+  progress('saber moves'); const saberData = await fetchGame2Json(base, 'sabermoves.json');
   if (o.map === false) return { rigJson, skel, body, lod, hilt, attach, glb, saberData, duelMap: null };
   progress('Lightsaber Training map');
   const raw = await fetch(base + 'maps/duel_training.bsp');
