@@ -9,10 +9,13 @@ export const CARS = [
   { id: 'alfa', name: '2024 Alfa Romeo 33 Stradale', file: 'alfa_romeo_33_stradale.fbx', color: '#dc3346', accel: 1.18, handling: 1.09, locked: true }
 ];
 export const STORY_SCENES = [
-  { kind:'cinematic', title:'PROLOGUE · THE CITY NEVER STOPS', speaker:'NARRATOR', text:'At night, the city belongs to whoever can find an open road. Every street has a history. Every driver has a reason to run.' },
+  { kind:'cinematic', title:'PROLOGUE · THE CITY NEVER STOPS', speaker:'NARRATOR', text:'At night, the city belongs to whoever can find an open road. Every street has a history. Every driver has a reason to run. Some dreams begin long before the first race.' },
+  { kind:'cinematic', title:'WHEN WE WERE KIDS', speaker:'NARRATOR', text:'Two friends played at being heroes, copied impossible anime moves and raced anything with wheels. They promised each other that one day they would do something extraordinary.' },
+  { kind:'dialogue', title:'THE PROMISE', speaker:'BEST FRIEND', text:'Remember those moves we used to practice? One day, maybe we really could pull one off. And one day, you will drive in the biggest race this city has ever seen.' },
   { kind:'dialogue', title:'THE INVITATION', speaker:'MARA · CREW LEADER', text:'That car has a story. But a name on the hood does not make you a racer. Meet me at the underpass. Show me how you drive.' },
-  { kind:'dialogue', title:'YOUR ANSWER', speaker:'DRIVER', text:'Give me a starting line. I will handle the rest.' },
-  { kind:'cinematic', title:'CHAPTER 1 · FIRST LIGHT', speaker:'NARRATOR', text:'Engines turn over. Flags rise. Beyond the first finish line, a secret about the city’s ghost racers waits to be uncovered.' }
+  { kind:'dialogue', title:'THE WARNING', speaker:'BEST FRIEND', text:'There is a reason people are afraid of the last race. Promise me you will not throw your life away just to prove you are fast.' },
+  { kind:'dialogue', title:'YOUR ANSWER', speaker:'DRIVER', text:'Give me a starting line. I will handle the rest. But I will not forget where we started.' },
+  { kind:'cinematic', title:'CHAPTER 1 · FIRST LIGHT', speaker:'NARRATOR', text:'Engines turn over. Flags rise. The two friends have no idea how much this dream will ask of them.' }
 ];
 export function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
 export function makeRaceState(){
