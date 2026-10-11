@@ -253,6 +253,8 @@ export default function DashboardAvatarOverview() {
     const openInventory = () => { setInventoryMode(true); focusDashboardWindow('inventory'); };
     const openMemories = () => { setMemoriesMode(true); focusDashboardWindow('records'); };
     const openFriends = () => { setFriendsMode(true); focusDashboardWindow('friends'); };
+    const openSkillBook = () => { setCardsMode(true); focusDashboardWindow('cards'); };
+    window.addEventListener('openLunaSkillBook', openSkillBook);
     window.addEventListener('openLunaInventoryWorkspace', openInventory);
     window.addEventListener('openLunaMemories', openMemories);
     window.addEventListener('openLunaRecords', openMemories);
@@ -262,6 +264,7 @@ export default function DashboardAvatarOverview() {
       window.removeEventListener('openLunaMemories', openMemories);
       window.removeEventListener('openLunaRecords', openMemories);
       window.removeEventListener('openLunaFriends', openFriends);
+      window.removeEventListener('openLunaSkillBook', openSkillBook);
     };
   }, []);
 
@@ -438,8 +441,8 @@ export default function DashboardAvatarOverview() {
         {seasonMode && <DashboardWindow id="season" title="Season Pass" width={960} height={660} index={6} onClose={() => setSeasonMode(false)}>
           <LunaSeasonPassOverlay embedded onClose={() => setSeasonMode(false)} />
         </DashboardWindow>}
-        {battleMode && <DashboardWindow id="ai-battle" title="AI Battle" width={560} height={550} index={7} onClose={() => setBattleMode(false)}>
-          <LunaAIBattleOverlay embedded onClose={() => setBattleMode(false)} />
+        {battleMode && <DashboardWindow id="ai-battle" title="AI Battle" width={940} height={760} index={7} onClose={() => setBattleMode(false)}>
+          <LunaAIBattleOverlay embedded onClose={() => setBattleMode(false)} onOpenSkillBook={() => { setCardsMode(true); focusDashboardWindow('cards'); }} />
         </DashboardWindow>}
         {leaderboardMode && <DashboardWindow id="leaderboard" title="Leaderboard" width={900} height={620} index={8} onClose={() => setLeaderboardMode(false)}>
           <LunaLeaderboardOverlay embedded onClose={() => setLeaderboardMode(false)} />

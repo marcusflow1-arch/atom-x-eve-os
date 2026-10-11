@@ -1,23 +1,20 @@
 import { activeDashboardWindow } from './windows/DashboardWindow';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Crown, Loader2, Shield, Swords, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import AIBattleMenuWorkspace from './AIBattleMenuWorkspace';
+import { BATTLE_MODES as MODES, getBattleAvailability, getBattleQueueTarget } from '@/components/battle/battleMenuCatalog';
 import useAIBattleQueue, { isRateLimited, setAIBattleOverlayOpen } from '@/components/battle/useAIBattleQueue';
 import { startLoopSound, stopLoopSound } from '@/components/game3d/combatAudioStore';
 import { showError, showInfo } from '@/components/error/ErrorToast';
 import useOnlineSummary from '@/components/social/useOnlineSummary';
 
-const MODES = [
-  { id: 'pvp', label: 'PvP', sub: 'Player vs Player', icon: Swords },
-  { id: 'pve', label: 'PvE', sub: 'Two players vs environment', icon: Shield },
-  { id: 'world_boss', label: 'World Boss', sub: 'Two players vs boss', icon: Crown },
-];
-
 const BUSY_MESSAGE = 'AI Battle is busy right now. Wait a few seconds and press Queue again.';
 
-export default function LunaAIBattleOverlay({ onClose, embedded = false }) {
+export default function LunaAIBattleOverlay({ onClose, embedded = false, onOpenSkillBook }) {
   const preferred = typeof window !== 'undefined' ? window.__lunaAIBattlePreferredMode : null;
   const { data: onlineSummary } = useOnlineSummary();
   const [mode, setMode] = useState(MODES.some((item) => item.id === preferred) ? preferred : 'pvp');
+  const [genreId, setGenreId] = useState(mode === 'pvp' ? 'core' : 'fighting');
+  const availability = getBattleAvailability(mode, genreId);
   const queuedFromThisOverlayRef = useRef(false);
   const queueRequestRef = useRef(false);
   // The popup reads the shared matchmaking cache. AIBattleHost (mounted once at
@@ -35,13 +32,16 @@ export default function LunaAIBattleOverlay({ onClose, embedded = false }) {
   const connecting = battle.match?.status === 'connecting';
   const ready = ['countdown', 'fighting'].includes(String(battle.match?.status || ''));
   const queuedMode = battle.match?.mode || battle.queue?.mode || null;
-  const active = useMemo(() => MODES.find((item) => item.id === mode) || MODES[0], [mode]);
+  const locked = waiting || reserved || connecting || ready || battle.busy || battle.isLoading;
 
   // Reopening the menu reflects the queue/match that already exists. This only
   // updates the selected tile; it never creates a queue or calls join().
   useEffect(() => {
-    if (queuedMode && MODES.some((item) => item.id === queuedMode)) setMode(queuedMode);
-  }, [queuedMode]);
+    if ((waiting || reserved || connecting || ready) && queuedMode && MODES.some((item) => item.id === queuedMode)) {
+      setMode(queuedMode);
+      setGenreId('core');
+    }
+  }, [queuedMode, waiting, reserved, connecting, ready]);
 
   // `matched` is only a reservation. Do not close the queue UI or reveal the
   // arena until the server confirms BOTH browser clients acknowledged that same
@@ -71,14 +71,15 @@ export default function LunaAIBattleOverlay({ onClose, embedded = false }) {
   const enterQueue = useCallback(async () => {
     // A local one-shot guard closes the tiny gap before React's mutation state
     // updates. Repeated Q presses can no longer fire parallel join requests.
-    if (queueRequestRef.current || battle.busy || waiting || reserved || connecting || ready) return;
+    const target = getBattleQueueTarget(mode, genreId);
+    if (!target || queueRequestRef.current || battle.isLoading || battle.busy || waiting || reserved || connecting || ready) return;
     queueRequestRef.current = true;
     queuedFromThisOverlayRef.current = true;
     // Start PvP music from the user's queue-button gesture so browsers permit
     // playback. The persistent dashboard bridge keeps this same loop alive.
     if (mode === 'pvp') startLoopSound('bgm_boss');
     try {
-      const body = await battle.join(mode);
+      const body = await battle.join(target.mode);
       // A returned `matched` reservation stays in the queue UI. Only a server
       // confirmed two-client connection may transition into the arena.
       if (body?.match && ['connecting', 'countdown', 'fighting'].includes(String(body.match.status || ''))) {
@@ -98,18 +99,27 @@ export default function LunaAIBattleOverlay({ onClose, embedded = false }) {
     } finally {
       queueRequestRef.current = false;
     }
-  }, [battle, mode, waiting, reserved, connecting, ready, onClose]);
+  }, [battle, mode, genreId, waiting, reserved, connecting, ready, onClose]);
 
   const chooseMode = useCallback((nextMode) => {
     // Queue state is explicit and idempotent. A tile click never doubles as a
     // hidden cancel; use the Cancel Queue button when you actually want to leave.
-    if (waiting || reserved || connecting || ready || battle.busy) return;
+    if (locked) return;
     setMode(nextMode);
-  }, [waiting, reserved, connecting, ready, battle.busy]);
+    if (nextMode !== 'pvp' && genreId === 'core') setGenreId('fighting');
+  }, [locked, genreId]);
+
+  const chooseGenre = useCallback((nextGenre) => {
+    if (!locked) setGenreId(nextGenre);
+  }, [locked]);
+  const openSkillBook = () => {
+    if (onOpenSkillBook) onOpenSkillBook();
+    else window.dispatchEvent(new CustomEvent('openLunaSkillBook'));
+  };
 
   useEffect(() => {
     const onKey = (event) => {
-      if (event.key.toLowerCase() !== 'q' || event.repeat) return;
+      if (event.key.toLowerCase() !== 'q' || event.repeat || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
       if (embedded && (activeDashboardWindow() !== 'ai-battle' || document.querySelector('[data-luna-window="ai-battle"]')?.dataset.minimized)) return;
       const target = event.target;
       if (target instanceof HTMLElement && target.closest('input,textarea,select,[contenteditable=true]')) return;
@@ -131,69 +141,16 @@ export default function LunaAIBattleOverlay({ onClose, embedded = false }) {
         ? 'You are queued. You can close this window and keep using the dashboard — you stay in the queue until another live player joins.'
         : ready
           ? (battle.match?.status === 'countdown' ? 'Both fighters loaded. Countdown starting…' : 'Match connected. Fight in progress.')
-          : 'Choose a mode, then press Q or Enter Queue. Opening AI Battle never queues automatically.';
+          : battle.busy ? 'Requesting your place in the avatar duel queue…' : 'Choose your arena, then select Find opponent. Opening AI Battle never queues automatically.';
 
   return (
-    <div className={embedded ? "luna-window__embedded luna-window__battle" : "fixed left-[390px] right-[338px] top-[205px] z-[130] flex justify-center pointer-events-none"} data-dashboard-utility-workspace>
-      <section className="pointer-events-auto w-[min(540px,94%)] border border-white/[0.10] bg-slate-950/78 text-white shadow-[0_24px_70px_rgba(0,0,0,.28)] backdrop-blur-2xl">
-        <header className="flex items-center gap-3 border-b border-white/[0.07] px-4 py-3">
-          <Swords className="h-4 w-4 text-cyan-100/75" />
-          <div>
-            <p className="text-[7px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Luna</p>
-            <h2 className="text-[15px] font-semibold">AI Battle</h2>
-          </div>
-          <button type="button" onClick={onClose} className="ml-auto grid h-8 w-8 place-items-center border border-white/[0.07] text-white/50 hover:bg-white/[0.06] hover:text-white" aria-label="Close AI Battle"><X className="h-3.5 w-3.5" /></button>
-        </header>
-
-        <div className="grid grid-cols-3 border-b border-white/[0.07]">
-          {MODES.map(({ id, label, sub, icon: Icon }) => {
-            const selected = mode === id;
-            const activeQueueTile = queuedMode === id && (waiting || reserved || connecting || ready);
-            const disabled = battle.busy || ((reserved || connecting || ready) && !activeQueueTile) || (waiting && !activeQueueTile);
-            return (
-              <button
-                key={id}
-                type="button"
-                disabled={disabled}
-                onClick={() => chooseMode(id)}
-                aria-pressed={selected}
-                className={`min-h-[72px] border-r border-white/[0.055] px-3 text-left last:border-r-0 ${selected ? 'bg-cyan-100/[0.075]' : 'hover:bg-white/[0.03]'} ${disabled ? 'cursor-default opacity-45' : ''}`}
-              >
-                <Icon className={`mb-2 h-4 w-4 ${selected ? 'text-cyan-100' : 'text-white/35'}`} />
-                <strong className="block text-[10px] text-white/90">{label}</strong>
-                <small className="mt-0.5 block text-[7px] text-white/35">
-                  {waiting && activeQueueTile ? 'Queued · waiting for opponent' : reserved && activeQueueTile ? 'Opponent found · confirming both players' : sub}
-                </small>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="p-4">
-          <div className="mb-3 text-[11px] font-semibold text-white/58">
-            Online now: {onlineSummary?.online ?? 0} · In queue: {onlineSummary?.in_queue ?? 0} · Live matches: {onlineSummary?.matches_live ?? 0}
-          </div>
-          <div className="flex min-h-[58px] items-center border border-white/[0.07] bg-white/[0.025] px-4">
-            {(battle.busy || reserved || connecting || ready) && <Loader2 className="mr-3 h-4 w-4 animate-spin text-cyan-200/70" />}
-            <div>
-              <p className="text-[10px] font-semibold text-white/80">{active.label}</p>
-              <p className="mt-1 text-[8px] text-white/42">{statusText}</p>
-            </div>
-          </div>
-
-          <div className="mt-3 flex gap-2">
-            {waiting ? (
-              <button type="button" disabled={battle.busy} onClick={leaveQueue} className="h-10 flex-1 border border-white/[0.10] text-[9px] font-black uppercase tracking-[0.12em] text-white/70 hover:bg-white/[0.05] disabled:opacity-50">{battle.busy ? 'Leaving Queue…' : 'Cancel Queue'}</button>
-            ) : reserved ? (
-              <button type="button" disabled={battle.busy} onClick={leaveQueue} className="h-10 flex-1 border border-cyan-100/[0.14] bg-cyan-100/[0.04] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-100/80 hover:bg-cyan-100/[0.08] disabled:opacity-50">{battle.busy ? 'Cancelling…' : 'Cancel Match Reservation'}</button>
-            ) : connecting || ready ? (
-              <button type="button" disabled className="h-10 flex-1 border border-cyan-100/[0.14] bg-cyan-100/[0.04] text-[9px] font-black uppercase tracking-[0.12em] text-cyan-100/80 opacity-80">Entering Match…</button>
-            ) : (
-              <button type="button" disabled={battle.busy} onClick={enterQueue} className="h-10 flex-1 bg-cyan-200 text-[9px] font-black uppercase tracking-[0.12em] text-slate-950 hover:bg-cyan-100 disabled:opacity-50">{battle.busy ? 'Entering Queue…' : 'Enter Queue · Q'}</button>
-            )}
-          </div>
-        </div>
-      </section>
-    </div>
+    <AIBattleMenuWorkspace
+      embedded={embedded} onClose={onClose} mode={mode} genreId={genreId}
+      chooseMode={chooseMode} chooseGenre={chooseGenre} locked={locked}
+      availability={availability} battle={battle} waiting={waiting}
+      reserved={reserved} connecting={connecting} ready={ready}
+      enterQueue={enterQueue} leaveQueue={leaveQueue} onlineSummary={onlineSummary}
+      statusText={statusText} openSkillBook={openSkillBook}
+    />
   );
 }
