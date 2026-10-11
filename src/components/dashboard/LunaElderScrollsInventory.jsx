@@ -78,7 +78,10 @@ export default function LunaElderScrollsInventory({
       .filter(([key, value]) => typeof value === 'number' && Number.isFinite(value))
       .slice(0, 3)
     : [];
-  const fillerCount = Math.max(0, 30 - visibleItems.length);
+  // Seven columns, unlimited rows. Keep five empty rows for a classic MMO
+  // backpack appearance; expand by whole rows when new owned gear arrives.
+  const rowCount = Math.max(5, Math.ceil(visibleItems.length / 7));
+  const fillerCount = rowCount * 7 - visibleItems.length;
 
   const handleSlotSelect = (slotId) => {
     if (!GEAR_SLOT_IDS.has(slotId)) return;
@@ -162,17 +165,16 @@ export default function LunaElderScrollsInventory({
           </div>
         </header>
 
-        <div className="relative min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3" data-inventory-grid-scroll>
           {collection.isLoading && (
             <p className="mb-3 text-center text-[11px] text-white/50">Loading owned gear…</p>
           )}
           {collection.isError && (
             <p className="mb-3 text-center text-[11px] text-rose-300">Unable to load equipment.</p>
           )}
-          {/* Classic compact slot inventory. Empty boxes preserve its grid appearance. */}
+          {/* Fixed seven-square MMO rows: extra items automatically extend the scrollable grid. */}
           <div
-            className="grid content-start justify-start gap-1.5"
-            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(52px, 1fr))' }}
+            className="grid grid-cols-7 content-start gap-1.5"
             role="group"
             aria-label="Equipment item grid"
           >
