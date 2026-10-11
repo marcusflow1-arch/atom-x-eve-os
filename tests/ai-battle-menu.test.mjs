@@ -22,6 +22,7 @@ const result = await build({
   platform:'node', format:'cjs', packages:'external', jsx:'automatic', loader:{'.css':'empty'},
   alias:{'@':process.cwd()+'/src'},
   plugins:[{name:'battle-menu-fixtures', setup(builder){
+    builder.onResolve({filter:/^lucide-react$/}, () => ({path:process.cwd()+'/node_modules/lucide-react/dist/esm/lucide-react.js'}));
     builder.onResolve({filter:/.*/}, args => {
       const name=args.path.split('/').at(-1).replace(/\.(jsx|js)$/, '');
       return fixtures[name] ? {path:name,namespace:'fixture'} : undefined;
