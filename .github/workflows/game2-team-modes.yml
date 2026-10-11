@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - feature/game2-drive-two-maps-ctf-sudden8v8
+      - fix/luna-waterfall-real-game2-drive-maps-20261011
   pull_request:
     paths:
       - 'src/components/game2/**'
       - 'tests/game2-team-modes.test.mjs'
+      - 'tests/game2-multi-map.test.mjs'
       - '.github/workflows/game2-team-modes.yml'
 
 jobs:
@@ -20,4 +22,4 @@ jobs:
         with:
           node-version: '20'
       - name: Verify Game Two match rules
-        run: node --test tests/game2-team-modes.test.mjs tests/game2-native-map.test.mjs tests/game2-mission.test.mjs
+        run: node --test tests/game2-team-modes.test.mjs tests/game2-native-map.test.mjs tests/game2-multi-map.test.mjs tests/game2-mission.test.mjs

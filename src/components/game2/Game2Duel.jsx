@@ -59,8 +59,8 @@ function Game2Menu({ onPick, mapId, onMapChange }) {
           <p className="mx-auto mt-2 max-w-xl text-sm text-white/55">Both modes share the same lightsaber, Force and combat rules.</p>
         </div>
         <div className="mb-4 rounded-xl border border-cyan-200/20 bg-cyan-400/[0.045] p-3">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-cyan-200/80">AI team-battle map · two maps selected from your Drive</div>
-          <div className="grid grid-cols-2 gap-2" role="group" aria-label="Choose AI match map">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-cyan-200/80">AI team-battle maps · three different original BSP arenas</div>
+          <div className="grid gap-2 sm:grid-cols-3" role="group" aria-label="Choose AI match map">
             {Object.values(GAME2_ARENA_MAPS).map(map => (
               <button key={map.id} type="button" onClick={() => onMapChange(map.id)}
                 aria-pressed={mapId === map.id}
@@ -69,7 +69,7 @@ function Game2Menu({ onPick, mapId, onMapChange }) {
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[11px] text-white/45">Hangar uses an original test layout until its licensed Drive BSP is synced locally. Mission and online modes are unchanged.</p>
+          <p className="mt-2 text-[11px] text-white/45">All three map choices load distinct original BSP geometry from your Google Drive. Mission and online modes remain unchanged.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           {Object.entries(MODES).map(([id, m]) => {

@@ -20,7 +20,7 @@ import { MISSIONS } from './missions/index.js';
 import { bolt, drawBolt } from './fx.js';
 import { geo } from './gl.js';
 import { Game2TeamMatch } from './teamMatch.js';
-import { GAME2_HANGAR_TEST_LAYOUT } from './arenaMaps.js';
+// Team arenas use the real Drive BSP selected by the player.
 
 const STEP = 1 / 60;
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -37,14 +37,12 @@ export class Game {
     this.t = 0; this.dtFrame = STEP; this.fps = 60; this.acc = 0; this.started = false; this.flashes = []; this.lightFlash = 0; this.lightFlashPos = [0, 2, 0]; this.shakeAmt = 0; this.frameNo = 0;
     this.bodyMesh = R.uploadSkinned(A.body); this.hiltMesh = R.uploadStatic(A.hilt); this.lodMesh = A.lod ? R.uploadSkinned(A.lod) : this.bodyMesh;
     const gun = geo(); gun.box(0, 0.03, 0, 0.05, 0.13, 0.06, [0.16, 0.16, 0.19, 1]).box(0, -0.12, 0, 0.045, 0.2, 0.05, [0.32, 0.33, 0.38, 1]).box(0, -0.235, 0, 0.03, 0.05, 0.03, [0.9, 0.25, 0.15, 1]); this.gunMesh = R.uploadStatic(gun.build());
-    // Real Drive BSP when installed; an original, labelled test layout when
-    // Hangar's licensed BSP has not been provisioned. Existing story unchanged.
-    const fallback = this.teamMode && !A.duelMap ? GAME2_HANGAR_TEST_LAYOUT : null;
-    const level = this.missionDef ? buildLevel(this.missionDef.layout) : fallback ? buildLevel(fallback) : null;
-    const arena = this.duel || this.online || (this.teamMode && !!A.duelMap);
+    const level = this.missionDef ? buildLevel(this.missionDef.layout) : null;
+    const arena = this.duel || this.online || this.teamMode;
+    if (arena && !A.duelMap) throw new Error('Game 2 selected map not loaded');
     this.world = new World(R, arena ? A.duelMap : null, level);
     this.playerSpawn = arena ? this.world.spawns.player.slice() : level ? level.playerSpawn.slice() : SPAWN.slice();
-    this.enemySpawn = arena ? this.world.spawns.enemy.slice() : fallback ? fallback.enemySpawn.slice() : [0, 0, 8];
+    this.enemySpawn = arena ? this.world.spawns.enemy.slice() : [0, 0, 8];
     this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
     // Reuse Atom XE's configured battle theme from the moment the map loads.
     // Browser autoplay restrictions may require the first player gesture.

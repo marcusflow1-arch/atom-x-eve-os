@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Game2TeamMatch, TEAM_MODES, spawnNearby } from '../src/components/game2/engine/teamMatch.js';
-import { GAME2_ARENA_MAPS, GAME2_HANGAR_TEST_LAYOUT } from '../src/components/game2/engine/arenaMaps.js';
+import { GAME2_ARENA_MAPS } from '../src/components/game2/engine/arenaMaps.js';
 
 function fakeGame() {
   const game = {
@@ -38,11 +38,12 @@ function fakeGame() {
   return game;
 }
 
-test('two map choices reference the distinct source files in Drive', () => {
+test('three map choices reference distinct real BSP files in Drive', () => {
   assert.notEqual(GAME2_ARENA_MAPS.training.driveFileId, GAME2_ARENA_MAPS.hangar.driveFileId);
   assert.equal(GAME2_ARENA_MAPS.training.filename, 'duel_training.bsp');
   assert.equal(GAME2_ARENA_MAPS.hangar.filename, 'duel_hangar.bsp');
-  assert.ok(GAME2_HANGAR_TEST_LAYOUT.ground);
+  assert.equal(GAME2_ARENA_MAPS.carbon.filename, 'duel_carbon.bsp');
+  assert.equal(new Set(Object.values(GAME2_ARENA_MAPS).map(m => m.driveFileId)).size, 3);
 });
 
 test('team sizes are 7v7 Capture the Flag and 8v8 Sudden Death', () => {

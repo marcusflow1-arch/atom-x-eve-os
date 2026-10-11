@@ -7,7 +7,8 @@ import { v3 } from './math.js';
 const SCALE = 1 / 48;
 const ORIGIN = [-64, -928, 64];
 const CELL = 3.5;
-const toGame = (x, y, z) => [(x - ORIGIN[0]) * SCALE, (z - ORIGIN[2]) * SCALE, (y - ORIGIN[1]) * SCALE];
+// Each actual BSP may be authored hundreds of metres away from the Training map origin.
+// Convert map coordinates relative to its own arena origin instead.
 const F = (view, offset) => view.getFloat32(offset, true);
 const I = (view, offset) => view.getInt32(offset, true);
 
@@ -25,7 +26,7 @@ function shaderColor(name) {
 const visible = name => !/caulk|noshader|\/clip|\/trigger|\/nodraw|\/sky|\/fog|\/glass|\/hint|\/skip/.test(name.toLowerCase());
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 
-export function parseRBSP(buffer) {
+export function parseRBSP(buffer, options = {}) {
   const raw = buffer instanceof ArrayBuffer ? buffer : buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   const d = new DataView(raw), bytes = new Uint8Array(raw);
   if (d.byteLength < 152 || String.fromCharCode(...bytes.slice(0, 4)) !== 'RBSP' || I(d, 4) !== 1) throw new Error('Game 2 map: invalid Raven RBSP v1 file');
@@ -36,6 +37,24 @@ export function parseRBSP(buffer) {
   });
   if (lumps[1].len % 72 || lumps[10].len % 80 || lumps[11].len % 4 || lumps[13].len % 148) throw new Error('Game 2 map: unrecognized BSP surface layout');
   const utf = new TextDecoder();
+  const entityText = utf.decode(bytes.slice(lumps[0].off, lumps[0].off + lumps[0].len));
+  const entities = [];
+  for (const hit of entityText.matchAll(/\{([^{}]*)\}/g)) {
+    const entry = {}, re = /"([^"]+)"\s*"([^"]*)"/g;
+    for (const kv of hit[1].matchAll(re)) entry[kv[1]] = kv[2];
+    entities.push(entry);
+  }
+  const originalStarts = entities
+    .filter(e => e.classname === 'info_player_deathmatch' && e.origin)
+    .map(e => e.origin.split(/\s+/).map(Number))
+    .filter(v => v.length === 3 && v.every(Number.isFinite));
+  const extent = k => [Math.min(...originalStarts.map(v => v[k])), Math.max(...originalStarts.map(v => v[k]))];
+  // Preserve Training's previously calibrated position so existing content does not move.
+  const origin = options.source === 'duel_training.bsp' || !options.source || !originalStarts.length
+    ? ORIGIN
+    : [(extent(0)[0] + extent(0)[1]) / 2, (extent(1)[0] + extent(1)[1]) / 2,
+       extent(2)[0] - 24];
+  const toGame = (x, y, z) => [(x - origin[0]) * SCALE, (z - origin[2]) * SCALE, (y - origin[1]) * SCALE];
   const mat = Array.from({length: lumps[1].len / 72}, (_, n) => {
     const off = lumps[1].off + n * 72, rawName = bytes.slice(off, off + 64);
     return utf.decode(rawName.slice(0, rawName.indexOf(0) >= 0 ? rawName.indexOf(0) : rawName.length));
@@ -135,13 +154,6 @@ export function parseRBSP(buffer) {
     }
   }
   if (tris.length < 100 || tris.length > 300000) throw new Error('Game 2 map: no usable world geometry');
-  const text = utf.decode(bytes.slice(lumps[0].off, lumps[0].off + lumps[0].len));
-  const entities = [];
-  for (const hit of text.matchAll(/\{([^{}]*)\}/g)) {
-    const e = {}, regex = /"([^"]+)"\s*"([^"]*)"/g;
-    for (const kv of hit[1].matchAll(regex)) e[kv[1]] = kv[2];
-    entities.push(e);
-  }
   const world = entities.find(e => e.classname === 'worldspawn') || {};
   const spawns = entities.filter(e => ['info_player_start', 'info_player_deathmatch'].includes(e.classname) && e.origin)
     .map(e => {
@@ -151,7 +163,7 @@ export function parseRBSP(buffer) {
       return { pos, kind: e.classname, angle: Number(e.angle) || 0 };
     }).filter(Boolean);
   return {
-    name: world.mapname || 'Lightsaber Training', source: 'duel_training.bsp', originalSurfaceCount: surfaces,
+    name: options.name || world.mapname || 'Imported Arena', source: options.source || 'duel_training.bsp', origin, originalSurfaceCount: surfaces,
     mesh: { pos: new Float32Array(positions), nrm: new Float32Array(normals), col: new Uint8Array(colors), idx: new Uint32Array(outIdx) },
     tris, spawns, materials: mat,
     texturedMeshes: Array.from(textured, ([shader, g]) => ({
@@ -241,6 +253,31 @@ export class BSPCollision {
       }
       if(clear)return {player:start,enemy:other};
     }
+    // The original Hangar / Carbon arenas include dedicated deathmatch spawns,
+    // but some elevated platforms cannot support the 4.5 m radial test above.
+    // Fall back to two *authored* spawns on the same floor, not fake geometry or
+    // an arbitrary position that clips through a BSP wall.
+    const safe = entry => {
+      const original = entry.pos.slice();
+      const floor = this.floorAt(original[0], original[2], original[1] + 1.5);
+      if (floor === null || Math.abs(floor - original[1]) > 1.1) return null;
+      const pos = [original[0], floor, original[2]], before = pos.slice();
+      this.collide(pos, 0.42);
+      return Math.hypot(pos[0] - before[0], pos[2] - before[2]) < 0.23 ? pos : null;
+    };
+    const originalSpawns = this.map.spawns
+      .filter(entry => entry.kind === 'info_player_deathmatch')
+      .map(safe).filter(Boolean);
+    let pair = null, maxSep = 0;
+    for (let i = 0; i < originalSpawns.length; i++) {
+      for (let j = i + 1; j < originalSpawns.length; j++) {
+        const first = originalSpawns[i], second = originalSpawns[j];
+        if (Math.abs(first[1] - second[1]) > 0.8) continue;
+        const d = Math.hypot(first[0]-second[0], first[2]-second[2]);
+        if (d > 3 && d > maxSep) { maxSep = d; pair = [first, second]; }
+      }
+    }
+    if (pair) return { player: pair[0], enemy: pair[1] };
     throw new Error('Game 2 map: could not locate two safe spawn positions');
   }
 }

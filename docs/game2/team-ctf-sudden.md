@@ -1,57 +1,37 @@
-# Game 2 — Drive arenas, 7v7 Capture the Flag, 8v8 Sudden Death
+# Game Two — real Drive arenas, 7v7 CTF, 8v8 Sudden Death
 
-These changes are specifically for **Luna → Game Two** (`src/pages/Game2.jsx` → `Game2Duel.jsx`). They do not change the separate Unreal / JK2_2026 CTF prototype, the Game Two campaign, or the existing 10-player online free-for-all.
+This applies to **Atom XE → Luna → Game Two**, not the separate Unreal project.
 
-## Choose a match
+## Team modes
 
-The Game Two menu now offers:
-- **Capture the Flag (7v7)**: the local player plus six Blue AI versus seven Red AI. Three captures win; pick up the opposing flag by touching it, return home with it while your own flag is at base, and prevent the enemy from doing likewise. Kill a carrier to drop the flag; teammates return dropped home flags on touch; dropped flags auto-return after 20 seconds. Defeated fighters respawn after five seconds.
-- **Sudden Death (8v8)**: local player plus seven Blue AI versus eight Red AI. Everyone has one life, no respawns. The first team to eliminate all eight opponents wins.
+- **Capture the Flag**: Blue = player + 6 bots; Red = 7 bots. Take the enemy flag back to your own base while your flag is home. Flag drop on death, 20-second auto-return, 5-second respawn, first to three captures wins.
+- **Sudden Death**: Blue = player + 7 bots; Red = 8 bots. No respawns. Eliminate the entire opposing team.
 
-AI teammates use attack / defend / support objectives in CTF and fight the opposing team in Sudden Death. Friendly fire is disabled in the saber/Force targeting logic. The ordinary HUD adds team scores, flag states or surviving-fighter counts and a result overlay. For non-BSP original Hangar test geometry, AI uses the existing Game 2 A* navigation grid.
+These are **local player vs AI matches**, not 16-player live networking. The existing 10-human Railway arena and the Jedi Outcast campaign remain separate.
 
-**These are local player-versus-AI modes.** The live Railway multiplayer server remains capped at ten human players. This work does NOT claim to support sixteen simultaneous human-controlled characters or replicated CTF scoring yet.
+## Real source maps used
 
-## Two map sources verified in the user's Google Drive
+All three menu entries now resolve to actual, different Raven RBSP v1 binary geometry that was read from the connected Google Drive /maps folder. No map-choice placeholder or fallback is allowed.
 
-| Menu choice | Drive source | File ID | Availability |
-|---|---|---|---|
-| Lightsaber Training | `/maps/duel_training.bsp` | `1uIQPWKuqMbujSn9dUrnwVFGqv6LKq3t9` | Existing project map |
-| Hangar Duel | `/maps/duel_hangar.bsp` | `16dHdYcOiPIJo1lvHVhcOjEZcf3KJmIJV` | Authenticated local Drive sync; otherwise original Hangar test arena |
+| Choice | Original map file | Size (bytes) |
+| --- | --- | ---: |
+| Lightsaber Training | `public/game2/maps/duel_training.bsp` | 905,388 |
+| Hangar Duel | `public/game2/maps/duel_hangar.bsp` | 702,604 |
+| Carbon Chamber | `public/game2/maps/duel_carbon.bsp` | 910,684 |
 
-Both were inspected as Raven `RBSP` version 1 files from Drive. Map metadata includes original deathmatch player spawn entities. The scene loader accepts either map in team modes, and uses the source BSP's geometry when available. The Hangar test arena is expressly NOT the original retail BSP geometry.
+The loader verifies actual BSP format, loads the specified geometry, positions the world relative to each map's own spawn origins, and fails visibly instead of displaying another map when the selected binary is missing. The material renderer currently only has shipped Yavin surface textures for Training; other source materials use color approximations rather than full original textures. This affects appearance but not which BSP geometry is loaded.
 
-### Sync authorized original maps locally
+**Licensing:** These imported level binaries may contain third-party copyrighted level design or assets. Possession in Drive does not establish public redistribution rights. Confirm authorization before keeping them in a public GitHub repository or serving them from a public site.
 
-For assets you are legally entitled to use, obtain a Google OAuth access token with read permission to the provided Drive files. On your development workstation:
-
-```bash
-GOOGLE_DRIVE_ACCESS_TOKEN="YOUR_TOKEN" node tools/game2/sync-team-maps.mjs
-```
-
-The Node script validates the magic header, BSP version and expected file length, then installs `duel_training.bsp` and `duel_hangar.bsp` to `public/game2/maps/`. Existing valid files are skipped. **Never commit OAuth tokens, secrets, or newly synced original retail map assets to this public repository.** Git ignores `duel_hangar.bsp`. Deployed environments must provision authorized assets separately if genuine Hangar geometry is intended to be served to end users.
-
-The first choice currently loads the already-installed authentic Training map. When the Hangar BSP is absent (or a dev server returns SPA HTML for the missing path) its choice loads an authored game-test layout with collision and navigation. This makes the new modes playable for testing without claiming unavailable licensed game art has already been deployed.
-
-## QA checklist
-
-Run this before treating it as production-ready:
+## Verification
 
 ```bash
-node --test tests/game2-team-modes.test.mjs
+node --test tests/game2-team-modes.test.mjs tests/game2-native-map.test.mjs tests/game2-multi-map.test.mjs tests/game2-mission.test.mjs
 npm run build
 ```
 
-Then in Game Two's dashboard menu:
-1. Choose **Capture the Flag** on **Lightsaber Training**. Check that Blue has 7 participants total, Red has 7; both flags can be stolen/dropped/returned and scoring requires your home flag present.
-2. Choose **Capture the Flag** on **Hangar Duel**. Verify the test layout is navigable, AI avoids cover obstacles and flag states are correctly announced. With your local BSP installed, repeat on real Hangar geometry.
-3. Choose **Sudden Death** on both maps. Confirm Blue 8, Red 8; killed fighters never respawn, and the last surviving team receives the victory announcement.
-4. Retest **Single Player**, the **Dark Jedi Duel**, and **online Free-for-all** for regressions.
-5. Profile 16 on-screen animated characters on your target desktop and mobile devices. Bots on legacy BSP maps currently use local steering rather than imported `.wnt` route graphs and will need navigation refinement before shipping.
+The multi-map test checks source binary lengths, magic and unique SHA-256s, parsed geometry and collision, and map-specific coordinate normalization. Re-test every map in 7v7 and 8v8 through Luna, including collision, spawning, match completion and frame rates with 16 characters onscreen. Team AI still uses basic steering on native BSP maps rather than advanced BSP route graph navigation, and will need more work for reliable competitive matches.
 
-## Known limitations
+### Separately: Luna AI Attribute waterfall
 
-- No 16-human online rooms: no Railway transport/matchmaker/server changes.
-- Existing BSP training and optional original Hangar are not newly optimized for a crowded 16-fighter match.
-- AI uses existing humanoid character animation and simple role policy; it is an initial prototype.
-- This PR does not republish the proprietary Hangar model or textures. Only the small original Hangar fallback geometry is committed.
+The Luna panel glass experiment now uses a time-varying full-surface transparent water shader, not thin vertical strokes. On systems without WebGL it uses a CSS-animated broad ripple fallback. It leaves the existing panel shell, icon/stat content and input controls unchanged. As with map gameplay, verify it visually on the deployed dashboard and on mobile before declaring it final.
