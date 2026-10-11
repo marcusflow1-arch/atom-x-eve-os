@@ -21,6 +21,7 @@ import LunaFriendsQuickAccessPanel from './LunaFriendsQuickAccessPanel';
 import LunaSeasonPassOverlay from './LunaSeasonPassOverlay';
 import LunaSkillXpHud from './LunaSkillXpHud';
 import LunaOrnateChrome from './LunaOrnateChrome';
+import LunaLiquidWaterfall from './LunaLiquidWaterfall';
 import './luna-ornate-attributes.css';
 import './luna-silver-attribute.css';
 import './luna-battle-launch.css';
@@ -456,6 +457,8 @@ export default function DashboardAvatarOverview() {
         <div className="axe-attribute-shell relative h-full w-full bg-transparent border-b border-white/[0.06] shadow-[0_20px_45px_rgba(0,0,0,0.10)]">
           <LunaOrnateChrome variant="silver" />
           <div className="axe-attribute-content relative flex h-full w-full flex-col bg-transparent backdrop-blur-[10px] overflow-hidden">
+            {/* Optical glass only: a downward water sheet over the existing panel, not its chrome. */}
+            <LunaLiquidWaterfall />
             <div className="axe-attribute-heading relative shrink-0 px-5 pt-3 pb-2 border-b border-white/[0.12]">
               <div className="flex items-center gap-2 pr-9">
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
