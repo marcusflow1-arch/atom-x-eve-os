@@ -124,7 +124,7 @@ try {
 
 const overview=readFileSync('src/components/dashboard/DashboardAvatarOverview.jsx','utf8');
 const luna=readFileSync('src/pages/LunaTemplate.jsx','utf8');
-for(const key of ['inventory','memories','messages','cards','ai-story','ai-battle','season','leaderboard']){
+for(const key of ['inventory','records','messages','cards','ai-story','ai-battle','season','leaderboard']){
   assert.match(overview,new RegExp('<DashboardWindow id="'+key+'"'),'missing independently mounted '+key+' window');
 }
 assert.match(overview,/slotItems\.map\(item/);

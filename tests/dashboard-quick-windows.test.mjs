@@ -107,7 +107,13 @@ try {
   assert.ok(popup('gamer-profile'),'View Profile opens a second independent floating window');
   assert.ok(popup('social-directory'),'profile remains independent of friends list');
   assert.ok(document.querySelector('[aria-label="AI Attribute Box"]'));
-  console.log('PASS: eight independent quick-action windows plus social directory, both AI icons, profile and preserved AI Attributes');
+  await run(()=>popup('cards').querySelector('[aria-label="Close Cards · Skill Book window"]').click());
+  assert.equal(popup('cards'),null);
+  await run(()=>window.dispatchEvent(new CustomEvent('openLunaSkillBook')));
+  assert.ok(popup('cards'),'AI Battle Skill Book event opens the actual cards window');
+  assert.ok(popup('ai-battle'),'opening Skill Book preserves AI Battle and its queue');
+  assert.ok(+popup('cards').style.zIndex > +popup('ai-battle').style.zIndex,'Skill Book comes to front');
+  console.log('PASS: eight independent quick-action windows, social/profile windows and AI Battle Skill Book bridge');
 }finally{
   await act(async()=>root.unmount());
   dom.window.close();
