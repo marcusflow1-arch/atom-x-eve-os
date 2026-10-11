@@ -203,7 +203,19 @@ export class Game2TeamMatch {
     const target = near || (this.mode === 'sudden' ? closest : null);
     const destination = target?.pos || objective;
     if (!destination) return;
-    const dx = destination[0] - f.pos[0], dz = destination[2] - f.pos[2];
+    let waypoint = destination;
+    // Author-built Hangar uses Game Two's existing A* navigation grid.
+    // Path cache is throttled per bot; combat targets are never path-cached.
+    if (!target && g.world.nav) {
+      if (!f.matchPath || !f.matchPathGoal || distance(f.matchPathGoal, destination) > 2.2 || g.t - (f.matchPathAt || 0) > 3) {
+        f.matchPath = g.world.nav.findPath(f.pos, destination, 4500) || [];
+        f.matchPathGoal = copy(destination);
+        f.matchPathAt = g.t;
+      }
+      while (f.matchPath?.length && distance(f.pos, f.matchPath[0]) < 1.2) f.matchPath.shift();
+      if (f.matchPath?.length) waypoint = f.matchPath[0];
+    }
+    const dx = waypoint[0] - f.pos[0], dz = waypoint[2] - f.pos[2];
     const d = Math.hypot(dx, dz);
     f.targetYaw = Math.atan2(dx, dz);
     if (target && d < 2.7) {
