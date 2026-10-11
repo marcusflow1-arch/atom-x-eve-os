@@ -67,7 +67,7 @@ const tile=label=>[...document.querySelectorAll('[data-dashboard-quick-control]'
 try {
   await run(()=>root.render(createElement(Overview)));
   const expected=[
-    ['Inventory','inventory'],['Memories','memories'],['Message','messages'],['Cards','cards'],
+    ['Inventory','inventory'],['Records','records'],['Message','messages'],['Cards','cards'],
     ['AI Story','ai-story'],['AI Battle','ai-battle'],['Season','season'],['Leaderboard','leaderboard']
   ];
   assert.equal(document.querySelectorAll('[data-dashboard-quick-control]').length,8);

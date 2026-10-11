@@ -31,7 +31,7 @@ const result = await build({
 });
 const module = new Module(process.cwd()+'/battle-menu-test.cjs');
 module.paths=Module._nodeModulePaths(process.cwd());
-module._compile(result.outputFiles[0].text, module.filename);
+module._compile(result.outputFiles[0].text, process.cwd()+'/battle-menu-test.cjs');
 const Menu=module.exports.default;
 let root, f;
 beforeEach(()=> {
