@@ -79,7 +79,7 @@ export default function AIBattleMenuWorkspace({ embedded, onClose, mode, genreId
           : connecting || ready ? <button type="button" className="ai-battle-menu__queue-button" disabled>Entering match…</button>
           : <button type="button" className="ai-battle-menu__queue-button" disabled={battle.busy || battle.isLoading || !availability.available} onClick={enterQueue}>{battle.busy ? 'Joining…' : battle.isLoading ? 'Checking queue…' : availability.available ? <>Find opponent<kbd>Q</kbd></> : 'Not available yet'}</button>}
         </div>
-        <div className="ai-battle-menu__footer-meta"><span>{queueActive ? 'Closing this window keeps your queue active.' : availability.available ? 'Opening this menu never starts a queue.' : 'Browse freely. Preview selections do not queue.'}</span><span>All AI Battle: {onlineSummary?.online ?? '—'} online · {onlineSummary?.in_queue ?? '—'} queued · {onlineSummary?.matches_live ?? '—'} matches</span></div>
+        <div className="ai-battle-menu__footer-meta"><span>{queueActive ? 'Closing this window keeps your queue active.' : availability.available ? 'Opening this menu never starts a queue.' : 'Browse freely. Preview selections do not queue.'}</span><span>Across Atom XE: {onlineSummary?.online ?? '—'} online · {onlineSummary?.in_queue ?? '—'} queued · {onlineSummary?.matches_live ?? '—'} matches</span></div>
       </footer>
     </section>
   </div>;
