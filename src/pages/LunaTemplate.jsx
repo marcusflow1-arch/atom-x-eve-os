@@ -77,10 +77,10 @@ import OwnedLibraryView from '@/components/dashboard/gamehub/OwnedLibraryView';
 import DevSpotlightShowcase from '../components/dashboard/DevSpotlightShowcase';
 import FriendsListContent from '../components/dashboard/FriendsListContent';
 import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
-import InventoryGrid from '../components/dashboard/InventoryGrid';
+import LunaElderScrollsInventory from '../components/dashboard/LunaElderScrollsInventory';
 import { getEquipmentSlotLabel, itemFitsSlot } from '../components/dashboard/equipmentSlotRules';
-import LunaSplitInventory from '../components/dashboard/LunaSplitInventory';
-import LunaInventoryItemPreview from '../components/dashboard/LunaInventoryItemPreview';
+
+
 import LunaEquipmentUpgradeWorkspace from '../components/dashboard/LunaEquipmentUpgradeWorkspace';
 import TransparentModel3DViewer from '../components/dashboard/TransparentModel3DViewer';
 import LunaBottomNav from '../components/dashboard/LunaBottomNav';
@@ -165,7 +165,7 @@ export default function LunaTemplate() {
   const location = useLocation();
   const { user } = useAuth();
   const resetLunaStore = useLunaStore((state) => state.reset);
-  const { equipItem, unequipItem, equippedItems, setWeaponModelUrl, weaponModelUrl } = useEquipment();
+  const { equipItem, unequipItem, equippedItems, setWeaponModelUrl, weaponModelUrl, isSaving: equipmentSaving } = useEquipment();
   const { activeSkills, triggerSkill } = useSkills();
   const [showSettings, setShowSettings] = useState(false);
   const [stageMode, setStageMode] = useState('default'); // 'default', 'stats', 'live', 'friends'
@@ -708,16 +708,18 @@ export default function LunaTemplate() {
     window.dispatchEvent(new CustomEvent('openInventoryPanel', { detail: { slotId } }));
   };
 
-  const handleEquipItem = (item) => {
-    if (!clickedSlot || !item) return;
+  const handleEquipItem = (item, slotId = clickedSlot) => {
+    if (!slotId || !item) return;
 
-    if (!itemFitsSlot(item, clickedSlot)) {
-      showError(`${item.name || 'That item'} cannot be equipped in ${getEquipmentSlotLabel(clickedSlot)}.`);
+    if (!itemFitsSlot(item, slotId)) {
+      showError(`${item.name || 'That item'} cannot be equipped in ${getEquipmentSlotLabel(slotId)}.`);
       return;
     }
 
-    equipItem(clickedSlot, item);
-    // Do NOT close inventory on equip - keeps UI stable
+    if (!equipItem(slotId, item)) {
+      showError('Only owned equipment cards can be equipped.');
+    }
+    // Keep inventory open to compare and change loadout without interruptions.
   };
 
   // Open InventoryPanel from other components (e.g., StatsDropdown InventoryGrid)
@@ -1613,70 +1615,25 @@ export default function LunaTemplate() {
                           
                     </motion.div> :
 
-                        <div className="relative flex h-full w-full min-w-0 pointer-events-auto">
-                          {/* Keep the compact stacked loadout layout, but restore the
-                              overall workspace to an even 50/50 split. */}
-                          <section className="relative h-full w-1/2 min-w-0 overflow-hidden">
-                            {inventoryUpgradeItem ? (
+                        <div className="relative h-full w-full min-w-0 pointer-events-auto">
+                          <LunaElderScrollsInventory
+                            equippedItems={equippedItems}
+                            selectedSlotId={clickedSlot}
+                            onSelectSlot={(slotId) => setClickedSlot(slotId)}
+                            onEquipItem={handleEquipItem}
+                            onUnequipSlot={unequipItem}
+                            onUpgradeItem={(item) => setInventoryUpgradeItem(item)}
+                            isSaving={equipmentSaving}
+                          />
+                          {inventoryUpgradeItem && (
+                            <section className="absolute inset-y-0 left-0 z-40 w-1/2 overflow-hidden border-r border-white/10">
                               <LunaEquipmentUpgradeWorkspace
                                 item={inventoryUpgradeItem}
                                 inventory={inventoryData}
-                                onBack={() => {
-                                  setInventoryUpgradeItem(null);
-                                  setInventoryPreviewItem(null);
-                                }}
+                                onBack={() => setInventoryUpgradeItem(null)}
                               />
-                            ) : (
-                              <>
-                                <InventoryGrid
-                                  equippedItems={equippedItems}
-                                  handleBoxClick={handleBoxClick}
-                                  compact
-                                  selectedSlotId={clickedSlot}
-                                />
-                                <AnimatePresence>
-                                  {inventoryPreviewItem && (
-                                    <motion.div
-                                      key={inventoryPreviewItem.id || inventoryPreviewItem.itemId || inventoryPreviewItem.name}
-                                      initial={{ opacity: 0 }}
-                                      animate={{ opacity: 1 }}
-                                      exit={{ opacity: 0 }}
-                                      transition={{ duration: 0.16 }}
-                                      className="absolute inset-0 z-40"
-                                    >
-                                      <LunaInventoryItemPreview
-                                        item={inventoryPreviewItem}
-                                        selectedSlotId={clickedSlot}
-                                        onEquip={handleEquipItem}
-                                        onUpgrade={(item) => {
-                                          setInventoryPreviewItem(null);
-                                          setInventoryUpgradeItem(item);
-                                        }}
-                                        onClose={() => setInventoryPreviewItem(null)}
-                                      />
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </>
-                            )}
-                          </section>
-
-                          <div
-                            aria-hidden="true"
-                            className="pointer-events-none absolute left-1/2 top-1/2 z-30 h-1/2 w-px -translate-x-1/2 -translate-y-1/2"
-                            style={{
-                              background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,.055) 18%, rgba(255,255,255,.23) 50%, rgba(255,255,255,.055) 82%, transparent 100%)',
-                              boxShadow: '0 0 10px rgba(207,238,255,.06)',
-                            }}
-                          />
-
-                          <section className="h-full w-1/2 min-w-0 overflow-hidden">
-                            <LunaSplitInventory
-                              inventory={inventoryData}
-                              selectedSlotId={clickedSlot}
-                              onPreviewItem={setInventoryPreviewItem}
-                            />
-                          </section>
+                            </section>
+                          )}
                         </div>
                         }
                   </AnimatePresence>
@@ -1687,21 +1644,22 @@ export default function LunaTemplate() {
                 null}
       </AnimatePresence>
 
-      {/* Inventory Panel Overlay (Global) - Single Instance */}
-      {/* Moved out of AnimatePresence to ensure single stable instance when visible */}
-      {clickedSlot && !uiVisible &&
-              <div
-                className="absolute inset-0 z-[60]"
-                key="inventory-panel-container">
-                
-          <InventoryPanel
-                  inventory={inventoryData}
-                  onEquip={handleEquipItem}
-                  targetSlot={clickedSlot}
-                  onClose={() => setClickedSlot(null)} />
-                
+      {/* Equipment selected outside the main loadout workspace opens the same 50/50 inventory. */}
+      {clickedSlot && !uiVisible && (
+        <div className="absolute inset-0 z-[60] pointer-events-auto">
+          <LunaElderScrollsInventory
+            equippedItems={equippedItems}
+            selectedSlotId={clickedSlot}
+            onSelectSlot={(slotId) => setClickedSlot(slotId)}
+            onEquipItem={handleEquipItem}
+            onUnequipSlot={unequipItem}
+            isSaving={equipmentSaving}
+          />
+          <button type="button" onClick={() => setClickedSlot(null)}
+            className="absolute right-4 top-4 z-20 rounded-full border border-white/20 bg-black/80 p-2 text-white hover:bg-neutral-800"
+            aria-label="Close inventory"><X className="h-5 w-5" /></button>
         </div>
-              }
+      )}
 
       {/* Avatar Progression Overlay (O key) */}
       <AnimatePresence>
