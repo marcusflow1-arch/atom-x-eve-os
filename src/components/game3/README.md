@@ -17,7 +17,10 @@ Standalone Game 3 under Atom × Eve OS, separate from Game 2. All driving code i
 - Two-stage draft at 4s/8s behind opponent, temporary intangible ghost pass with dimming and afterimages, nitrous/drift/lateral-dodge prototypes.
 - Top-speed camera shake, airborne ramp jump orbit shot, pre-landing camera return, clean landing nitrous bonus.
 - Car collection and local win-based car unlocks, material-targeted paint/rim customization, underglow, custom slipstream/shift colors, HUD gauge styles.
-- Original four-scene story prologue and conditional audio mixing. Video previews are available on the music tab.
+- Seven-scene original prologue introducing the best friend's childhood promise and final-race warning, with conditional audio mixing. Video previews are available on the music tab.
+
+## Main story / finale canon
+Full open-city campaign and eight-part finale are specified in `docs/GAME3_NIGHT_RUN_FINALE_STORY_BIBLE.md`; machine-readable mission data is in `src/components/game3/campaignOutline.js`. The story ends with a rescue trip to the hospital, lightweight final race without nitrous, waterfront sacrifice, memory-flipbook fight and graveside spirit reveal. These finale gameplay/cinematic scenes are **design only**, not playable content in this checkpoint. No driver or friend character rigs are provided.
 
 ## Still not complete
 - Realistic rigid-body tire/suspension collision dynamics, traffic AI, server-authoritative online racing.
