@@ -26,7 +26,7 @@ test('Game 2 starts on a menu: Single Player runs the mission, Multiplayer opens
   assert.match(src, /choice === 'multi'/); // practice: the offline duel
   assert.match(src, /mode: 'online'/);
   assert.match(src, /Main menu/);
-  assert.match(src, /arena = choice !== 'single'/); assert.match(src, /\{ map: arena \}/); // the mission does not download the duel arena
+  assert.match(src, /arena = choice !== 'single'/); assert.match(src, /\{ map: arena, mapId: teamMode \? mapId : 'training' \}/); // the story mission still skips multiplayer BSPs
 });
 
 test("the mission's Reborn is the duel's Reborn value for value", () => {

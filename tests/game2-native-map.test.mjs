@@ -52,12 +52,15 @@ test('Game 2 uses imported mesh while leaving Game 1 and legacy explorer alone',
   assert.equal(world.bodies.length,0,'old barrels/crates not scattered over the genuine map');
   world.draw();world.update(1/60);
   const src=readFileSync(new URL('../src/components/game2/engine/game.js',import.meta.url),'utf8');
-  assert.match(src,/const arena = this\.duel \|\| this\.online;/); // duel and online matches use the imported arena
+  assert.match(src,/const arena = this\.duel \|\| this\.online \|\| \(this\.teamMode/); // legacy duel/online remain on imported BSP
   assert.match(src,/new World\(R, arena \? A\.duelMap : null, level\)/);
   assert.match(src,/label: 'Reborn'/);
   const assets=readFileSync(new URL('../src/components/game2/engine/assets.js',import.meta.url),'utf8');
-  assert.match(assets,/maps\/duel_training\.bsp/);
-  assert.match(assets,/if \(!raw\.ok\) throw/);
+  const maps = readFileSync(new URL('../src/components/game2/engine/arenaMaps.js',import.meta.url),'utf8');
+  assert.match(maps,/duel_training\.bsp/);
+  assert.match(maps,/duel_hangar\.bsp/);
+  assert.match(assets,/GAME2_ARENA_MAPS/);
+  assert.match(assets,/if \(!duelMap\)/); // Vite HTML fallbacks must not masquerade as a BSP
 });
 
 test('map surfaces are batched by genuine BSP material with finite UV coordinates', () => {

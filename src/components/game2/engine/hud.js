@@ -56,9 +56,9 @@ export class HUD {
     for (const n of g.npcs) {
       if (n.status === 'dead' && !F.active.see) continue; if ((g.duel || g.net) && !F.active.see) continue; const hp = n.headPos(); const s = this.project(g.R, [hp[0], hp[1] + 0.35, hp[2]]); if (!s) continue; if (s[0] < -50 || s[0] > W + 50 || s[1] < -50 || s[1] > H + 50) continue;
       const d = Math.hypot(n.pos[0] - P.pos[0], n.pos[2] - P.pos[2]); if (d > 26 && !F.active.see) continue; const sc = Math.max(0.55, Math.min(1.1, 9 / (s[2] + 4)));
-      const col = n.team === 'ally' ? ['#2bd96b', '#8dffb7'] : ['#d92b2b', '#ff8f6a']; const w = 54 * sc; x.globalAlpha = n.status === 'dead' ? 0.35 : 0.95;
+      const col = n.team === 'blue' ? ['#258bdc', '#96e2ff'] : n.team === 'ally' ? ['#2bd96b', '#8dffb7'] : ['#d92b2b', '#ff8f6a']; const w = 54 * sc; x.globalAlpha = n.status === 'dead' ? 0.35 : 0.95;
       this.bar(x, s[0] - w / 2, s[1] - 14 * sc, w, 5 * sc + 1, n.hp / n.maxHp, col);
-      x.fillStyle = n.team === 'ally' ? '#bfffd6' : '#ffd0c8'; x.font = `600 ${Math.round(10 * sc + 1)}px system-ui,sans-serif`; x.textAlign = 'center'; x.textBaseline = 'bottom'; x.fillText(n.label, s[0], s[1] - 16 * sc); x.textAlign = 'left';
+      x.fillStyle = n.team === 'blue' ? '#c5eeff' : n.team === 'ally' ? '#bfffd6' : '#ffd0c8'; x.font = `600 ${Math.round(10 * sc + 1)}px system-ui,sans-serif`; x.textAlign = 'center'; x.textBaseline = 'bottom'; x.fillText(n.label, s[0], s[1] - 16 * sc); x.textAlign = 'left';
       if (F.active.see) { x.strokeStyle = 'rgba(80,220,255,0.9)'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(s[0], s[1] + 4 * sc); x.lineTo(s[0] + 6 * sc, s[1] + 10 * sc); x.lineTo(s[0], s[1] + 16 * sc); x.lineTo(s[0] - 6 * sc, s[1] + 10 * sc); x.closePath(); x.stroke(); }
       x.globalAlpha = 1;
     }

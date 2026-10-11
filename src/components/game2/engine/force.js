@@ -66,7 +66,7 @@ export class Force {
   hands() { const a = this.p.actor; const l = a.bonePos('lhand'), r = a.bonePos('rhand'); const d = this.aim(); return [v3.addS(l, d, 0.12), v3.addS(r, d, 0.12)]; }
   targets() {
     const g = this.g; if (!this.npc) return g.targets();
-    if (g.online) return g.foesOf(this.p).map(f => ({ type: 'npc', ref: f, center: () => f.chest() }));
+    if (g.online || g.teamMode) return g.foesOf(this.p).map(f => ({ type: 'npc', ref: f, center: () => f.chest() }));
     const P = g.player; return P.status === 'dead' ? [] : [{ type: 'npc', ref: P, center: () => P.chest() }];
   }
   cone(range, deg, opts = {}) {
