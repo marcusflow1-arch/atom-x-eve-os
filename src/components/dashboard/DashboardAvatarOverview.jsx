@@ -397,7 +397,7 @@ export default function DashboardAvatarOverview() {
           showcaseEditing={cardsMode && !cardsMinimized} embedded={cardsMode && !cardsMinimized}
           dockTarget={skillBookDock} combatMode={false} />
 
-        {inventoryMode && <DashboardWindow id="inventory" title="Inventory · Equipment" width={990} height={670} onClose={() => { setInventoryMode(false); setInventorySlot(null); }}>
+        {inventoryMode && <DashboardWindow id="inventory" title="Inventory" width={990} height={670} onClose={() => { setInventoryMode(false); setInventorySlot(null); }}>
           <div className="h-full min-h-0 w-full">
             <LunaElderScrollsInventory
               equippedItems={equippedItems}
