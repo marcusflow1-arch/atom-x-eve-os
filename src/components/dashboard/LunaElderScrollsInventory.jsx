@@ -1,63 +1,34 @@
 import { useMemo, useState } from 'react';
-import {
-  Check, CircleDot, Footprints, Gem, Hand, HardHat, Layers3, Lock,
-  Package, Search, Shield, Shirt, Sparkles, Swords, UserRound, Wrench,
-} from 'lucide-react';
-import useCardCollection from '@/components/cards/useCardCollection';
+import { Check, Lock, Package, Search, Shield, Swords, Wrench } from 'lucide-react';
+import useOwnedEquipment from '@/components/luna/hooks/useOwnedEquipment';
+import InventoryGrid from './InventoryGrid';
 import { EQUIPMENT_SLOT_DEFINITIONS, getEquipmentSlotLabel, itemFitsSlot } from './equipmentSlotRules';
 
-// Original dark fantasy-inspired layout; uses Atom XE's own items and loadout service.
-// The two halves stay equal, with independent scrolling for short dashboard windows.
-const ICONS = {
-  helmet: HardHat, armor: Shirt, pants: Shield, boots: Footprints, gloves: Hand,
-  'ring-left': CircleDot, 'ring-right': CircleDot,
-  'earring-left': Gem, 'earring-right': Gem,
-};
-const iconForSlot = (id) =>
-  ICONS[id] || (id.startsWith('weapon-') ? Swords : id.startsWith('artifact-') ? Gem : id.startsWith('aspect-') ? Sparkles : Layers3);
-const identity = (item) => String(item?.user_card_id || item?.id || item?.itemId || '');
-const itemCategory = (item) => {
-  const type = String([item?.card_type, item?.itemType, item?.type, item?.equip_slot].filter(Boolean).join(' ')).toLowerCase();
-  if (/weapon|saber|sword|pistol|rifle|bow|blade|staff/.test(type)) return 'weapons';
-  if (/armor|equipment|helmet|boots|gloves|pants|gear|ring|earring/.test(type)) return 'gear';
-  if (/artifact|relic|trinket/.test(type)) return 'artifacts';
-  if (/aspect|ability|skill|spell|companion|genre/.test(type)) return 'powers';
-  return 'other';
-};
+// Only physical equipment slots belong in the Inventory workspace.
+// Abilities, skills, aspects, and genre cards are handled elsewhere.
+const GEAR_SLOTS = EQUIPMENT_SLOT_DEFINITIONS.filter(
+  (slot) => ['armor', 'weapon', 'artifact'].includes(slot.group),
+);
+const GEAR_SLOT_IDS = new Set(GEAR_SLOTS.map((slot) => slot.id));
 const FILTERS = [
-  ['all', 'All'],
-  ['gear', 'Armor'],
+  ['all', 'All Gear'],
+  ['armor', 'Armor'],
   ['weapons', 'Weapons'],
+  ['accessories', 'Accessories'],
   ['artifacts', 'Artifacts'],
-  ['powers', 'Abilities'],
-  ['other', 'Other'],
 ];
-
-function SlotButton({ id, equipped, selected, onSelect, condensed = false }) {
-  const Icon = iconForSlot(id);
-  const label = getEquipmentSlotLabel(id);
-  const image = equipped?.icon_url || equipped?.image_url || equipped?.image || equipped?.icon;
-  return (
-    <button
-      type="button"
-      aria-label={label + (equipped?.name ? ': ' + equipped.name : ': Empty')}
-      aria-pressed={selected}
-      title={equipped?.name ? label + ' — ' + equipped.name : label + ' — empty'}
-      onClick={() => onSelect(id)}
-      className={`group flex min-w-0 items-center gap-2 border px-2 transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-amber-200/80
-        ${condensed ? 'min-h-11 py-1.5' : 'min-h-14 py-2'}
-        ${selected ? 'border-amber-200/60 bg-amber-200/[0.10]' : 'border-white/[0.10] bg-black/30 hover:border-white/25 hover:bg-white/[0.06]'}`}
-    >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center border border-white/[0.10] bg-[#080a0e]/85">
-        {image ? <img src={image} alt="" className="h-7 w-7 object-contain" /> : <Icon className={`h-4 w-4 ${selected ? 'text-amber-100' : 'text-white/40'}`} strokeWidth={1.5} />}
-      </div>
-      <span className="min-w-0 flex-1 text-left">
-        <span className="block truncate text-[9px] font-semibold text-white/85">{label}</span>
-        <span className="block truncate text-[8px] text-white/40">{equipped?.name || 'Empty slot'}</span>
-      </span>
-    </button>
-  );
-}
+const itemId = (item) => String(item?.user_card_id || item?.id || '');
+const slotKind = (item) => {
+  const semantic = String(item?.equip_slot || '').trim().toLowerCase();
+  const name = String(item?.name || '').toLowerCase();
+  if (/^weapon/.test(semantic) || /sword|blade|bow|rifle|pistol|staff|axe|spear|gun|dagger|mace/.test(name)) return 'weapons';
+  if (semantic === 'artifact' || /artifact|relic/.test(name)) return 'artifacts';
+  if (/ring|earring|jewel/.test(semantic) || /ring|earring|jewel/.test(name)) return 'accessories';
+  return 'armor';
+};
+const itemIcon = (item) => item?.icon_url || item?.image || item?.image_url || '';
+const labelStat = (key) => String(key).replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+const firstCompatible = (item) => GEAR_SLOTS.find((slot) => itemFitsSlot(item, slot.id))?.id || null;
 
 export default function LunaElderScrollsInventory({
   equippedItems = {},
@@ -68,222 +39,244 @@ export default function LunaElderScrollsInventory({
   onUpgradeItem,
   isSaving = false,
 }) {
-  const collection = useCardCollection();
-  const items = useMemo(() => (collection.owned || [])
-    .filter((card) => card.user_card_id)
-    .map((card) => ({
-      ...card,
-      id: card.user_card_id,
-      user_card_id: card.user_card_id,
-      name: card.name || card.title || 'Unnamed item',
-      type: card.card_type || card.type || 'item',
-      itemType: card.card_type || card.itemType || card.type || 'item',
-      image: card.image || card.image_url || card.icon_url || '',
-      icon_url: card.image || card.image_url || card.icon_url || '',
-      game: card.game_title || card.game || 'Atom XE',
-      level: card.progression?.level || card.level || 1,
-    })), [collection.owned]);
+  // The existing owned-equipment hook is backed by the equipment-only card
+  // collection. Do not present abilities, skills, companions or demo items.
+  const collection = useOwnedEquipment();
+  const items = collection.items || [];
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [selectedItemKey, setSelectedItemKey] = useState(null);
-  const [showExtendedSlots, setShowExtendedSlots] = useState(false);
-  const equippedIds = useMemo(() => new Set(
-    Object.values(equippedItems || {}).map(identity).filter(Boolean),
-  ), [equippedItems]);
+  const [selectedItemId, setSelectedItemId] = useState(null);
+  const selectedItem = items.find((item) => itemId(item) === selectedItemId) || null;
+  const equippedIds = useMemo(
+    () => new Set(Object.values(equippedItems || {}).map(itemId).filter(Boolean)),
+    [equippedItems],
+  );
+
   const visibleItems = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return items.filter((item) => (filter === 'all' || itemCategory(item) === filter)
-      && (!q || [item.name, item.game, item.rarity, item.type, item.equip_slot]
-        .filter(Boolean).join(' ').toLowerCase().includes(q)));
+    return items.filter((item) =>
+      (filter === 'all' || slotKind(item) === filter) &&
+      (!q || [item.name, item.game, item.rarity, item.equip_slot]
+        .filter(Boolean).join(' ').toLowerCase().includes(q)),
+    );
   }, [items, search, filter]);
-  const selectedItem = items.find((item) => identity(item) === selectedItemKey) || null;
-  const targetItem = selectedSlotId ? equippedItems[selectedSlotId] : null;
-  const suggestedSlot = selectedItem
-    ? EQUIPMENT_SLOT_DEFINITIONS.find((slot) => itemFitsSlot(selectedItem, slot.id))?.id
-    : null;
-  const equipTarget = selectedSlotId || suggestedSlot;
-  const compatible = Boolean(selectedItem && equipTarget && itemFitsSlot(selectedItem, equipTarget));
-  const alreadyEquipped = Boolean(selectedItem && identity(targetItem) === identity(selectedItem));
-  const canEquip = compatible && !alreadyEquipped && !isSaving && Boolean(selectedItem?.user_card_id);
 
-  const chooseSlot = (slotId) => {
+  const isGearSlot = GEAR_SLOT_IDS.has(selectedSlotId);
+  const chosenSlot = isGearSlot ? selectedSlotId : null;
+  const compatibleSlot = selectedItem ? firstCompatible(selectedItem) : null;
+  // When the player chooses an equipment box, that target always takes priority.
+  // Otherwise provide a compatible gear target so selection -> Equip still works.
+  const equipTarget = chosenSlot || compatibleSlot;
+  const compatible = Boolean(selectedItem && equipTarget && itemFitsSlot(selectedItem, equipTarget));
+  const targetItem = chosenSlot ? equippedItems[chosenSlot] : null;
+  const alreadyEquippedHere = Boolean(
+    selectedItem && targetItem && itemId(selectedItem) === itemId(targetItem),
+  );
+  const canEquip = Boolean(compatible && selectedItem?.user_card_id && !alreadyEquippedHere && !isSaving);
+  const displayedStats = selectedItem
+    ? Object.entries(selectedItem.stats || {})
+      .filter(([key, value]) => typeof value === 'number' && Number.isFinite(value))
+      .slice(0, 3)
+    : [];
+  const fillerCount = Math.max(0, 30 - visibleItems.length);
+
+  const handleSlotSelect = (slotId) => {
+    if (!GEAR_SLOT_IDS.has(slotId)) return;
     onSelectSlot?.(slotId);
-    const current = equippedItems[slotId];
-    if (current) {
-      const match = items.find((item) => identity(item) === identity(current));
-      if (match) setSelectedItemKey(identity(match));
+    const equipped = equippedItems[slotId];
+    if (equipped) {
+      const existing = items.find((item) => itemId(item) === itemId(equipped));
+      if (existing) setSelectedItemId(itemId(existing));
     }
   };
-  const renderSlot = (id, condensed = false) => (
-    <SlotButton
-      key={id}
-      id={id}
-      condensed={condensed}
-      equipped={equippedItems[id]}
-      selected={selectedSlotId === id}
-      onSelect={chooseSlot}
-    />
-  );
-  const armorA = ['helmet', 'armor', 'gloves', 'ring-left', 'earring-left'];
-  const armorB = ['pants', 'boots', 'ring-right', 'earring-right'];
-  const additional = [
-    ['Artifacts', EQUIPMENT_SLOT_DEFINITIONS.filter((s) => s.group === 'artifact')],
-    ['Aspects', EQUIPMENT_SLOT_DEFINITIONS.filter((s) => s.group === 'aspect')],
-    ['Genre', EQUIPMENT_SLOT_DEFINITIONS.filter((s) => s.group === 'genre')],
-  ];
 
   return (
     <div
       data-luna-elder-inventory
-      className="flex h-full min-h-0 w-full min-w-0 overflow-hidden text-white"
-      style={{ background: 'linear-gradient(125deg, rgba(6,7,10,.96), rgba(23,24,29,.90) 52%, rgba(7,8,12,.96))' }}
+      className="flex h-full w-full min-h-0 min-w-0 overflow-hidden text-white"
+      style={{ background: 'linear-gradient(135deg, rgba(6,8,12,0.93), rgba(20,23,28,0.90) 55%, rgba(7,9,13,0.94))' }}
     >
-      <section aria-label="Equipped loadout" className="flex h-full w-1/2 min-w-0 flex-col border-r border-white/[0.12]">
-        <header className="shrink-0 border-b border-white/[0.10] px-4 py-4">
-          <p className="text-[9px] uppercase tracking-[.25em] text-amber-100/65">Character</p>
-          <h2 className="mt-1 text-xl font-medium tracking-wide text-white/95">Equipment</h2>
-          <p className="mt-1 text-[11px] text-white/45">Choose a slot to inspect or replace its gear</p>
-        </header>
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
-          <div className="relative mx-auto mb-3 grid max-w-[510px] grid-cols-[minmax(0,1fr)_58px_minmax(0,1fr)] items-center gap-1.5 sm:gap-2">
-            <div className="relative z-10 flex flex-col gap-2">{armorA.map((id) => renderSlot(id, true))}</div>
-            <div aria-hidden="true" className="relative flex h-full flex-col items-center justify-center gap-2">
-              <div className="absolute inset-y-3 -inset-x-6 rounded-full bg-amber-100/[0.035] blur-2xl" />
-              <UserRound className="relative h-16 w-16 text-white/[0.18]" strokeWidth={0.65} />
-              <span className="relative [writing-mode:vertical-rl] text-[8px] uppercase tracking-[.22em] text-white/25">Loadout</span>
-            </div>
-            <div className="relative z-10 flex flex-col gap-2">{armorB.map((id) => renderSlot(id, true))}</div>
-          </div>
-
-          <div className="mx-auto mb-3 max-w-[510px] border-t border-white/[0.10] pt-3">
-            <p className="mb-2 text-[9px] uppercase tracking-widest text-white/55">Weapons</p>
-            <div className="grid grid-cols-3 gap-2">
-              {EQUIPMENT_SLOT_DEFINITIONS.filter((slot) => slot.group === 'weapon').map((slot) => renderSlot(slot.id, true))}
-            </div>
-          </div>
-
-          <div className="mx-auto max-w-[510px] border-t border-white/[0.10] pt-3">
-            <button type="button" aria-expanded={showExtendedSlots} onClick={() => setShowExtendedSlots((v) => !v)}
-              className="flex w-full items-center justify-between py-2 text-left text-[10px] font-semibold uppercase tracking-[.14em] text-amber-100/75 hover:text-amber-100">
-              <span>Artifacts &amp; attunements</span>
-              <span className="text-sm">{showExtendedSlots ? '−' : '+'}</span>
-            </button>
-            {showExtendedSlots && (
-              <div className="space-y-4 pb-3">
-                {additional.map(([label, slots]) => (
-                  <div key={label}>
-                    <p className="mb-2 text-[9px] uppercase tracking-widest text-white/45">{label}</p>
-                    <div className="grid grid-cols-2 gap-2">{slots.map((slot) => renderSlot(slot.id, true))}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+      <section aria-label="Equipment slots" className="flex h-full w-1/2 min-w-0 flex-col border-r border-white/[0.12]">
+        {/* The actual pre-existing slot design, not the character silhouette redesign. */}
+        <div className="min-h-0 flex-1">
+          <InventoryGrid
+            equippedItems={equippedItems}
+            handleBoxClick={handleSlotSelect}
+            compact
+            gearOnly
+            selectedSlotId={chosenSlot}
+          />
         </div>
-
-        <footer className="shrink-0 border-t border-white/[0.10] bg-black/20 px-4 py-3">
-          <p className="truncate text-xs text-amber-100/75">{selectedSlotId ? getEquipmentSlotLabel(selectedSlotId) : 'Select an equipment slot'}</p>
-          <div className="mt-1 flex items-center justify-between gap-2">
-            <span className="truncate text-[11px] text-white/55">{targetItem?.name || 'No item equipped'}</span>
-            <button type="button" disabled={!targetItem || isSaving} onClick={() => onUnequipSlot?.(selectedSlotId)}
-              className="shrink-0 border border-white/15 px-3 py-1.5 text-[10px] text-white/70 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30">
-              Unequip
-            </button>
+        <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-white/[0.08] bg-black/25 px-4 py-2.5">
+          <div className="min-w-0">
+            <p className="truncate text-[9px] font-semibold text-white/85">
+              {chosenSlot ? getEquipmentSlotLabel(chosenSlot) : 'Select an equipment slot'}
+            </p>
+            <p className="truncate text-[9px] text-white/45">{targetItem?.name || 'No gear selected'}</p>
           </div>
+          <button
+            type="button"
+            onClick={() => onUnequipSlot?.(chosenSlot)}
+            disabled={!chosenSlot || !targetItem || isSaving}
+            className="shrink-0 border border-white/15 bg-white/[0.04] px-2.5 py-1.5 text-[9px] text-white/80 transition-colors hover:bg-white/[0.10] disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            Unequip
+          </button>
         </footer>
       </section>
 
-      <section aria-label="Owned inventory" className="flex h-full w-1/2 min-w-0 flex-col">
-        <header className="shrink-0 border-b border-white/[0.10] px-4 py-4">
-          <p className="text-[9px] uppercase tracking-[.25em] text-amber-100/65">Satchel</p>
-          <div className="mt-1 flex items-center justify-between gap-2">
-            <h2 className="text-xl font-medium tracking-wide">Inventory</h2>
+      <section aria-label="Equipment inventory" className="flex h-full w-1/2 min-w-0 flex-col">
+        <header className="shrink-0 border-b border-white/[0.09] px-3 py-3.5">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[8px] font-black uppercase tracking-[0.18em] text-white/40">Equipment Collection</p>
+              <h2 className="mt-0.5 text-[17px] font-semibold text-white/90">Inventory</h2>
+            </div>
             <span className="text-[10px] text-white/45">{items.length} owned</span>
           </div>
-          <label className="mt-3 flex h-9 items-center gap-2 border border-white/[0.15] bg-black/30 px-3">
-            <Search className="h-4 w-4 text-white/45" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search inventory…"
-              className="w-full min-w-0 bg-transparent text-xs text-white outline-none placeholder:text-white/35" />
+          <label className="mt-3 flex h-8 items-center gap-2 border border-white/[0.09] bg-black/25 px-2">
+            <Search className="h-3.5 w-3.5 text-white/40" />
+            <input
+              aria-label="Search equipment"
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search gear and weapons"
+              className="w-full min-w-0 bg-transparent text-[11px] text-white outline-none placeholder:text-white/30"
+            />
           </label>
-          <div className="mt-3 flex gap-1 overflow-x-auto pb-1" aria-label="Item categories">
-            {FILTERS.map(([key, label]) => (
-              <button type="button" key={key} onClick={() => setFilter(key)} aria-pressed={filter === key}
-                className={`shrink-0 border px-2 py-1.5 text-[9px] transition-colors ${filter === key
-                  ? 'border-amber-100/50 bg-amber-100/[0.10] text-amber-100'
-                  : 'border-white/[0.10] text-white/50 hover:text-white/90'}`}>
+          <div className="mt-2.5 flex gap-1 overflow-x-auto pb-1" role="group" aria-label="Equipment categories">
+            {FILTERS.map(([id, label]) => (
+              <button
+                type="button"
+                key={id}
+                aria-pressed={filter === id}
+                onClick={() => setFilter(id)}
+                className={`shrink-0 border px-2 py-1.5 text-[9px] transition-colors ${filter === id
+                  ? 'border-white/30 bg-white/[0.12] text-white'
+                  : 'border-white/[0.07] bg-black/10 text-white/50 hover:text-white/90'}`}
+              >
                 {label}
               </button>
             ))}
           </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-          {collection.isLoading && <p className="p-5 text-center text-xs text-white/55">Loading owned items…</p>}
-          {collection.isError && <p className="p-5 text-center text-xs text-rose-300">Could not load inventory. Please try again.</p>}
-          {!collection.isLoading && !collection.isError && visibleItems.length === 0 && (
-            <div className="flex h-full min-h-32 flex-col items-center justify-center gap-2 text-white/45">
-              <Package className="h-7 w-7" strokeWidth={1.2} />
-              <p className="text-center text-xs">{search || filter !== 'all' ? 'No matching items' : 'No owned inventory items yet'}</p>
-            </div>
+        <div className="relative min-h-0 flex-1 overflow-y-auto px-3 py-3">
+          {collection.isLoading && (
+            <p className="mb-3 text-center text-[11px] text-white/50">Loading owned gear…</p>
           )}
-          <div className="space-y-1.5">
+          {collection.isError && (
+            <p className="mb-3 text-center text-[11px] text-rose-300">Unable to load equipment.</p>
+          )}
+          {/* Classic compact slot inventory. Empty boxes preserve its grid appearance. */}
+          <div
+            className="grid content-start justify-start gap-1.5"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(52px, 1fr))' }}
+            role="group"
+            aria-label="Equipment item grid"
+          >
             {visibleItems.map((item) => {
-              const id = identity(item);
-              const active = id === selectedItemKey;
+              const id = itemId(item);
+              const selected = id === selectedItemId;
               const worn = equippedIds.has(id);
-              const image = item.icon_url;
+              const image = itemIcon(item);
               return (
-                <button key={id} type="button" aria-pressed={active} onClick={() => setSelectedItemKey(id)}
-                  className={`group flex w-full items-center gap-3 border px-2.5 py-2 text-left transition-colors ${active
-                    ? 'border-amber-100/45 bg-amber-100/[0.085]'
-                    : 'border-white/[0.07] bg-black/25 hover:bg-white/[0.055]'}`}>
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/[0.08] bg-black/45">
-                    {image ? <img src={image} alt="" className="h-10 w-10 object-contain" /> : <Package className="h-5 w-5 text-white/35" />}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[12px] font-medium text-white/90">{item.name}</span>
-                    <span className="mt-0.5 block truncate text-[10px] text-white/45">{item.rarity || 'Common'} · {item.game}</span>
-                  </span>
-                  {worn && <Check className="h-4 w-4 shrink-0 text-amber-100/80" aria-label="Equipped" />}
+                <button
+                  type="button"
+                  key={id}
+                  title={`${item.name} — ${item.rarity || 'Common'}`}
+                  aria-label={`${item.name}, ${item.rarity || 'Common'}${worn ? ', equipped' : ''}`}
+                  aria-pressed={selected}
+                  onClick={() => setSelectedItemId(id)}
+                  className={`group relative aspect-square min-w-0 overflow-hidden rounded-[5px] border transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-cyan-200
+                    ${selected ? 'border-cyan-200/70 bg-cyan-100/[0.12] shadow-[inset_0_0_14px_rgba(103,232,249,0.09)]'
+                      : 'border-white/[0.13] bg-black/40 hover:border-white/35 hover:bg-white/[0.07]'}`}
+                >
+                  {image
+                    ? <img src={image} alt="" className="h-full w-full object-contain p-1.5" loading="lazy" />
+                    : <Package className="absolute inset-0 m-auto h-5 w-5 text-white/35" />}
+                  {Number(item.quantity) > 1 && (
+                    <span className="absolute bottom-0.5 right-1 rounded bg-black/70 px-0.5 text-[8px] text-white">
+                      {item.quantity}
+                    </span>
+                  )}
+                  {worn && (
+                    <span className="absolute right-0.5 top-0.5 rounded-sm bg-cyan-400/90 p-px text-slate-950" title="Equipped">
+                      <Check className="h-2.5 w-2.5" />
+                    </span>
+                  )}
+                  <span className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/[0.06]" />
                 </button>
               );
             })}
+            {Array.from({ length: fillerCount }, (_, i) => (
+              <div
+                key={`empty-${i}`}
+                aria-hidden="true"
+                className="aspect-square min-w-0 rounded-[5px] border border-white/[0.045] bg-black/[0.19]"
+              />
+            ))}
           </div>
+          {!collection.isLoading && !collection.isError && visibleItems.length === 0 && (
+            <p className="pointer-events-none absolute inset-x-5 top-1/3 text-center text-[11px] text-white/50">
+              {search.trim() || filter !== 'all' ? 'No equipment matches your filter' : 'No equipment in your collection yet'}
+            </p>
+          )}
         </div>
 
-        <footer className="min-h-[142px] shrink-0 border-t border-white/[0.12] bg-black/25 px-4 py-3">
+        <footer className="min-h-[132px] shrink-0 border-t border-white/[0.09] bg-black/25 px-3 py-3">
           {selectedItem ? (
             <>
-              <div className="flex min-w-0 items-center justify-between gap-2">
-                <h3 className="truncate text-[13px] font-semibold text-white">{selectedItem.name}</h3>
-                <span className="shrink-0 text-[10px] text-amber-100/75">{selectedItem.rarity || 'Common'}</span>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="truncate text-xs font-semibold text-white">{selectedItem.name}</h3>
+                  <p className="mt-0.5 truncate text-[9px] text-white/45">
+                    {selectedItem.rarity || 'Common'} · Lv {selectedItem.level || 1} · {selectedItem.game || 'Unknown game'}
+                  </p>
+                </div>
+                <span className="shrink-0 text-[8px] uppercase text-white/45">{slotKind(selectedItem)}</span>
               </div>
-              <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-white/50">
-                {selectedItem.description || selectedItem.details || 'An item earned for your Atom XE collection.'}
-              </p>
-              <p className="mt-1 truncate text-[10px] text-white/40">
-                Level {selectedItem.level || 1} · {equipTarget ? 'Target: ' + getEquipmentSlotLabel(equipTarget) : 'Not an equippable item'}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" disabled={!canEquip}
+              <div className="mt-1.5 flex min-h-[15px] flex-wrap gap-x-3 gap-y-1">
+                {displayedStats.map(([key, value]) => (
+                  <span key={key} className="text-[9px] text-white/60">{labelStat(key)}: {value}</span>
+                ))}
+                {displayedStats.length === 0 && (
+                  <span className="truncate text-[9px] text-white/40">
+                    {selectedItem.description || 'No additional equipment stats listed'}
+                  </span>
+                )}
+              </div>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={!canEquip}
                   onClick={() => { if (canEquip) onEquipItem?.(selectedItem, equipTarget); }}
-                  className="flex min-h-8 flex-1 items-center justify-center gap-1.5 border border-amber-100/35 bg-amber-100/[0.12] px-3 text-[10px] font-semibold uppercase tracking-widest text-amber-100 hover:bg-amber-100/20 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.03] disabled:text-white/30">
+                  className="flex min-h-8 flex-1 items-center justify-center gap-1.5 border border-cyan-200/25 bg-cyan-200/[0.09] px-3 text-[10px] font-semibold text-cyan-50 transition-colors hover:bg-cyan-200/[0.16] disabled:cursor-not-allowed disabled:border-white/[0.06] disabled:bg-white/[0.02] disabled:text-white/30"
+                >
                   {compatible ? <Check className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
-                  {alreadyEquipped ? 'Equipped' : isSaving ? 'Saving…' : compatible ? 'Equip' : 'No compatible slot'}
+                  {alreadyEquippedHere ? 'Equipped' : isSaving ? 'Saving…' : compatible ? 'Equip' : chosenSlot ? 'Wrong slot' : 'No valid slot'}
                 </button>
-                {onUpgradeItem && itemCategory(selectedItem) === 'gear' && (
-                  <button type="button" onClick={() => onUpgradeItem(selectedItem)}
-                    className="flex min-h-8 items-center gap-1 border border-white/15 px-3 text-[10px] text-white/70 hover:bg-white/10">
+                {onUpgradeItem && (
+                  <button
+                    type="button"
+                    onClick={() => onUpgradeItem(selectedItem)}
+                    className="flex min-h-8 items-center gap-1.5 border border-white/15 px-2.5 text-[10px] text-white/70 hover:bg-white/[0.08]"
+                  >
                     <Wrench className="h-3 w-3" /> Upgrade
                   </button>
                 )}
               </div>
+              {compatible && (
+                <p className="mt-1.5 truncate text-[9px] text-white/35">
+                  {getEquipmentSlotLabel(equipTarget)}
+                </p>
+              )}
             </>
           ) : (
-            <div className="flex h-full items-center gap-3 text-white/40">
-              <Sparkles className="h-5 w-5 shrink-0" />
-              <p className="text-xs leading-relaxed">Choose an item to inspect its stats, compatibility, and equipment actions.</p>
+            <div className="flex h-full items-center gap-3 text-white/45">
+              <Shield className="h-5 w-5 shrink-0" />
+              <p className="text-[11px]">Select a gear square to view details and equip it into a slot on the left.</p>
             </div>
           )}
         </footer>
