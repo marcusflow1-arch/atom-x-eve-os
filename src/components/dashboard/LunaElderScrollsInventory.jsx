@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Check, Lock, Package, Search, Shield, Swords, Wrench } from 'lucide-react';
 import useOwnedEquipment from '@/components/luna/hooks/useOwnedEquipment';
 import InventoryGrid from './InventoryGrid';
+import { equipmentGridPlaceholders } from './equipmentGridLayout';
 import { EQUIPMENT_SLOT_DEFINITIONS, getEquipmentSlotLabel, itemFitsSlot } from './equipmentSlotRules';
 
 // Only physical equipment slots belong in the Inventory workspace.
@@ -78,10 +79,8 @@ export default function LunaElderScrollsInventory({
       .filter(([key, value]) => typeof value === 'number' && Number.isFinite(value))
       .slice(0, 3)
     : [];
-  // Seven columns, unlimited rows. Keep five empty rows for a classic MMO
-  // backpack appearance; expand by whole rows when new owned gear arrives.
-  const rowCount = Math.max(5, Math.ceil(visibleItems.length / 7));
-  const fillerCount = rowCount * 7 - visibleItems.length;
+  // Each additional set of seven equipment cards creates another scrollable row.
+  const fillerCount = equipmentGridPlaceholders(visibleItems.length);
 
   const handleSlotSelect = (slotId) => {
     if (!GEAR_SLOT_IDS.has(slotId)) return;
