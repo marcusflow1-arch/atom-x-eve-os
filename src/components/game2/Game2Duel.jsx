@@ -4,6 +4,7 @@ import { getAccessToken } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
 import { game2RailwayUrl } from './net/railway.js';
 import Game2Lobby from './Game2Lobby';
+import { GAME2_ARENA_MAPS } from './engine/arenaMaps.js';
 
 // Game 2 start screen: Single Player (story missions) or Multiplayer (the online free-for-all arena, Game2Lobby.jsx;
 // the offline Dark Jedi duel is the lobby's practice mode).
@@ -22,6 +23,14 @@ const MODES = {
     tag: 'Multiplayer', title: 'Free-for-all arena', loading: 'Entering the arena', icon: Users,
     blurb: 'One real-time Railway arena for up to 10 human-controlled Jedi or Dark Jedi. Fight other players from different browsers and countries. Optional AI Reborn opponents; offline practice remains available.',
   },
+  ctf: {
+    tag: 'AI team battle', title: 'Capture the Flag · 7v7', loading: 'Capture the Flag', icon: Users,
+    blurb: 'Blue: you and six AI teammates. Red: seven enemy bots. Steal their flag, bring it home and defend your own. First to three captures.',
+  },
+  sudden: {
+    tag: 'AI elimination', title: 'Sudden Death · 8v8', loading: 'Sudden Death', icon: Swords,
+    blurb: 'Blue: you and seven AI teammates. Red: eight enemies. One life per fighter; eliminate the entire opposing team to win.',
+  },
 };
 const PRACTICE = { tag: 'Practice', title: 'Dark Jedi Duel', loading: 'Dark Jedi duel', icon: Swords };
 
@@ -31,15 +40,16 @@ function fillParent(el) {
 
 // Fills its nearest positioned parent (Game2.jsx gives it a relative flex-1 section).
 export default function Game2Duel() {
-  const [choice, setChoice] = useState(null); // 'single' | 'online' | 'multi' (offline duel practice)
+  const [choice, setChoice] = useState(null); // 'single' | 'online' | 'multi' | 'ctf' | 'sudden'
+  const [mapId, setMapId] = useState('training');
   const [online, setOnline] = useState(null); // lobby result: { name, side, selfId, local }
-  if (!choice) return <Game2Menu onPick={setChoice} />;
+  if (!choice) return <Game2Menu onPick={setChoice} mapId={mapId} onMapChange={setMapId} />;
   if (choice === 'online' && !online) return <Game2Lobby onBack={() => setChoice(null)} onStart={setOnline} onPractice={() => setChoice('multi')} />;
   const exit = () => { if (choice === 'online') setOnline(null); else setChoice(choice === 'multi' ? 'online' : null); }; // online / practice go back to the lobby
-  return <Game2Session key={choice + (online ? online.selfId : '')} choice={choice} online={online} onExit={exit} />;
+  return <Game2Session key={choice + mapId + (online ? online.selfId : '')} choice={choice} online={online} mapId={mapId} onExit={exit} />;
 }
 
-function Game2Menu({ onPick }) {
+function Game2Menu({ onPick, mapId, onMapChange }) {
   return (
     <div className="absolute inset-0 overflow-y-auto bg-[radial-gradient(ellipse_at_top,#1a1530_0%,#070812_55%,#05060c_100%)] text-white">
       <div className="mx-auto flex min-h-full max-w-4xl flex-col justify-center px-4 py-10">
@@ -47,6 +57,19 @@ function Game2Menu({ onPick }) {
           <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-300/80">Game 2 · Jedi Outcast</div>
           <h1 className="mt-2 text-3xl font-extrabold tracking-wide sm:text-4xl">Choose your fight</h1>
           <p className="mx-auto mt-2 max-w-xl text-sm text-white/55">Both modes share the same lightsaber, Force and combat rules.</p>
+        </div>
+        <div className="mb-4 rounded-xl border border-cyan-200/20 bg-cyan-400/[0.045] p-3">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-cyan-200/80">AI team-battle map · two maps selected from your Drive</div>
+          <div className="grid grid-cols-2 gap-2" role="group" aria-label="Choose AI match map">
+            {Object.values(GAME2_ARENA_MAPS).map(map => (
+              <button key={map.id} type="button" onClick={() => onMapChange(map.id)}
+                aria-pressed={mapId === map.id}
+                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${mapId === map.id ? 'border-cyan-200/65 bg-cyan-200/15 text-white' : 'border-white/10 text-white/60 hover:border-cyan-200/40'}`}>
+                {map.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-white/45">Hangar uses an original test layout until its licensed Drive BSP is synced locally. Mission and online modes are unchanged.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           {Object.entries(MODES).map(([id, m]) => {
@@ -78,7 +101,7 @@ function Game2Menu({ onPick }) {
   );
 }
 
-function Game2Session({ choice, online, onExit }) {
+function Game2Session({ choice, online, mapId, onExit }) {
   const hostRef = useRef(null);
   const mode = MODES[choice] || PRACTICE;
   const [status, setStatus] = useState({ phase: 'loading', text: `Loading ${mode.loading}` });
@@ -99,10 +122,13 @@ function Game2Session({ choice, online, onExit }) {
     canvas.tabIndex = 0;
     hud.style.pointerEvents = 'none';
     host.append(canvas, hud);
-    const duel = choice === 'multi', arena = choice !== 'single';
-    let engineOptions = duel
-      ? { mode: 'duel', sfxBase: `${ASSET_BASE}sfx/` }
-      : { mode: 'mission', mission: 'kejim', sfxBase: `${ASSET_BASE}sfx/` };
+    const duel = choice === 'multi', teamMode = choice === 'ctf' || choice === 'sudden';
+    const arena = choice !== 'single';
+    let engineOptions = teamMode
+      ? { mode: choice, mapId, sfxBase: `${ASSET_BASE}sfx/` }
+      : duel
+        ? { mode: 'duel', sfxBase: `${ASSET_BASE}sfx/` }
+        : { mode: 'mission', mission: 'kejim', sfxBase: `${ASSET_BASE}sfx/` };
 
     (async () => {
       try {
@@ -116,7 +142,7 @@ function Game2Session({ choice, online, onExit }) {
         renderer.maxDpr = 1.5;
         const assets = await loadAll(ASSET_BASE, (what) => {
           if (!cancelled) setStatus({ phase: 'loading', text: `Loading ${what}` });
-        }, { map: arena });
+        }, { map: arena, mapId: teamMode ? mapId : 'training' });
         if (cancelled) return;
         if (choice === 'online') {
           if (online.local) { // isolated localhost developer test; never on editor/live
@@ -178,7 +204,7 @@ function Game2Session({ choice, online, onExit }) {
       canvas.remove();
       hud.remove();
     };
-  }, [choice, online]);
+  }, [choice, online, mapId]);
 
   return (
     <div className="absolute inset-0 select-none overflow-hidden bg-[#05060c]" style={{ touchAction: 'none' }}>
