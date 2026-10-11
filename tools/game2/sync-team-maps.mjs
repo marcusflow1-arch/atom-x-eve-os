@@ -14,6 +14,7 @@ if (!token) {
   const sources = [
     { id: '1uIQPWKuqMbujSn9dUrnwVFGqv6LKq3t9', name: 'duel_training.bsp', expected: 905388 },
     { id: '16dHdYcOiPIJo1lvHVhcOjEZcf3KJmIJV', name: 'duel_hangar.bsp', expected: 702604 },
+    { id: '18Fb_OkshjX9SqdW-UcG1eWapc8jsKXhB', name: 'duel_carbon.bsp', expected: 910684 },
   ];
   const isRBSP = bytes => bytes.length >= 152 &&
     bytes.toString('ascii', 0, 4) === 'RBSP' && bytes.readInt32LE(4) === 1;
