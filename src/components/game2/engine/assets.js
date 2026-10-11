@@ -3,6 +3,7 @@ import { parseGLB } from './glb.js';
 import { fetchGame2Binary } from './chunked.js';
 import { Skeleton } from './actor.js';
 import { parseRBSP } from './rbsp.js';
+import { GAME2_ARENA_MAPS } from './arenaMaps.js';
 
 const fetchBuf = fetchGame2Binary;
 
@@ -44,10 +45,22 @@ export async function loadAll(base = 'assets/', progress = () => { }, o = {}) { 
   const attach = { holster: { t: holster.translation, q: holster.rotation, bone: 'rfemurYZ' }, grip: { t: grip.translation, q: grip.rotation, s: grip.extras.hilt_scale, bone: 'rhand' }, hiltLen: holster.extras.length_m };
   progress('saber moves'); const saberData = await fetchGame2Json(base, 'sabermoves.json');
   if (o.map === false) return { rigJson, skel, body, lod, hilt, attach, glb, saberData, duelMap: null };
-  progress('Lightsaber Training map');
-  const raw = await fetch(base + 'maps/duel_training.bsp');
-  if (!raw.ok) throw new Error('Game 2 Lightsaber Training map missing: HTTP ' + raw.status);
+  const selected = GAME2_ARENA_MAPS[o.mapId || 'training'];
+  if (!selected) throw new Error('Unknown Game 2 arena map: ' + o.mapId);
+  progress(selected.label + ' map');
+  const raw = await fetch(base + 'maps/' + selected.filename);
+  if (!raw.ok) {
+    // Public builds use a distinct original Hangar test layout until the user
+    // syncs their licensed original BSP locally. Never silently mislabel it.
+    if (selected.id === 'hangar') {
+      console.info('Hangar retail BSP not installed. Using Game 2 original Hangar test layout.');
+      return { rigJson, skel, body, lod, hilt, attach, glb, saberData, duelMap: null };
+    }
+    throw new Error('Game 2 arena map missing: ' + selected.filename + ' (HTTP ' + raw.status + ')');
+  }
   const duelMap = parseRBSP(await raw.arrayBuffer());
+  duelMap.source = selected.filename;
+  duelMap.name = selected.label;
   // Fetch only original textures imported from the user's Drive. Other shader
   // references stay clearly color-shaded until their original assets are supplied.
   const have = new Set([
