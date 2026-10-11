@@ -20,4 +20,4 @@ jobs:
         with:
           node-version: '20'
       - name: Verify Game Two match rules
-        run: node --test tests/game2-team-modes.test.mjs
+        run: node --test tests/game2-team-modes.test.mjs tests/game2-native-map.test.mjs tests/game2-mission.test.mjs
