@@ -49,16 +49,26 @@ export async function loadAll(base = 'assets/', progress = () => { }, o = {}) { 
   if (!selected) throw new Error('Unknown Game 2 arena map: ' + o.mapId);
   progress(selected.label + ' map');
   const raw = await fetch(base + 'maps/' + selected.filename);
-  if (!raw.ok) {
+  // Vite can respond with index.html and HTTP 200 for an uninstalled map:
+  // distinguish that HTML fallback from real binary RBSP geometry.
+  const invalidResponse = !raw.ok || raw.headers?.get?.('content-type')?.includes('text/html');
+  let duelMap = null;
+  if (!invalidResponse) {
+    try { duelMap = parseRBSP(await raw.arrayBuffer()); }
+    catch (error) {
+      if (selected.id !== 'hangar') throw error;
+      console.warn('Hangar BSP could not be parsed; using authored fallback:', error);
+    }
+  }
+  if (!duelMap) {
     // Public builds use a distinct original Hangar test layout until the user
     // syncs their licensed original BSP locally. Never silently mislabel it.
     if (selected.id === 'hangar') {
-      console.info('Hangar retail BSP not installed. Using Game 2 original Hangar test layout.');
+      console.info('Hangar BSP not installed. Using original Game 2 Hangar test layout.');
       return { rigJson, skel, body, lod, hilt, attach, glb, saberData, duelMap: null };
     }
-    throw new Error('Game 2 arena map missing: ' + selected.filename + ' (HTTP ' + raw.status + ')');
+    throw new Error('Game 2 arena map missing or invalid: ' + selected.filename + ' (HTTP ' + raw.status + ')');
   }
-  const duelMap = parseRBSP(await raw.arrayBuffer());
   duelMap.source = selected.filename;
   duelMap.name = selected.label;
   // Fetch only original textures imported from the user's Drive. Other shader
