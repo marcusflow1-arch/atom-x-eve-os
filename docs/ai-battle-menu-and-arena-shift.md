@@ -97,3 +97,13 @@ The inspected backend currently accepts pvp, pve and world_boss labels but pairs
 
 ## Verification
 See the implementation completion notes appended after the checks below.
+
+### Completion checks
+- Production `npm run build`: passed, exit 0. Existing browser-database and unrelated Tailwind ambiguous-duration warnings remain.
+- Targeted ESLint on the queue overlay, new workspace and catalog: passed.
+- `node --test tests/ai-battle-matchmaking.test.mjs tests/ai-battle-menu.test.mjs tests/dashboard-quick-windows.test.mjs tests/dashboard-floating-windows.test.mjs`: 30 checks passed, 0 failed.
+- Menu checks cover no automatic joins, every unavailable genre/mode, mouse/Q consistency, duplicate pending requests, text-field/modifier/background/minimized guards, cancellation, legacy reservations, server-confirmed transition, error retry, initial loading, genre search, real store card rendering and unknown count display.
+- Existing dashboard test fixtures referred to the earlier Memories name and omitted the already-existing RecordsWorkspace/Swords imports. Updated those fixtures to the current Records surface; no Records production behavior changed.
+- Added an integration check that the Skill Book event opens/focuses the actual Cards window without closing AI Battle.
+- The authenticated Base44 preview redirects this browser to sign-in. Live visual layout, account-backed card loading, actual two-player matching/combat, latency, PvE, world bosses and Arena Shift were NOT verified in a signed-in app.
+- Responsive CSS and reduced-motion behavior are implemented; automated DOM tests are not a substitute for rendered viewport/accessibility review.
