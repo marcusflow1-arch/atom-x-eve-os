@@ -225,6 +225,8 @@ export default function LibrarySidebar() {
 
   const location = useLocation();
   const pathname = location.pathname.toLowerCase();
+  // Scope the charcoal-glass drawer to the Luna dashboard; other routes keep their existing treatment.
+  const isLunaDashboard = pathname.includes('/lunatemplate');
   const panel = new URLSearchParams(location.search).get('panel');
   const currentEnvironmentPageKey = pathname.includes('/lunatemplate') ? 'lunatemplate' : pathname.includes('/onboardinghome') ? 'onboardinghome' : pathname.replace(/[^a-z0-9]/g, '_') || 'global';
   const [isEnvironmentEnabled, setIsEnvironmentEnabled] = useState(() => {
@@ -478,10 +480,16 @@ export default function LibrarySidebar() {
                   top: '64px',
                   bottom: '52px',
                   width: '240px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  backdropFilter: 'blur(50px) saturate(200%)',
-                  WebkitBackdropFilter: 'blur(50px) saturate(200%)',
-                  boxShadow: '0 4px 30px rgba(0,0,0,0.2)',
+                  // Friends, Library, Rewards, and Entertainment share this drawer surface.
+                  // Dark neutral translucency lets the dashboard show through without the pale color wash.
+                  background: isLunaDashboard
+                    ? 'linear-gradient(135deg, rgba(6, 7, 10, 0.86), rgba(31, 32, 36, 0.78))'
+                    : 'rgba(255, 255, 255, 0.03)',
+                  backdropFilter: isLunaDashboard ? 'blur(32px) saturate(85%)' : 'blur(50px) saturate(200%)',
+                  WebkitBackdropFilter: isLunaDashboard ? 'blur(32px) saturate(85%)' : 'blur(50px) saturate(200%)',
+                  boxShadow: isLunaDashboard
+                    ? '0 12px 36px rgba(0, 0, 0, 0.28), inset 1px 0 rgba(255, 255, 255, 0.05)'
+                    : '0 4px 30px rgba(0,0,0,0.2)',
                   borderBottom: 'none',
                 }}
               >
