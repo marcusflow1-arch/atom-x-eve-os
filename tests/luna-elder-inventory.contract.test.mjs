@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { EQUIPMENT_GRID_COLUMNS, MIN_VISIBLE_EQUIPMENT_ROWS, equipmentGridPlaceholders } from '../src/components/dashboard/equipmentGridLayout.js';
 
 const read = (path) => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 const inventory = read('src/components/dashboard/LunaElderScrollsInventory.jsx');
@@ -28,9 +29,13 @@ test('original loadout styling is reused and non-equipment slots are hidden only
 
 test('right inventory is a traditional square grid rather than item rows', () => {
   assert.match(inventory, /aria-label="Equipment item grid"/);
-  assert.match(inventory, /gridTemplateColumns: 'repeat\(auto-fill, minmax\(52px, 1fr\)\)'/);
+  assert.match(inventory, /grid grid-cols-7 content-start gap-1\.5/);
+  assert.match(inventory, /data-inventory-grid-scroll/);
+  assert.match(inventory, /overflow-y-auto overscroll-contain/);
   assert.match(inventory, /aspect-square/);
   assert.match(inventory, /empty-\$\{i\}/);
+  assert.match(inventory, /equipmentGridPlaceholders\(visibleItems\.length\)/);
+  assert.match(inventory, /\{visibleItems\.map\(\(item\) =>/);
   assert.match(inventory, /setSelectedItemId\(id\)/);
   assert.doesNotMatch(inventory, /space-y-1\.5[^\n]*\n\s*\{visibleItems\.map/);
 });
@@ -59,4 +64,27 @@ test('both dashboard inventory surfaces use the same restored slot and grid comp
   assert.match(dashboard, /onUnequipSlot=\{unequipItem\}/);
   assert.match(luna, /onUnequipSlot=\{unequipItem\}/);
   assert.match(dashboard, /title="Inventory" width=\{990\} height=\{670\}/);
+});
+
+test('seven slots per row and no client-side row cap even for very large gear collections', () => {
+  assert.equal(EQUIPMENT_GRID_COLUMNS, 7);
+  assert.equal(MIN_VISIBLE_EQUIPMENT_ROWS, 5);
+  for (const count of [0, 1, 7, 8, 21, 34, 35, 36, 41, 42, 43, 140, 1000, 100001]) {
+    const placeholders = equipmentGridPlaceholders(count);
+    const minimum = Math.max(35, count);
+    assert.equal((placeholders + count) % 7, 0, 'every row contains exactly seven squares');
+    assert.ok(placeholders >= 0 && placeholders < 7 || (count < 35 && count + placeholders === 35));
+    assert.ok(count + placeholders >= minimum, 'every owned item is included');
+  }
+  assert.equal(equipmentGridPlaceholders(35), 0);
+  assert.equal(equipmentGridPlaceholders(36), 6);
+  assert.equal(equipmentGridPlaceholders(42), 0);
+  assert.equal(equipmentGridPlaceholders(1000), 1);
+});
+
+test('restored equipment slots use tighter spacing only for this equipment panel', () => {
+  assert.match(loadout, /gearOnly \? 'h-11 w-11' : 'h-\[60px\] w-\[60px\]'/);
+  assert.match(loadout, /gearOnly \? 'gap-2' : 'gap-3'/);
+  assert.match(loadout, /gearOnly \? 'gap-3' : 'gap-5'/);
+  assert.match(loadout, /compactSlot\(`artifact-\$\{i\}\`\)/);
 });
