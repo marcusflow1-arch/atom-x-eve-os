@@ -408,7 +408,7 @@ export default function DashboardAvatarOverview() {
               isSaving={isSaving}
             />
           </div>
-        </DashboardWindow>
+        </DashboardWindow>}
         {cardsMode && <DashboardWindow id="cards" title="Cards · Skill Book" width={850} height={680} index={1}
           onMinimizedChange={setCardsMinimized} onClose={() => { setCardsMode(false); setCardsMinimized(false); }}>
           <LunaCardsPanel onClose={() => setCardsMode(false)} slotDockRef={setSkillBookDock} />
