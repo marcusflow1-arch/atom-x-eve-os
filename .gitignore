@@ -31,3 +31,6 @@ dist-ssr
 base44/.app.jsonc
 
 /public/vendor/face-landmarker/
+
+# Locally synced user-owned retail map assets (never commit new proprietary BSPs)
+/public/game2/maps/duel_hangar.bsp
