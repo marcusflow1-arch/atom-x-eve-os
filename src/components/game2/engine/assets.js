@@ -47,30 +47,20 @@ export async function loadAll(base = 'assets/', progress = () => { }, o = {}) { 
   if (o.map === false) return { rigJson, skel, body, lod, hilt, attach, glb, saberData, duelMap: null };
   const selected = GAME2_ARENA_MAPS[o.mapId || 'training'];
   if (!selected) throw new Error('Unknown Game 2 arena map: ' + o.mapId);
-  progress(selected.label + ' map');
+  progress(selected.label + ' · actual imported BSP');
   const raw = await fetch(base + 'maps/' + selected.filename);
-  // Vite can respond with index.html and HTTP 200 for an uninstalled map:
-  // distinguish that HTML fallback from real binary RBSP geometry.
-  const invalidResponse = !raw.ok || raw.headers?.get?.('content-type')?.includes('text/html');
-  let duelMap = null;
-  if (!invalidResponse) {
-    try { duelMap = parseRBSP(await raw.arrayBuffer()); }
-    catch (error) {
-      if (selected.id !== 'hangar') throw error;
-      console.warn('Hangar BSP could not be parsed; using authored fallback:', error);
-    }
+  // Never swap in the Training level or a procedural replacement if another
+  // requested map is missing/corrupt: report the exact missing asset.
+  if (!raw.ok || raw.headers?.get?.('content-type')?.includes('text/html')) {
+    throw new Error('Game 2 map could not load: ' + selected.filename + ' (HTTP ' + raw.status + ')');
   }
-  if (!duelMap) {
-    // Public builds use a distinct original Hangar test layout until the user
-    // syncs their licensed original BSP locally. Never silently mislabel it.
-    if (selected.id === 'hangar') {
-      console.info('Hangar BSP not installed. Using original Game 2 Hangar test layout.');
-      return { rigJson, skel, body, lod, hilt, attach, glb, saberData, duelMap: null };
-    }
-    throw new Error('Game 2 arena map missing or invalid: ' + selected.filename + ' (HTTP ' + raw.status + ')');
+  const duelMap = parseRBSP(await raw.arrayBuffer(), {
+    source: selected.filename,
+    name: selected.label,
+  });
+  if (!duelMap.tris?.length || duelMap.source !== selected.filename) {
+    throw new Error('Game 2 map content invalid: ' + selected.filename);
   }
-  duelMap.source = selected.filename;
-  duelMap.name = selected.label;
   // Fetch only original textures imported from the user's Drive. Other shader
   // references stay clearly color-shaded until their original assets are supplied.
   const have = new Set([
