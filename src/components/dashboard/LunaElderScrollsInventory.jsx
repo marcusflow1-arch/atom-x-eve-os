@@ -127,7 +127,6 @@ export default function LunaElderScrollsInventory({
   const armorA = ['helmet', 'armor', 'gloves', 'ring-left', 'earring-left'];
   const armorB = ['pants', 'boots', 'ring-right', 'earring-right'];
   const additional = [
-    ['Weapons', EQUIPMENT_SLOT_DEFINITIONS.filter((s) => s.group === 'weapon')],
     ['Artifacts', EQUIPMENT_SLOT_DEFINITIONS.filter((s) => s.group === 'artifact')],
     ['Aspects', EQUIPMENT_SLOT_DEFINITIONS.filter((s) => s.group === 'aspect')],
     ['Genre', EQUIPMENT_SLOT_DEFINITIONS.filter((s) => s.group === 'genre')],
@@ -157,10 +156,17 @@ export default function LunaElderScrollsInventory({
             <div className="relative z-10 flex flex-col gap-2">{armorB.map((id) => renderSlot(id, true))}</div>
           </div>
 
+          <div className="mx-auto mb-3 max-w-[510px] border-t border-white/[0.10] pt-3">
+            <p className="mb-2 text-[9px] uppercase tracking-widest text-white/55">Weapons</p>
+            <div className="grid grid-cols-3 gap-2">
+              {EQUIPMENT_SLOT_DEFINITIONS.filter((slot) => slot.group === 'weapon').map((slot) => renderSlot(slot.id, true))}
+            </div>
+          </div>
+
           <div className="mx-auto max-w-[510px] border-t border-white/[0.10] pt-3">
             <button type="button" aria-expanded={showExtendedSlots} onClick={() => setShowExtendedSlots((v) => !v)}
               className="flex w-full items-center justify-between py-2 text-left text-[10px] font-semibold uppercase tracking-[.14em] text-amber-100/75 hover:text-amber-100">
-              <span>Weapons, artifacts &amp; attunements</span>
+              <span>Artifacts &amp; attunements</span>
               <span className="text-sm">{showExtendedSlots ? '−' : '+'}</span>
             </button>
             {showExtendedSlots && (
