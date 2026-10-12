@@ -1,20 +1,190 @@
+/* Atom XE — player profile: 70% live avatar / game showcase, 30% centered game shelf. */
+.gamer-profile {
+  width:100%;height:100%;min-height:0;display:grid;
+  grid-template-rows:minmax(0,7fr) minmax(170px,3fr);
+  overflow:hidden;container-type:inline-size;
+  color:#e8f1f8;font:12px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:radial-gradient(ellipse at 76% 3%,rgba(75,135,176,.14),transparent 51%),
+    radial-gradient(ellipse at 7% 75%,rgba(35,68,106,.25),transparent 46%),
+    linear-gradient(147deg,#172636,#0b1624 56%,#09111e);
+}
+.gamer-profile * { box-sizing:border-box; }
+.gamer-profile button {
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;
+  color:inherit;font:inherit;cursor:pointer;border:1px solid rgba(192,218,239,.13);
+  background:rgba(194,221,240,.035);border-radius:9px;padding:7px 10px;
+  transition:background .17s ease,border-color .17s ease,filter .17s ease;
+}
+.gamer-profile button:hover { background:rgba(201,227,246,.11);border-color:rgba(202,233,247,.24); }
+.gamer-profile button:disabled { opacity:.4;cursor:not-allowed; }
+.gamer-profile :focus-visible { outline:2px solid #86deee;outline-offset:2px; }
+.gamer-eyebrow { font-size:9px;font-weight:700;letter-spacing:.2em;color:#86b7cc;line-height:1.6; }
+.gamer-profile-stage {
+  min-height:0;min-width:0;display:grid;grid-template-columns:minmax(210px,30%) minmax(0,70%);
+  position:relative;isolation:isolate;
+}
+.gamer-profile-stage:after {
+  content:"";pointer-events:none;position:absolute;inset:auto 0 0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(134,216,242,.55) 32%,rgba(184,215,242,.22) 67%,transparent);
+}
+.gamer-avatar-pane {
+  position:relative;min-width:0;min-height:0;z-index:2;
+  display:flex;flex-direction:column;padding:15px 17px 11px;
+  background:linear-gradient(110deg,rgba(174,213,240,.035),rgba(3,10,22,.06));
+}
+.gamer-profile-name { margin-top:7px;min-width:0;flex-shrink:0; }
+.gamer-profile-name h1 { font-size:clamp(16px,2.5cqw,24px);font-weight:650;letter-spacing:-.03em;margin:0 0 3px;overflow-wrap:anywhere; }
+.gamer-presence { display:flex;align-items:center;gap:7px;font-size:10px;color:#95aebc;text-transform:capitalize; }
+.gamer-presence i { width:6px;height:6px;border-radius:50%;background:#687988;flex-shrink:0; }
+.gamer-presence.online i { background:#76e4af;box-shadow:0 0 12px #51e2a76c; }
+.gamer-avatar-viewer {
+  display:flex;flex:1;min-height:95px;overflow:hidden;position:relative;
+  background:radial-gradient(ellipse at 49% 64%,rgba(88,146,183,.17),transparent 59%);
+}
+.gamer-avatar-viewer>div:first-child { width:100%;height:100%; }
+.gamer-avatar-viewer:after { content:"";pointer-events:none;position:absolute;bottom:4px;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,#a8e7fa64,transparent); }
+.gamer-avatar-fallback { display:flex;align-items:center;flex-direction:column;justify-content:center;gap:10px;width:100%;height:100%;color:#90a7b9;text-align:center;font-size:10px; }
+.gamer-avatar-fallback img { width:80px;height:90px;object-fit:cover;border-radius:11px; }
+.gamer-avatar-level {
+  position:absolute;right:6px;bottom:11px;z-index:3;min-width:53px;text-align:center;
+  padding:6px 8px;background:rgba(8,22,36,.77);border:1px solid rgba(159,211,236,.18);
+  border-radius:8px;backdrop-filter:blur(16px);
+}
+.gamer-avatar-level small { display:block;font-size:7px;letter-spacing:.08em;color:#9dc3d9; }
+.gamer-avatar-level strong { display:block;font-size:17px;font-weight:600;line-height:1.25; }
+.gamer-avatar-activity { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 10px;border-bottom:1px solid #d6eaf313;min-width:0; }
+.gamer-avatar-activity small { color:#809ead;font-size:8px;letter-spacing:.12em;flex-shrink:0; }
+.gamer-avatar-activity strong { font-size:10px;max-width:60%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:500;text-align:right; }
+.gamer-profile-actions { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-top:10px; }
+.gamer-dropdown { position:relative;min-width:0; }
+.gamer-profile .gamer-dropdown>button { width:100%;height:35px;font-size:11px;font-weight:600; }
+.gamer-profile .gamer-dropdown>button[aria-expanded=true] { background:rgba(116,198,224,.16);border-color:#8cdded55; }
+.gamer-dropdown-menu {
+  position:absolute;bottom:calc(100% + 6px);left:0;width:max-content;min-width:100%;
+  z-index:50;display:grid;gap:4px;padding:5px;border:1px solid #b5dcf140;
+  background:rgba(9,23,37,.98);backdrop-filter:blur(22px);
+  box-shadow:0 14px 40px #0009;border-radius:11px;
+}
+.gamer-profile .gamer-dropdown-menu button { justify-content:flex-start;width:100%;white-space:nowrap;padding:9px 11px;font-size:11px;border:0;background:transparent; }
+.gamer-avatar-secondary { display:flex;flex-wrap:wrap;justify-content:center;gap:5px;padding-top:7px; }
+.gamer-profile .gamer-avatar-secondary button { border:0;background:transparent;color:#9fb8cc;padding:4px 5px;font-size:10px; }
+.gamer-feature {
+  min-width:0;min-height:0;position:relative;z-index:1;
+  display:flex;flex-direction:column;padding:16px 19px 11px 14px;
+  background:linear-gradient(150deg,rgba(15,35,55,.48),rgba(7,18,31,.36));
+}
+.gamer-feature-header { display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-height:70px;flex-shrink:0; }
+.gamer-feature-header h2 { font-size:clamp(16px,2.2cqw,24px);font-weight:590;line-height:1.18;letter-spacing:-.04em;margin:4px 0 2px; }
+.gamer-feature-header p { font-size:10px;color:#88a6b9;margin:0;text-transform:capitalize; }
+.gamer-profile .gamer-refresh { flex-shrink:0;border:0;background:transparent;padding:8px;color:#9eb7cc; }
+.gamer-feature-content { display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:12px;min-width:0;min-height:0;flex:1; }
+.gamer-montage {
+  position:relative;overflow:hidden;min-height:100px;border-radius:12px;
+  background:radial-gradient(ellipse at center,#203b54,#091322 75%);
+  border:1px solid rgba(174,223,243,.1);
+}
+.gamer-montage>img,.gamer-montage>video { height:100%;width:100%;object-fit:cover;display:block;position:absolute;inset:0; }
+.gamer-montage-shade { position:absolute;inset:20% 0 0;pointer-events:none;background:linear-gradient(0deg,rgba(4,11,22,.96),transparent 90%); }
+.gamer-montage-bottom { position:absolute;bottom:0;left:0;right:0;padding:11px 12px 12px;text-shadow:0 2px 5px #000b; }
+.gamer-montage-bottom small { font-size:8px;color:#a7e7ed;letter-spacing:.15em;font-weight:700; }
+.gamer-montage-bottom h3 { font-size:clamp(15px,1.9cqw,20px);font-weight:650;line-height:1.22;margin:2px 0 5px; }
+.gamer-montage-bottom p { color:#c1d1dfd9;font-size:9px;line-height:1.45;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+.gamer-montage-placeholder { display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;width:100%;height:100%;color:#88a9c0;text-align:center;font-size:11px;padding:12px; }
+.gamer-montage-dots { display:flex;gap:4px;padding-top:8px; }
+.gamer-montage-dots i { width:13px;height:2px;background:rgba(198,231,240,.29);border-radius:2px; }
+.gamer-montage-dots i.active { background:#a3e0ee; }
+.gamer-unlocks { display:flex;flex-direction:column;min-width:0;min-height:0;background:rgba(170,206,237,.035);border:1px solid rgba(174,223,243,.095);border-radius:12px;overflow:hidden; }
+.gamer-unlocks-heading { display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 12px;border-bottom:1px solid #d2e6ed18; }
+.gamer-unlocks-heading h3 { margin:3px 0 0;font-size:13px;font-weight:630; }
+.gamer-unlocks-heading>small { color:#90a9b8;font-size:8px;text-align:right; }
+.gamer-unlocks-scroll { flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;padding:9px 9px 12px; }
+.gamer-reward-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px; }
+.gamer-reward { min-width:0;display:flex;gap:7px;align-items:center;border-radius:8px;padding:6px;background:rgba(184,212,243,.047); }
+.gamer-reward-art { width:42px;height:50px;flex-shrink:0;display:grid;place-items:center;overflow:hidden;border-radius:6px;background:rgba(14,36,58,.9);color:#85b2d1; }
+.gamer-reward-art img { width:100%;height:100%;object-fit:contain; }
+.gamer-reward-copy { min-width:0;display:flex;flex-direction:column;gap:3px; }
+.gamer-reward-copy strong { font-size:10px;font-weight:600;white-space:nowrap;text-overflow:ellipsis;overflow:hidden; }
+.gamer-reward-copy span { color:#90acc0;font-size:8px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden; }
+.gamer-reward-empty { margin:10px;color:#92aaba;font-size:11px;line-height:1.6; }
+.gamer-reward-count { color:#8eaac0;padding:4px 0;font-size:9px; }
+.gamer-achievement-list { margin-top:11px;border-top:1px solid #deeef519;padding-top:7px; }
+.gamer-achievement-label { display:flex;align-items:center;gap:5px;font-size:9px;color:#b5d6e7;margin-bottom:5px;font-weight:600; }
+.gamer-achievement-row { display:flex;align-items:center;gap:6px;padding:6px 2px;color:#cad9e5;font-size:9px;border-bottom:1px solid #e2edf00d; }
+.gamer-achievement-row>img { width:16px;height:16px;object-fit:contain; }
+.gamer-achievement-row svg { flex-shrink:0;color:#e1c992; }
+.gamer-achievement-row span { min-width:0;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis; }
+.gamer-achievement-row small { color:#8caac0;font-size:9px; }
+.gamer-feature-footer { display:flex;align-items:center;gap:16px;flex-shrink:0;min-height:44px;padding-top:9px; }
+.gamer-feature-footer>div:not(.gamer-profile-more-wrap) { display:flex;align-items:center;gap:6px;white-space:nowrap; }
+.gamer-feature-footer svg { color:#91c9df; }
+.gamer-feature-footer strong { font-size:12px;font-weight:700; }
+.gamer-feature-footer span { font-size:9px;color:#8ca9ba; }
+.gamer-dashboard-indicator { color:#93b4cb;display:flex;gap:5px;align-items:center; }
+.gamer-profile-more-wrap { position:relative;margin-left:auto; }
+.gamer-profile .gamer-profile-more-wrap>button { padding:5px 8px;border:0;color:#8eafc3;font-size:10px; }
+.gamer-profile-more { position:absolute;right:0;bottom:calc(100% + 3px);display:grid;gap:4px;min-width:150px;padding:6px;z-index:20;border-radius:10px;border:1px solid #e7f1fc22;background:#0b1b2af5;box-shadow:0 12px 30px #0006; }
+.gamer-profile .gamer-profile-more button { display:flex;justify-content:flex-start;background:transparent;border:0;font-size:10px;white-space:nowrap; }
+.gamer-status { flex-shrink:0;padding:8px;font-size:10px;color:#e8cbb0;background:#e1b88412;border:1px solid #deb98422;border-radius:7px;margin:5px 0; }
+.gamer-profile .gamer-status button { padding:3px 7px; }
+.gamer-report { position:absolute;right:20px;bottom:46px;z-index:22;display:grid;gap:6px;width:min(245px,80%);padding:11px;background:#0a1828f5;border:1px solid #bacfe339;border-radius:10px;box-shadow:0 10px 28px #0008; }
+.gamer-report label { color:#b7cddb;font-size:10px; }
+.gamer-report select,.gamer-report textarea { display:block;width:100%;padding:6px 8px;font:inherit;background:#0b1d2e;color:white;border:1px solid #b6cede2e;border-radius:6px; }
+.gamer-report textarea { min-height:50px;resize:vertical; }
+.gamer-gallery { min-height:0;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(11,25,40,.98),rgba(9,20,35,.91)); }
+.gamer-gallery-header { display:flex;align-items:center;justify-content:center;gap:18px;flex-shrink:0;padding:8px 20px 6px;min-height:46px; }
+.gamer-gallery-header h2 { margin:1px 0 0;font-size:13px;font-weight:620; }
+.gamer-gallery-header>span { font-size:10px;color:#96b1c3; }
+.gamer-gallery-header .gamer-gallery-help { color:#748fa2;font-size:9px; }
+.gamer-gallery-band { display:grid;grid-template-columns:minmax(8px,1fr) minmax(0,84%) minmax(8px,1fr);flex:1;min-height:0;overflow:hidden; }
+.gamer-gallery-blank { pointer-events:none;background:linear-gradient(90deg,rgba(45,87,118,.09),transparent); }
+.gamer-gallery-blank:last-child { background:linear-gradient(270deg,rgba(45,87,118,.09),transparent); }
+.gamer-game-shelf {
+  display:grid;grid-template-columns:repeat(7,minmax(0,1fr));align-content:start;gap:7px;
+  overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#94bec048 transparent;
+  padding:5px 8px 12px;min-height:0;outline-offset:-3px;
+}
+.gamer-profile .gamer-game-tile {
+  flex-direction:column;justify-content:flex-start;gap:3px;min-width:0;border:1px solid transparent;
+  padding:4px;background:rgba(162,216,242,.028);border-radius:9px;text-align:center;outline-offset:0;
+}
+.gamer-profile .gamer-game-tile:hover,.gamer-profile .gamer-game-tile[aria-pressed=true] {
+  border-color:#7ac8e080;background:rgba(105,190,216,.12);box-shadow:inset 0 0 14px #9dc7ed0c;
+}
+.gamer-tile-art { display:grid;place-items:center;position:relative;width:100%;height:72px;overflow:hidden;border-radius:6px;background:rgba(43,70,92,.55);color:#7d9bb0; }
+.gamer-tile-art>img { width:100%;height:100%;object-fit:cover; }
+.gamer-tile-art i { position:absolute;bottom:0;left:0;right:0;padding:3px 0;font-size:7px;letter-spacing:.06em;font-style:normal;color:#d2dce8;background:#0b142bcf; }
+.gamer-game-tile.unplayed .gamer-tile-art { filter:grayscale(1);opacity:.48; }
+.gamer-game-tile.unplayed[aria-pressed=true] .gamer-tile-art { filter:grayscale(.7);opacity:.8; }
+.gamer-tile-name { display:block;max-width:100%;font-size:9px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#c5dbe6; }
+.gamer-game-tile.unplayed .gamer-tile-name { color:#7d909c; }
+.gamer-profile .gamer-game-tile[aria-pressed=true] .gamer-tile-name { color:#dbf9ff; }
+.gamer-gallery-empty { grid-column:1/-1;padding:18px;text-align:center;color:#8fa7b9;font-size:11px; }
 
-.gamer-profile{height:100%;overflow:auto;container-type:inline-size;color:#e7edf5;background:radial-gradient(ellipse at 0% 20%,#3d536335,transparent 48%),linear-gradient(145deg,#17232f,#0d1622);font-size:12px}.gamer-profile-layout{display:grid;grid-template-columns:minmax(230px,30%) minmax(0,1fr);min-height:100%}
-.gamer-profile *{box-sizing:border-box}.gamer-profile button{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#e8f2ff08;border:1px solid #d2e1ee24;border-radius:8px;padding:10px 12px;color:inherit;cursor:pointer;font:inherit}.gamer-profile button:hover{background:#e9f3ff14}.gamer-profile button:disabled{opacity:.45;cursor:not-allowed}.gamer-profile :focus-visible{outline:2px solid #b4cddd;outline-offset:3px}
-.gamer-identity{display:flex;flex-direction:column;padding:27px 22px 22px;border-right:1px solid #d2e5f21a;background:linear-gradient(160deg,#b7d7ec09,#00000010);min-width:0;position:relative}.gamer-eyebrow{font-size:8px;letter-spacing:.19em;font-weight:600;color:#98aebf}.gamer-identity-heading{padding-top:25px}.gamer-identity h1{font-size:28px;font-weight:500;letter-spacing:-1px;line-height:1.2;overflow-wrap:anywhere;margin:0 0 10px}
-.gamer-presence{display:flex;gap:6px;align-items:center;font-size:10px;color:#9dafbf;text-transform:capitalize}.gamer-presence i{height:5px;width:5px;border-radius:50%;background:#7d8a94}.gamer-presence.online i{background:#a4c5ba}
-.gamer-avatar-stage{position:relative;min-height:310px;height:360px;margin:15px -22px 0;background:radial-gradient(ellipse at 50% 75%,#95b4c910,transparent 63%)}.gamer-avatar-stage:after{content:"";position:absolute;pointer-events:none;left:20%;right:20%;bottom:8px;height:1px;background:linear-gradient(90deg,transparent,#d1e4f35c,transparent)}
-.gamer-avatar-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:18px;color:#92a6b7}.gamer-avatar-fallback img{max-width:135px;max-height:180px;border-radius:14px;object-fit:cover}.gamer-avatar-fallback span{font-size:10px}
-.gamer-level{position:absolute;right:18px;bottom:24px;display:grid;text-align:center;border:1px solid #d0e4f033;background:#10212ed9;backdrop-filter:blur(10px);padding:10px 13px;border-radius:10px}.gamer-level span{font-size:7px;letter-spacing:.14em;color:#95afc1}.gamer-level strong{font-size:25px;line-height:1.4;font-weight:400}
-.gamer-now{padding:18px 0;border-bottom:1px solid #ffffff13;margin-bottom:17px}.gamer-now small{font-size:8px;letter-spacing:.13em;color:#8da3b4}.gamer-now p{font-size:12px;margin:7px 0;color:#d6e0e8}.gamer-identity>button{margin-top:7px;font-size:11px}.gamer-profile .gamer-primary{background:#cddfe9;border-color:#d7e7f1;color:#142535;font-weight:600}.gamer-social-buttons{display:flex;gap:7px;margin-top:7px}.gamer-social-buttons button{flex:1;font-size:10px}
-.gamer-main{min-width:0;padding:30px 28px 24px}.gamer-main-header{display:flex;align-items:start;justify-content:space-between;gap:15px}.gamer-main-header h2{font-size:24px;line-height:1.15;font-weight:450;letter-spacing:-.7px;margin:10px 0 23px}.gamer-profile .gamer-refresh{padding:7px;background:none;border:0;color:#8da9ba}
-.gamer-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:25px;border:1px solid #cbddea20;border-radius:10px;overflow:hidden}.gamer-profile .gamer-stats button{display:grid;grid-template-columns:auto 1fr;text-align:left;border:0;border-radius:0;border-right:1px solid #ffffff10;padding:16px 18px;column-gap:14px;background:#cfdfeb04}.gamer-stats svg{color:#92a9bb;grid-row:span 2}.gamer-stats strong{font-size:22px;line-height:1.1;font-weight:450}.gamer-stats span{font-size:9px;color:#91a7b8;margin-top:6px}
-.gamer-tabs{display:flex;border-bottom:1px solid #ffffff18;gap:20px}.gamer-profile .gamer-tabs button{padding:13px 0;border:0;border-radius:0;background:none;border-bottom:2px solid transparent;color:#8fa5b6;font-size:11px}.gamer-profile .gamer-tabs button[aria-pressed=true]{color:#e7eef3;border-bottom-color:#c6dce9}.gamer-tab-content{padding-top:5px}.gamer-section{margin:25px 0}.gamer-section>header{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-bottom:14px}.gamer-section h2{font-size:15px;font-weight:500;margin:5px 0 0;letter-spacing:-.2px}.gamer-profile .gamer-section>header button{font-size:9px;border:0;background:transparent;padding:5px 0;color:#a6bed0}.gamer-section>header>span{font-size:9px;color:#8da1b2}
-.gamer-collection{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.gamer-collection-item{display:flex;min-width:0;gap:12px;padding:12px;border:1px solid #ccdfed16;border-radius:8px;background:linear-gradient(130deg,#cadfee08,#cadfee02)}.gamer-collection-item>div:last-child{min-width:0}.gamer-collection-item>img,.gamer-collection-art{width:46px;height:60px;object-fit:cover;flex-shrink:0;border-radius:4px;background:#d4e5f40a}.gamer-collection-art{display:grid;place-items:center;color:#8eabbf}.gamer-collection-art svg{width:20px}
-.gamer-collection-item small{display:block;color:#a6b7c5;font-size:8px;text-transform:uppercase;letter-spacing:.08em}.gamer-collection-item h3{font-size:11px;line-height:1.45;margin:5px 0 4px;font-weight:550;overflow-wrap:anywhere}.gamer-collection-item p{font-size:9px;color:#8ba0b3;line-height:1.55;margin:0 0 7px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.gamer-collection-item span{font-size:8px;color:#a4b6c5}
-.gamer-collection.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.gamer-collection.cards .gamer-collection-item{display:block;padding:10px}.gamer-collection.cards .gamer-collection-item>img,.gamer-collection.cards .gamer-collection-art{width:100%;height:125px;object-fit:contain;margin-bottom:12px;background:#030b134d}
-.gamer-genres{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.gamer-genres>div{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #ffffff13;font-size:10px;color:#a6bccc}.gamer-genres strong{font-size:10px;color:#d2e2ec;font-weight:500}
-.gamer-empty{color:#879dad;font-size:11px;line-height:1.7;padding:22px;border:1px dashed #d2e5f01c;border-radius:8px}.gamer-actions{display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid #ffffff15;padding-top:20px;margin-top:25px}.gamer-profile .gamer-actions button{font-size:10px;padding:9px 10px}.gamer-more{display:flex;flex-wrap:wrap;gap:7px;width:100%;padding-top:5px}.gamer-report{width:100%;display:grid;gap:10px}.gamer-report label{font-size:10px;color:#a0b5c6}.gamer-report select,.gamer-report textarea{display:block;width:100%;margin-top:6px;background:#0a1723;border:1px solid #d7e7f222;border-radius:6px;color:#d6e5f0;padding:8px;font:inherit}.gamer-status{margin:16px 0;font-size:11px;color:#c9bdb0;background:#efddac0a;border:1px solid #efddac22;padding:12px;border-radius:8px}
-.gamer-dashboard-preview>p{color:#91a7b9;font-size:11px;line-height:1.7}.gamer-preview-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:20px 0}.gamer-preview-summary>div{padding:15px;border:1px solid #c2d8e51f;border-radius:8px}.gamer-preview-summary small{display:block;font-size:9px;color:#91a9bc;margin-bottom:8px}.gamer-preview-summary strong{font-size:20px;font-weight:450}.gamer-dashboard-preview h3{font-size:12px;margin:22px 0 12px}.gamer-dashboard-preview>.gamer-primary{margin-top:20px}
-@container(max-width:760px){.gamer-profile-layout{grid-template-columns:210px minmax(0,1fr)}.gamer-main{padding:23px 17px}.gamer-collection,.gamer-collection.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.gamer-collection.achievements,.gamer-collection.games{grid-template-columns:1fr}.gamer-profile .gamer-stats button{display:flex;flex-direction:column;gap:5px;padding:12px 5px}.gamer-stats svg{display:none}.gamer-tabs{gap:12px}.gamer-main-header h2{font-size:21px}.gamer-identity{padding-left:17px;padding-right:17px}.gamer-avatar-stage{margin-left:-17px;margin-right:-17px}}
-@container(max-width:500px){.gamer-profile-layout{display:block}.gamer-identity{border-right:0;border-bottom:1px solid #d2e5f21a}.gamer-avatar-stage{height:300px}.gamer-identity-heading{padding-top:15px}.gamer-main{padding:24px 18px}.gamer-genres{grid-template-columns:1fr}}
+@container (max-width:860px) {
+  .gamer-avatar-pane { padding:10px 11px 8px; }
+  .gamer-avatar-activity { padding:5px 0; }
+  .gamer-feature { padding:12px 10px 8px; }
+  .gamer-feature-header { min-height:60px; }
+  .gamer-feature-content { gap:7px; }
+  .gamer-unlocks-heading { flex-direction:column;align-items:flex-start;padding:8px; }
+  .gamer-reward-grid { grid-template-columns:1fr; }
+  .gamer-reward-art { height:38px;width:33px; }
+  .gamer-feature-footer { gap:9px; }
+  .gamer-gallery-header .gamer-gallery-help { display:none; }
+  .gamer-gallery-band { grid-template-columns:minmax(5px,1fr) minmax(0,91%) minmax(5px,1fr); }
+}
+@container (max-width:590px) {
+  .gamer-profile { display:block;overflow-y:auto; }
+  .gamer-profile-stage { display:grid;grid-template-columns:1fr; }
+  .gamer-avatar-pane { min-height:290px; }
+  .gamer-avatar-viewer { min-height:155px; }
+  .gamer-feature { min-height:410px; }
+  .gamer-feature-content { min-height:290px; }
+  .gamer-feature-footer { flex-wrap:wrap; }
+  .gamer-gallery { min-height:255px; }
+  .gamer-game-shelf { grid-template-columns:repeat(4,minmax(0,1fr));max-height:275px; }
+  .gamer-tile-art { height:85px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .gamer-profile button { transition:none; }
+}
