@@ -55,18 +55,27 @@ test('mini game montage uses actual screenshots, safe URLs and a direct video wh
   });
 });
 
-test('shared Friends and sidebar route through the same responsive 70/30 profile', () => {
+test('Friends and sidebar share the responsive console profile with live 3D and original social actions', () => {
   const profile = source('../src/components/dashboard/LunaGamerProfile.jsx');
   const css = source('../src/components/dashboard/gamer-profile.css');
   const friends = source('../src/components/dashboard/FriendsListContent.jsx');
   const sidebar = source('../src/components/streaming/FriendProfileOverlay.jsx');
   const backend = source('../base44/functions/friendConsoleProfile/entry.ts');
-  assert.match(profile, /data-profile-layout="70-30"/);
+  assert.match(profile, /data-profile-layout="profile-console"/);
+  assert.match(profile, /gamer-console-identity/);
+  assert.match(profile, /gamer-console-feature-grid/);
+  assert.match(profile, /gamer-console-avatar-viewer/);
+  assert.match(profile, /<GenesisModelPreview/);
+  assert.match(profile, /profile\.avatar/);
+  assert.match(profile, /--gamer-wallpaper/);
+  assert.match(profile, /onMouseEnter=\{\(\) => showGame\(index\)\}/);
+  assert.match(profile, /gameArtifacts\(profile, selectedGame\)/);
+  assert.match(profile, /gamer-carousel-arrow/);
   assert.match(css, /grid-template-rows:minmax\(0,7fr\) minmax\(170px,3fr\)/);
   assert.match(css, /grid-template-columns:repeat\(7,minmax\(0,1fr\)\)/);
   assert.match(css, /\.gamer-game-tile\.unplayed \.gamer-tile-art/);
-  assert.match(profile, /Regular chat/);
-  assert.match(profile, /Voice call/);
+  assert.match(profile, /Regular Chat/);
+  assert.match(profile, /Voice Chat/);
   assert.match(profile, /To Party/);
   assert.match(profile, /To Dashboard/);
   assert.match(friends, /<LunaGamerProfile/);
