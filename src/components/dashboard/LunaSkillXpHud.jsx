@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Network, RefreshCw, Sparkles, X } from 'lucide-react';
+import { ArrowDown, Check, Minus, Network, Plus, RefreshCw, Sparkles, X } from 'lucide-react';
 import useLunaStore from '@/components/luna/useLunaStore';
 import useSkillBookLoadout from '@/components/luna/hooks/useSkillBookLoadout';
 import { SKILL_KEYS, SKILL_SET_COUNT } from '@/components/luna/skillSlots';
@@ -38,7 +38,7 @@ export function HotkeyFrame() {
   );
 }
 
-function HotkeySlot({ index, selected, pendingCard, onAssign, onSelect, combatMode, saving, embedded }) {
+function HotkeySlot({ index, selected, pendingCard, onAssign, onSelect, combatMode, saving, embedded, onRemove }) {
   const [dragOver, setDragOver] = useState(false);
   const assigned = useLunaStore((state) => state.hotbar[index]);
   const image = assigned?.image || assigned?.card_image || assigned?.icon_url || assigned?.icon || '';
@@ -66,6 +66,7 @@ function HotkeySlot({ index, selected, pendingCard, onAssign, onSelect, combatMo
     else if (assigned) onSelect(index, assigned);
   };
   return (
+    <div className="luna-hotbar-slot-wrap">
     <button type="button" className="luna-hotbar-slot" data-hotkey={key}
       data-selected={selected || undefined} data-pending={Boolean(pendingCard) || undefined}
       data-drag-over={dragOver || undefined}
@@ -79,15 +80,17 @@ function HotkeySlot({ index, selected, pendingCard, onAssign, onSelect, combatMo
         event.preventDefault();
         if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
       }}>
-      {image ? <img src={image} alt="" draggable={false} /> : <Sparkles size={16} />}
+      {image ? <img src={image} alt="" draggable={false} /> : !embedded ? <Sparkles size={16} /> : assigned ? <Sparkles size={24} /> : <Plus size={23} />}
       {embedded && <span className="luna-hotbar-slot-name">{assigned ? title : "Empty"}</span>}
       <span className="luna-hotbar-key">{key}</span>
     </button>
+    {embedded && assigned && onRemove && <button type="button" className="lsb-remove-skill" aria-label={`Unequip ${title} from skill ${key}`} title="Unequip skill" disabled={saving} onClick={() => onRemove(index)}><Minus size={13}/></button>}
+    </div>
   );
 }
 
 export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1, showcaseEditing = false, combatMode = false, dockStyle, stacked = false, embedded = false, dockTarget = null }) {
-  const { equip, isSaving, isLoading, error: loadoutError, skillSets, activeSkillSetId, selectSkillSet } = useSkillBookLoadout();
+  const { equip, unequip, slots, isSaving, isLoading, error: loadoutError, skillSets, activeSkillSetId, selectSkillSet } = useSkillBookLoadout();
   const [pendingCard, setPendingCard] = useState(() => typeof window !== 'undefined' ? window.__lunaSelectedShowcaseCard || null : null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [previewCard, setPreviewCard] = useState(null);
@@ -126,11 +129,22 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
   const activeSet = sets.find((set) => String(set.skill_set_id) === String(activeSkillSetId))
     || sets.find((set) => set.is_active) || sets[0];
   const chooseSet = async (set) => {
-    if (!set?.skill_set_id || combatMode || isSaving) return;
+    if (!set?.skill_set_id || combatMode || isSaving || assigning.current) return;
+    assigning.current = true;
     try {
       await selectSkillSet(set.skill_set_id);
       setSelectedSlot(null); setPreviewCard(null);
     } catch (error) { showError(error, 'Switch Prefab'); }
+    finally { assigning.current = false; }
+  };
+  const remove = async index => {
+    if (combatMode || isSaving || assigning.current) return;
+    assigning.current = true;
+    try {
+      await unequip(index);
+      setSelectedSlot(null); setPreviewCard(null);
+    } catch (error) { showError(error, 'Unequip Skill'); }
+    finally { assigning.current = false; }
   };
   const xp = Number.isFinite(Number(currentXp)) ? Math.max(0, Number(currentXp)) : 0;
   const goal = Number.isFinite(Number(nextXp)) ? Math.max(1, Number(nextXp)) : 1;
@@ -205,7 +219,36 @@ export default function LunaSkillXpHud({ currentXp = 0, nextXp = 1000, level = 1
       </div>
     </section>
   );
-  // Keep one live HUD instance while its DOM moves into and out of the book.
-  // Ongoing saves, selected slots and the active prefab survive the move.
-  return embedded ? (dockTarget ? createPortal(content, dockTarget) : null) : content;
+  const prefabContent = <section className="luna-hotbar lsb-prefab" data-luna-skill-xp-hud data-embedded data-placing={Boolean(pendingCard) || undefined}
+    data-window-dismiss-layer={pendingCard ? '' : undefined} aria-label="Skill Book skill slots"
+    onKeyDown={event => {
+      if (event.key === 'Escape' && pendingCard) { event.preventDefault(); event.stopPropagation(); cancelPlacement(); }
+      else if (event.key !== 'Escape') event.stopPropagation();
+    }}>
+    <nav className="luna-hotbar-prefabs" aria-label="Skill prefabs">{Array.from({ length: SKILL_SET_COUNT }, (_, index) => {
+      const set = sets[index];
+      return <button key={index} type="button" disabled={combatMode || isSaving || isLoading || Boolean(loadoutError) || !set}
+        aria-pressed={Boolean(set && set.skill_set_id === activeSet?.skill_set_id)} title={set?.skill_set_name || 'Loading loadout'}
+        onClick={() => chooseSet(set)}>Loadout {index + 1}</button>;
+    })}</nav>
+    <div className="lsb-prefab-section-heading"><h3>Active Skills</h3><span>{(slots || []).filter(slot => slot.card).length} / {SKILL_KEYS.length}</span></div>
+    <div className="luna-hotbar-grid" aria-label="Equipped skill keys 1 through 0">{SKILL_KEYS.map((key, index) => <HotkeySlot key={key} index={index} selected={selectedSlot === index}
+      pendingCard={pendingCard} onAssign={assign} onRemove={remove} saving={isSaving || isLoading || Boolean(loadoutError)} combatMode={combatMode} embedded
+      onSelect={(slot, card) => { setSelectedSlot(slot); setPreviewCard(card); }}/>)}</div>
+    <div className="lsb-prefab-detail"><div className="lsb-prefab-section-heading"><h3>{pendingCard ? 'Ready to Equip' : 'Selected Skill'}</h3><Sparkles size={15}/></div>
+      <strong>{pendingCard?.title || pendingCard?.card_name || previewCard?.title || previewCard?.card_name || 'Make this loadout your own'}</strong>
+      <p>{pendingCard ? 'Choose a slot above. Equipping here replaces its current skill.' : previewCard ? [previewCard.game_name, previewCard.rarity || previewCard.card_rarity, 'Hotkey ' + SKILL_KEYS[selectedSlot]].filter(Boolean).join(' · ') : 'Select an equipped skill to inspect it, or choose a learned card from your Skill Book.'}</p>
+      {pendingCard && <button type="button" className="luna-hotbar-cancel" disabled={isSaving} aria-label="Cancel skill placement" onClick={cancelPlacement}><X size={12}/>Cancel placement</button>}
+    </div>
+    <div className="lsb-prefab-xp"><div className="lsb-prefab-section-heading"><h3>Avatar Progress</h3><span>Level {level}</span></div>
+      <div className="luna-hotbar-exp-track" role="progressbar" aria-label="Experience" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)} aria-valuetext={`${xp.toLocaleString()} of ${goal.toLocaleString()} experience`}><div style={{ width: `${progress}%` }}/></div>
+      <p>{xp.toLocaleString()} / {goal.toLocaleString()} XP</p>
+    </div>
+    <div className="lsb-equip-guide"><ArrowDown size={26}/><strong>Drag & Drop to Equip</strong><p>Or right-click a learned card, then choose a skill slot.</p>
+      <span className="luna-hotbar-save-state" role="status">{isSaving ? <><RefreshCw size={12}/>Saving…</> : isLoading ? 'Loading…' : loadoutError ? 'Loadout unavailable' : <><Check size={12}/>Changes save automatically</>}</span>
+    </div>
+  </section>;
+  // Keep the one live HUD instance while its DOM moves into the independent
+  // prefab window. In-flight saves survive closing and reopening the book.
+  return embedded ? (dockTarget ? createPortal(prefabContent, dockTarget) : null) : content;
 }

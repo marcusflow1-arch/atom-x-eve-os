@@ -49,7 +49,7 @@ const compiled=await build({
     });
     builder.onLoad({filter:/.*/,namespace:'quick-fixture'},args=>({
       loader:'js',contents:args.path==='icons'
-        ? "export const "+['Swords','Activity','Heart','Zap','Trophy','Gamepad2','Star','Shield','ChevronRight','BarChart3','Gauge','Target','Sparkles','Users','UserPlus','UserRound','Camera','MessageSquare','Crown','PackageOpen','Medal','X','Grip','Maximize2','Minimize2','Minus'].map(name=>name+'=()=>null').join(',')+';'
+        ? "export const "+['Swords','Activity','Heart','Zap','Trophy','Gamepad2','Star','Shield','ChevronRight','BarChart3','Gauge','Target','Sparkles','Users','UserPlus','UserRound','Camera','MessageSquare','Crown','PackageOpen','Medal','BookOpen','X','Grip','Maximize2','Minimize2','Minus'].map(name=>name+'=()=>null').join(',')+';'
         : fakeNames.has(args.path)
         ? "export default function Placeholder(){return null;}"
         : fakeHooks[args.path],
@@ -110,7 +110,7 @@ try {
   await run(()=>window.dispatchEvent(new CustomEvent('openLunaGamerProfile',{detail:{player:{id:'friend-77',name:'Nova'}}})));
   assert.ok(popup('gamer-profile'),'friend profile uses its own window');
   assert.ok(document.querySelector('[aria-label="AI Attribute Box"]'));
-  await run(()=>popup('cards').querySelector('[aria-label="Close Cards · Skill Book window"]').click());
+  await run(()=>popup('cards').querySelector('[aria-label="Close Skill Book window"]').click());
   assert.equal(popup('cards'),null);
   await run(()=>window.dispatchEvent(new CustomEvent('openLunaSkillBook')));
   assert.ok(popup('cards'),'AI Battle Skill Book event opens the actual cards window');

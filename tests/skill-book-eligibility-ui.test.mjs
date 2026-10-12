@@ -4,9 +4,10 @@ import { build } from 'esbuild';
 import { JSDOM } from 'jsdom';
 
 const dom = new JSDOM('<div id="root"></div>', { url: 'https://test.local/LunaTemplate', pretendToBeVisual: true });
-for (const name of ['window', 'document', 'HTMLElement', 'HTMLInputElement', 'HTMLSelectElement', 'Element', 'Node', 'Event', 'CustomEvent']) globalThis[name] = dom.window[name];
+for (const name of ['window', 'document', 'HTMLElement', 'HTMLInputElement', 'HTMLSelectElement', 'Element', 'Node', 'Event', 'CustomEvent', 'sessionStorage']) globalThis[name] = dom.window[name];
 Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, configurable: true });
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+globalThis.ResizeObserver = class { observe() {} disconnect() {} };
 const React = await import('react'), { act } = React;
 const { createRoot } = await import('react-dom/client');
 const { QueryClient, QueryClientProvider } = createRequire(import.meta.url)('@tanstack/react-query');
@@ -24,6 +25,8 @@ cards.push({ id: 'boost', user_card_id: 'owned-boost', title: 'Boost', game_name
 cards.push({ id: 'unowned', title: 'Unowned reward', game_name: 'Atom X Eve', owned: false });
 cards.push({ id: 'consumed', user_card_id: 'gone', title: 'Consumed card', game_name: 'Atom X Eve', owned: true, card: { quantity: 0 } });
 const persisted = Array(10).fill(null);
+const prefabSlots = [persisted, Array(10).fill(null), Array(10).fill(null), Array(10).fill(null)];
+let activePrefab = 0;
 let failEquip = false, pauseEquip = null, releaseEquip;
 const snapshot = () => ({
   success: true, avatar_gender: 'male',
@@ -33,11 +36,11 @@ const snapshot = () => ({
     { key: 'locked', title: 'Locked Game', genre: 'Adventure' },
   ],
   skills: cards,
-  loadout: { skill_set_order: 0, slots: persisted.map((id, index) => ({
+  loadout: { skill_set_order: activePrefab, slots: prefabSlots[activePrefab].map((id, index) => ({
     index, card: id ? { ...cards.find(card => card.user_card_id === id).card, user_card_id: id, title: cards.find(card => card.user_card_id === id).title } : null,
   })) },
   skill_sets: [0, 1, 2, 3].map(i => ({ skill_set_id: 'set-' + i, skill_set_order: i })),
-  active_skill_set_id: 'set-0',
+  active_skill_set_id: 'set-' + activePrefab,
 });
 globalThis.skillBookSdk = { functions: { invoke: async (name, request) => {
   assert.equal(name, 'skillBookLoadout');
@@ -48,14 +51,16 @@ globalThis.skillBookSdk = { functions: { invoke: async (name, request) => {
     const { slot, user_card_id } = request.data;
     const owned = cards.find(card => card.user_card_id === user_card_id);
     assert.ok(owned?.owned && owned.can_equip, 'only a compatible owned ID reaches equip');
-    for (let i = 0; i < persisted.length; i++) if (persisted[i] === user_card_id) persisted[i] = null;
-    persisted[slot] = user_card_id;
-  } else assert.equal(request.action, 'getState');
+    for (let i = 0; i < 10; i++) if (prefabSlots[activePrefab][i] === user_card_id) prefabSlots[activePrefab][i] = null;
+    prefabSlots[activePrefab][slot] = user_card_id;
+  } else if (request.action === 'unequip') prefabSlots[activePrefab][request.data.slot] = null;
+  else if (request.action === 'selectSkillSet') activePrefab = Number(request.data.skill_set_id.split('-')[1]);
+  else assert.equal(request.action, 'getState');
   return { data: structuredClone(snapshot()) };
 } } };
 globalThis.skillBookNotices = notices;
 const built = await build({
-  stdin: { contents: "export { default as Panel } from './src/components/dashboard/LunaCardsPanel.jsx'; export { default as Hud } from './src/components/dashboard/LunaSkillXpHud.jsx'; export { default as store } from './src/components/luna/useLunaStore.jsx'; export { useSkills } from './src/components/luna/hooks/useSkills.jsx';", resolveDir: process.cwd(), loader: 'jsx' },
+  stdin: { contents: "export { default as Frame } from './src/components/dashboard/windows/DashboardWindow.jsx'; export { default as Panel } from './src/components/dashboard/LunaCardsPanel.jsx'; export { default as Hud } from './src/components/dashboard/LunaSkillXpHud.jsx'; export { default as store } from './src/components/luna/useLunaStore.jsx'; export { useSkills } from './src/components/luna/hooks/useSkills.jsx';", resolveDir: process.cwd(), loader: 'jsx' },
   bundle: true, write: false, format: 'cjs', platform: 'node', packages: 'external',
   jsx: 'automatic', alias: { '@': process.cwd() + '/src' }, loader: { '.css': 'empty' },
   plugins: [{ name: 'skill-book-service-fixture', setup(b) {
@@ -73,7 +78,7 @@ const built = await build({
 const filename = process.cwd() + '/tests/__skill_book_ui_bundle.cjs', module = new Module(filename);
 module.paths = Module._nodeModulePaths(process.cwd());
 module._compile(built.outputFiles[0].text, filename);
-const { Panel, Hud, store, useSkills } = module.exports;
+const { Frame, Panel, Hud, store, useSkills } = module.exports;
 const makeClient = () => new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false, gcTime: 0 } } });
 let client = makeClient(), root = createRoot(document.getElementById('root'));
 const run = async (fn = () => {}) => {
@@ -83,7 +88,7 @@ function Workbench({show}) {
   const [dock,setDock] = React.useState(null);
   useSkills();
   return React.createElement(React.Fragment,null,
-    show && React.createElement(Panel,{slotDockRef:setDock}),
+    show && React.createElement(Frame,{id:'cards',title:'Skill Book',appearance:'skillbook',anchor:'skillbook'},React.createElement(Panel,{slotDockRef:setDock})),
     React.createElement(Hud,{embedded:show,dockTarget:dock,showcaseEditing:show,currentXp:71,nextXp:100,level:3}));
 }
 const render = (show = true) => root.render(React.createElement(QueryClientProvider, { client },
@@ -112,8 +117,10 @@ try {
   await run(render); await run();
   assert.deepEqual([...document.querySelectorAll('.lsb-game strong')].map(n => n.textContent), ['Atom X Eve', 'Zeta Racing']);
   assert.equal(document.querySelectorAll('[data-hotkey]').length, 10, 'there is only one set of slot targets');
-  const dock = document.querySelector('.luna-skill-book .lsb-slot-dock');
-  assert.equal(dock.querySelectorAll('[data-hotkey]').length,10,'every target is inside the book');
+  const dock = document.querySelector('[data-luna-window="skill-prefab"] .lsb-slot-dock');
+  assert.ok(document.querySelector('[data-luna-window="cards"]'));
+  assert.equal(document.querySelectorAll('[data-luna-window]').length,2,'book and prefab are independent windows');
+  assert.equal(dock.querySelectorAll('[data-hotkey]').length,10,'every target is in the prefab window');
   assert.equal(dock.querySelectorAll('nav button').length,4,'prefabs stay with their slots');
   assert.equal(dock.querySelector('[role="progressbar"]').getAttribute('aria-valuenow'),'71');
   assert.equal(document.querySelector('[data-luna-skill-xp-hud]').style.position,'','embedded controls have no viewport offsets');
@@ -127,8 +134,16 @@ try {
   assert.equal(document.querySelectorAll('.lsb-game').length, 1, 'card-name search also locates its game');
   await run(() => button('Atom X Eve').click());
   assert.equal(search().value, '');
-  assert.equal(document.querySelectorAll('[data-skill-card]').length, 5);
-  assert.doesNotMatch(document.querySelector('.lsb-results').textContent, /Unowned reward|Consumed card/);
+  assert.equal(document.querySelectorAll('[data-skill-card]').length, 6);
+  assert.doesNotMatch(document.querySelector('.lsb-results').textContent, /Consumed card/);
+  await run(() => button('Unlearned (1)').click());
+  const locked = document.querySelector('[data-skill-card="unowned"]');
+  assert.equal(document.querySelectorAll('[data-skill-card]').length,1);
+  assert.equal(locked.draggable,false);
+  await run(() => locked.click());
+  assert.equal(calls.filter(call=>call.action==='equip').length,0,'unlearned cards cannot be equipped');
+  await run(() => button('Learned (5)').click());
+  assert.equal(document.querySelectorAll('[data-skill-card]').length,5);
   const blocked = card('artemis_lunar_beam');
   assert.equal(blocked.draggable, false);
   assert.match(document.getElementById(blocked.getAttribute('aria-describedby')).textContent, /female avatar/);
@@ -156,11 +171,14 @@ try {
   assert.equal(document.querySelectorAll('[data-pending]').length,0,'Escape cancels placement before closing');
   assert.equal(escapedToDashboard,0);
   await run(() => slot('1').dispatchEvent(new window.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true})));
-  assert.equal(escapedToDashboard,1,'Escape can close the book from a focused slot');
+  assert.equal(document.querySelector('[data-luna-window="skill-prefab"]'),null,'second Escape closes only the front prefab window');
+  await run(() => document.querySelector('.lsb-footer button').click());
+  assert.ok(slot('1'),'the prefab window can be reopened');
   window.removeEventListener('keydown',escapeListener);
 
   // Use the real Panel -> HTML drag payload -> docked HUD -> query mutation -> store path.
-  const transfer = drag(card('chidori')).payload;
+  let transfer;
+  await run(() => { transfer = drag(card('chidori')).payload; });
   assert.equal(JSON.parse(transfer['application/json']).user_card_id, 'owned-chidori');
   pauseEquip = new Promise(resolve => { releaseEquip = resolve; });
   await run(() => { drop(slot('1'), transfer); drop(slot('2'), transfer); });
@@ -209,6 +227,18 @@ try {
   assert.match(document.querySelector('.lsb-empty').textContent, /No matches/);
   await run(() => button('Clear filters').click());
 
+  // Each real saved set is separate; clearing a slot goes through the service.
+  await run(() => button('Loadout 2').click()); await run();
+  assert.equal(activePrefab,1);
+  assert.match(slot('0').getAttribute('aria-label'),/Empty/);
+  await run(() => drop(slot('2'),transfer)); await run();
+  assert.equal(prefabSlots[1][1],'owned-chidori');
+  await run(() => document.querySelector('[aria-label="Unequip Chidori from skill 2"]').click()); await run();
+  assert.equal(prefabSlots[1][1],null);
+  await run(() => button('Loadout 1').click()); await run();
+  assert.equal(activePrefab,0);
+  assert.match(slot('0').getAttribute('aria-label'),/Getsuga/,'switching back restores the first saved set');
+
   // Reload with an empty client/store: restore the saved server loadout.
   await run(() => root.unmount()); client.clear(); store.getState().reset();
   client = makeClient(); root = createRoot(document.getElementById('root'));
@@ -252,7 +282,7 @@ try {
   assert.equal(document.querySelectorAll('[data-luna-skill-tree-hotbar-button]').length,0,'the extra dashboard icon does not appear inside Skill Book');
   assert.equal(document.querySelector('.lsb-slot-dock').querySelectorAll('[data-hotkey]').length,10);
   assert.match(slot('2').getAttribute('aria-label'),/Chidori/);
-  console.log('PASS: embedded single-instance slot dock, prefab/EXP visibility, cancel selection, in-flight save during close/reopen, cast suppression while editing, owned game/card browser, alphabetical/genre/search filters, compatibility, voice fallback, real drag-to-equip path, shared saving state, rapid-drop guard, moving/replacing cards, save errors, reload restoration and close cleanup.');
+  console.log('PASS: independent reference windows, real unlearned catalog, saved loadout switching and unequip, single-instance slot dock, prefab/EXP visibility, cancel selection, in-flight save during close/reopen, cast suppression while editing, owned game/card browser, alphabetical/genre/search filters, compatibility, voice fallback, real drag-to-equip path, shared saving state, rapid-drop guard, moving/replacing cards, save errors, reload restoration and close cleanup.');
 } finally {
   await act(async () => root.unmount()); client.clear(); dom.window.close();
   delete globalThis.skillBookSdk; delete globalThis.skillBookNotices;

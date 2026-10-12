@@ -132,7 +132,6 @@ export default function DashboardAvatarOverview() {
   const [inventoryMode, setInventoryMode] = useState(false);
   const [inventorySlot, setInventorySlot] = useState(null);
   const [cardsMode, setCardsMode] = useState(false);
-  const [cardsMinimized, setCardsMinimized] = useState(false);
   const [memoriesMode, setMemoriesMode] = useState(false);
   const [skillBookDock, setSkillBookDock] = useState(null);
   const [leaderboardMode, setLeaderboardMode] = useState(false);
@@ -378,7 +377,7 @@ export default function DashboardAvatarOverview() {
     focusDashboardWindow(item.id);
   };
 
-  const skillLayout = useDashboardSkillLayout({ active: !avatarFocusMode && surface === 'dashboard', bookOpen: cardsMode && !cardsMinimized });
+  const skillLayout = useDashboardSkillLayout({ active: !avatarFocusMode && surface === 'dashboard', bookOpen: cardsMode });
 
   const circleOptions = [
     { id: 'blank-1', label: 'View 1', icon: Activity },
@@ -404,7 +403,7 @@ export default function DashboardAvatarOverview() {
         <PartyPortraitRail />
         <LunaSkillXpHud dockStyle={skillLayout.hud} stacked={skillLayout.stacked}
           currentXp={stats.currentXP} nextXp={stats.nextXP} level={stats.level}
-          showcaseEditing={cardsMode && !cardsMinimized} embedded={cardsMode && !cardsMinimized}
+          showcaseEditing={cardsMode} embedded={cardsMode}
           dockTarget={skillBookDock} combatMode={false} />
 
         {inventoryMode && <DashboardWindow id="inventory" title="Inventory" width={990} height={670} onClose={() => { setInventoryMode(false); setInventorySlot(null); }}>
@@ -419,9 +418,10 @@ export default function DashboardAvatarOverview() {
             />
           </div>
         </DashboardWindow>}
-        {cardsMode && <DashboardWindow id="cards" title="Cards · Skill Book" width={850} height={680} index={1}
-          onMinimizedChange={setCardsMinimized} onClose={() => { setCardsMode(false); setCardsMinimized(false); }}>
-          <LunaCardsPanel onClose={() => setCardsMode(false)} slotDockRef={setSkillBookDock} />
+        {cardsMode && <DashboardWindow id="cards" title="Skill Book" appearance="skillbook" anchor="skillbook"
+          subtitle="Discover skills from across worlds. Learn. Combine. Make it your own."
+          onClose={() => setCardsMode(false)}>
+          <LunaCardsPanel slotDockRef={setSkillBookDock} />
         </DashboardWindow>}
         {friendsMode && <DashboardWindow id="friends" title="Friends" width={470} height={620} index={2} onClose={() => setFriendsMode(false)}>
           <LunaFriendsQuickAccessPanel initialAction={friendsAction} />

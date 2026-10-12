@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Grip, Maximize2, Minimize2, Minus, X } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthContext';
-import { createWindowStack, fitWindow, moveWindow, resizeWindow } from './windowGeometry';
+import { createWindowStack, fitWindow, moveWindow, resizeWindow, skillBookWindowRect } from './windowGeometry';
+import SkillBookOrnament, { SkillBookCrest } from '../SkillBookOrnament';
 import './dashboard-windows.css';
 
 const stack = createWindowStack();
@@ -15,14 +16,16 @@ function workArea() {
   const bottom = Math.min(window.innerHeight, document.querySelector('.glass-page-bottom-bar')?.getBoundingClientRect().top ?? window.innerHeight - 48);
   return { x: 0, y: top, width: window.innerWidth, height: Math.max(40, bottom - top) };
 }
-export default function DashboardWindow({ id, title, children, onClose, onMinimizedChange, width = 720, height = 560, index = 0, captureEscape = true, anchor = 'center' }) {
+export default function DashboardWindow({ id, title, children, onClose, onMinimizedChange, width = 720, height = 560, index = 0, captureEscape = true, anchor = 'center', appearance, subtitle }) {
   const { user } = useAuth();
-  const storageKey = 'luna-window-v1:' + (user?.id || 'guest') + ':' + id;
+  const storageKey = (appearance === 'skillbook' ? 'luna-skill-window-v2:' : 'luna-window-v1:') + (user?.id || 'guest') + ':' + id;
   const initialRect = (key) => {
     const area = workArea();
     let saved;
     try { saved = JSON.parse(sessionStorage.getItem(key) || 'null'); } catch { /* fresh position */ }
-    const position = anchor === 'ai-attributes'
+    const position = anchor === 'skillbook' || anchor === 'skill-prefab'
+      ? skillBookWindowRect(area, anchor === 'skill-prefab')
+      : anchor === 'ai-attributes'
       ? { x: area.x + area.width - width - 12, y: area.y + 118, width, height }
       : { x: area.width / 2 - width / 2 + index * 24, y: area.y + 28 + index * 22, width, height };
     return fitWindow(saved || position, area);
@@ -124,8 +127,9 @@ export default function DashboardWindow({ id, title, children, onClose, onMinimi
   return createPortal(
     <section ref={shell} tabIndex={-1} role="dialog" aria-modal="false" aria-label={title + ' window'}
       data-luna-window={id} data-minimized={minimized || undefined}
-      className="luna-window" onPointerDownCapture={bringForward} onFocusCapture={bringForward}
+      className={`luna-window${appearance === 'skillbook' ? ' luna-window--skillbook' : ''}`} onPointerDownCapture={bringForward} onFocusCapture={bringForward}
       style={{ left: shown.x, top: shown.y, width: shown.width, height: minimized ? 40 : shown.height, zIndex: z }}>
+      {appearance === 'skillbook' && <SkillBookOrnament />}
       <header className="luna-window__bar">
         <div className="luna-window__drag" role="button" tabIndex={0} aria-label={'Move ' + title + ' window'}
           title="Drag to move. Arrow keys also move this window."
@@ -133,7 +137,10 @@ export default function DashboardWindow({ id, title, children, onClose, onMinimi
           onPointerUp={end} onPointerCancel={end} onLostPointerCapture={end}
           onKeyDown={event => keyboardAdjust(event, 'move')}
           onDoubleClick={() => { setMinimized(false); setMaximized(value => !value); }}>
-          <Grip size={14} aria-hidden="true" /><span>{title}</span>
+          {appearance === 'skillbook' ? <><SkillBookCrest prefab={anchor === 'skill-prefab'} />
+            <span className="lsb-window-title"><strong>{title}</strong><small>{subtitle}</small></span>
+            {anchor === 'skillbook' && <em className="lsb-window-motto">“Different worlds.<br/>The same potential within you.”</em>}
+          </> : <><Grip size={14} aria-hidden="true" /><span>{title}</span></>}
         </div>
         <button type="button" aria-label={(minimized ? 'Restore ' : 'Minimize ') + title} onClick={() => setMinimized(value => !value)}><Minus size={14} /></button>
         <button type="button" aria-label={(maximized ? 'Restore size of ' : 'Maximize ') + title}

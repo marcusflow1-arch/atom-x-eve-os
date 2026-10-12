@@ -33,7 +33,7 @@ const bundle=await build({
   plugins:[{name:'window-fixtures',setup(builder) {
     builder.onResolve({filter:/^lucide-react$/},()=>({path:'icons',namespace:'fixture'}));
     builder.onLoad({filter:/^icons$/,namespace:'fixture'},()=>({loader:'js',contents:
-      "export const Grip=()=>null; export const Maximize2=()=>null; export const Minimize2=()=>null; export const Minus=()=>null; export const X=()=>null;"
+      "export const BookOpen=()=>null; export const Sparkles=()=>null; export const Grip=()=>null; export const Maximize2=()=>null; export const Minimize2=()=>null; export const Minus=()=>null; export const X=()=>null;"
     }));
     builder.onResolve({filter:/AuthContext$/},()=>({path:'auth',namespace:'fixture'}));
     builder.onLoad({filter:/^auth$/,namespace:'fixture'},()=>({contents:"export const useAuth=()=>({user:{id:globalThis.mockWindowUserId}});",loader:'js'}));

@@ -35,3 +35,26 @@ test('compact screens fall back to a usable inset without negative widths', () =
   assert.ok(parseFloat(layout.hud.width) > 0);
   assert.ok(parseFloat(layout.hud.left) + parseFloat(layout.hud.width) <= 378);
 });
+
+test('reference book and prefab open side by side between dashboard headers', async () => {
+  const { skillBookWindowRect } = await import('../src/components/dashboard/windows/windowGeometry.js');
+  for (const width of [1000, 1280, 1672, 1920]) {
+    const area = { x: 0, y: 64, width, height: 820 };
+    const book = skillBookWindowRect(area), prefab = skillBookWindowRect(area, true);
+    assert.ok(book.x + book.width < prefab.x, `separate default windows at ${width}`);
+    assert.ok(prefab.x + prefab.width <= width);
+    assert.equal(book.y, prefab.y);
+    assert.ok(book.y >= area.y && book.y + book.height <= area.y + area.height);
+  }
+});
+test('reference windows stay reachable on phone screens and short work areas', async () => {
+  const { skillBookWindowRect } = await import('../src/components/dashboard/windows/windowGeometry.js');
+  for (const area of [{ x: 0, y: 64, width: 390, height: 680 }, { x: 0, y: 64, width: 320, height: 160 }]) {
+    for (const prefab of [false, true]) {
+      const box = skillBookWindowRect(area, prefab);
+      assert.ok(box.width > 0 && box.height > 0);
+      assert.ok(box.x >= area.x && box.x + box.width <= area.width);
+      assert.ok(box.y >= area.y && box.y + box.height <= area.y + area.height);
+    }
+  }
+});
