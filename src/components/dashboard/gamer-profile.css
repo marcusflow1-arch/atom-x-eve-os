@@ -470,3 +470,65 @@
 @media (max-width:700px) {
   .gamer-console {display:block;height:100%;overflow-y:auto;}
 }
+
+
+/* Interactive owner profile and collectible details: keep controls above the wallpaper. */
+.gamer-console .gamer-console-nav button.gamer-console-nav-link {
+  color:#b8d9e9;font-size:11px;padding:7px 10px;border-radius:8px;
+}
+.gamer-console .gamer-console-nav button.gamer-console-nav-link:hover {
+  background:#57cfff1c;color:#e4faff;
+}
+.gamer-console .gamer-console-achievement {
+  width:100%;height:auto;min-height:0;flex-shrink:0;display:flex;
+  flex-direction:column;justify-content:flex-start;align-items:stretch;
+  padding:4px 4px 8px;border-radius:8px;text-align:center;
+  background:rgba(3,15,30,.77);border:1px solid #c0ddfc2e;
+  cursor:pointer;
+}
+.gamer-console .gamer-console-achievement:hover,
+.gamer-console .gamer-console-achievement:focus-visible {
+  border-color:#7addf4;box-shadow:0 0 16px #48bfff40;
+}
+.gamer-console .gamer-montage-bottom {pointer-events:none;}
+.gamer-console .gamer-montage-open {
+  pointer-events:auto;position:relative;z-index:5;
+  margin-top:9px;background:#103856dd;border-color:#8edcff8c;
+  color:#eafaff;font-size:11px;padding:6px 10px;
+}
+.gamer-console .gamer-montage-open:hover {background:#18587a;}
+.gamer-console .gamer-own-profile-actions button {
+  min-width:0;display:flex;align-items:center;justify-content:center;
+  padding:7px 8px;font-size:11px;border-color:#58b7ec7a;
+}
+.gamer-console .gamer-console-detail-backdrop {
+  position:absolute;inset:0;z-index:60;display:flex;align-items:center;
+  justify-content:center;padding:18px;background:#030a16bd;backdrop-filter:blur(7px);
+}
+.gamer-console .gamer-console-detail {
+  display:flex;flex-direction:column;gap:12px;
+  width:min(420px,100%);max-height:92%;overflow:auto;padding:18px;
+  color:#e3f6ff;background:linear-gradient(145deg,#173553,#071524);
+  border:1px solid #7ad7f17a;border-radius:13px;
+  box-shadow:0 24px 70px #000b;
+}
+.gamer-console .gamer-console-detail-header {
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;letter-spacing:.13em;color:#b9e8f8;
+}
+.gamer-console .gamer-console-detail-header button {font-size:20px;padding:0 8px;}
+.gamer-console .gamer-console-detail img {
+  width:100%;max-height:220px;object-fit:contain;border-radius:7px;
+}
+.gamer-console .gamer-console-detail h2 {font-size:20px;font-weight:700;}
+.gamer-console .gamer-console-detail p {font-size:12px;color:#bcd2e3;}
+.gamer-console .gamer-console-detail label {
+  display:flex;flex-direction:column;gap:5px;font-size:11px;color:#b9d9e8;
+}
+.gamer-console .gamer-console-detail input,
+.gamer-console .gamer-console-detail textarea {
+  width:100%;padding:10px;border:1px solid #74c6ea55;border-radius:7px;
+  background:#04192d;color:white;font:inherit;outline-offset:2px;
+}
+.gamer-console .gamer-console-editor-actions {display:flex;gap:10px;justify-content:flex-end;}
+.gamer-console .gamer-console-editor-actions button:last-child {background:#0d6188;color:white;}
