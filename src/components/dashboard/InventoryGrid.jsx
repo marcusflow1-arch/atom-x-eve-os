@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { CircleDot, Footprints, Gem, Hand, HardHat, Layers3, Shirt, Shield, Sparkles, Swords } from 'lucide-react';
 import { EQUIPMENT_SLOT_DEFINITIONS, getEquipmentSlotDefinition } from './equipmentSlotRules';
 
-export default function InventoryGrid({ equippedItems = {}, handleBoxClick, compact = false, selectedSlotId = null }) {
+export default function InventoryGrid({ equippedItems = {}, handleBoxClick, compact = false, selectedSlotId = null, gearOnly = false }) {
   const SLOT_ICONS = {
     helmet: HardHat,
     armor: Shirt,
@@ -44,7 +44,7 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
         type="button"
         title={label}
         onClick={() => handleBoxClick(slotId)}
-        className={`group relative flex h-[60px] w-[60px] cursor-pointer items-center justify-center overflow-hidden border transition-all duration-300 ${round ? 'rounded-full' : 'rounded-xl'} ${selected ? 'scale-[1.04]' : 'hover:scale-[1.03]'}`}
+        className={`group relative flex cursor-pointer items-center justify-center overflow-hidden border transition-all duration-300 ${gearOnly ? 'h-11 w-11' : 'h-[60px] w-[60px]'} ${round ? 'rounded-full' : 'rounded-xl'} ${selected ? 'scale-[1.04]' : 'hover:scale-[1.03]'}`}
         style={{
           background: selected ? 'rgba(8, 29, 39, 0.92)' : 'rgba(11, 11, 11, 0.85)',
           backdropFilter: 'blur(28px)',
@@ -95,7 +95,7 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
         transition={{ duration: 0.3 }}
         className="h-full w-full overflow-y-auto overflow-x-hidden"
       >
-        <div className="mx-auto min-h-full w-full max-w-[640px] px-5 py-5">
+        <div className={`mx-auto min-h-full w-full max-w-[640px] ${gearOnly ? 'px-3 py-3' : 'px-5 py-5'}`}>
           <div className="mb-4 flex items-center justify-between border-b border-white/[0.06] pb-3">
             <div>
               <p className="text-[8px] font-black uppercase tracking-[0.22em] text-white">Loadout</p>
@@ -106,29 +106,29 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
 
           {/* Narrow 30% loadout rail. Keep each slot family intact and stack
               the families vertically so the grid stays readable at smaller widths. */}
-          <div className="flex flex-col items-center gap-5">
-            <section className="flex w-full flex-col items-center gap-3">
+          <div className={`flex flex-col items-center ${gearOnly ? 'gap-3' : 'gap-5'}`}>
+            <section className={`flex w-full flex-col items-center ${gearOnly ? 'gap-2' : 'gap-3'}`}>
               <CompactHeader width="w-52">Weapons</CompactHeader>
-              <div className="flex gap-3">
+              <div className={`flex ${gearOnly ? 'gap-2' : 'gap-3'}`}>
                 {[1,2,3].map((i) => compactSlot(`weapon-${i}`))}
               </div>
             </section>
 
-            <section className="flex w-full flex-col items-center gap-3 border-t border-white/[0.05] pt-4">
+            <section className={`flex w-full flex-col items-center border-t border-white/[0.05] ${gearOnly ? 'gap-2 pt-3' : 'gap-3 pt-4'}`}>
               <CompactHeader width="w-48">Equipment</CompactHeader>
-              <div className="grid grid-cols-3 gap-3">
+              <div className={`grid grid-cols-3 ${gearOnly ? 'gap-2' : 'gap-3'}`}>
                 {EQUIPMENT_SLOT_DEFINITIONS.filter((slot) => slot.group === 'armor').map((slot) => compactSlot(slot.id))}
               </div>
             </section>
 
-            <section className="flex w-full flex-col items-center gap-3 border-t border-white/[0.05] pt-4">
+            <section className={`flex w-full flex-col items-center border-t border-white/[0.05] ${gearOnly ? 'gap-2 pt-3' : 'gap-3 pt-4'}`}>
               <CompactHeader width="w-52">Artifacts</CompactHeader>
-              <div className="flex gap-3">
+              <div className={`flex ${gearOnly ? 'gap-2' : 'gap-3'}`}>
                 {[1,2,3,4,5].map((i) => compactSlot(`artifact-${i}`))}
               </div>
             </section>
 
-            <div className="grid w-full grid-cols-2 items-start gap-4 border-t border-white/[0.05] pt-4">
+            {!gearOnly && <div className="grid w-full grid-cols-2 items-start gap-4 border-t border-white/[0.05] pt-4">
               <section className="flex min-w-0 flex-col items-center gap-3">
                 <CompactHeader width="w-32">Genre</CompactHeader>
                 <div className="grid grid-cols-2 gap-3">
@@ -142,7 +142,7 @@ export default function InventoryGrid({ equippedItems = {}, handleBoxClick, comp
                   {[1,2,3].map((i) => compactSlot(`aspect-${i}`, true))}
                 </div>
               </section>
-            </div>
+            </div>}
           </div>
         </div>
       </motion.div>
