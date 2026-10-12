@@ -451,7 +451,7 @@ export default function DashboardAvatarOverview() {
       </>}
 
       {!avatarFocusMode && <aside
-        className={`absolute right-[-1px] top-[26px] z-50 w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
+        className={`absolute right-[-1px] top-[26px] z-50 w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100 pointer-events-auto'}`}
         aria-label="AI Attribute Box"
       >
         <div className="axe-attribute-shell relative h-full w-full bg-transparent border-b border-white/[0.06] shadow-[0_20px_45px_rgba(0,0,0,0.10)]">
