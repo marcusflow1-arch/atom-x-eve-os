@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { GAME_SHELF_COLUMNS, nextGameIndex, belongsToGame, gameArtifacts, gameMedia } from '../src/components/dashboard/gameProfileSelectors.mjs';
+import { buildSelfConsoleProfile, loadSelfConsoleProfile } from '../src/components/dashboard/selfConsoleProfile.mjs';
 
 const source = name => readFileSync(new URL(name, import.meta.url), 'utf8');
 
@@ -100,4 +101,54 @@ test('AI Attribute header opens the signed-in player profile, not a friends dire
   assert.match(profile, /self \? ' · You'/);
   assert.match(profile, /<GenesisModelPreview/);
   assert.match(backend, /const self = targetId === String\(user\.id\)/);
+});
+
+test('owner profile uses signed-in identity, real collections, and never requires friend permission', async () => {
+  const user = { id:'account-17', username:'CurrentPlayer', bio:'My account', avatar_url:'/my-avatar.png' };
+  const avatar = {id:'avatar-17', name:'Artemis', gender:'female', level:19};
+  const record = buildSelfConsoleProfile(user, avatar, {
+    catalog:[{id:'g1',title:'My Played Game',cover_image:'/cover.png',screenshots:['/scene.png']},
+      {id:'g2',title:'My Other Game'}],
+    entitlements:[{game_id:'g1',item_type:'game'}],
+    history:[{game_id:'g1'}],
+    cards:[{id:'c1',card_name:'Artemis Bow',game_id:'g1',card_rarity:'Rare'}],
+    achievements:[{id:'a1',achievement_id:'ach-1'}],
+    definitions:[{id:'ach-1',title:'First Quest',game_id:'g1',points:5}],
+  });
+  assert.equal(record.name,'CurrentPlayer');
+  assert.equal(record.avatar.name,'Artemis');
+  assert.equal(record.online,true);
+  assert.deepEqual(record.games.map(game => game.id),['g1','g2']);
+  assert.equal(record.counts.games,1);
+  assert.equal(record.counts.cards,1);
+  assert.equal(record.achievements[0].title,'First Quest');
+  const calls=[];
+  const entity = value => ({list: async () => {calls.push('list');return value;},
+    filter: async () => {calls.push('filter');return value;}});
+  const client={entities:{
+    Game: entity([{id:'g1',title:'My Played Game'}]),
+    Entitlement: entity([{game_id:'g1',item_type:'game'}]),
+    StorePlayHistory: entity([{game_id:'g1'}]),
+    UserCard: entity([]), UserAchievement: entity([]),
+    Achievement: entity([]), AvatarProgression: entity([]),
+  }};
+  const loaded=await loadSelfConsoleProfile(client,user,avatar);
+  assert.equal(loaded.name,'CurrentPlayer');
+  assert.equal(loaded.games[0].played,true);
+  assert.equal(calls.length,7);
+});
+
+test('AI Attribute shortcut opens a fresh owner console with working controls', () => {
+  const dashboard=source('../src/components/dashboard/DashboardAvatarOverview.jsx');
+  const profile=source('../src/components/dashboard/LunaGamerProfile.jsx');
+  const window=source('../src/components/dashboard/windows/DashboardWindow.jsx');
+  assert.match(dashboard,/focusDashboardWindow\('self-gamer-profile'\)/);
+  assert.match(dashboard,/id=\{String\(profileTarget\.id \|\| profileTarget\.friend_id\) === String\(user\?\.id\) \? "self-gamer-profile"/);
+  assert.match(profile,/loadSelfConsoleProfile\(base44, user, ownAvatar\)/);
+  assert.match(profile,/data-profile-owner=\{self \? 'you' : 'friend'\}/);
+  assert.match(profile,/onClick=\{openEdit\}/);
+  assert.match(profile,/View Game Details/);
+  assert.match(profile,/onSelect=\{setSelectedReward\}/);
+  assert.match(profile,/aria-label="Achievement details"/);
+  assert.match(window,/stack\.top\(\) !== id/);
 });
