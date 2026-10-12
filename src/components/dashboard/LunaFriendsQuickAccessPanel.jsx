@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Gamepad2, MessageSquare, Search, Send, UserRound, Users } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { ArrowLeftRight, Gamepad2, MessageSquare, Search, Send, UserRound, Users } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
+import FriendTradePanel from '@/components/streaming/FriendTradePanel';
 
 const LIVE_WINDOW_MS = 20000;
 
@@ -27,6 +29,7 @@ export default function LunaFriendsQuickAccessPanel() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [partyInvitingId, setPartyInvitingId] = useState(null);
+  const [tradeFriend, setTradeFriend] = useState(null);
 
   const { data: friends = [], isLoading } = useQuery({
     queryKey: ['luna-friends-quick-access', user?.id],
@@ -116,6 +119,29 @@ export default function LunaFriendsQuickAccessPanel() {
     window.dispatchEvent(new CustomEvent('openLunaMessages', { detail: { target } }));
   };
 
+  const friendTarget = (friend) => ({
+    id: String(friend.friend_id || ''),
+    friend_id: String(friend.friend_id || ''),
+    name: friend.friend_name || 'Friend',
+    friend_name: friend.friend_name || 'Friend',
+    avatar: friend.friend_avatar || '',
+    friend_avatar: friend.friend_avatar || '',
+    status: friend.status || 'offline',
+    is_friend: true,
+  });
+
+  const openProfile = (friend) => {
+    if (!friend?.friend_id) return;
+    window.dispatchEvent(new CustomEvent('openLunaGamerProfile', {
+      detail: { player: friendTarget(friend) },
+    }));
+  };
+
+  const openTrade = (friend) => {
+    if (!user?.id || !friend?.friend_id || String(friend.friend_id) === String(user.id)) return;
+    setTradeFriend(friendTarget(friend));
+  };
+
   const inviteParty = async (friend) => {
     const id = String(friend.friend_id || '');
     if (!id || partyInvitingId) return;
@@ -199,7 +225,7 @@ export default function LunaFriendsQuickAccessPanel() {
               return (
                 <div
                   key={friend.friend_id}
-                  className="group flex min-h-[64px] items-center gap-3 border border-white/[0.055] bg-white/[0.018] px-3 py-2 transition-colors hover:border-white/[0.10] hover:bg-white/[0.035]"
+                  className="group flex min-h-[82px] items-center gap-2 border border-white/[0.055] bg-white/[0.018] px-2.5 py-2 transition-colors hover:border-white/[0.10] hover:bg-white/[0.035]"
                 >
                   <div className="relative h-10 w-10 shrink-0 overflow-hidden border border-white/[0.08] bg-white/[0.04]">
                     {friend.friend_avatar
@@ -219,25 +245,39 @@ export default function LunaFriendsQuickAccessPanel() {
                     </div>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-1.5">
+                  <div className="grid w-[142px] shrink-0 grid-cols-2 gap-1" role="group" aria-label={`Actions for ${friend.friend_name || 'friend'}`}>
+                    <button
+                      type="button"
+                      onClick={() => openProfile(friend)}
+                      aria-label={`View ${friend.friend_name || 'friend'} profile`}
+                      className="flex h-8 items-center justify-center gap-1 border border-cyan-200/20 bg-cyan-200/[0.06] px-1 text-[8px] font-semibold text-cyan-100/80 transition-colors hover:bg-cyan-200/[0.12] hover:text-white"
+                    >
+                      <UserRound className="h-3 w-3 shrink-0" /> Profile
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openTrade(friend)}
+                      aria-label={`Trade with ${friend.friend_name || 'friend'}`}
+                      className="flex h-8 items-center justify-center gap-1 border border-emerald-200/20 bg-emerald-200/[0.045] px-1 text-[8px] font-semibold text-emerald-100/80 transition-colors hover:bg-emerald-200/[0.11] hover:text-white"
+                    >
+                      <ArrowLeftRight className="h-3 w-3 shrink-0" /> Trade
+                    </button>
                     <button
                       type="button"
                       onClick={() => openMessage(friend)}
-                      className="flex h-8 items-center gap-1.5 border border-white/[0.07] bg-white/[0.025] px-2.5 text-[6px] font-black uppercase tracking-[0.08em] text-white/65 transition-colors hover:bg-cyan-100/[0.08] hover:text-white"
-                      title={`Message ${friend.friend_name || 'friend'}`}
+                      aria-label={`Message ${friend.friend_name || 'friend'}`}
+                      className="flex h-8 items-center justify-center gap-1 border border-white/[0.07] bg-white/[0.025] px-1 text-[8px] text-white/65 transition-colors hover:bg-cyan-100/[0.08] hover:text-white"
                     >
-                      <MessageSquare className="h-3 w-3" />
-                      Message
+                      <MessageSquare className="h-3 w-3 shrink-0" /> Message
                     </button>
                     <button
                       type="button"
                       disabled={inviting}
                       onClick={() => inviteParty(friend)}
-                      className="flex h-8 items-center gap-1.5 border border-white/[0.07] bg-white/[0.025] px-2.5 text-[6px] font-black uppercase tracking-[0.08em] text-white/65 transition-colors hover:bg-white/[0.07] hover:text-white disabled:opacity-40"
-                      title={`Invite ${friend.friend_name || 'friend'} to party`}
+                      aria-label={`Invite ${friend.friend_name || 'friend'} to party`}
+                      className="flex h-8 items-center justify-center gap-1 border border-white/[0.07] bg-white/[0.025] px-1 text-[8px] text-white/65 transition-colors hover:bg-white/[0.07] hover:text-white disabled:opacity-40"
                     >
-                      <Send className="h-3 w-3" />
-                      {inviting ? 'Sending' : 'Party'}
+                      <Send className="h-3 w-3 shrink-0" /> {inviting ? 'Sending' : 'Party'}
                     </button>
                   </div>
                 </div>
@@ -255,6 +295,13 @@ export default function LunaFriendsQuickAccessPanel() {
           </div>
         )}
       </div>
+      {tradeFriend && createPortal(
+        <>
+          <button type="button" aria-label="Close trade menu overlay" className="fixed inset-0 z-[2600] cursor-default bg-black/65 backdrop-blur-sm" onClick={() => setTradeFriend(null)} />
+          <FriendTradePanel key={tradeFriend.id} friend={tradeFriend} overlayMode="dashboard" onClose={() => setTradeFriend(null)} />
+        </>,
+        document.body
+      )}
     </div>
   );
 }
