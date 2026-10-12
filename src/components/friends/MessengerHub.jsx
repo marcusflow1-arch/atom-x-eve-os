@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Camera, FileText, Image as ImageIcon, Mic, MicOff, MoreHorizontal, Paperclip,
-  Phone, PhoneOff, Search, Send, Smile, UserRound, Video, X
+  ArrowLeftRight, Phone, PhoneOff, Search, Send, Smile, UserRound, Video, X
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
+import FriendTradePanel from '@/components/streaming/FriendTradePanel';
 
 const unwrap = (response) => {
   const body = response?.data ?? response;
@@ -20,6 +22,7 @@ export default function MessengerHub({ threadOnly = false }) {
   const [conversations, setConversations] = useState([]);
   const [manualTargets, setManualTargets] = useState({});
   const [selectedId, setSelectedId] = useState('');
+  const [tradeFriend, setTradeFriend] = useState(null);
   const [voiceTargetId, setVoiceTargetId] = useState('');
   const [messages, setMessages] = useState([]);
   const [search, setSearch] = useState('');
@@ -382,6 +385,15 @@ export default function MessengerHub({ threadOnly = false }) {
 
   const filtered = mergedConversations.filter((item) => `${item.partner_name} ${item.last_message}`.toLowerCase().includes(search.toLowerCase()));
   const sharedMedia = messages.filter((message) => message.media_url).slice().reverse().slice(0, 12);
+  const socialTarget = selected ? {
+    id: String(selected.partner_id),
+    friend_id: String(selected.partner_id),
+    name: selected.partner_name || 'Player',
+    friend_name: selected.partner_name || 'Player',
+    avatar: selected.partner_avatar || '',
+    friend_avatar: selected.partner_avatar || '',
+    is_friend: Boolean(selected.is_friend),
+  } : null;
 
   return (
     <div className="relative flex h-full w-full overflow-hidden text-white">
@@ -407,6 +419,8 @@ export default function MessengerHub({ threadOnly = false }) {
             <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{selected.partner_name}</p><p className="text-[9px] text-white/35">{selected.is_friend ? 'Friend' : 'Message request'} · Luna Messenger</p></div>
             <button onClick={() => startCall('voice')} title="Voice call" className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.06] text-cyan-100/75 hover:bg-white/[0.11]"><Phone className="h-4 w-4" /></button>
             <button onClick={() => startCall('video')} title="Video call" className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.06] text-cyan-100/75 hover:bg-white/[0.11]"><Video className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setTradeFriend(socialTarget)} disabled={!user?.id || String(selected.partner_id) === String(user?.id)} title="Trade cards" aria-label={`Trade with ${selected.partner_name}`} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/[0.06] text-cyan-100/75 transition hover:bg-white/[0.11] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-200 disabled:cursor-not-allowed disabled:opacity-30"><ArrowLeftRight className="h-4 w-4" /></button>
+            <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('openLunaGamerProfile', { detail: { player: socialTarget } }))} title="View profile" aria-label={`View ${selected.partner_name} profile`} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/[0.06] text-cyan-100/75 transition hover:bg-white/[0.11] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-200"><UserRound className="h-4 w-4" /></button>
           </header>
 
           <div ref={feedRef} className="flex-1 overflow-y-auto px-6 py-5 [scrollbar-width:thin]">
@@ -438,6 +452,14 @@ export default function MessengerHub({ threadOnly = false }) {
       </main>
 
       {selected && !threadOnly && <aside className="hidden w-[230px] shrink-0 border-l border-white/[0.08] bg-slate-950/20 p-4 xl:block"><div className="flex flex-col items-center pt-3"><div className="h-20 w-20 overflow-hidden rounded-full bg-white/10">{selected.partner_avatar ? <img src={selected.partner_avatar} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center"><UserRound className="h-8 w-8 text-white/30" /></div>}</div><p className="mt-3 max-w-full truncate text-sm font-semibold">{selected.partner_name}</p><p className="mt-1 text-[9px] uppercase tracking-[.16em] text-white/30">{selected.is_friend ? 'Friend' : 'Not a friend'}</p></div><div className="mt-6 border-t border-white/[0.08] pt-4"><p className="text-[8px] font-black uppercase tracking-[.18em] text-white/35">Shared media</p><div className="mt-3 grid grid-cols-3 gap-1.5">{sharedMedia.map((item) => <a key={item.id} href={item.media_url} target="_blank" rel="noreferrer" className="aspect-square overflow-hidden rounded-lg border border-white/[0.06] bg-white/[0.04]">{item.message_type === 'video' ? <div className="grid h-full place-items-center"><Video className="h-4 w-4 text-white/40" /></div> : item.message_type === 'file' ? <div className="grid h-full place-items-center"><FileText className="h-4 w-4 text-white/40" /></div> : <img src={item.media_url} alt="" className="h-full w-full object-cover" />}</a>)}</div>{!sharedMedia.length && <p className="mt-3 text-[10px] text-white/25">No shared media yet.</p>}</div></aside>}
+
+      {tradeFriend && createPortal(
+        <>
+          <button type="button" aria-label="Close trade menu overlay" className="fixed inset-0 z-[2600] cursor-default bg-black/65 backdrop-blur-sm" onClick={() => setTradeFriend(null)} />
+          <FriendTradePanel key={tradeFriend.id} friend={tradeFriend} overlayMode="dashboard" onClose={() => setTradeFriend(null)} />
+        </>,
+        document.body
+      )}
 
       <audio ref={remoteAudioRef} autoPlay />
 
