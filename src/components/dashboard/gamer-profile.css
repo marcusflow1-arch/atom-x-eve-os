@@ -188,3 +188,254 @@
 @media (prefers-reduced-motion:reduce) {
   .gamer-profile button { transition:none; }
 }
+
+
+/* Atom X Eve friend profile — console layout from the approved male/female mockups.
+   All images, achievements, cards and model data come from the actual player. */
+.gamer-console {
+  --gamer-accent:#61d8ff;
+  --gamer-edge:rgba(113,193,231,.25);
+  position:relative;isolation:isolate;
+  display:grid;
+  grid-template-rows:45px minmax(0,1fr) minmax(168px,29%);
+  background:linear-gradient(135deg,#091424,#050e1b 60%,#091727);
+  color:#e6f4ff;
+}
+.gamer-console-female { --gamer-accent:#86d6ff; }
+.gamer-console-male { --gamer-accent:#55ceff; }
+.gamer-console::before {
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(90deg,rgba(4,14,26,.95),rgba(4,13,24,.8),rgba(4,14,25,.91)),var(--gamer-wallpaper,linear-gradient(125deg,#142a48,#050f1e));
+  background-size:cover;background-position:center;opacity:.88;
+  transition:background-image .2s ease;
+}
+.gamer-console .gamer-console-nav {
+  display:flex;align-items:center;gap:clamp(8px,1.7cqw,24px);min-width:0;
+  border-bottom:1px solid rgba(110,188,226,.16);padding:0 clamp(12px,2.3cqw,32px);
+  background:rgba(3,12,23,.43);z-index:3;
+}
+.gamer-console .gamer-console-brand {
+  display:flex;align-items:center;gap:8px;white-space:nowrap;
+  color:#a8e9ff;font-weight:800;font-size:13px;letter-spacing:.2em;margin-right:14px;
+}
+.gamer-console-brand svg {color:var(--gamer-accent);}
+.gamer-console-brand b {color:var(--gamer-accent);font-size:17px;}
+.gamer-console .gamer-console-nav-active {
+  align-self:stretch;display:flex;align-items:center;padding:0 11px;
+  color:#f6fcff;font-weight:700;border-bottom:2px solid var(--gamer-accent);
+  text-shadow:0 0 14px rgba(87,214,255,.6);
+}
+.gamer-console .gamer-console-nav-link {color:#9bb2c8;font-size:11px;}
+.gamer-console-nav-spacer {flex:1;}
+.gamer-console .gamer-console-nav button {border:0;background:transparent;color:#b9d6e9;padding:7px;}
+.gamer-console .gamer-profile-stage {
+  display:grid;grid-template-columns:minmax(165px,21%) minmax(0,1fr) minmax(190px,24%);
+  gap:8px;padding:8px;min-width:0;min-height:0;position:relative;z-index:4;
+}
+.gamer-console .gamer-profile-stage::after {display:none;}
+.gamer-console .gamer-console-panel {
+  min-width:0;min-height:0;position:relative;
+  background:linear-gradient(140deg,rgba(12,29,49,.65),rgba(3,13,27,.65));
+  border:1px solid var(--gamer-edge);border-radius:13px;
+  box-shadow:inset 0 1px rgba(178,226,255,.04),0 12px 40px rgba(0,0,0,.15);
+  backdrop-filter:blur(18px);
+}
+.gamer-console .gamer-console-identity {
+  display:flex;flex-direction:column;gap:8px;padding:clamp(10px,1.4cqw,20px);
+  overflow-y:auto;scrollbar-width:thin;scrollbar-color:#41829a67 transparent;
+}
+.gamer-console-portrait {
+  width:clamp(67px,8.7cqw,115px);height:clamp(67px,8.7cqw,115px);
+  flex-shrink:0;border-radius:50%;border:2px solid var(--gamer-accent);
+  background:radial-gradient(circle,#224d6b,#081728);position:relative;
+  box-shadow:0 0 18px #49cfff47;display:grid;place-items:center;
+  font-size:30px;font-weight:700;color:#a7e8ff;
+}
+.gamer-console-portrait img {height:100%;width:100%;object-fit:cover;border-radius:50%;}
+.gamer-console-portrait i {
+  position:absolute;bottom:3px;right:1px;width:13px;height:13px;
+  border-radius:50%;border:2px solid #10263c;background:#526b7c;
+}
+.gamer-console-portrait i.online {background:#59e8a0;box-shadow:0 0 10px #59e8a070;}
+.gamer-console .gamer-console-identity h1 {
+  font-size:clamp(18px,2.1cqw,29px);letter-spacing:-.03em;font-weight:750;
+  line-height:1.18;overflow-wrap:anywhere;margin:2px 0 0;
+}
+.gamer-console .gamer-presence {font-size:11px;text-transform:capitalize;color:#9cbbcd;}
+.gamer-console .gamer-presence.online {color:#73e3b1;}
+.gamer-console-bio {color:#bbcad9;font-size:11px;line-height:1.5;margin:5px 0;}
+.gamer-console-level {margin:8px 0 2px;}
+.gamer-console-level>div:first-child {display:flex;align-items:center;justify-content:space-between;gap:5px;}
+.gamer-console-level strong {font-size:18px;}
+.gamer-console-level span {font-size:10px;color:#b5cfe3;}
+.gamer-console-level-track {height:6px;margin-top:7px;border-radius:9px;background:#30495f;overflow:hidden;}
+.gamer-console-level-track i {display:block;width:100%;height:100%;background:linear-gradient(90deg,#3eacec,#73e6ff);opacity:.6;}
+.gamer-console-tags {display:flex;flex-wrap:wrap;gap:5px;padding:6px 0;}
+.gamer-console-tags span {
+  display:flex;align-items:center;gap:4px;max-width:100%;padding:5px 6px;
+  border:1px solid #a9d2e52d;border-radius:7px;font-size:9px;color:#d1e7f6;
+  background:#13314b48;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.gamer-console-stats {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;
+  border-top:1px solid #d6ebf91a;border-bottom:1px solid #d6ebf91a;padding:12px 0 10px;
+}
+.gamer-console-stats div {display:flex;flex-direction:column;align-items:center;border-right:1px solid #cce6f21a;}
+.gamer-console-stats div:last-child {border:0;}
+.gamer-console-stats strong {font-size:clamp(14px,1.6cqw,20px);line-height:1.1;}
+.gamer-console-stats span {font-size:9px;color:#a3b9ca;}
+.gamer-console-identity-actions {display:flex;flex-direction:column;gap:5px;margin-top:auto;}
+.gamer-console .gamer-console-identity-actions>button,
+.gamer-console .gamer-console-identity-actions>.gamer-profile-more-wrap>button {
+  justify-content:flex-start;width:100%;border:0;background:#ffffff09;
+  font-size:10px;padding:6px 8px;color:#b4d9eb;
+}
+.gamer-console .gamer-console-identity-actions .gamer-profile-more-wrap {width:100%;margin-left:0;}
+.gamer-console .gamer-console-identity-actions .gamer-profile-more {bottom:calc(100% + 4px);left:0;right:auto;}
+.gamer-console .gamer-console-feature {
+  display:flex;flex-direction:column;padding:9px;gap:7px;overflow:hidden;
+}
+.gamer-console-feature-top {display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;}
+.gamer-console-feature-count {font-size:9px;color:#94c2d9;white-space:nowrap;}
+.gamer-console-feature-grid {
+  display:grid;grid-template-columns:minmax(85px,21%) minmax(0,1fr) minmax(85px,21%);
+  gap:8px;min-height:0;flex:1;
+}
+.gamer-console-rail {display:flex;flex-direction:column;gap:7px;min-width:0;min-height:0;}
+.gamer-console-rail-heading {
+  display:flex;align-items:center;gap:5px;height:21px;flex-shrink:0;
+  font-size:clamp(7px,.75cqw,10px);color:#c5e2f2;
+  letter-spacing:.045em;white-space:nowrap;overflow:hidden;
+}
+.gamer-console-rail-heading svg {flex-shrink:0;color:#b7dafa;}
+.gamer-console-rail-cards {display:flex;flex-direction:column;gap:7px;min-height:0;overflow-y:auto;scrollbar-width:thin;}
+.gamer-console-achievement {
+  flex-shrink:0;display:flex;flex-direction:column;align-items:stretch;min-width:0;
+  padding:4px 4px 8px;border-radius:8px;overflow:hidden;
+  border:1px solid #c0ddfc2e;background:rgba(3,15,30,.77);text-align:center;
+}
+.gamer-console-achievement-art {
+  height:clamp(50px,7.1cqw,112px);border-radius:5px;overflow:hidden;
+  background:radial-gradient(circle,#25486a,#091423);color:#84bff1;
+  display:grid;place-items:center;
+}
+.gamer-console-achievement-art img {width:100%;height:100%;object-fit:cover;}
+.gamer-console-achievement strong {font-size:clamp(8px,.82cqw,11px);font-weight:640;margin:5px 2px 1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gamer-console-achievement span {font-size:9px;color:#a6bad0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.gamer-console-no-rewards {padding:12px 5px;font-size:10px;color:#88aabd;text-align:center;}
+.gamer-console-feature-hero {display:flex;flex-direction:column;min-width:0;min-height:0;gap:7px;}
+.gamer-console-feature-hero .gamer-montage {
+  flex:1;min-height:0;border-radius:9px;
+  border:1px solid #9fcfee27;
+  background:#122d49;
+}
+.gamer-console-feature-hero .gamer-montage-bottom {padding:12px;}
+.gamer-console-feature-hero .gamer-montage-bottom h3 {
+  font-size:clamp(17px,2.3cqw,32px);
+  font-weight:750;text-shadow:0 3px 18px #000;
+}
+.gamer-console-feature-hero .gamer-montage-bottom p {font-size:10px;}
+.gamer-console-feature-subtitle {display:flex;align-items:center;gap:5px;font-size:9px;color:#a6c6da;min-height:18px;flex-shrink:0;}
+.gamer-console .gamer-console-avatar {
+  display:flex;flex-direction:column;gap:7px;padding:9px;overflow:visible;z-index:8;
+}
+.gamer-console-avatar-heading {display:flex;align-items:center;justify-content:space-between;gap:5px;font-size:9px;letter-spacing:.06em;color:#a4cce1;min-height:20px;}
+.gamer-console-avatar-heading span {display:flex;align-items:center;gap:5px;min-width:0;}
+.gamer-console-avatar-heading b {font-size:9px;color:#c3f5ff;border:1px solid #73d7ff70;border-radius:12px;padding:3px 6px;white-space:nowrap;}
+.gamer-console-avatar-viewer {
+  flex:1;min-height:0;position:relative;overflow:hidden;border-radius:9px;
+  background:radial-gradient(ellipse at 50% 78%,#204568 2%,#0b1c31 57%,#081324);
+  border:1px solid #a5dbff27;isolation:isolate;
+}
+.gamer-console-avatar-viewer>div:first-child {height:100%;width:100%;position:relative;z-index:2;}
+.gamer-console-avatar-platform {
+  position:absolute;bottom:9px;left:13%;right:13%;height:20px;
+  border-radius:50%;border:1px solid #5acfff;box-shadow:0 0 21px #57cfff66;
+  pointer-events:none;z-index:0;
+}
+.gamer-console-avatar-caption {
+  position:absolute;bottom:4px;left:8px;z-index:4;
+  color:#a9d4e7;font-size:8px;background:#0615248a;border-radius:4px;
+  padding:3px 5px;pointer-events:none;
+}
+.gamer-console .gamer-profile-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0;flex-shrink:0;}
+.gamer-console .gamer-dropdown>button {
+  height:35px;border:1px solid #6abfe984;background:#0d2941;
+  box-shadow:0 0 10px #43bef021;border-radius:7px;font-size:11px;
+}
+.gamer-console .gamer-dropdown>button svg:last-child {margin-left:auto;}
+.gamer-console .gamer-dropdown-menu {
+  position:absolute;top:calc(100% + 4px);bottom:auto;left:0;z-index:100;
+  min-width:100%;width:max-content;border-radius:7px;
+  background:#081c30f8;border-color:#60badc70;
+}
+.gamer-console-self {color:#8ac5de;text-align:center;margin:8px 0;font-size:10px;}
+.gamer-console .gamer-gallery {
+  min-height:0;position:relative;z-index:2;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#071727cc,#061221ed);
+  border-top:1px solid #6acfff35;overflow:hidden;
+}
+.gamer-console .gamer-gallery-header {
+  justify-content:flex-start;gap:16px;min-height:37px;padding:5px 4%;flex-shrink:0;
+}
+.gamer-console .gamer-gallery-header h2 {
+  display:flex;align-items:center;gap:6px;font-size:12px;margin:0;
+}
+.gamer-console .gamer-gallery-header .gamer-eyebrow {display:none;}
+.gamer-console .gamer-gallery-band {
+  display:grid;grid-template-columns:minmax(38px,7%) minmax(0,1fr) minmax(38px,7%);
+  flex:1;min-height:0;overflow:hidden;padding:0 3% 8px;
+}
+.gamer-console .gamer-game-shelf {
+  display:flex;gap:7px;align-items:stretch;align-content:normal;
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
+  padding:2px 5px 4px;min-width:0;min-height:0;scroll-snap-type:x proximity;
+}
+.gamer-console .gamer-game-shelf::-webkit-scrollbar {display:none;}
+.gamer-console .gamer-game-tile {
+  display:flex;flex-direction:column;flex:0 0 clamp(90px,10.7cqw,160px);
+  height:100%;min-height:0;scroll-snap-align:center;
+  padding:4px;background:#061b31b9;border:1px solid #c0e4fb22;
+  border-radius:9px;gap:4px;
+}
+.gamer-console .gamer-game-tile[aria-pressed=true] {
+  border-color:#63d8ff;box-shadow:0 0 13px #48c6ff75,inset 0 0 14px #9dc7ed0c;
+  background:#0d2f45;
+}
+.gamer-console .gamer-tile-art {height:calc(100% - 20px);min-height:50px;border-radius:6px;flex:1;}
+.gamer-console .gamer-tile-art>img {object-fit:cover;}
+.gamer-console .gamer-tile-name {font-size:10px;color:#d7eaf5;min-height:16px;width:100%;}
+.gamer-console .gamer-carousel-arrow {
+  justify-self:center;align-self:center;min-width:32px;width:32px;height:32px;
+  padding:4px;border-radius:50%;border:1px solid #6eadd05c;
+  background:#0c2238b3;color:#d2ecff;
+}
+.gamer-console .gamer-carousel-arrow svg {transform:rotate(90deg);}
+.gamer-console .gamer-carousel-next svg {transform:rotate(-90deg);}
+@container (max-width:1080px) {
+  .gamer-console .gamer-profile-stage {grid-template-columns:minmax(156px,23%) minmax(0,1fr) minmax(170px,25%);gap:5px;padding:5px;}
+  .gamer-console .gamer-console-identity {padding:10px;}
+  .gamer-console-feature-grid {grid-template-columns:minmax(75px,22%) minmax(0,1fr) minmax(75px,22%);gap:5px;}
+  .gamer-console .gamer-console-feature {padding:7px;gap:4px;}
+  .gamer-console-achievement-art {height:clamp(46px,6.5cqw,76px);}
+  .gamer-console .gamer-console-avatar {padding:6px;}
+  .gamer-console .gamer-game-tile {flex-basis:clamp(78px,12cqw,135px);}
+}
+@container (max-width:680px) {
+  .gamer-console {display:block;height:100%;overflow-y:auto;}
+  .gamer-console .gamer-console-nav {min-height:43px;gap:10px;}
+  .gamer-console .gamer-console-nav-link {display:none;}
+  .gamer-console .gamer-profile-stage {display:grid;grid-template-columns:1fr;gap:7px;padding:7px;}
+  .gamer-console .gamer-console-identity {min-height:180px;gap:6px;}
+  .gamer-console .gamer-console-feature {min-height:360px;}
+  .gamer-console .gamer-console-avatar {min-height:360px;}
+  .gamer-console .gamer-console-avatar-viewer {min-height:280px;}
+  .gamer-console .gamer-profile-actions {max-width:400px;width:100%;margin:0 auto;}
+  .gamer-console .gamer-gallery {min-height:200px;}
+  .gamer-console .gamer-game-shelf {max-height:none;}
+  .gamer-console .gamer-tile-art {min-height:110px;}
+  .gamer-console .gamer-gallery-header .gamer-gallery-help {display:none;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .gamer-console::before {transition:none;}
+}
