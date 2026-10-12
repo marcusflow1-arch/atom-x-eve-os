@@ -426,7 +426,7 @@ export default function DashboardAvatarOverview() {
             <AIBoxSocialPanel key={socialDirectoryMode} mode={socialDirectoryMode} />
           </div>
         </DashboardWindow>}
-        {profileTarget && <DashboardWindow id="gamer-profile" title={String(profileTarget.id || profileTarget.friend_id) === String(user?.id) ? "Your Profile · You" : "Gamer Profile"} width={1450} height={870} index={2}
+        {profileTarget && <DashboardWindow id={String(profileTarget.id || profileTarget.friend_id) === String(user?.id) ? "self-gamer-profile" : "gamer-profile"} title={String(profileTarget.id || profileTarget.friend_id) === String(user?.id) ? "Your Profile · You" : "Gamer Profile"} width={1450} height={870} index={2}
           onClose={() => setProfileTarget(null)}>
           <LunaGamerProfile key={String(profileTarget.id || profileTarget.friend_id)} player={profileTarget} onClose={() => setProfileTarget(null)} />
         </DashboardWindow>}
@@ -483,7 +483,7 @@ export default function DashboardAvatarOverview() {
                           status: 'online',
                           is_self: true,
                         });
-                        focusDashboardWindow('gamer-profile');
+                        focusDashboardWindow('self-gamer-profile');
                       }}
                       disabled={!user?.id}
                       className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-cyan-200/25 bg-cyan-300/[0.07] text-cyan-100/80 transition hover:border-cyan-200/55 hover:bg-cyan-300/[0.15] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-35"
