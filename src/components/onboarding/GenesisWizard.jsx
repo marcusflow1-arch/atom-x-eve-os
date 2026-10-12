@@ -22,11 +22,12 @@ const baseCompanion = {
   voice: { uri: '', pitch: 1, rate: 1 },
 };
 
-export default function GenesisWizard({ user, initialProfile, preview = false, onComplete }) {
+export default function GenesisWizard({ user, initialProfile, preview = false, testMode = false, onComplete }) {
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(null);
+  const [testFinished, setTestFinished] = useState(false);
   const [layerState,setLayerState] = useState({loading:false,error:''});
   const [profile, setProfile] = useState({ display_name: user?.full_name || '', username: user?.username || '', date_of_birth: '', phone: '', ...initialProfile });
   const [config, setConfig] = useState(() => withAppearanceDefaults({ ...baseCompanion, ...(initialProfile?.companion || {}), voice: { ...baseCompanion.voice, ...(initialProfile?.companion?.voice || {}) } }));
@@ -38,6 +39,8 @@ export default function GenesisWizard({ user, initialProfile, preview = false, o
     if (busy || layerState.loading || layerState.error) return;
     setError('');
     if (step < 5) { setStep((value) => value + 1); return; }
+    // Test mode exercises the same first-login UI without committing changes.
+    if (testMode) { setTestFinished(true); return; }
     setBusy(true);
     try {
       const response = await base44.functions.invoke('avatarSystem', { action: 'completeSetup', profile, companion: config, preview });
@@ -49,10 +52,12 @@ export default function GenesisWizard({ user, initialProfile, preview = false, o
     } finally { setBusy(false); }
   };
 
+  if (testFinished) return <div className="genesis-surface genesis-shell genesis-success" data-testid="genesis-test-finished"><Check size={40}/><p className="genesis-kicker">CHARACTER CREATION TEST</p><h1>Test complete.</h1><p>You have finished the character creation walkthrough. No live character, account profile, or progression was saved or changed.</p><div><button className="genesis-secondary" onClick={() => { setTestFinished(false); setStep(0); }}>Try again</button><Link className="genesis-primary" to="/LunaTemplate">Return home</Link></div></div>;
+
   if (saved) return <div className="genesis-surface genesis-shell genesis-success" data-saved-profile-id={saved.id}><Check size={40}/><p className="genesis-kicker">PREVIEW SAVED · LIVE IDENTITY UNCHANGED</p><h1>Meet {config.name}.</h1><p>Your developer draft is saved separately. You can reopen this preview without recreating your live companion.</p><div><button className="genesis-secondary" onClick={() => { setSaved(null); setStep(1); }}>Edit preview</button><Link className="genesis-primary" to="/LunaTemplate">Return home</Link></div></div>;
 
   return <div className="genesis-surface genesis-shell" data-testid="genesis-wizard">
-    <header><span className="genesis-brand"><Moon size={24}/>ATOM × EVE</span>{preview ? <span className="genesis-preview-badge">Developer preview<Link to="/LunaTemplate">Exit preview</Link></span> : <span className="genesis-preview-badge">First-time setup</span>}</header>
+    <header><span className="genesis-brand"><Moon size={24}/>ATOM × EVE</span>{testMode ? <span className="genesis-preview-badge">Test mode · No changes saved<Link to="/LunaTemplate">Exit test</Link></span> : preview ? <span className="genesis-preview-badge">Developer preview<Link to="/LunaTemplate">Exit preview</Link></span> : <span className="genesis-preview-badge">First-time setup</span>}</header>
     <ol className="genesis-steps">{['Body','Face','Appearance','Identity','Voice','Review'].map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined}><span>{step > index ? '✓' : `0${index + 1}`}</span>{label}</li>)}</ol>
     <div className="genesis-workspace">
       <GenesisModelPreview config={config} onCapabilities={setCapabilities} onCustomizationState={setLayerState}/>
@@ -62,10 +67,10 @@ export default function GenesisWizard({ user, initialProfile, preview = false, o
         {step === 1 && <GenesisFaceScan config={config} setConfig={setConfig} capabilities={capabilities}/>}
         {step === 2 && <GenesisAppearanceFields config={config} setConfig={setConfig} capabilities={capabilities}/>}
         {step === 4 && <GenesisVoiceFields config={config} setConfig={setConfig}/>}
-        {step === 5 && <GenesisReview profile={profile} config={config} preview={preview}/>}
+        {step === 5 && <GenesisReview profile={profile} config={config} preview={preview} testMode={testMode}/>} 
       </motion.div></AnimatePresence></fieldset>
       {(error||layerState.error) && <p className="genesis-error" role="alert">{error||layerState.error}</p>}
-      <footer className="genesis-actions">{step > 0 ? <button className="genesis-secondary" type="button" disabled={busy} onClick={() => setStep((value) => value - 1)}><ArrowLeft size={15}/>Back</button> : <span>Setup once. Keep it with you.</span>}<button className="genesis-primary" type="submit" disabled={busy||layerState.loading||Boolean(layerState.error)}>{step === 5 ? (preview ? 'Save preview' : 'Begin my journey') : 'Continue'}<ArrowRight size={15}/></button></footer>
+      <footer className="genesis-actions">{step > 0 ? <button className="genesis-secondary" type="button" disabled={busy} onClick={() => setStep((value) => value - 1)}><ArrowLeft size={15}/>Back</button> : <span>Setup once. Keep it with you.</span>}<button className="genesis-primary" type="submit" disabled={busy||layerState.loading||Boolean(layerState.error)}>{step === 5 ? (testMode ? 'Finish test' : preview ? 'Save preview' : 'Begin my journey') : 'Continue'}<ArrowRight size={15}/></button></footer>
       </form>
     </div>
     <AnimatePresence>{busy && <GenesisLoadingScreen label={preview ? 'Saving your preview' : 'Preparing your world'}/>}</AnimatePresence>
