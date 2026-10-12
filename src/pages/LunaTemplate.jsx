@@ -1368,13 +1368,21 @@ export default function LunaTemplate() {
                 <span className={`text-sm font-sans relative z-10 ${stageMode === 'stats' ? 'text-cyan-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Stats</span>
               </ConsoleTile>
 
-              {/* Friends (Replaces Skill Tree) */}
+              {/* Friends quick menu: select a friend before opening their profile or the existing trade workspace. */}
               <ConsoleTile
-                          onClick={() => setStageMode((m) => m === 'friends' ? 'default' : 'friends')}
-                          className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'friends' ? 'border-green-400/50 bg-green-900/20' : ''}`}>
-                          
-                <Users className={`w-10 h-10 relative z-10 ${stageMode === 'friends' ? 'text-green-400' : ''}`} style={stageMode === 'friends' ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className={`text-sm font-sans relative z-10 ${stageMode === 'friends' ? 'text-green-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
+                onClick={() => window.dispatchEvent(new CustomEvent('openLunaFriends', { detail: { mode: 'all' } }))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-1"
+              >
+                <Users className="h-7 w-7 relative z-10 text-slate-200" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255,255,255,.28))' }} strokeWidth={1.5} />
+                <span className="text-sm font-sans relative z-10 text-[#CCCCCC]" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
+                <div className="relative z-30 mt-0.5 flex w-full max-w-[200px] justify-center gap-1.5 px-2" role="group" aria-label="Friends quick menu">
+                  <button type="button" className="pointer-events-auto h-7 flex-1 rounded-md border border-cyan-200/20 bg-cyan-200/[0.065] text-[10px] font-medium text-cyan-100/80 hover:bg-cyan-200/[0.13]"
+                    onClick={(event) => { event.stopPropagation(); window.dispatchEvent(new CustomEvent('openLunaFriends', { detail: { mode: 'profile' } })); }}
+                    aria-label="Friends Profile menu">Profile</button>
+                  <button type="button" className="pointer-events-auto h-7 flex-1 rounded-md border border-emerald-200/20 bg-emerald-200/[0.065] text-[10px] font-medium text-emerald-100/80 hover:bg-emerald-200/[0.13]"
+                    onClick={(event) => { event.stopPropagation(); window.dispatchEvent(new CustomEvent('openLunaFriends', { detail: { mode: 'trade' } })); }}
+                    aria-label="Friends Trade menu">Trade</button>
+                </div>
               </ConsoleTile>
 
 
