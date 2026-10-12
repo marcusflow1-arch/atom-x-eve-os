@@ -489,7 +489,8 @@ export default function DashboardAvatarOverview() {
                       className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-cyan-200/25 bg-cyan-300/[0.07] text-cyan-100/80 transition hover:border-cyan-200/55 hover:bg-cyan-300/[0.15] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-35"
                     >
                       <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
-                    </button>                  </div>
+                    </button>
+                  </div>
                 </div>
               </div>
 
