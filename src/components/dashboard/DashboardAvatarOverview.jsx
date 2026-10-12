@@ -4,7 +4,7 @@ import RecordsWorkspace from '@/components/records/RecordsWorkspace';
 import { useRecordsCapture, stopRecording } from '@/components/records/recordsCapture';
 import AIStoryOverlay from './AIStoryOverlay';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, Swords, ChevronRight, BarChart3, Gauge, Target, Sparkles, Users, UserPlus, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
+import { Activity, Heart, Zap, Trophy, Gamepad2, Star, Shield, Swords, ChevronRight, BarChart3, Gauge, Target, Sparkles, UserRound, MessageSquare, Crown, PackageOpen, Medal, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardAvatarScene from './DashboardAvatarScene';
 import { useAuth } from '../auth/AuthContext';
@@ -426,7 +426,7 @@ export default function DashboardAvatarOverview() {
             <AIBoxSocialPanel key={socialDirectoryMode} mode={socialDirectoryMode} />
           </div>
         </DashboardWindow>}
-        {profileTarget && <DashboardWindow id="gamer-profile" title="Gamer Profile" width={1040} height={720} index={2}
+        {profileTarget && <DashboardWindow id="gamer-profile" title={String(profileTarget.id || profileTarget.friend_id) === String(user?.id) ? "Your Profile · You" : "Gamer Profile"} width={1450} height={870} index={2}
           onClose={() => setProfileTarget(null)}>
           <LunaGamerProfile key={String(profileTarget.id || profileTarget.friend_id)} player={profileTarget} onClose={() => setProfileTarget(null)} />
         </DashboardWindow>}
@@ -468,30 +468,28 @@ export default function DashboardAvatarOverview() {
                     <div className="truncate text-white font-bold text-base">
                       {companion?.name || 'AI Avatar'}
                     </div>
-                    <div className="flex shrink-0 items-center gap-1.5" aria-label="AI Attribute social modes">
-                      {[
-                        { id: 'online', label: 'People Online', icon: UserPlus },
-                        { id: 'friends', label: 'Friends Online', icon: Users },
-                      ].map(({ id, label, icon: Icon }) => {
-                        const active = socialDirectoryMode === id;
-                        return (
-                          <button
-                            key={id}
-                            type="button"
-                            onClick={() => { setSocialDirectoryMode(id); focusDashboardWindow('social-directory'); }}
-                            title={label}
-                            aria-label={label}
-                            aria-pressed={active}
-                            className={`grid h-6 w-6 place-items-center rounded-full border transition-all ${active
-                              ? 'border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-100 shadow-[0_0_12px_rgba(103,232,249,.12)]'
-                              : 'border-white/[0.10] bg-white/[0.035] text-white/40 hover:border-white/[0.18] hover:bg-white/[0.07] hover:text-white/70'}`}
-                          >
-                            <Icon className="h-3 w-3" />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                    <button
+                      type="button"
+                      aria-label="View your profile"
+                      title="Your Profile"
+                      aria-haspopup="dialog"
+                      onClick={() => {
+                        if (!user?.id) return;
+                        // The AI companion name belongs to the avatar; this icon
+                        // always opens the signed-in player's own account.
+                        setProfileTarget({
+                          id: String(user.id),
+                          name: user.username || user.display_name || user.full_name || 'You',
+                          status: 'online',
+                          is_self: true,
+                        });
+                        focusDashboardWindow('gamer-profile');
+                      }}
+                      disabled={!user?.id}
+                      className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-cyan-200/25 bg-cyan-300/[0.07] text-cyan-100/80 transition hover:border-cyan-200/55 hover:bg-cyan-300/[0.15] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-35"
+                    >
+                      <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>                  </div>
                 </div>
               </div>
 
