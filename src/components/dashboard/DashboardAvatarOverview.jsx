@@ -451,7 +451,7 @@ export default function DashboardAvatarOverview() {
       </>}
 
       {!avatarFocusMode && <aside
-        className={`absolute right-[-1px] top-[26px] z-50 w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
+        className={`absolute right-[-1px] top-[26px] z-50 w-[338px] max-w-[30vw] h-[calc(100%-26px)] overflow-visible pointer-events-auto transition-all duration-500 ${backgroundDimmed ? 'blur-[10px] opacity-25 pointer-events-none translate-x-3' : 'blur-0 opacity-100'}`}
         aria-label="AI Attribute Box"
       >
         <div className="axe-attribute-shell relative h-full w-full bg-transparent border-b border-white/[0.06] shadow-[0_20px_45px_rgba(0,0,0,0.10)]">
@@ -459,7 +459,7 @@ export default function DashboardAvatarOverview() {
           <div className="axe-attribute-content relative flex h-full w-full flex-col bg-transparent backdrop-blur-[10px] overflow-hidden">
             {/* Optical glass only: a downward water sheet over the existing panel, not its chrome. */}
             <LunaLiquidWaterfall />
-            <div className="axe-attribute-heading relative shrink-0 px-5 pt-3 pb-2 border-b border-white/[0.12]">
+            <div className="axe-attribute-heading relative z-20 shrink-0 pointer-events-auto px-5 pt-3 pb-2 border-b border-white/[0.12]">
               <div className="flex items-center gap-2 pr-9">
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
                 <div className="min-w-0 flex-1">
@@ -474,7 +474,10 @@ export default function DashboardAvatarOverview() {
                       title="Your Profile"
                       aria-haspopup="dialog"
                       onClick={() => {
-                        if (!user?.id) return;
+                        if (!user?.id) {
+                          showError('Sign in to view your profile.');
+                          return;
+                        }
                         // The AI companion name belongs to the avatar; this icon
                         // always opens the signed-in player's own account.
                         setProfileTarget({
@@ -485,8 +488,7 @@ export default function DashboardAvatarOverview() {
                         });
                         focusDashboardWindow('self-gamer-profile');
                       }}
-                      disabled={!user?.id}
-                      className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-cyan-200/25 bg-cyan-300/[0.07] text-cyan-100/80 transition hover:border-cyan-200/55 hover:bg-cyan-300/[0.15] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-35"
+                      className="relative z-30 pointer-events-auto grid h-7 w-7 shrink-0 place-items-center rounded-full border border-cyan-200/25 bg-cyan-300/[0.07] text-cyan-100/80 transition hover:border-cyan-200/55 hover:bg-cyan-300/[0.15] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-35"
                     >
                       <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
