@@ -71,8 +71,8 @@ test('Friends and sidebar share the responsive console profile with live 3D and 
   assert.match(profile, /onMouseEnter=\{\(\) => showGame\(index\)\}/);
   assert.match(profile, /gameArtifacts\(profile, selectedGame\)/);
   assert.match(profile, /gamer-carousel-arrow/);
-  assert.match(css, /grid-template-rows:minmax\(0,7fr\) minmax\(170px,3fr\)/);
-  assert.match(css, /grid-template-columns:repeat\(7,minmax\(0,1fr\)\)/);
+  assert.match(css, /grid-template-rows:45px minmax\\(0,1fr\\) minmax\\(168px,29%\\)/);
+  assert.match(css, /gamer-console \\.gamer-profile-stage/);
   assert.match(css, /\.gamer-game-tile\.unplayed \.gamer-tile-art/);
   assert.match(profile, /Regular Chat/);
   assert.match(profile, /Voice Chat/);
