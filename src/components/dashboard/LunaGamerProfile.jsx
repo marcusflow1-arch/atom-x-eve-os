@@ -215,7 +215,7 @@ export default function LunaGamerProfile({ player, onClose, initialTab = 'overvi
         {profile?.bio && <p className="gamer-console-bio">{profile.bio}</p>}
         <div className="gamer-console-level">
           <div><strong>Lv. {profile?.level || 1}</strong>{profile?.xp != null && <span>{Number(profile.xp).toLocaleString()} XP</span>}</div>
-          <div className="gamer-console-level-track"><i /></div>
+          {Number(profile?.next_level_xp) > 0 && Number(profile?.xp) >= 0 && <div className="gamer-console-level-track"><i style={{ width: Math.min(100, Math.max(0, Number(profile.xp) / Number(profile.next_level_xp) * 100)) + '%' }} /></div>}
         </div>
         <div className="gamer-console-tags">
           <span><Gamepad2 size={12} /> {profile?.current_game || 'Atom X Eve player'}</span>
