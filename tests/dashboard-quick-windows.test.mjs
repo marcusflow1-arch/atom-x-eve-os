@@ -49,7 +49,7 @@ const compiled=await build({
     });
     builder.onLoad({filter:/.*/,namespace:'quick-fixture'},args=>({
       loader:'js',contents:args.path==='icons'
-        ? "export const "+['Swords','Activity','Heart','Zap','Trophy','Gamepad2','Star','Shield','ChevronRight','BarChart3','Gauge','Target','Sparkles','Users','UserPlus','Camera','MessageSquare','Crown','PackageOpen','Medal','X','Grip','Maximize2','Minimize2','Minus'].map(name=>name+'=()=>null').join(',')+';'
+        ? "export const "+['Swords','Activity','Heart','Zap','Trophy','Gamepad2','Star','Shield','ChevronRight','BarChart3','Gauge','Target','Sparkles','Users','UserPlus','UserRound','Camera','MessageSquare','Crown','PackageOpen','Medal','X','Grip','Maximize2','Minimize2','Minus'].map(name=>name+'=()=>null').join(',')+';'
         : fakeNames.has(args.path)
         ? "export default function Placeholder(){return null;}"
         : fakeHooks[args.path],
@@ -90,22 +90,25 @@ try {
   assert.equal(document.querySelectorAll('[data-luna-window]').length,7,
     'closing Inventory must not close the other seven panels');
   for(const [,id] of expected.slice(1))assert.ok(popup(id));
-  // Plus slots and both AI Attribute icons use the same independent popup;
-  // opening it cannot replace the AI Attribute's live-stat content.
+  // The whole dashboard host disables pointer events by default. The attribute
+  // panel MUST restore pointer events so the icon beside Artemis receives clicks.
+  const attribute=document.querySelector('[aria-label="AI Attribute Box"]');
+  const ownerIcon=attribute?.querySelector('[aria-label="View your profile"]');
+  assert.ok(attribute,'AI Attribute Box is present');
+  assert.ok(ownerIcon,'your profile button is present next to the companion name');
+  assert.ok(attribute.className.includes('pointer-events-auto'),'AI Attribute panel is clickable');
+  assert.ok(ownerIcon.className.includes('pointer-events-auto'),'profile icon is hit-testable');
+  assert.equal(ownerIcon.disabled,false,'profile icon is not silently disabled');
+  assert.equal(attribute.querySelector('[aria-label="People Online"]'),null,'old online icon removed');
+  assert.equal(attribute.querySelector('[aria-label="Friends Online"]'),null,'old friends icon removed');
+  await run(()=>ownerIcon.click());
+  assert.ok(popup('self-gamer-profile'),'clicking the icon opens the signed-in player profile');
+  assert.match(popup('self-gamer-profile').getAttribute('aria-label'),/Your Profile · You/);
+  assert.equal(popup('gamer-profile'),null,'self profile does not masquerade as a friend profile');
   await run(()=>window.dispatchEvent(new CustomEvent('openLunaSocialWindow',{detail:{mode:'party'}})));
-  assert.ok(popup('social-directory'),'party plus buttons open a movable social window');
-  assert.match(popup('social-directory').getAttribute('aria-label'),/Invite Friends to Party/);
-  assert.ok(document.querySelector('[aria-label="AI Attribute Box"]'));
-  const people=[...document.querySelectorAll('button')].find(button=>button.getAttribute('aria-label')==='People Online');
-  const friends=[...document.querySelectorAll('button')].find(button=>button.getAttribute('aria-label')==='Friends Online');
-  await run(()=>people.click());
-  assert.match(popup('social-directory').getAttribute('aria-label'),/People Online/);
-  await run(()=>friends.click());
-  assert.match(popup('social-directory').getAttribute('aria-label'),/Friends Online/);
-  assert.equal(document.querySelectorAll('[data-luna-window="social-directory"]').length,1);
+  assert.ok(popup('social-directory'),'party still has a separate movable social window');
   await run(()=>window.dispatchEvent(new CustomEvent('openLunaGamerProfile',{detail:{player:{id:'friend-77',name:'Nova'}}})));
-  assert.ok(popup('gamer-profile'),'View Profile opens a second independent floating window');
-  assert.ok(popup('social-directory'),'profile remains independent of friends list');
+  assert.ok(popup('gamer-profile'),'friend profile uses its own window');
   assert.ok(document.querySelector('[aria-label="AI Attribute Box"]'));
   await run(()=>popup('cards').querySelector('[aria-label="Close Cards · Skill Book window"]').click());
   assert.equal(popup('cards'),null);
@@ -113,7 +116,7 @@ try {
   assert.ok(popup('cards'),'AI Battle Skill Book event opens the actual cards window');
   assert.ok(popup('ai-battle'),'opening Skill Book preserves AI Battle and its queue');
   assert.ok(+popup('cards').style.zIndex > +popup('ai-battle').style.zIndex,'Skill Book comes to front');
-  console.log('PASS: eight independent quick-action windows, social/profile windows and AI Battle Skill Book bridge');
+  console.log('PASS: eight independent quick-action windows, clickable self profile, social/friend windows and AI Battle Skill Book bridge');
 }finally{
   await act(async()=>root.unmount());
   dom.window.close();
