@@ -8,9 +8,16 @@ import { JSDOM } from 'jsdom';
 const source = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 
 test('Luna Friends has clickable Profile and Trade actions using the existing trade workspace', async () => {
+  const lunaSource = source('../src/pages/LunaTemplate.jsx');
+  const dashboardSource = source('../src/components/dashboard/DashboardAvatarOverview.jsx');
   const quickSource = source('../src/components/dashboard/LunaFriendsQuickAccessPanel.jsx');
   const tradeSource = source('../src/components/streaming/FriendTradePanel.jsx');
   const sidebarSource = source('../src/components/streaming/LibrarySidebar.jsx');
+  assert.match(lunaSource, /aria-label="Friends Profile menu"/);
+  assert.match(lunaSource, /aria-label="Friends Trade menu"/);
+  assert.match(lunaSource, /openLunaFriends/);
+  assert.match(dashboardSource, /setFriendsAction\(mode === 'profile' \|\| mode === 'trade' \? mode : 'all'\)/);
+  assert.match(dashboardSource, /<LunaFriendsQuickAccessPanel initialAction=\{friendsAction\}/);
   assert.match(quickSource, /onClick=\{\(\) => openProfile\(friend\)\}/);
   assert.match(quickSource, /onClick=\{\(\) => openTrade\(friend\)\}/);
   assert.match(quickSource, /openLunaGamerProfile/);
