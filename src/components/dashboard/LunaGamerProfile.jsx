@@ -12,7 +12,7 @@ import { joinDashboard, openPlayerMessage } from '@/components/social/dashboardS
 import { sendTradeRequest } from '@/components/game3d/social/tradeRequest';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
-import { GAME_SHELF_COLUMNS, gameArtifacts, gameMedia, nextGameIndex } from './gameProfileSelectors.mjs';
+import { gameArtifacts, gameMedia, nextGameIndex } from './gameProfileSelectors.mjs';
 import './gamer-profile.css';
 
 const unwrap = result => {
@@ -58,31 +58,20 @@ function GameMontage({ game }) {
   </div>;
 }
 
-function UnlocksForGame({ game, profile }) {
-  const { achievements, cards } = gameArtifacts(profile, game);
-  return <div className="gamer-unlocks">
-    <div className="gamer-unlocks-heading">
-      <div><span className="gamer-eyebrow">THIS GAME'S REWARDS</span><h3>Achievement cards</h3></div>
-      <small>{achievements.length} achievements · {cards.length} cards</small>
+
+function GamerAchievementRail({ items, title, side }) {
+  return <aside className={'gamer-console-rail gamer-console-rail-' + side} aria-label={title}>
+    <div className="gamer-console-rail-heading"><Trophy size={13} /><span>{title}</span></div>
+    <div className="gamer-console-rail-cards">
+      {items.length ? items.map((item, index) => <article className="gamer-console-achievement" key={item.type + ':' + (item.id || index)} title={item.name}>
+        <div className="gamer-console-achievement-art">
+          {item.image ? <img src={item.image} alt="" loading="lazy" /> : (item.type === 'card' ? <Layers3 size={30} /> : <Trophy size={30} />)}
+        </div>
+        <strong>{item.name}</strong>
+        <span>{item.detail}</span>
+      </article>) : <div className="gamer-console-no-rewards">No achievements or cards earned for this game yet.</div>}
     </div>
-    <div className="gamer-unlocks-scroll">
-      {cards.length ? <div className="gamer-reward-grid">
-        {cards.slice(0, 8).map(card => <article key={card.id} className="gamer-reward" title={card.name}>
-          <div className="gamer-reward-art">{card.image ? <img src={card.image} alt="" loading="lazy" /> : <Layers3 size={24} />}</div>
-          <div className="gamer-reward-copy"><strong>{card.name}</strong><span>{card.rarity || 'Card'}{card.equipped ? ' · Equipped' : ''}</span></div>
-        </article>)}
-      </div> : <p className="gamer-reward-empty">{game?.played ? 'No cards earned from this game yet.' : 'Cards will appear here once earned.'}</p>}
-      {cards.length > 8 && <p className="gamer-reward-count">+ {cards.length - 8} more cards in the collection</p>}
-      {achievements.length > 0 && <div className="gamer-achievement-list">
-        <div className="gamer-achievement-label"><Trophy size={13} /> Achievements unlocked</div>
-        {achievements.slice(0, 5).map(item => <div key={item.id} className="gamer-achievement-row">
-          {item.icon ? <img src={item.icon} alt="" loading="lazy" /> : <Trophy size={13} />}
-          <span>{item.title}</span><small>{Number(item.points) || 0} pts</small>
-        </div>)}
-        {achievements.length > 5 && <small className="gamer-reward-count">+ {achievements.length - 5} additional achievements</small>}
-      </div>}
-    </div>
-  </div>;
+  </aside>;
 }
 
 export default function LunaGamerProfile({ player, onClose, initialTab = 'overview' }) {
@@ -179,39 +168,122 @@ export default function LunaGamerProfile({ player, onClose, initialTab = 'overvi
   };
   const handleGameKeys = event => {
     if (event.target?.closest?.('input,textarea,select,[contenteditable="true"]')) return;
-    const next = nextGameIndex(event.key, selectedIndex, games.length, GAME_SHELF_COLUMNS);
+    const next = nextGameIndex(event.key, selectedIndex, games.length, 1);
     if (next === selectedIndex) return;
     event.preventDefault();
     showGame(next);
     galleryRef.current?.querySelector(`[data-game-position="${next}"]`)?.focus({ preventScroll: false });
   };
+  const rewardData = gameArtifacts(profile, selectedGame);
+  const rewards = [
+    ...rewardData.cards.map(card => ({ type: 'card', id: card.id, name: card.name || 'Achievement card', image: card.image, detail: card.rarity || 'Card' })),
+    ...rewardData.achievements.map(item => ({ type: 'achievement', id: item.id, name: item.title || 'Achievement', image: item.icon, detail: (Number(item.points) || 0) + ' points' })),
+  ];
+  const rewardsLeft = rewards.filter((_, index) => index % 2 === 0);
+  const rewardsRight = rewards.filter((_, index) => index % 2 === 1);
+  const wallpaper = gameMedia(selectedGame).stills[0] || '';
+  const gender = String(profile?.avatar?.gender || profile?.gender || '').toLowerCase();
+  const hasPortrait = Boolean(profile?.avatar_url || p.avatar);
+  const galleryStep = delta => {
+    const next = Math.max(0, Math.min(games.length - 1, selectedIndex + delta));
+    showGame(next);
+    galleryRef.current?.querySelector('[data-game-position="' + next + '"]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  };
 
-  return <div className="gamer-profile" data-luna-gamer-profile={p.id} data-profile-layout="70-30">
+  return <div className={'gamer-profile gamer-console ' + (gender === 'female' ? 'gamer-console-female' : gender === 'male' ? 'gamer-console-male' : '')}
+    data-luna-gamer-profile={p.id}
+    data-profile-layout="profile-console"
+    style={wallpaper ? { '--gamer-wallpaper': 'url(' + JSON.stringify(wallpaper) + ')' } : undefined}>
+    <nav className="gamer-console-nav" aria-label="Player profile">
+      <span className="gamer-console-brand"><Shield size={19} /> ATOM <b>X</b> EVE</span>
+      <span className="gamer-console-nav-active">Profile</span>
+      <span className="gamer-console-nav-link">Games</span>
+      <span className="gamer-console-nav-link">Social</span>
+      <span className="gamer-console-nav-link">Achievements</span>
+      <span className="gamer-console-nav-spacer" />
+      <button type="button" onClick={() => refetch()} aria-label="Refresh player profile" title="Refresh profile"><RefreshCw size={15} /></button>
+    </nav>
+
     <div className="gamer-profile-stage">
-      <aside className="gamer-avatar-pane">
-        <div className="gamer-eyebrow">ATOM XE · LIVE AI AVATAR</div>
-        <div className="gamer-profile-name">
-          <h1>{name}</h1>
-          <span className={'gamer-presence ' + (profile?.online ? 'online' : '')}><i />{profile?.status || p.status}{self ? ' · You' : friend ? ' · Friend' : ''}</span>
+      <aside className="gamer-console-identity gamer-console-panel" aria-label="Player details">
+        <div className="gamer-console-portrait">
+          {hasPortrait ? <img src={profile?.avatar_url || p.avatar} alt={name + ' portrait'} /> : <span aria-hidden="true">{name.charAt(0).toUpperCase()}</span>}
+          <i className={profile?.online ? 'online' : ''} aria-label={profile?.online ? 'Online' : 'Offline'} />
         </div>
-        <div className="gamer-avatar-viewer">
+        <h1>{name}</h1>
+        <div className={'gamer-presence ' + (profile?.online ? 'online' : '')}><i />{profile?.status || p.status}{self ? ' · You' : friend ? ' · Friend' : ''}</div>
+        {profile?.bio && <p className="gamer-console-bio">{profile.bio}</p>}
+        <div className="gamer-console-level">
+          <div><strong>Lv. {profile?.level || 1}</strong>{profile?.xp != null && <span>{Number(profile.xp).toLocaleString()} XP</span>}</div>
+          <div className="gamer-console-level-track"><i /></div>
+        </div>
+        <div className="gamer-console-tags">
+          <span><Gamepad2 size={12} /> {profile?.current_game || 'Atom X Eve player'}</span>
+          {friend && <span><Users size={12} /> Friend</span>}
+          {profile?.avatar && <span><Shield size={12} /> AI companion</span>}
+        </div>
+        <div className="gamer-console-stats">
+          <div><strong>{playedCount}</strong><span>Games</span></div>
+          <div><strong>{profile?.counts?.achievements || 0}</strong><span>Achievements</span></div>
+          <div><strong>{profile?.counts?.cards || 0}</strong><span>Cards</span></div>
+        </div>
+        <div className="gamer-console-identity-actions">
+          <button type="button" onClick={() => { navigate('/PlayerProfile?userId=' + encodeURIComponent(p.id) + '&view=dashboard'); onClose?.(); }} disabled={!profile}><LayoutDashboard size={13} /> Open dashboard profile</button>
+          {!self && <button type="button" onClick={join} disabled={!!busy}><LogIn size={13} /> Join dashboard</button>}
+          {!self && <button type="button" onClick={trade} disabled={!!busy}><Repeat2 size={13} /> Trade cards</button>}
+          {!self && <div className="gamer-profile-more-wrap">
+            <button type="button" onClick={() => setMore(!more)} aria-expanded={more}><ChevronDown size={13} /> More player actions</button>
+            {more && <div className="gamer-profile-more">
+              <button type="button" onClick={friendAction} disabled={!!busy || requested}>{friend ? <UserMinus size={14} /> : <UserPlus size={14} />}{friend ? 'Remove friend' : requested ? 'Request sent' : 'Add friend'}</button>
+              <button type="button" onClick={toggleFollow} disabled={!!busy}><Heart size={14} />{following ? 'Unfollow' : 'Follow'}</button>
+              <button type="button" onClick={() => setReporting(!reporting)}><Flag size={14} /> Report player</button>
+            </div>}
+          </div>}
+        </div>
+      </aside>
+
+      <main className="gamer-console-feature gamer-console-panel">
+        <div className="gamer-console-feature-top">
+          <span className="gamer-eyebrow">FEATURED GAME · PLAYER COLLECTION</span>
+          <span className="gamer-console-feature-count">{rewards.length} unlocked rewards</span>
+        </div>
+        {isLoading && <p className="gamer-status" role="status">Loading player games, achievements and cards…</p>}
+        {error && <div className="gamer-status" role="alert">{error.message || 'Profile could not load.'} <button type="button" onClick={() => refetch()}>Try again</button></div>}
+        <div className="gamer-console-feature-grid">
+          <GamerAchievementRail title="FEATURED ACHIEVEMENTS" side="left" items={rewardsLeft} />
+          <div className="gamer-console-feature-hero">
+            <GameMontage game={selectedGame} />
+            {!!selectedGame && <div className="gamer-console-feature-subtitle"><Gamepad2 size={13} />{selectedGame.genre || 'Game'} · {selectedGame.played ? 'Played' : 'In collection'}</div>}
+          </div>
+          <GamerAchievementRail title="RECENT REWARDS" side="right" items={rewardsRight} />
+        </div>
+        {reporting && <div className="gamer-report">
+          <label>Reason<select value={reason} onChange={event => setReason(event.target.value)}>{['harassment', 'spam', 'hate', 'other'].map(value => <option key={value}>{value}</option>)}</select></label>
+          <textarea value={details} onChange={event => setDetails(event.target.value)} maxLength={1000} aria-label="Report details" placeholder="Optional details" />
+          <button type="button" onClick={report} disabled={!!busy}>Submit report</button>
+        </div>}
+      </main>
+
+      <aside className="gamer-console-avatar gamer-console-panel" aria-label="Live AI companion model">
+        <div className="gamer-console-avatar-heading"><span><Shield size={13} /> AI COMPANION / AVATAR</span><b>LIVE 3D</b></div>
+        <div className="gamer-console-avatar-viewer">
           {profile?.avatar
-            ? <GenesisModelPreview key={p.id} config={profile.avatar} compact controls="none" idleOnly initialYaw={-0.2} />
+            ? <GenesisModelPreview key={p.id + ':' + gender} config={profile.avatar} compact idleOnly initialYaw={-0.2} />
             : <div className="gamer-avatar-fallback">
-                {profile?.avatar_url || p.avatar ? <img src={profile?.avatar_url || p.avatar} alt={name} /> : <Shield size={48} />}
-                <span>{isLoading ? 'Loading avatar…' : 'No 3D avatar shared yet'}</span>
+                {hasPortrait ? <img src={profile?.avatar_url || p.avatar} alt={name} /> : <Shield size={44} />}
+                <span>{isLoading ? 'Loading avatar…' : 'No live 3D avatar available for this player'}</span>
               </div>}
-          <div className="gamer-avatar-level"><small>AVATAR LEVEL</small><strong>{profile?.level || 1}</strong></div>
+          <div className="gamer-console-avatar-platform" aria-hidden="true" />
+          <span className="gamer-console-avatar-caption">{profile?.avatar ? 'Drag to rotate · Scroll to zoom' : '3D preview'}</span>
         </div>
-        <div className="gamer-avatar-activity"><small>CURRENT ACTIVITY</small><strong>{profile?.current_game || (profile?.online ? 'Online in Atom XE' : 'Offline')}</strong></div>
-        {!self && <div className="gamer-profile-actions">
+        {!self ? <div className="gamer-profile-actions">
           <div className="gamer-dropdown">
             <button type="button" aria-haspopup="menu" aria-expanded={menu === 'message'} onClick={() => setMenu(menu === 'message' ? null : 'message')} disabled={!user?.id}>
               <MessageSquare size={15} /> Message <ChevronDown size={12} />
             </button>
             {menu === 'message' && <div className="gamer-dropdown-menu" role="menu">
-              <button type="button" role="menuitem" onClick={message}><MessageSquare size={14} /> Regular chat</button>
-              <button type="button" role="menuitem" onClick={voice}><Mic size={14} /> Voice call</button>
+              <button type="button" role="menuitem" onClick={message}><MessageSquare size={14} /> Regular Chat</button>
+              <button type="button" role="menuitem" onClick={voice}><Mic size={14} /> Voice Chat</button>
             </div>}
           </div>
           <div className="gamer-dropdown">
@@ -223,82 +295,40 @@ export default function LunaGamerProfile({ player, onClose, initialTab = 'overvi
               <button type="button" role="menuitem" onClick={inviteDashboard}><LayoutDashboard size={14} /> To Dashboard</button>
             </div>}
           </div>
-        </div>}
-        <div className="gamer-avatar-secondary">
-          <button type="button" onClick={() => { navigate('/PlayerProfile?userId=' + encodeURIComponent(p.id) + '&view=dashboard'); onClose?.(); }} disabled={!profile}>
-            <LayoutDashboard size={13} /> Dashboard <ArrowUpRight size={12} />
-          </button>
-          {!self && <button type="button" onClick={join} disabled={!!busy}><LogIn size={13} /> Join</button>}
-          {!self && <button type="button" onClick={trade} disabled={!!busy}><Repeat2 size={13} /> Trade</button>}
-        </div>
+        </div> : <p className="gamer-console-self">Your live AI avatar</p>}
       </aside>
-
-      <main className="gamer-feature">
-        <header className="gamer-feature-header">
-          <div><span className="gamer-eyebrow">THE GAMES BEHIND THE PLAYER</span>
-            <h2>{selectedGame?.title || 'Select a game to explore'}</h2>
-            <p>{selectedGame ? `${selectedGame.genre || 'Game'} · ${selectedGame.played ? 'Played' : 'Not played yet'}` : 'Choose one of the titles in the gallery below.'}</p>
-          </div>
-          <button type="button" className="gamer-refresh" aria-label="Refresh player profile" onClick={() => refetch()}><RefreshCw size={16} /></button>
-        </header>
-        {isLoading && <p className="gamer-status" role="status">Loading player games, achievements and cards…</p>}
-        {error && <div className="gamer-status" role="alert">{error.message || 'Profile could not load.'} <button onClick={() => refetch()}>Try again</button></div>}
-        <div className="gamer-feature-content">
-          <GameMontage game={selectedGame} />
-          <UnlocksForGame game={selectedGame} profile={profile} />
-        </div>
-        <div className="gamer-feature-footer">
-          <div><Trophy size={14} /><strong>{profile?.counts?.achievements || 0}</strong><span>Achievements</span></div>
-          <div><Layers3 size={14} /><strong>{profile?.counts?.cards || 0}</strong><span>Cards</span></div>
-          <div><Gamepad2 size={14} /><strong>{playedCount}</strong><span>Games played</span></div>
-          {initialTab === 'dashboard' && <span className="gamer-dashboard-indicator"><LayoutDashboard size={13} /> Player dashboard profile</span>}
-          {!self && <div className="gamer-profile-more-wrap">
-            <button type="button" onClick={() => setMore(!more)} aria-expanded={more}><ChevronDown size={13} /> More</button>
-            {more && <div className="gamer-profile-more">
-              <button type="button" onClick={friendAction} disabled={!!busy || requested}>{friend ? <UserMinus size={14} /> : <UserPlus size={14} />}{friend ? 'Remove friend' : requested ? 'Request sent' : 'Add friend'}</button>
-              <button type="button" onClick={toggleFollow} disabled={!!busy}><Heart size={14} />{following ? 'Unfollow' : 'Follow'}</button>
-              <button type="button" onClick={() => setReporting(!reporting)}><Flag size={14} /> Report player</button>
-            </div>}
-          </div>}
-        </div>
-        {reporting && <div className="gamer-report">
-          <label>Reason<select value={reason} onChange={event => setReason(event.target.value)}>{['harassment', 'spam', 'hate', 'other'].map(value => <option key={value}>{value}</option>)}</select></label>
-          <textarea value={details} onChange={event => setDetails(event.target.value)} maxLength={1000} aria-label="Report details" placeholder="Optional details" />
-          <button type="button" onClick={report} disabled={!!busy}>Submit report</button>
-        </div>}
-      </main>
     </div>
 
     <section className="gamer-gallery" aria-label="Player game collection">
       <header className="gamer-gallery-header">
-        <div><span className="gamer-eyebrow">GAME HISTORY & DISCOVERY</span><h2>Game collection</h2></div>
+        <div><span className="gamer-eyebrow">PLAYER LIBRARY</span><h2><Gamepad2 size={15} /> Games played & collected</h2></div>
         <span>{playedCount} played · {games.length} shown</span>
-        <span className="gamer-gallery-help">Select or hover · A / D one game · W / S one row · scroll for more</span>
+        <span className="gamer-console-nav-spacer" />
+        <span className="gamer-gallery-help">Hover a game to change wallpaper</span>
       </header>
       <div className="gamer-gallery-band">
-        <div className="gamer-gallery-blank" aria-hidden="true" />
-        <div ref={galleryRef} className="gamer-game-shelf" tabIndex={0} onKeyDown={handleGameKeys} aria-label="Game shelf. Use A and D or W and S to navigate." >
+        <button type="button" className="gamer-carousel-arrow" aria-label="Previous game" disabled={!games.length || selectedIndex === 0} onClick={() => galleryStep(-1)}><ChevronDown size={19} /></button>
+        <div ref={galleryRef} className="gamer-game-shelf" tabIndex={0} onKeyDown={handleGameKeys} aria-label="Game shelf. Use left and right arrows or A and D to navigate.">
           {games.map((game, index) => <button
             key={game.id}
             type="button"
             data-game-position={index}
-            aria-label={`${game.title}, ${game.played ? 'played' : 'not played'}`}
+            aria-label={game.title + ', ' + (game.played ? 'played' : 'not played')}
             aria-pressed={selectedIndex === index}
             onClick={() => showGame(index)}
             onFocus={() => showGame(index)}
             onMouseEnter={() => showGame(index)}
             className={'gamer-game-tile ' + (!game.played ? 'unplayed' : '')}
-            title={game.title}
-          >
+            title={game.title}>
             <span className="gamer-tile-art">
               {game.cover_image ? <img src={game.cover_image} alt="" loading="lazy" /> : <Gamepad2 size={23} />}
               {!game.played && <i>NOT PLAYED</i>}
             </span>
             <span className="gamer-tile-name">{game.title}</span>
           </button>)}
-          {!games.length && !isLoading && <p className="gamer-gallery-empty">No games are available in the catalog yet.</p>}
+          {!games.length && !isLoading && <p className="gamer-gallery-empty">No games shared in this profile yet.</p>}
         </div>
-        <div className="gamer-gallery-blank" aria-hidden="true" />
+        <button type="button" className="gamer-carousel-arrow gamer-carousel-next" aria-label="Next game" disabled={!games.length || selectedIndex === games.length - 1} onClick={() => galleryStep(1)}><ChevronDown size={19} /></button>
       </div>
     </section>
   </div>;
