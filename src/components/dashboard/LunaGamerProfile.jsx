@@ -12,6 +12,7 @@ import { joinDashboard, openPlayerMessage } from '@/components/social/dashboardS
 import { sendTradeRequest } from '@/components/game3d/social/tradeRequest';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import GenesisModelPreview from '@/components/onboarding/GenesisModelPreview';
+import { buildSelfConsoleProfile, loadSelfConsoleProfile } from './selfConsoleProfile.mjs';
 import { gameArtifacts, gameMedia, nextGameIndex } from './gameProfileSelectors.mjs';
 import './gamer-profile.css';
 
@@ -29,7 +30,7 @@ export const asSocialTarget = player => ({
 });
 const fmtDate = value => value ? new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
 
-function GameMontage({ game }) {
+function GameMontage({ game, onOpen }) {
   const media = useMemo(() => gameMedia(game), [game]);
   const [frame, setFrame] = useState(0);
   useEffect(() => { setFrame(0); }, [game?.id]);
@@ -50,6 +51,7 @@ function GameMontage({ game }) {
         <small>{game.played ? 'PLAYED' : game.in_library ? 'IN LIBRARY · NOT PLAYED' : 'NOT PLAYED'}</small>
         <h3>{game.title}</h3>
         <p>{game.description || game.genre || 'Game showcase'}</p>
+        <button type="button" className="gamer-montage-open" onClick={() => onOpen?.(game)}><ArrowUpRight size={13} /> View Game Details</button>
         {!media.video && media.stills.length > 1 && <div className="gamer-montage-dots" aria-label="Preview frames">
           {media.stills.map((_, index) => <i key={index} className={index === frame ? 'active' : ''} />)}
         </div>}
@@ -59,23 +61,23 @@ function GameMontage({ game }) {
 }
 
 
-function GamerAchievementRail({ items, title, side }) {
+function GamerAchievementRail({ items, title, side, onSelect }) {
   return <aside className={'gamer-console-rail gamer-console-rail-' + side} aria-label={title}>
     <div className="gamer-console-rail-heading"><Trophy size={13} /><span>{title}</span></div>
     <div className="gamer-console-rail-cards">
-      {items.length ? items.map((item, index) => <article className="gamer-console-achievement" key={item.type + ':' + (item.id || index)} title={item.name}>
+      {items.length ? items.map((item, index) => <button type="button" className="gamer-console-achievement" key={item.type + ':' + (item.id || index)} title={'View ' + item.name} onClick={() => onSelect?.(item)} aria-label={'View ' + item.name + ' details'}>
         <div className="gamer-console-achievement-art">
           {item.image ? <img src={item.image} alt="" loading="lazy" /> : (item.type === 'card' ? <Layers3 size={30} /> : <Trophy size={30} />)}
         </div>
         <strong>{item.name}</strong>
         <span>{item.detail}</span>
-      </article>) : <div className="gamer-console-no-rewards">No achievements or cards earned for this game yet.</div>}
+      </button>) : <div className="gamer-console-no-rewards">No achievements or cards earned for this game yet.</div>}
     </div>
   </aside>;
 }
 
 export default function LunaGamerProfile({ player, onClose, initialTab = 'overview' }) {
-  const { user } = useAuth();
+  const { user, avatar: ownAvatar, updateUserData } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const p = asSocialTarget(player);
@@ -90,22 +92,35 @@ export default function LunaGamerProfile({ player, onClose, initialTab = 'overvi
   const [reason, setReason] = useState('harassment');
   const [details, setDetails] = useState('');
   const [requested, setRequested] = useState(false);
+  const [selectedReward, setSelectedReward] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [draftName, setDraftName] = useState('');
+  const [draftBio, setDraftBio] = useState('');
+  const [saving, setSaving] = useState(false);
+  const featureRef = useRef(null);
   const galleryRef = useRef(null);
 
-  const { data: profile, isLoading, error, refetch } = useQuery({
-    queryKey: ['friend-console-profile', user?.id, p.id],
+  const { data: fetchedProfile, isLoading, error, refetch } = useQuery({
+    queryKey: ['console-profile', user?.id, p.id, self ? ownAvatar?.id || 'avatar-loading' : 'friend'],
     enabled: Boolean(user?.id && p.id),
     retry: false,
-    staleTime: 30000,
-    queryFn: async () => unwrap(await base44.functions.invoke('friendConsoleProfile', { target_user_id: p.id })).profile,
+    staleTime: 60000,
+    queryFn: async () => self
+      ? loadSelfConsoleProfile(base44, user, ownAvatar)
+      : unwrap(await base44.functions.invoke('friendConsoleProfile', { target_user_id: p.id })).profile,
   });
+  // Own identity renders immediately, even if the avatar or library is still loading.
+  // Friend profiles retain their existing server-side privacy checks.
+  const profile = self
+    ? { ...buildSelfConsoleProfile(user, ownAvatar), ...fetchedProfile, avatar: ownAvatar || fetchedProfile?.avatar || null }
+    : fetchedProfile;
   const name = profile?.name || p.name;
   const games = profile?.games || [];
   const selectedIndex = Math.max(0, games.findIndex(game => game.id === selectedId));
   const selectedGame = games[selectedIndex] || null;
   const playedCount = profile?.counts?.games || 0;
 
-  useEffect(() => { setSelectedId(''); setMenu(null); }, [p.id]);
+  useEffect(() => { setSelectedId(''); setMenu(null); setSelectedReward(null); setEditing(false); }, [p.id]);
   useEffect(() => {
     if (!user?.id || !p.id || self) return undefined;
     let active = true;
@@ -161,6 +176,25 @@ export default function LunaGamerProfile({ player, onClose, initialTab = 'overvi
     setReporting(false); setMore(false);
   }, 'Report submitted.');
 
+  const openGameDetails = game => {
+    if (!game?.id) return;
+    navigate('/GameDetail?id=' + encodeURIComponent(game.id) + '&from=library');
+    onClose?.();
+  };
+  const openEdit = () => { setDraftName(user?.username || user?.display_name || user?.full_name || ''); setDraftBio(user?.bio || ''); setEditing(true); };
+  const saveEdits = async () => {
+    const username = draftName.trim();
+    if (!username || saving) return;
+    setSaving(true);
+    try {
+      const result = await updateUserData({ username, bio: draftBio.trim() });
+      if (!result?.success) throw new Error(result?.error || 'Could not save your profile.');
+      setEditing(false);
+      await refetch();
+      showSuccess('Your profile was updated.');
+    } catch (e) { showError(e, 'Save profile'); }
+    finally { setSaving(false); }
+  };
   const showGame = index => {
     const game = games[index];
     if (!game) return;
@@ -193,13 +227,14 @@ export default function LunaGamerProfile({ player, onClose, initialTab = 'overvi
   return <div className={'gamer-profile gamer-console ' + (gender === 'female' ? 'gamer-console-female' : gender === 'male' ? 'gamer-console-male' : '')}
     data-luna-gamer-profile={p.id}
     data-profile-layout="profile-console"
+    data-profile-owner={self ? 'you' : 'friend'}
     style={wallpaper ? { '--gamer-wallpaper': 'url(' + JSON.stringify(wallpaper) + ')' } : undefined}>
     <nav className="gamer-console-nav" aria-label="Player profile">
       <span className="gamer-console-brand"><Shield size={19} /> ATOM <b>X</b> EVE</span>
-      <span className="gamer-console-nav-active">Profile</span>
-      <span className="gamer-console-nav-link">Games</span>
-      <span className="gamer-console-nav-link">Social</span>
-      <span className="gamer-console-nav-link">Achievements</span>
+      <span className="gamer-console-nav-active">{self ? 'Your Profile · You' : 'Profile'}</span>
+      <button type="button" className="gamer-console-nav-link" onClick={() => galleryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })}>Games</button>
+      <button type="button" className="gamer-console-nav-link" onClick={() => { navigate('/Friends'); onClose?.(); }}>Social</button>
+      <button type="button" className="gamer-console-nav-link" onClick={() => featureRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })}>Achievements</button>
       <span className="gamer-console-nav-spacer" />
       <button type="button" onClick={() => refetch()} aria-label="Refresh player profile" title="Refresh profile"><RefreshCw size={15} /></button>
     </nav>
@@ -228,7 +263,8 @@ export default function LunaGamerProfile({ player, onClose, initialTab = 'overvi
           <div><strong>{profile?.counts?.cards || 0}</strong><span>Cards</span></div>
         </div>
         <div className="gamer-console-identity-actions">
-          <button type="button" onClick={() => { navigate('/PlayerProfile?userId=' + encodeURIComponent(p.id) + '&view=dashboard'); onClose?.(); }} disabled={!profile}><LayoutDashboard size={13} /> Open dashboard profile</button>
+          {self && <button type="button" onClick={openEdit}><Shield size={13} /> Edit Your Profile</button>}
+          <button type="button" onClick={() => { navigate('/PlayerProfile?userId=' + encodeURIComponent(p.id) + '&view=dashboard'); onClose?.(); }} disabled={!profile}><LayoutDashboard size={13} /> {self ? 'Open Your Profile Page' : 'Open dashboard profile'}</button>
           {!self && <button type="button" onClick={join} disabled={!!busy}><LogIn size={13} /> Join dashboard</button>}
           {!self && <button type="button" onClick={trade} disabled={!!busy}><Repeat2 size={13} /> Trade cards</button>}
           {!self && <div className="gamer-profile-more-wrap">
@@ -242,20 +278,20 @@ export default function LunaGamerProfile({ player, onClose, initialTab = 'overvi
         </div>
       </aside>
 
-      <main className="gamer-console-feature gamer-console-panel">
+      <main ref={featureRef} className="gamer-console-feature gamer-console-panel">
         <div className="gamer-console-feature-top">
-          <span className="gamer-eyebrow">FEATURED GAME · PLAYER COLLECTION</span>
+          <span className="gamer-eyebrow">{self ? 'YOUR GAMES · YOUR ACHIEVEMENTS' : 'FEATURED GAME · PLAYER COLLECTION'}</span>
           <span className="gamer-console-feature-count">{rewards.length} unlocked rewards</span>
         </div>
         {isLoading && <p className="gamer-status" role="status">Loading player games, achievements and cards…</p>}
         {error && <div className="gamer-status" role="alert">{error.message || 'Profile could not load.'} <button type="button" onClick={() => refetch()}>Try again</button></div>}
         <div className="gamer-console-feature-grid">
-          <GamerAchievementRail title="FEATURED ACHIEVEMENTS" side="left" items={rewardsLeft} />
+          <GamerAchievementRail title="FEATURED ACHIEVEMENTS" side="left" items={rewardsLeft} onSelect={setSelectedReward} />
           <div className="gamer-console-feature-hero">
-            <GameMontage game={selectedGame} />
+            <GameMontage game={selectedGame} onOpen={openGameDetails} />
             {!!selectedGame && <div className="gamer-console-feature-subtitle"><Gamepad2 size={13} />{selectedGame.genre || 'Game'} · {selectedGame.played ? 'Played' : 'In collection'}</div>}
           </div>
-          <GamerAchievementRail title="RECENT REWARDS" side="right" items={rewardsRight} />
+          <GamerAchievementRail title="RECENT REWARDS" side="right" items={rewardsRight} onSelect={setSelectedReward} />
         </div>
         {reporting && <div className="gamer-report">
           <label>Reason<select value={reason} onChange={event => setReason(event.target.value)}>{['harassment', 'spam', 'hate', 'other'].map(value => <option key={value}>{value}</option>)}</select></label>
@@ -295,9 +331,34 @@ export default function LunaGamerProfile({ player, onClose, initialTab = 'overvi
               <button type="button" role="menuitem" onClick={inviteDashboard}><LayoutDashboard size={14} /> To Dashboard</button>
             </div>}
           </div>
-        </div> : <p className="gamer-console-self">Your live AI avatar</p>}
+        </div> : <div className="gamer-profile-actions gamer-own-profile-actions">
+          <button type="button" onClick={openEdit}><Shield size={14} /> Edit Profile</button>
+          <button type="button" onClick={() => galleryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })}><Gamepad2 size={14} /> My Games</button>
+        </div>}
       </aside>
     </div>
+
+    {selectedReward && <div className="gamer-console-detail-backdrop" onClick={() => setSelectedReward(null)}>
+      <section role="dialog" aria-label="Achievement details" className="gamer-console-detail" onClick={event => event.stopPropagation()}>
+        <div className="gamer-console-detail-header"><strong>{selectedReward.type === 'card' ? 'COLLECTIBLE CARD' : 'ACHIEVEMENT'}</strong>
+          <button type="button" onClick={() => setSelectedReward(null)} aria-label="Close achievement details">×</button></div>
+        {selectedReward.image && <img src={selectedReward.image} alt="" />}
+        <h2>{selectedReward.name}</h2><p>{selectedReward.detail}</p>
+        <button type="button" onClick={() => setSelectedReward(null)}>Close</button>
+      </section>
+    </div>}
+    {self && editing && <div className="gamer-console-detail-backdrop" onClick={() => !saving && setEditing(false)}>
+      <form className="gamer-console-detail gamer-console-editor" onClick={event => event.stopPropagation()} onSubmit={event => { event.preventDefault(); saveEdits(); }}>
+        <div className="gamer-console-detail-header"><strong>EDIT YOUR PROFILE</strong>
+          <button type="button" onClick={() => setEditing(false)} disabled={saving} aria-label="Close profile editor">×</button></div>
+        <label>Your display name<input value={draftName} onChange={event => setDraftName(event.target.value)} maxLength={80} required /></label>
+        <label>Your bio<textarea value={draftBio} onChange={event => setDraftBio(event.target.value)} maxLength={500} rows={4} /></label>
+        <div className="gamer-console-editor-actions">
+          <button type="button" onClick={() => setEditing(false)} disabled={saving}>Cancel</button>
+          <button type="submit" disabled={saving || !draftName.trim()}>{saving ? 'Saving…' : 'Save Profile'}</button>
+        </div>
+      </form>
+    </div>}
 
     <section className="gamer-gallery" aria-label="Player game collection">
       <header className="gamer-gallery-header">
