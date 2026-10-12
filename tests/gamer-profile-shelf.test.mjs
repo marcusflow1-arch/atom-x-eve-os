@@ -85,3 +85,19 @@ test('Friends and sidebar share the responsive console profile with live 3D and 
   assert.match(backend, /const catalog = \[\.\.\.gameMap\.values\(\)\]/);
   assert.match(backend, /screenshots:/);
 });
+
+test('AI Attribute header opens the signed-in player profile, not a friends directory', () => {
+  const dashboard = source('../src/components/dashboard/DashboardAvatarOverview.jsx');
+  const profile = source('../src/components/dashboard/LunaGamerProfile.jsx');
+  const backend = source('../base44/functions/friendConsoleProfile/entry.ts');
+  const aiHeading = dashboard.split('data-axe-panel-label')[1]?.split('{socialModeActive ?')[0] || '';
+  assert.match(aiHeading, /aria-label="View your profile"/);
+  assert.match(aiHeading, /<UserRound/);
+  assert.match(aiHeading, /id: String\(user\.id\)/);
+  assert.match(aiHeading, /setProfileTarget\(/);
+  assert.doesNotMatch(aiHeading, /People Online|Friends Online/);
+  assert.match(dashboard, /"Your Profile · You" : "Gamer Profile"/);
+  assert.match(profile, /self \? ' · You'/);
+  assert.match(profile, /<GenesisModelPreview/);
+  assert.match(backend, /const self = targetId === String\(user\.id\)/);
+});
