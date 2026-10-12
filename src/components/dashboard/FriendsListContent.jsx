@@ -10,6 +10,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import FriendMessengerPanel from '@/components/friends/FriendMessengerPanel';
+import LunaGamerProfile from './LunaGamerProfile';
 
 const playerIdFor = (userObj) => String(userObj?.friend_id || userObj?.player_id || userObj?.id || '').trim();
 
@@ -289,7 +290,11 @@ export default function FriendsListContent({ lunaOverlay = false }) {
         </div>
 
         <div className={`flex-1 relative overflow-hidden flex flex-col ${lunaOverlay ? 'bg-[radial-gradient(circle_at_34%_18%,rgba(56,84,116,.18),transparent_34%),linear-gradient(135deg,rgba(18,29,44,.42),rgba(10,17,28,.26))]' : 'bg-gradient-to-br from-slate-900/50 to-slate-800/50'} ${pendingInvite ? 'pt-14' : ''}`}>
-          {selectedFriend ? (
+          {selectedFriend && selectedIsFriend ? (
+            <motion.div key={`gamer-${activeTab}-${selectedId}`} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.22 }} className="flex-1 min-h-0 min-w-0 overflow-hidden">
+              <LunaGamerProfile key={selectedId} player={{ ...selectedFriend, is_friend: true }} />
+            </motion.div>
+          ) : selectedFriend ? (
             <motion.div key={`${activeTab}-${selectedId}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }} className="flex-1 flex flex-col h-full">
               <div className="h-32 bg-gradient-to-r from-blue-600/20 to-purple-600/20 relative"><div className="absolute inset-0 bg-black/20" /><div className="absolute bottom-4 right-4 flex gap-2"><Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full bg-black/40 hover:bg-black/60 text-white"><MoreHorizontal className="w-4 h-4" /></Button></div></div>
               <div className="px-6 relative flex-1 overflow-y-auto">
@@ -337,8 +342,8 @@ export default function FriendsListContent({ lunaOverlay = false }) {
 
                 <div className="space-y-6">
                   {selectedFriend.current_game && <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4"><div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center"><Gamepad2 className="w-6 h-6 text-blue-400" /></div><div className="flex-1"><p className="text-xs text-white/40 uppercase font-bold">Playing Now</p><p className="text-white font-semibold">{selectedFriend.current_game}</p></div><Button onClick={() => handleJoin(selectedFriend)} size="sm" variant="secondary" className="bg-white/10 hover:bg-white/20 text-white">Dashboard</Button></div>}
-                  <div><h4 className="text-xs font-bold text-white/40 uppercase mb-3">Overview</h4><div className="grid grid-cols-2 gap-3"><div className="p-3 rounded-lg bg-white/5 border border-white/5"><div className="flex items-center gap-2 text-purple-400 mb-1"><Trophy className="w-4 h-4" /><span className="text-xs font-bold">Achievements</span></div><p className="text-xl font-bold text-white">1,240</p></div><div className="p-3 rounded-lg bg-white/5 border border-white/5"><div className="flex items-center gap-2 text-green-400 mb-1"><Shield className="w-4 h-4" /><span className="text-xs font-bold">Reputation</span></div><p className="text-xl font-bold text-white">Elite</p></div></div></div>
-                  <div><h4 className="text-xs font-bold text-white/40 uppercase mb-3">Badges</h4><div className="flex flex-wrap gap-2"><Badge className="bg-white/5 hover:bg-white/10 text-white border-white/10">Early Adopter</Badge><Badge className="bg-white/5 hover:bg-white/10 text-white border-white/10">Beta Tester</Badge><Badge className="bg-white/5 hover:bg-white/10 text-white border-white/10">Streamer</Badge></div></div>
+                  <div><h4 className="text-xs font-bold text-white/40 uppercase mb-3">Overview</h4><div className="grid grid-cols-2 gap-3"><div className="p-3 rounded-lg bg-white/5 border border-white/5"><div className="flex items-center gap-2 text-purple-400 mb-1"><Trophy className="w-4 h-4" /><span className="text-xs font-bold">Achievements</span></div><p className="text-xl font-bold text-white">Private</p></div><div className="p-3 rounded-lg bg-white/5 border border-white/5"><div className="flex items-center gap-2 text-green-400 mb-1"><Shield className="w-4 h-4" /><span className="text-xs font-bold">Reputation</span></div><p className="text-xl font-bold text-white">Private</p></div></div></div>
+                  <div><h4 className="text-xs font-bold text-white/40 uppercase mb-3">Game history</h4><p className="text-xs text-white/45">Add this player as a friend to view their games, AI avatar, achievements, and cards.</p></div>
                 </div>
               </div>
             </motion.div>

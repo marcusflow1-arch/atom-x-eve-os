@@ -38,12 +38,17 @@ function publicCard(row: Row) {
 }
 
 function publicGame(row: Row) {
+  const media = (value: any) => typeof value === 'string' && (/^https?:\/\//i.test(value) || /^\/(?!\/)/.test(value)) ? value : '';
   return {
-    id: row.id,
+    id: String(row.id || ''),
     title: row.title || 'Game',
     genre: row.genre || 'other',
-    cover_image: row.cover_image || row.image || '',
-    banner_image: row.banner_image || '',
+    description: String(row.description || '').slice(0, 400),
+    cover_image: media(row.cover_image || row.image || ''),
+    banner_image: media(row.banner_image || ''),
+    screenshots: (Array.isArray(row.screenshots) ? row.screenshots : []).map(media).filter(Boolean).slice(0, 6),
+    // The UI autoplays direct media files only; YouTube/watch URLs use stills.
+    video_urls: [row.trailer_url, ...(Array.isArray(row.video_urls) ? row.video_urls : [])].map(media).filter(Boolean).slice(0, 2),
     status: row.status || 'available',
   };
 }
@@ -138,12 +143,27 @@ Deno.serve(async (req) => {
       if (!previous || Date.parse(row.granted_at || '') > Date.parse(previous)) acquired.set(id, row.granted_at || row.created_date || '');
     }
     for (const id of played.keys()) gameIds.add(id);
-    const games = [...gameIds]
-      .map((id) => gameMap.get(id))
-      .filter(Boolean)
-      .map((row: Row) => ({...publicGame(row),last_played:played.get(String(row.id))||null,acquired_at:acquired.get(String(row.id))||null}))
-      .sort((a: Row,b: Row) => Math.max(Date.parse(b.last_played||'')||0,Date.parse(b.acquired_at||'')||0) - Math.max(Date.parse(a.last_played||'')||0,Date.parse(a.acquired_at||'')||0))
-      .slice(0, 24);
+    // Browse played AND unplayed catalog titles in the seven-across profile shelf.
+    // An entitlement/card/achievement is not evidence that a game was launched:
+    // only StorePlayHistory marks it "played". Unplayed titles stay dimmed.
+    const catalog = [...gameMap.values()].filter((row: Row) => row?.id && row?.title);
+    const newest = (game: Row) => Math.max(Date.parse(game.last_played || '') || 0, Date.parse(game.acquired_at || '') || 0);
+    const enriched = catalog.map((row: Row) => {
+      const id = String(row.id);
+      return { ...publicGame(row), played: played.has(id),
+        in_library: gameIds.has(id),
+        last_played: played.get(id) || null, acquired_at: acquired.get(id) || null };
+    });
+    enriched.sort((a: Row, b: Row) =>
+      Number(b.played) - Number(a.played) ||
+      Number(b.in_library) - Number(a.in_library) ||
+      (newest(b) - newest(a)) ||
+      String(a.title).localeCompare(String(b.title)));
+    // Include every title associated with this player even when the catalog
+    // grows; fill the rest with browseable (greyed-out) titles.
+    const ownGames = enriched.filter((game: Row) => game.in_library);
+    const otherGames = enriched.filter((game: Row) => !game.in_library).slice(0, Math.max(0, 210 - ownGames.length));
+    const games = [...ownGames, ...otherGames];
 
     const progressionGenres = asArray(progression?.genres).map((genre: Row) => ({
       id: String(genre.id || genre.name || '').toLowerCase().replace(/\s+/g, '_'),
@@ -193,7 +213,9 @@ Deno.serve(async (req) => {
         counts: {
           achievements: achievements.length,
           cards: cards.length,
-          games: games.length,
+          games: games.filter((game: Row) => game.played).length,
+          library_games: ownGames.length,
+          catalog_games: catalog.length,
           genres: genres.length,
         },
       },
