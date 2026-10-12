@@ -40,7 +40,8 @@ export default function DashboardWindow({ id, title, children, onClose, onMinimi
   const gesture = useRef(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
-  const bringForward = () => setZ(stack.focus(id));
+  // Do not rerender a live 3D/profile window on every pointer event inside it.
+  const bringForward = () => { if (stack.top() !== id) setZ(stack.focus(id)); };
   useEffect(() => {
     bringForward();
     const focus = event => {
