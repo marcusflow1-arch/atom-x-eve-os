@@ -24,7 +24,7 @@ const normalizeStatus = (status) => {
   return 'offline';
 };
 
-export default function LunaFriendsQuickAccessPanel() {
+export default function LunaFriendsQuickAccessPanel({ initialAction = 'all' }) {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
@@ -185,6 +185,11 @@ export default function LunaFriendsQuickAccessPanel() {
           </div>
         </div>
 
+        {initialAction !== 'all' && (
+          <p role="status" className="mt-3 border-l border-cyan-200/35 bg-cyan-200/[0.035] px-3 py-2 text-[10px] text-cyan-100/75">
+            {initialAction === 'trade' ? 'Select Trade beside the friend you want to exchange cards with.' : 'Select Profile beside the friend you want to view.'}
+          </p>
+        )}
         <label className="mt-3 flex h-9 items-center gap-2 border border-white/[0.09] bg-white/[0.025] px-3 focus-within:border-cyan-200/20">
           <Search className="h-3.5 w-3.5 text-white/35" />
           <input
