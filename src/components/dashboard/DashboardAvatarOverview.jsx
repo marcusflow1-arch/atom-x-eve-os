@@ -138,6 +138,7 @@ export default function DashboardAvatarOverview() {
   const [leaderboardMode, setLeaderboardMode] = useState(false);
   const [messagesMode, setMessagesMode] = useState(false);
   const [friendsMode, setFriendsMode] = useState(false);
+  const [friendsAction, setFriendsAction] = useState('all');
   const [seasonMode, setSeasonMode] = useState(false);
   const [battleMode, setBattleMode] = useState(false);
   const [surface, setSurface] = useState('dashboard');
@@ -253,7 +254,12 @@ export default function DashboardAvatarOverview() {
   useEffect(() => {
     const openInventory = () => { setInventoryMode(true); focusDashboardWindow('inventory'); };
     const openMemories = () => { setMemoriesMode(true); focusDashboardWindow('records'); };
-    const openFriends = () => { setFriendsMode(true); focusDashboardWindow('friends'); };
+    const openFriends = (event) => {
+      const mode = event?.detail?.mode;
+      setFriendsAction(mode === 'profile' || mode === 'trade' ? mode : 'all');
+      setFriendsMode(true);
+      focusDashboardWindow('friends');
+    };
     const openSkillBook = () => { setCardsMode(true); focusDashboardWindow('cards'); };
     window.addEventListener('openLunaSkillBook', openSkillBook);
     window.addEventListener('openLunaInventoryWorkspace', openInventory);
@@ -417,8 +423,8 @@ export default function DashboardAvatarOverview() {
           onMinimizedChange={setCardsMinimized} onClose={() => { setCardsMode(false); setCardsMinimized(false); }}>
           <LunaCardsPanel onClose={() => setCardsMode(false)} slotDockRef={setSkillBookDock} />
         </DashboardWindow>}
-        {friendsMode && <DashboardWindow id="friends" title="Friends" width={440} height={580} index={2} onClose={() => setFriendsMode(false)}>
-          <LunaFriendsQuickAccessPanel />
+        {friendsMode && <DashboardWindow id="friends" title="Friends" width={470} height={620} index={2} onClose={() => setFriendsMode(false)}>
+          <LunaFriendsQuickAccessPanel initialAction={friendsAction} />
         </DashboardWindow>}
         {socialDirectoryMode && <DashboardWindow id="social-directory" title={socialDirectoryMode === 'online' ? 'People Online' : socialDirectoryMode === 'party' ? 'Invite Friends to Party' : 'Friends Online'}
           width={420} height={590} anchor="ai-attributes" onClose={() => setSocialDirectoryMode(null)}>
