@@ -406,9 +406,10 @@ export default function DashboardAvatarOverview() {
           showcaseEditing={cardsMode} embedded={cardsMode}
           dockTarget={skillBookDock} combatMode={false} />
 
-        {inventoryMode && <DashboardWindow id="inventory" title="Inventory" width={990} height={670} onClose={() => { setInventoryMode(false); setInventorySlot(null); }}>
+        {inventoryMode && <DashboardWindow id="inventory" title="Inventory" width={610} height={670} index={-7} onClose={() => { setInventoryMode(false); setInventorySlot(null); }}>
           <div className="h-full min-h-0 w-full">
             <LunaElderScrollsInventory
+              panel="inventory"
               equippedItems={equippedItems}
               selectedSlotId={inventorySlot}
               onSelectSlot={handleInventorySlot}
@@ -417,6 +418,17 @@ export default function DashboardAvatarOverview() {
               isSaving={isSaving}
             />
           </div>
+        </DashboardWindow>}
+        {inventoryMode && <DashboardWindow id="equipment-slots" title="Equipment Slots" width={445} height={670} index={11} onClose={() => { setInventoryMode(false); setInventorySlot(null); }}>
+          <LunaElderScrollsInventory
+            panel="equipment"
+            equippedItems={equippedItems}
+            selectedSlotId={inventorySlot}
+            onSelectSlot={handleInventorySlot}
+            onEquipItem={handleInventoryEquip}
+            onUnequipSlot={unequipItem}
+            isSaving={isSaving}
+          />
         </DashboardWindow>}
         {cardsMode && <DashboardWindow id="cards" title="Skill Book" appearance="skillbook" anchor="skillbook"
           subtitle="Discover skills from across worlds. Learn. Combine. Make it your own."
