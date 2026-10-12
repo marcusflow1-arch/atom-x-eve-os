@@ -179,7 +179,19 @@ export default function LunaFriendsQuickAccessPanel({ initialAction = 'all' }) {
             <p className="text-[7px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Quick Access</p>
             <h2 className="text-[15px] font-semibold text-white">Friends</h2>
           </div>
-          <div className="ml-auto text-right">
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Open my profile"
+              title="My Profile"
+              onClick={() => window.dispatchEvent(new CustomEvent('openLunaGamerProfile', { detail: { player: { id: user?.id, name: user?.username || user?.full_name || 'Player', avatar: user?.avatar_url || '' } } }))}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-cyan-200/30 bg-cyan-200/[0.07] text-cyan-100 transition hover:bg-cyan-200/[0.16] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-200"
+            >
+              <UserRound className="h-4 w-4" />
+            </button>
+            <span role="img" aria-label="Reserved blank circle" title="Reserved" className="block h-9 w-9 shrink-0 rounded-full border border-white/20 bg-white/[0.025]" />
+          </div>
+          <div className="text-right">
             <p className="text-[10px] font-semibold text-white">{onlineCount} online</p>
             <p className="text-[7px] text-white/38">{friends.length} friends</p>
           </div>
