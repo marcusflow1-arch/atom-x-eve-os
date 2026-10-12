@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Check, Lock, Package, Search, Shield, Swords, Wrench } from 'lucide-react';
+import { Check, Lock, Package, Search, Shield, Swords, Wrench, Gem, Crown, ScrollText, X } from 'lucide-react';
 import useOwnedEquipment from '@/components/luna/hooks/useOwnedEquipment';
 import InventoryGrid from './InventoryGrid';
 import { equipmentGridPlaceholders } from './equipmentGridLayout';
@@ -28,6 +28,7 @@ const slotKind = (item) => {
   return 'armor';
 };
 const itemIcon = (item) => item?.icon_url || item?.image || item?.image_url || '';
+const rarityGlow = (rarity) => ({ Common: 'rgba(173,194,210,.25)', Uncommon: 'rgba(80,210,134,.65)', Rare: 'rgba(50,166,248,.8)', Epic: 'rgba(173,92,250,.85)', Legendary: 'rgba(246,184,61,.85)', Mythical: 'rgba(250,83,106,.85)', Mythic: 'rgba(250,83,106,.85)' }[rarity] || 'rgba(173,194,210,.25)');
 const labelStat = (key) => String(key).replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 const firstCompatible = (item) => GEAR_SLOTS.find((slot) => itemFitsSlot(item, slot.id))?.id || null;
 
@@ -97,10 +98,10 @@ export default function LunaElderScrollsInventory({
     <div
       data-luna-elder-inventory
       className="flex h-full w-full min-h-0 min-w-0 overflow-hidden text-white"
-      style={{ background: 'linear-gradient(135deg, rgba(6,8,12,0.93), rgba(20,23,28,0.90) 55%, rgba(7,9,13,0.94))' }}
+      style={{ background: 'linear-gradient(145deg, rgba(3,12,27,.97), rgba(8,26,49,.95) 48%, rgba(2,9,22,.98))', fontFamily: 'inherit' }}
     >
-      {panel !== 'inventory' && <section aria-label="Equipment slots" className={`flex h-full min-w-0 flex-col ${panel === 'both' ? 'w-1/2 border-r border-white/[0.12]' : 'w-full'}`}>
-        {/* The actual pre-existing slot design, not the character silhouette redesign. */}
+      {panel !== 'inventory' && <section aria-label="Equipment slots" className={`flex h-full min-w-0 flex-col ${panel === 'both' ? 'w-1/2 border-r border-cyan-200/20' : 'w-full'} ring-1 ring-inset ring-cyan-300/20 shadow-[inset_0_0_38px_rgba(17,111,177,.09)]`}>
+        <header className="flex shrink-0 items-center gap-3 border-b border-cyan-200/20 bg-gradient-to-r from-[#08192d] to-[#0b2540] px-4 py-3 shadow-[0_1px_12px_rgba(20,161,255,.14)]"><Crown className="h-6 w-6 text-cyan-200" /><h2 className="font-serif text-[22px] tracking-wide text-slate-100">Equipment</h2><span className="ml-auto text-[9px] uppercase tracking-widest text-cyan-200/45">Loadout</span></header>
         <div className="min-h-0 flex-1">
           <InventoryGrid
             equippedItems={equippedItems}
@@ -110,7 +111,7 @@ export default function LunaElderScrollsInventory({
             selectedSlotId={chosenSlot}
           />
         </div>
-        <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-white/[0.08] bg-black/25 px-4 py-2.5">
+        <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-cyan-200/20 bg-[#041225]/90 px-4 py-2.5">
           <div className="min-w-0">
             <p className="truncate text-[9px] font-semibold text-white/85">
               {chosenSlot ? getEquipmentSlotLabel(chosenSlot) : 'Select an equipment slot'}
@@ -128,16 +129,16 @@ export default function LunaElderScrollsInventory({
         </footer>
       </section>}
 
-      {panel !== 'equipment' && <section aria-label="Equipment inventory" className={`flex h-full min-w-0 flex-col ${panel === 'both' ? 'w-1/2' : 'w-full'}`}>
-        <header className="shrink-0 border-b border-white/[0.09] px-3 py-3.5">
+      {panel !== 'equipment' && <section aria-label="Equipment inventory" className={`flex h-full min-w-0 flex-col ${panel === 'both' ? 'w-1/2' : 'w-full'} ring-1 ring-inset ring-cyan-300/20 shadow-[inset_0_0_38px_rgba(17,111,177,.09)]`}>
+        <header className="shrink-0 border-b border-cyan-200/15 bg-gradient-to-b from-[#0a2340]/75 to-transparent px-4 py-3.5">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-[8px] font-black uppercase tracking-[0.18em] text-white/40">Equipment Collection</p>
-              <h2 className="mt-0.5 text-[17px] font-semibold text-white/90">Inventory</h2>
+              <h2 className="mt-0.5 flex items-center gap-2 font-serif text-[23px] tracking-wide text-white"><Package className="h-5 w-5 text-cyan-200" /> Inventory</h2>
             </div>
             <span className="text-[10px] text-white/45">{items.length} owned</span>
           </div>
-          <label className="mt-3 flex h-8 items-center gap-2 border border-white/[0.09] bg-black/25 px-2">
+          <label className="mt-3 flex h-9 items-center gap-2 rounded-md border border-cyan-300/20 bg-[#030e1e]/80 px-3 focus-within:border-cyan-200/50">
             <Search className="h-3.5 w-3.5 text-white/40" />
             <input
               aria-label="Search equipment"
@@ -155,9 +156,9 @@ export default function LunaElderScrollsInventory({
                 key={id}
                 aria-pressed={filter === id}
                 onClick={() => setFilter(id)}
-                className={`shrink-0 border px-2 py-1.5 text-[9px] transition-colors ${filter === id
-                  ? 'border-white/30 bg-white/[0.12] text-white'
-                  : 'border-white/[0.07] bg-black/10 text-white/50 hover:text-white/90'}`}
+                className={`shrink-0 rounded-t-md border px-3 py-2 text-[10px] transition-colors ${filter === id
+                  ? 'border-cyan-300/55 bg-cyan-500/[0.19] text-cyan-50 shadow-[inset_0_-2px_0_rgba(80,195,255,.75)]'
+                  : 'border-cyan-200/[0.08] bg-[#041325]/60 text-white/55 hover:text-white/90'}`}
               >
                 {label}
               </button>
@@ -191,9 +192,8 @@ export default function LunaElderScrollsInventory({
                   aria-label={`${item.name}, ${item.rarity || 'Common'}${worn ? ', equipped' : ''}`}
                   aria-pressed={selected}
                   onClick={() => setSelectedItemId(id)}
-                  className={`group relative aspect-square min-w-0 overflow-hidden rounded-[5px] border transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-cyan-200
-                    ${selected ? 'border-cyan-200/70 bg-cyan-100/[0.12] shadow-[inset_0_0_14px_rgba(103,232,249,0.09)]'
-                      : 'border-white/[0.13] bg-black/40 hover:border-white/35 hover:bg-white/[0.07]'}`}
+                  className={`group relative aspect-square min-w-0 overflow-hidden rounded-md border bg-[#030b18]/90 transition-all hover:brightness-125 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-200 ${selected ? 'ring-2 ring-cyan-200' : ''}`}
+                  style={{ borderColor: rarityGlow(item.rarity), boxShadow: `inset 0 0 14px ${rarityGlow(item.rarity)}22, 0 0 8px ${rarityGlow(item.rarity)}22` }}
                 >
                   {image
                     ? <img src={image} alt="" className="h-full w-full object-contain p-1.5" loading="lazy" />
@@ -216,7 +216,7 @@ export default function LunaElderScrollsInventory({
               <div
                 key={`empty-${i}`}
                 aria-hidden="true"
-                className="aspect-square min-w-0 rounded-[5px] border border-white/[0.045] bg-black/[0.19]"
+                className="aspect-square min-w-0 rounded-md border border-cyan-100/[0.07] bg-[#030b18]/50"
               />
             ))}
           </div>
@@ -227,7 +227,7 @@ export default function LunaElderScrollsInventory({
           )}
         </div>
 
-        <footer className="min-h-[132px] shrink-0 border-t border-white/[0.09] bg-black/25 px-3 py-3">
+        <footer className="min-h-[132px] shrink-0 border-t border-cyan-200/20 bg-[#041225]/90 px-4 py-3">
           {selectedItem ? (
             <>
               <div className="flex items-start justify-between gap-2">
