@@ -73,7 +73,7 @@ function OfferColumn({ title, cards, confirmed, mine, onRemove }) {
   );
 }
 
-export default function FriendTradePanel({ friend, onClose, currentUser: providedUser, initialCardId }) {
+export default function FriendTradePanel({ friend, onClose, currentUser: providedUser, initialCardId, overlayMode = 'sidebar' }) {
   const { user: signedInUser } = useAuth();
   const currentUser = providedUser || signedInUser;
   const partnerId = friend?.friend_id || friend?.id;
@@ -161,20 +161,24 @@ export default function FriendTradePanel({ friend, onClose, currentUser: provide
   return (
     <motion.div
       initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}
-      className="fixed bottom-[52px] left-[320px] right-0 top-[64px] z-[71] flex min-h-0 flex-col overflow-hidden text-white"
+      data-friend-trade-menu={overlayMode}
+      role={overlayMode === 'dashboard' ? 'dialog' : undefined}
+      aria-modal={overlayMode === 'dashboard' ? 'true' : undefined}
+      aria-label={overlayMode === 'dashboard' ? 'Trade with ' + (friend?.name || 'friend') : undefined}
+      className={`fixed flex min-h-0 flex-col overflow-hidden text-white ${overlayMode === 'dashboard' ? 'left-[max(12px,calc((100vw-1300px)/2))] right-[max(12px,calc((100vw-1300px)/2))] top-[64px] bottom-[48px] z-[2601] rounded-xl border border-cyan-200/20 shadow-[0_26px_90px_rgba(0,0,0,.7)]' : 'bottom-[52px] left-[320px] right-0 top-[64px] z-[71]'}`}
       style={{ background: 'rgba(6,10,16,.72)', backdropFilter: 'blur(34px) saturate(135%)', WebkitBackdropFilter: 'blur(34px) saturate(135%)' }}
     >
       <header className="flex h-[66px] flex-shrink-0 items-center gap-3 border-b border-white/[0.065] px-5">
         <div className="grid h-8 w-8 place-items-center bg-white/[0.055]"><ArrowLeftRight className="h-3.5 w-3.5 text-cyan-100/70" /></div>
         <div><p className="text-[8px] font-bold uppercase tracking-[.22em] text-white/28">Friend Card Trade</p><h2 className="mt-0.5 text-sm font-semibold text-white/90">{friend?.name || state.partner?.name || 'Friend'}</h2></div>
         <div className="ml-auto flex items-center gap-2 text-[8px] uppercase tracking-[.14em] text-white/28"><ShieldCheck className="h-3.5 w-3.5" /> Live Card Inventory</div>
-        <button onClick={onClose} className="ml-2 grid h-8 w-8 place-items-center text-white/35 transition hover:bg-white/[0.05] hover:text-white"><X className="h-4 w-4" /></button>
+        <button type="button" onClick={onClose} aria-label="Close trade menu" className="ml-2 grid h-8 w-8 place-items-center text-white/35 transition hover:bg-white/[0.05] hover:text-white"><X className="h-4 w-4" /></button>
       </header>
 
       {initialCardId && active && !selectedIds.includes(initialCardId) && state.ownedCards.some(card => card.id === initialCardId) && <div className="mx-5 mt-3 flex items-center justify-between gap-4 bg-cyan-200/[.05] p-3 text-xs"><span>Selected: {state.ownedCards.find(card => card.id === initialCardId)?.card_name}</span><button disabled={busy || myConfirmed} onClick={() => toggleCard({ id: initialCardId })} className="text-cyan-200 disabled:opacity-30">Add to offer</button></div>}
       {error && <div className="mx-5 mt-3 border-l border-red-300/35 bg-red-300/[0.035] px-3 py-2 text-[10px] text-red-100/75">{error}</div>}
 
-      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1.35fr)_minmax(330px,.65fr)] gap-0">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-0 overflow-y-auto md:grid-cols-[minmax(0,1.35fr)_minmax(300px,.65fr)] md:overflow-hidden">
         <section className="flex min-h-0 flex-col border-r border-white/[0.055] px-5 py-4">
           <div className="mb-3 flex items-center gap-2"><Gamepad2 className="h-3.5 w-3.5 text-white/35" /><span className="text-[9px] font-bold uppercase tracking-[.18em] text-white/44">Your Cards</span><span className="text-[9px] text-white/20">{state.ownedCards?.length || 0} tradeable</span></div>
           <div className="mb-4 flex gap-2">
