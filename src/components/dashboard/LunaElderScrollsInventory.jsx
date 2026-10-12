@@ -39,6 +39,7 @@ export default function LunaElderScrollsInventory({
   onUnequipSlot,
   onUpgradeItem,
   isSaving = false,
+  panel = 'both',
 }) {
   // The existing owned-equipment hook is backed by the equipment-only card
   // collection. Do not present abilities, skills, companions or demo items.
@@ -98,7 +99,7 @@ export default function LunaElderScrollsInventory({
       className="flex h-full w-full min-h-0 min-w-0 overflow-hidden text-white"
       style={{ background: 'linear-gradient(135deg, rgba(6,8,12,0.93), rgba(20,23,28,0.90) 55%, rgba(7,9,13,0.94))' }}
     >
-      <section aria-label="Equipment slots" className="flex h-full w-1/2 min-w-0 flex-col border-r border-white/[0.12]">
+      {panel !== 'inventory' && <section aria-label="Equipment slots" className={`flex h-full min-w-0 flex-col ${panel === 'both' ? 'w-1/2 border-r border-white/[0.12]' : 'w-full'}`}>
         {/* The actual pre-existing slot design, not the character silhouette redesign. */}
         <div className="min-h-0 flex-1">
           <InventoryGrid
@@ -125,9 +126,9 @@ export default function LunaElderScrollsInventory({
             Unequip
           </button>
         </footer>
-      </section>
+      </section>}
 
-      <section aria-label="Equipment inventory" className="flex h-full w-1/2 min-w-0 flex-col">
+      {panel !== 'equipment' && <section aria-label="Equipment inventory" className={`flex h-full min-w-0 flex-col ${panel === 'both' ? 'w-1/2' : 'w-full'}`}>
         <header className="shrink-0 border-b border-white/[0.09] px-3 py-3.5">
           <div className="flex items-end justify-between gap-3">
             <div>
@@ -281,7 +282,7 @@ export default function LunaElderScrollsInventory({
             </div>
           )}
         </footer>
-      </section>
+      </section>}
     </div>
   );
 }
