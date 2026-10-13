@@ -37,3 +37,32 @@ node --test tests/game5/quests/*.test.mjs  # existing independent quest tests (L
 ```
 
 Full production integration needs authenticated identity, server-authoritative positions and NPC/pickup instances, an inventory-backed immutable collection event, shared ACID persistence, atomic real reward settlement, outbox delivery, world-state replication, comprehensive crash/multi-node QA, and explicit app routing approval.
+
+## G5-0003-B — Game 5 dashboard two-mode integration
+
+The already registered admin-only `/Game5` dashboard continues to mount the **same** Three.js scene in `Game5QuestPreview.jsx`. The visual meshes, camera, lighting, keyboard movement, and mobile controls have not been replaced.
+
+- **Browser Demo:** browser-only, tab-scoped simulation using `browserQuestDemo.mjs`. Simulated token counts are explicitly labeled; none are posted to a backend.
+- **Connected Test:** fail-closed, separate `connectedQuestSession.mjs` state machine. It requires a reviewed `connectedTransport` supplied by the Game 5 dashboard; when absent it displays `disconnected` and a missing-backend message. It does **not** run or copy Browser Demo state. Requests are serialized; NPC dialogue refreshes the authoritative snapshot; card geometry disappears only at authoritative `ready_to_complete` or `completed` state.
+
+### Dependency gate — G5-0003-A
+
+At the time of this change, **no approved authenticated G5-0003-A browser-facing endpoint contract is present on `main`**. Consequently, the dashboard deliberately supplies **no** Connected Test transport. It is incorrect to claim the mode can yet save or award anything through the backend.
+
+The Quest Developer must first provide and document:
+1. The exact authenticated browser API transport (URL or existing sanctioned SDK function), session binding, CSRF/CORS policy, and account/character ownership enforcement.
+2. The supported `load`, `accept`, `pickup`, and `complete` commands; whether the server accepts the existing `npcId` / `pickupId` / `position` payloads or instead uses a different schema. Client-reported coordinates must not be treated as authoritative.
+3. A normalized response of `{snapshot:{quest:{status,objective:{current,required}},cardCollected?,testWallet?},notice?}`, or an explicit mapping adapter agreed with the Quest Developer, and server error status mapping.
+4. The dedicated test-only inventory, reward, idempotency, and persistence guarantees; do not connect real player wallets/inventory.
+
+After coordination, attach a **real authenticated transport** in `src/pages/Game5.jsx` using the approved endpoint/SDK. Never create a client-side trusted actor or a fabricated authenticated response. A separate narrow integration PR is needed if backend contract changes or protected files would be required.
+
+### Test evidence and remaining verification
+
+```sh
+node --test tests/game5/client/connectedQuestSession.test.mjs
+# 6 tests cover no-fallback, server snapshots/reload, duplicate in-flight action,
+# rejected pickup, unauthorized/disconnect/503 errors, and invalid responses.
+```
+
+These tests use test transport fixtures **only inside test files**. They do not prove a live authenticated server connection or browser interaction. Browser end-to-end verification of **both** modes on the Luna → Game 5 entry route remains blocked until an installed/full environment and real G5-0003-A endpoints are provided. No QA or deployment approval is implied.
