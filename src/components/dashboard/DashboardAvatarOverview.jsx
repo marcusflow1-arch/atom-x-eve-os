@@ -55,8 +55,8 @@ function GlassSlot({ icon: Icon, label, active, alert = false, badge = 0, onClic
     >
       <div className={`pointer-events-none absolute inset-0 border ${compact ? 'rounded-lg' : 'rounded-xl'} ${active ? 'border-cyan-200/[0.12]' : 'border-cyan-300/[0.04]'}`} />
       {Icon && <Icon className={`pointer-events-none absolute left-1/2 -translate-x-1/2 ${compact ? 'top-[7px] h-3.5 w-3.5' : 'top-[12px] h-4 w-4'} ${active || alert ? 'text-cyan-100' : 'text-white/55'}`} />}
-      {badge > 0 && <span className={`pointer-events-none absolute grid place-items-center rounded-full bg-cyan-300 px-1 font-black text-slate-950 shadow-[0_0_14px_rgba(103,232,249,.35)] ${compact ? '-right-1 -top-1 min-h-[14px] min-w-[14px] text-[6px]' : '-right-1 -top-1 min-h-[16px] min-w-[16px] text-[7px]'}`}>{badge > 99 ? '99+' : badge}</span>}
-      <span className={`pointer-events-none absolute left-0 right-0 text-center uppercase tracking-wider ${compact ? 'bottom-[4px] text-[5px]' : 'bottom-[5px] text-[6px]'} ${active || alert ? 'text-white/80' : 'text-white/45'}`}>{label}</span>
+      {badge > 0 && <span className={`pointer-events-none absolute grid place-items-center rounded-full bg-cyan-300 px-1 font-black text-slate-950 shadow-[0_0_14px_rgba(103,232,249,.35)] ${compact ? '-right-1 -top-1 min-h-[14px] min-w-[14px] text-[8px]' : '-right-1 -top-1 min-h-[16px] min-w-[16px] text-[9px]'}`}>{badge > 99 ? '99+' : badge}</span>}
+      <span className={`pointer-events-none absolute left-0 right-0 text-center uppercase tracking-wider ${compact ? 'bottom-[4px] text-[8px]' : 'bottom-[5px] text-[8px]'} ${active || alert ? 'text-white/80' : 'text-white/45'}`}>{label}</span>
     </button>
   );
 }
@@ -87,9 +87,9 @@ function StatRow({ icon, label, value, accent = 'text-cyan-300' }) {
     <div className="axe-stat-row flex items-center justify-between gap-3 py-1 border-b border-white/[0.055] last:border-b-0 min-h-[20px]">
       <div className="flex items-center gap-2 min-w-0">
         <span className={accent}>{icon}</span>
-        <span className="text-white/55 text-[9px] uppercase tracking-wider truncate">{label}</span>
+        <span className="text-white/70 text-[12px] uppercase tracking-wide truncate">{label}</span>
       </div>
-      <span className="text-white text-[10px] font-semibold tabular-nums whitespace-nowrap">{value}</span>
+      <span className="text-white text-[13px] font-semibold tabular-nums whitespace-nowrap">{value}</span>
     </div>
   );
 }
@@ -101,7 +101,7 @@ function ProgressBar({ value }) {
 function GenreRows({ genres }) {
   const list = (genres?.length ? genres : FALLBACK_GENRES.map(name => ({ name, level: 1, current_xp: 0, xp_to_next_level: 100 }))).slice(0, 11);
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+    <div className="grid grid-cols-1 gap-y-2">
       {list.map((g, i) => {
         const name = g.name || g.genre || FALLBACK_GENRES[i];
         const level = Number(g.level || 1);
@@ -109,9 +109,9 @@ function GenreRows({ genres }) {
         const next = Math.max(1, Number(g.xp_to_next_level ?? g.next_xp ?? 100));
         return (
           <div key={`${name}-${i}`}>
-            <div className="flex justify-between mb-0.5"><span className="text-white/55 text-[7px] truncate">{name}</span><span className="text-cyan-300/80 text-[7px]">Lv {level}</span></div>
+            <div className="flex justify-between mb-0.5"><span className="text-white/65 text-[9px] truncate">{name}</span><span className="text-cyan-300/80 text-[9px]">Lv {level}</span></div>
             <ProgressBar value={xp / next * 100} />
-            <div className="text-right text-[6px] text-white/25">{xp.toLocaleString()} XP</div>
+            <div className="text-right text-[8px] text-white/45">{xp.toLocaleString()} XP</div>
           </div>
         );
       })}
@@ -481,9 +481,9 @@ export default function DashboardAvatarOverview() {
               <div className="flex items-center gap-2 pr-9">
                 <span className="w-2 h-2 rounded-full bg-cyan-300" />
                 <div className="min-w-0 flex-1">
-                  <div data-axe-panel-label className="text-white/45 text-[8px] uppercase tracking-[0.2em]">{'AI Attribute Box'}</div>
+                  <div data-axe-panel-label className="text-white/60 text-[10.5px] uppercase tracking-[0.2em]">{'AI Attribute Box'}</div>
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="truncate text-white font-bold text-base">
+                    <div className="truncate text-white font-bold text-[21px]">
                       {companion?.name || 'AI Avatar'}
                     </div>
                     <button
@@ -564,13 +564,13 @@ export default function DashboardAvatarOverview() {
                   {attributeView.startsWith('blank-') && <div className="min-h-[300px]" />}
 
                   <div className="axe-genre-block mt-1 pt-1 border-t border-white/[0.08]">
-                    <div className="flex justify-between mb-1"><span className="axe-genre-heading text-white/60 text-[7px] uppercase">Top Genres / Current Levels</span><span className="text-white/30 text-[6px]">XP / Level</span></div>
+                    <div className="flex justify-between mb-1"><span className="axe-genre-heading text-white/70 text-[9px] uppercase">Top Genres / Current Levels</span><span className="text-white/50 text-[8px]">XP / Level</span></div>
                     <GenreRows genres={progression?.genres} />
                   </div>
 
                   <div className="axe-stat-points mt-1 pt-1 border-t border-white/[0.08] grid grid-cols-2 gap-1">
                     {[['Strength', stats.strength], ['Intelligence', stats.intelligence], ['Wisdom', stats.wisdom], ['Vitality', stats.vitality]].map(([label, value]) => (
-                      <div key={label} className="border border-white/[0.07] bg-transparent px-2 py-1"><div className="text-white/35 text-[7px] uppercase">{label}</div><div className="text-white text-[10px] font-semibold">{value}</div></div>
+                      <div key={label} className="border border-white/[0.07] bg-transparent px-2 py-1"><div className="text-white/55 text-[9px] uppercase">{label}</div><div className="text-white text-[13px] font-semibold">{value}</div></div>
                     ))}
                   </div>
                 </>
