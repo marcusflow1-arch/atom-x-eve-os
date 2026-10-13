@@ -722,6 +722,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     courtLine(scene,-5.5,1,5.5,1,0x5de8ff,.18);courtLine(scene,-5.5,7.5,5.5,7.5,0x5de8ff,.18);courtLine(scene,-5.5,-1,5.5,-1,0xff7799,.18);courtLine(scene,-5.5,-7.5,5.5,-7.5,0xff7799,.18);
 
     let disposed = false, frame = 0, previous = performance.now(), shoulder = 1, cameraDistance = 6.2;
+    const moveSessionId = crypto.randomUUID?.() || String(Date.now());
+    const retiredMovementSessions = new Set();
     // Only smooth the visible opponent; combat uses positions.current.opponent.
     let opponentVisualPos = null;
     const smoothOpponent = new URLSearchParams(window.location.search).get('aibattlesmooth') !== '0';
