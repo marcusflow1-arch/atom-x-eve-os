@@ -1,0 +1,32 @@
+name: Shared multiplayer smoothing tests
+on:
+  pull_request:
+    paths:
+      - 'src/components/network/remote/**'
+      - 'src/components/game3d/RemotePlayersManager.jsx'
+      - 'src/components/battle/**'
+      - 'tests/network-position-correction.test.mjs'
+      - '.github/workflows/network-smoothing.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/components/network/remote/**'
+      - 'src/components/game3d/RemotePlayersManager.jsx'
+      - 'src/components/battle/**'
+      - 'tests/network-position-correction.test.mjs'
+      - '.github/workflows/network-smoothing.yml'
+jobs:
+  network-smoothing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Validate shared position reconciliation
+        run: node --test tests/network-position-correction.test.mjs tests/ai-battle-attack-preview.test.mjs tests/pvp-latency.test.mjs
+      - name: Check full application build
+        run: npm run build

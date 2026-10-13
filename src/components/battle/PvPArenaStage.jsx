@@ -33,6 +33,8 @@ import { requestAIBattle } from './battleClient';
 import { skillSlotFromKey } from '@/components/luna/skillSlots';
 import { characterBodyBounds } from '@/lib/characterModelOverrides';
 import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, RUN_SPEED, SPAWN_Z, WALK_SPEED } from './arenaConfig';
+import { reconcileNetworkPosition } from '../network/remote/positionCorrection';
+import { makeAttackPreview, PREVIEW_KINDS } from './attackPreview';
 
 const lerpAngle = (a, b, maxStep) => {
   let delta = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI;
@@ -289,6 +291,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   // accepted; this set only prevents the accepted response from restarting the
   // exact same animation a second time.
   const predictedLocalCasts = useRef(new Set());
+  // Remote visual previews use the same cast ID as the later authoritative ack.
+  // They never apply damage or claim that a strike connected.
+  const predictedRemoteCasts = useRef(new Set());
   const shownSlashes = useRef(new Set());
   const shownHits = useRef(null);
   const menuBlockedRef = useRef(false);
@@ -405,7 +410,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const effectId = cast.effect_id || skill?.effect_id || '';
     const chidori = isChidoriCast(skill || { clip_name: cast.clip_name }, effectId);
     const wasPredictedLocally = casterKey === 'local' && castId && predictedLocalCasts.current.delete(castId);
-    const started = wasPredictedLocally
+    const wasPredictedRemotely = casterKey === 'opponent' && castId && predictedRemoteCasts.current.delete(castId);
+    const started = wasPredictedLocally || wasPredictedRemotely
       ? true
       : (skill ? playSkill(caster, skill, targetId, facingYaw, { castId, damage: cast.damage }) : false);
     if (!started && caster && !chidori) caster.lunge = { start: performance.now() };
@@ -522,6 +528,10 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       setLastCastSlot((state) => ({ ...state, local: Number(skill.slot) }));
     }
     if (localStorage.getItem('atomxe_pvp_latency_debug') === '1') console.info('[PvP latency] cast_input', { castId, at: performance.now() });
+    // Emit the visual start to the remote browser on input, not after the
+    // Base44 round-trip. A separate confirmed event follows only on success.
+    const skillPreview = makeAttackPreview({ type: 'skill', matchId: match.id, castId, slot, effectId: skill.effect_id });
+    if (skillPreview) window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: skillPreview }));
     actionPending.current = true;
     try {
       const body = await invoke('use_skill', { match_id: match.id, slot: Number(slot), cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
@@ -565,6 +575,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     actionPending.current = true;
     // Predict only the swing. HP, hit text and target reaction wait for the server.
     showMeleeSlash(user.id, castId);
+    const meleePreview = makeAttackPreview({ type: 'melee', matchId: match.id, castId });
+    if (meleePreview) window.dispatchEvent(new CustomEvent('multiplayerLocalAction', { detail: meleePreview }));
     try {
       const body = await invoke('basic_attack', { match_id: match.id, cast_id: castId, attacker_pos: { x: a.x, z: a.z }, target_pos: { x: b.x, z: b.z } });
       const cast = body.cast || {};
@@ -705,6 +717,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     courtLine(scene,-5.5,1,5.5,1,0x5de8ff,.18);courtLine(scene,-5.5,7.5,5.5,7.5,0x5de8ff,.18);courtLine(scene,-5.5,-1,5.5,-1,0xff7799,.18);courtLine(scene,-5.5,-7.5,5.5,-7.5,0xff7799,.18);
 
     let disposed = false, frame = 0, previous = performance.now(), shoulder = 1, cameraDistance = 6.2;
+    // Only smooth the visible opponent; combat uses positions.current.opponent.
+    let opponentVisualPos = null;
+    const smoothOpponent = new URLSearchParams(window.location.search).get('aibattlesmooth') !== '0';
     const barRoots = [];
     const barObjects = [];
     const addBar = (fighter, isLocal) => {
@@ -724,6 +739,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       runtimes.current = { local: localFighter, opponent: opponentFighter };
       positions.current.local.set(0,0,localSide === 'host' ? SPAWN_Z : -SPAWN_Z);
       positions.current.opponent.set(0,0,opponentSide === 'host' ? SPAWN_Z : -SPAWN_Z);
+      opponentVisualPos = [positions.current.opponent.x, 0, positions.current.opponent.z];
       addBar(localFighter,true); addBar(opponentFighter,false);
       // Do the expensive material/program compilation while the arena still says
       // "Loading fighters". WebGL can otherwise compile a material on its first
@@ -749,8 +765,32 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       const d=event.detail||{}; const currentMatch=matchRef.current; const currentOpponent=opponentRef.current;
       if(String(d.matchId||'')!==String(currentMatch?.id||'')||String(d.sourcePlayerId||d.player_id||'')!==String(currentOpponent?.id||''))return;
       if (localStorage.getItem('atomxe_pvp_latency_debug') === '1') console.info('[PvP latency] peer_cast_received', { castId: d.cast_id, at: performance.now() });
-      // Peer relay is the fastest path; the server poll (hit_log / last_cast)
-      // shows the same action if this message never arrives.
+      // Visual-only peer hints happen before server acceptance. Never apply
+      // HP, hit reactions, ATB, or ability resolution based on these hints.
+      if (d.kind === PREVIEW_KINDS.melee) {
+        if (d.cast_id) showMeleeSlashRef.current?.(currentOpponent.id, d.cast_id);
+        return;
+      }
+      if (d.kind === PREVIEW_KINDS.skill) {
+        const id = String(d.cast_id || '');
+        if (!id || playedCasts.current.has(id) || predictedRemoteCasts.current.has(id)) return;
+        const skill = (currentOpponent?.skills || []).find((entry) => Number(entry.slot) === Number(d.slot));
+        const fighter = runtimes.current.opponent;
+        const a = positions.current.opponent, b = positions.current.local;
+        if (!skill || !fighter || !a || !b) return;
+        const facingYaw = Math.atan2(b.x - a.x, b.z - a.z);
+        if (playSkill(fighter, skill, user.id, facingYaw, { castId: id, predicted: true })) {
+          predictedRemoteCasts.current.add(id);
+          // Bound orphan previews from rejected or disconnected casts.
+          if (predictedRemoteCasts.current.size > 128) {
+            predictedRemoteCasts.current.delete(predictedRemoteCasts.current.values().next().value);
+          }
+          recordPvPLatency('peer_cast_preview_visual', id);
+        }
+        return;
+      }
+      // Confirmed server events retain the original visuals and combat sync.
+      // The hit log remains authoritative even if no peer packet arrives.
       if (String(d.kind || '') === 'pvp_melee' || String(d.effect_id || '') === 'basic_melee') {
         showMeleeSlashRef.current?.(currentOpponent.id, d.cast_id);
         return;
@@ -817,6 +857,11 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
           }
         }
         const renderTime=Date.now()+offset-INTERPOLATION_DELAY_MS; const samples=remoteSamples.current; if(samples.length){let a=samples[0],b=samples[samples.length-1];for(let i=0;i<samples.length-1;i++){if(Number(samples[i].t)<=renderTime&&Number(samples[i+1].t)>=renderTime){a=samples[i];b=samples[i+1];break;}}const span=Math.max(1,Number(b.t)-Number(a.t));const t=THREE.MathUtils.clamp((renderTime-Number(a.t))/span,0,1);const box=boxFor(opponentSide);const p=clampPos({x:THREE.MathUtils.lerp(Number(a.x),Number(b.x),t),z:THREE.MathUtils.lerp(Number(a.z),Number(b.z),t)},box);op.x=p.x;op.z=p.z;setMotion(of,(Date.now()-Number(b.receivedAt||0)>500||b.moving===false)?'idle':`${b.running?'run':'walk'}_${b.anim||'forward'}`);}else{const stored=currentMatch?.positions?.[currentOpponent?.id];if(stored){op.x=Number(stored.x||op.x);op.z=Number(stored.z||op.z);}}
+        // Prevent delayed network corrections from warping the visible opponent.
+        // Targeting, skill timing and server combat continue using op unchanged.
+        if (!opponentVisualPos) opponentVisualPos = [op.x, 0, op.z];
+        else if (smoothOpponent) opponentVisualPos = reconcileNetworkPosition(opponentVisualPos, [op.x, 0, op.z], dt).pos;
+        else opponentVisualPos = [op.x, 0, op.z];
         lf.yaw=lerpAngle(lf.yaw,Math.atan2(op.x-lp.x,op.z-lp.z),FACING_SPEED*dt);of.yaw=lerpAngle(of.yaw,Math.atan2(lp.x-op.x,lp.z-op.z),FACING_SPEED*dt);
         // Lunge/recoil offsets are presentation only; the logical positions
         // (lp/op) that are sent to the server and the peer are unchanged.
@@ -840,7 +885,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         }
         const localMotion=motionOffset(lf,now,gap), opponentMotion=motionOffset(of,now,gap);
         lf.root.position.x=lp.x+towardX*localMotion.push;lf.root.position.z=lp.z+towardZ*localMotion.push;lf.root.position.y=(lf.baseY||0)+localMotion.lift;
-        of.root.position.x=op.x-towardX*opponentMotion.push;of.root.position.z=op.z-towardZ*opponentMotion.push;of.root.position.y=(of.baseY||0)+opponentMotion.lift;
+        of.root.position.x=opponentVisualPos[0]-towardX*opponentMotion.push;of.root.position.z=opponentVisualPos[2]-towardZ*opponentMotion.push;of.root.position.y=(of.baseY||0)+opponentMotion.lift;
         // Auto-lock owns world facing even while an authored ability clip is
         // running. Push the continuously updated opponent yaw into both runtimes,
         // update the mixers, then re-apply wrapper rotation after animation so a
@@ -912,6 +957,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       runtimes.current.opponent?.runtime?.dispose?.();
       runtimes.current = { local: null, opponent: null };
       remoteSamples.current = [];
+      predictedRemoteCasts.current.clear();
+      opponentVisualPos = null;
       held.current.clear();
       if (arenaVisualRef.current.scene === scene) arenaVisualRef.current = { scene: null, camera: null };
       renderer.dispose();

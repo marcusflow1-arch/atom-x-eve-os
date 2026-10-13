@@ -4,9 +4,10 @@
 // linear extrapolation (capped) and recovers cleanly when new data arrives.
 
 import * as THREE from 'three';
+import { reconcileNetworkPosition } from './positionCorrection';
 
 const EXTRAPOLATION_MAX_MS = 250; // never extrapolate beyond this without a new sample
-const POS_LERP = 0.5;             // matches the legacy RemotePlayersManager feel
+const POS_LERP = 0.5;             // rollback path
 const YAW_SLERP = 0.4;
 
 const _q = new THREE.Quaternion();
@@ -22,6 +23,7 @@ export function createNetworkRemoteTransform(group) {
   let targetYaw = 0;
   let lastUpdateMs = 0;
   let initialized = false;
+  const smoothRemote = typeof window === 'undefined' || new URLSearchParams(window.location.search).get('g3netsmooth') !== '0';
 
   function setTarget(pos, yaw) {
     const now = performance.now();
@@ -47,7 +49,7 @@ export function createNetworkRemoteTransform(group) {
     lastUpdateMs = now;
   }
 
-  function update(/* dt seconds */) {
+  function update(dt) {
     if (!initialized) return;
     const ageMs = performance.now() - lastUpdateMs;
 
@@ -62,9 +64,19 @@ export function createNetworkRemoteTransform(group) {
       _aim.z += velocity.z * extraS * 0.5;
     }
 
-    group.position.lerp(_aim, POS_LERP);
+    if (smoothRemote) {
+      const fix = reconcileNetworkPosition(
+        [group.position.x, group.position.y, group.position.z],
+        [_aim.x, _aim.y, _aim.z], dt,
+      );
+      group.position.set(...fix.pos);
+    } else {
+      group.position.lerp(_aim, POS_LERP);
+    }
     _q.setFromAxisAngle(_yAxis, targetYaw);
-    group.quaternion.slerp(_q, YAW_SLERP);
+    group.quaternion.slerp(_q, smoothRemote
+      ? 1 - Math.exp(-20 * Math.max(0, Math.min(Number(dt) || 0, 0.1)))
+      : YAW_SLERP);
   }
 
   function getStatus() {
