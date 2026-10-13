@@ -20,10 +20,26 @@ export function createLostCardGameplayController({ repository, world = DEV_WORLD
       );
     },
   });
+  /**
+   * Crash recovery: receipt commit and quest progress are separate transactions
+   * because the existing quest service verifies committed inventory receipts.
+   * Reconcile a durable dev receipt before serving any snapshot. This also
+   * repairs a crash after the receipt commit but before recordItemCollection.
+   * Replays are safe: the unchanged quest service is idempotent.
+   */
   async function snapshot() {
-    const [quest, record] = await Promise.all([service.getQuestState({ actor }), repository.read(DEV_PLAYER)]);
+    let [quest, record] = await Promise.all([service.getQuestState({ actor }), repository.read(DEV_PLAYER)]);
+    const pending = record.devClaims?.[world.card.id];
+    if (quest.status === 'active' && pending) {
+      await service.recordItemCollection({ actor, event: structuredClone(pending) });
+      [quest, record] = await Promise.all([service.getQuestState({ actor }), repository.read(DEV_PLAYER)]);
+    }
+    // A receipt alone does not mean the objective has actually progressed.
+    // If reconciliation fails, the caller receives an error and the browser
+    // never hides the collectible based solely on a half-committed claim.
+    const progressed = quest.status === 'ready_to_complete' || quest.status === 'completed';
     return { quest, testWallet: record.wallet.game5_quest_token ?? 0,
-      cardCollected: Boolean(record.devClaims?.[world.card.id]),
+      cardCollected: progressed,
       developmentOnly: true };
   }
   async function accept({ position, npcId }) {
