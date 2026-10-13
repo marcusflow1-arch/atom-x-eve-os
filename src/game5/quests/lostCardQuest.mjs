@@ -61,6 +61,28 @@ function acceptState() {
   return state;
 }
 
+
+/**
+ * Shared progression logic used by inventory event delivery and the Game 5
+ * server-owned pickup path. Caller must hold an atomic player transaction.
+ */
+function progressAfterCollection(player, state, playerId, event) {
+  state.objective.current = LOST_CARD_QUEST.requiredCount;
+  state.status = 'ready_to_complete';
+  const output = {
+    schema_version: LOST_CARD_QUEST.outputContract,
+    eventId: `${QUEST_ID}:${playerId}:item-collected`,
+    questId: QUEST_ID,
+    playerId,
+    sourceEventId: event.eventId,
+    objectiveId: LOST_CARD_QUEST.objectiveId,
+    cardId: LOST_CARD_QUEST.targetCardId,
+    progress: LOST_CARD_QUEST.requiredCount,
+  };
+  player.outbox[EVENT_KEY] = output;
+  return { progressed: true, state: copyState(state), emittedEvent: structuredClone(output) };
+}
+
 function requireRepository(repository) {
   if (typeof repository?.read !== 'function' || typeof repository?.transact !== 'function') {
     throw new TypeError('Transactional quest repository with read and transact is required');
@@ -112,21 +134,45 @@ export function createLostCardQuestService({ repository, verifyCollection } = {}
           return { progressed: false, state: copyState(state), emittedEvent: null };
         }
 
-        state.objective.current = LOST_CARD_QUEST.requiredCount;
-        state.status = 'ready_to_complete';
-        const output = {
-          schema_version: LOST_CARD_QUEST.outputContract,
-          eventId: `${QUEST_ID}:${playerId}:item-collected`,
-          questId: QUEST_ID,
-          playerId,
-          sourceEventId: event.eventId,
-          objectiveId: LOST_CARD_QUEST.objectiveId,
+        return progressAfterCollection(player, state, playerId, event);
+      });
+    },
+
+    /**
+     * Authenticated Game 5 server-only pickup. The browser supplies neither
+     * identity, position, card receipt, nor event ID. The injected callback
+     * checks a fresh position from a separately trusted server movement feed.
+     *
+     * Receipt, quest progress and outbox are committed in ONE transaction,
+     * closing the receipt→progress crash window in the old dev controller.
+     */
+    async collectTrustedCard({ actor, authorizeCollection }) {
+      const playerId = requireActor(actor);
+      if (typeof authorizeCollection !== 'function') {
+        throw new TypeError('Trusted collection authorization callback is required');
+      }
+      return repository.transact(playerId, async (player) => {
+        const state = player.quests[QUEST_ID];
+        if (!state || state.status !== 'active') {
+          return { progressed: false, state: copyState(state), emittedEvent: null };
+        }
+        if ((await authorizeCollection({ playerId })) !== true) {
+          return { progressed: false, state: copyState(state), emittedEvent: null };
+        }
+        const key = `quest:${QUEST_ID}:lost-card-receipt`;
+        player.questReceipts ??= {};
+        const receipt = player.questReceipts[key] ?? {
+          type: 'game5.inventory.card_collected.v1',
+          eventId: `game5:${QUEST_ID}:${playerId}:server-pickup`,
           cardId: LOST_CARD_QUEST.targetCardId,
-          progress: LOST_CARD_QUEST.requiredCount,
+          cardInstanceId: `game5:${QUEST_ID}:${playerId}:lost-card-copy`,
+          playerId,
+          isolatedTestOnly: true,
         };
-        // Transactional outbox: downstream consumers can deliver this event once.
-        player.outbox[EVENT_KEY] = output;
-        return { progressed: true, state: copyState(state), emittedEvent: structuredClone(output) };
+        validateCollectionEvent(receipt);
+        // Receipt and quest progress are atomically committed, never separately.
+        player.questReceipts[key] = receipt;
+        return progressAfterCollection(player, state, playerId, receipt);
       });
     },
 
