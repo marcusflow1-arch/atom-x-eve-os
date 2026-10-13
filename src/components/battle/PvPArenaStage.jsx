@@ -909,7 +909,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         lf.root.rotation.y=lf.yaw;of.root.rotation.y=of.yaw;
 
         window.__lunaPvPPosition={x:lp.x,z:lp.z};
-        if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;window.webrtcBroadcast?.({type:'movement',payload:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim:moveAnim,moving,running:moving&&!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}});}
+        if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;window.webrtcBroadcast?.({type:'movement',payload:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,move_session_id:moveSessionId,x:lp.x,z:lp.z,yaw:lf.yaw,anim:moveAnim,moving,running:moving&&!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}});}
         if(currentMatch?.status==='ended'){
           of.root.visible=false;
           setMotion(lf,'idle');
