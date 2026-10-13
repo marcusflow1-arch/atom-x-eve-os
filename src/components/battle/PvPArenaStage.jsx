@@ -36,6 +36,7 @@ import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, R
 import { reconcileNetworkPosition } from '../network/remote/positionCorrection';
 import { makeAttackPreview, PREVIEW_KINDS } from './attackPreview';
 import { classifyArenaMovement } from './arenaMovementSequence';
+import { useBattlePeerLink } from './useBattlePeerLink';
 
 const lerpAngle = (a, b, maxStep) => {
   let delta = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI;
