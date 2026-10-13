@@ -957,6 +957,17 @@ function LayoutContent({ children, currentPageName }) {
                     </button>
 
 
+                    {p_lower.includes('/lunatemplate') && user?.role === 'admin' && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(createPageUrl('Game5'))}
+                        aria-label="Open Game 5 development dashboard"
+                        className="shrink-0 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-400/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
+                      >
+                        Game 5
+                      </button>
+                    )}
+
                     {showStoreHeader && (
                       <>
                         {/* Store identity/navigation button restored to the far-left header cluster. */}
