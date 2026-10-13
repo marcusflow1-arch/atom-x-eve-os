@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useWebRTCVoice } from '@/components/shared/useWebRTCVoice';
+import { useAIBattleSnapshot } from '@/components/battle/useAIBattleQueue';
 import { toast } from 'react-hot-toast';
 import { getCompanionState } from '@/components/game3d/companionStore';
 import { getCompanionProgression } from '@/components/game3d/companionProgressionStore';
@@ -35,7 +36,20 @@ export default function MultiplayerSystem({ envUrl, surface = 'dashboard' }) {
   }, [user?.preferred_genres]);
 
   const dashboardParticipants = useDashboardRoom(currentChannel, user, envUrl);
-  useWebRTCVoice(currentChannel, user, !micEnabled || partyVoice, partyVoice, currentChannel?.startsWith("dashboard_") ? dashboardParticipants : participantIds);
+  const { match: activeBattle } = useAIBattleSnapshot();
+  // Dashboard presence refreshes only every 15s. In PvP both participant IDs
+  // are known at matchmaking time; don't stall the WebRTC handshake until
+  // social presence catches up.
+  const battleRoom = activeBattle?.mode === 'pvp'
+    && ['connecting', 'countdown', 'fighting'].includes(String(activeBattle.status))
+    && String(activeBattle.dashboard_channel || '') === String(currentChannel || '')
+    && (activeBattle.player_ids || []).map(String).includes(String(user?.id || ''));
+  const battlePeers = battleRoom
+    ? (activeBattle.player_ids || []).map(String).filter(id => id && id !== String(user.id))
+    : [];
+  const roomPeers = currentChannel?.startsWith('dashboard_') ? dashboardParticipants : participantIds;
+  const livePeers = [...new Set([...roomPeers.map(String), ...battlePeers])].sort();
+  useWebRTCVoice(currentChannel, user, !micEnabled || partyVoice, partyVoice, livePeers);
   useWebRTCVoice(party.party?.voiceRoomId, user, !micEnabled || !partyVoice, !partyVoice, (party.members || []).map(m=>m.user_id), {data:false});
 
   useEffect(() => {
