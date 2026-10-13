@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Gamepad2, Play, RefreshCw, ShieldAlert, Terminal } from 'lucide-react';
 import { createPageUrl } from '@/utils';
@@ -11,9 +11,20 @@ const tile = 'rounded-2xl border border-white/10 bg-[#101b2b]/85 p-5 backdrop-bl
 export default function Game5() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [previewOpen, setPreviewOpen] = useState(false);
+  // Remember the UI mode only, never quest state or trusted reward data.
+  const [previewOpen, setPreviewOpen] = useState(() => {
+    try { return sessionStorage.getItem('game5.quest.display-mode') === 'connected'; }
+    catch { return false; }
+  });
   const [refreshKey, setRefreshKey] = useState(0);
-  const [mode, setMode] = useState('demo');
+  const [mode, setMode] = useState(() => {
+    try { return sessionStorage.getItem('game5.quest.display-mode') === 'connected' ? 'connected' : 'demo'; }
+    catch { return 'demo'; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem('game5.quest.display-mode', mode); }
+    catch { /* UI preference is optional; server state remains authoritative */ }
+  }, [mode]);
   // G5-0003-A logical endpoint contract. Server hosting/auth and movement authority
   // are separate unmerged prerequisites; never use browser-demo state as fallback.
   const [connectedTransport] = useState(() => createGame5QuestHttpTransport());
