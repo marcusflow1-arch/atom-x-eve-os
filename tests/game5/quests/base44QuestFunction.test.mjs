@@ -77,7 +77,7 @@ function setup({ storage = new AtomicTestStore(), movement = true } = {}) {
     const body = payload ?? (action === 'state' ? {} :
       action === 'pickup' ? { pickupId: DEV_WORLD.card.id } : { npcId: DEV_WORLD.npc.id });
     const headers = { 'authorization': `Bearer ${as}` };
-    if (requestOrigin !== undefined) headers.origin = requestOrigin;
+    if (requestOrigin != null) headers.origin = requestOrigin;
     if (fetchSite !== undefined) headers['sec-fetch-site'] = fetchSite;
     if (contentType !== undefined) headers['content-type'] = contentType;
     const response = await functionHandler(new Request('https://host.internal/functions/game5Quest', {
@@ -127,7 +127,7 @@ test('missing, invalid and expired sessions are unauthorized; outages fail close
 
 test('POST is denied without valid Origin or with cross-site request metadata', async () => {
   const { call } = setup();
-  assert.equal((await call('accept', { requestOrigin: undefined })).status, 403);
+  assert.equal((await call('accept', { requestOrigin: null })).status, 403);
   assert.equal((await call('accept', { requestOrigin: 'null' })).status, 403);
   assert.equal((await call('accept', { requestOrigin: 'https://evil.example' })).status, 403);
   assert.equal((await call('accept', { fetchSite: 'cross-site' })).status, 403);
