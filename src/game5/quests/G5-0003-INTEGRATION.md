@@ -20,6 +20,13 @@ Game 2/Game 3, global router, Base44 entities and balances are unchanged.
 - `src/game5/client/browserQuestDemo.mjs` uses browser/sessionStorage state;
   Game5QuestPreview uses client-side Three.js movement. Neither is a trusted
   multiplayer position authority or inventory.
+- Read-only inspection of the connected **Atom x Eve OS** Base44 app schema:
+  an existing entity named `Quest` is a shared quest **definition/catalog**
+  (`key`, `title`, `scope`, `objectives`, `rewards`, `status`);
+  it does not expose the required per-player atomic progress, pickup receipt,
+  completion ledger or outbox transaction. Its create/update/delete rules are
+  admin-only. Do **not** retrofit it for this task without an approved entity
+  migration and security review.
 - Base44 SDK documents hosted backend functions via
   `createClientFromRequest(req)` followed by `await base44.auth.me()` and
   invoking backend functions through `base44.functions.invoke(...)`.
