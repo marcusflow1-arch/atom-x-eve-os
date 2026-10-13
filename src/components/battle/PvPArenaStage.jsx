@@ -307,6 +307,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
 
   const local = useMemo(() => (match?.players || []).find((p) => String(p.id || p.player_id) === String(user?.id)), [match?.players, user?.id]);
   const opponent = useMemo(() => (match?.players || []).find((p) => String(p.id || p.player_id) !== String(user?.id)), [match?.players, user?.id]);
+  const peerConnected = useBattlePeerLink(match, opponent);
   const localRef = useRef(local);
   const opponentRef = useRef(opponent);
   localRef.current = local;
