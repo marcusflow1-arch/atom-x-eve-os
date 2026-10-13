@@ -76,7 +76,8 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                 reconnectTimers.delete(id);
                 if (!isMounted || !participantsRef.current.map(String).includes(id)) return;
                 const current = peersRef.current[id];
-                if (current?.connectionState === 'connected') return;
+                if (current?.connectionState === 'connected'
+                    && Object.values(dataChannelsRef.current[id] || {}).some(ch => ch?.readyState === 'open')) return;
                 if (current) {
                     current.close();
                     if (peersRef.current[id] === current) delete peersRef.current[id];
@@ -287,6 +288,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                     reconnectAttempts.delete(String(peerId));
                     publishPeerState(peerId);
                 }
+                if (pc.connectionState === 'disconnected') scheduleReconnect(peerId);
                 if (['failed', 'closed'].includes(pc.connectionState)) {
                     pc.onconnectionstatechange = null;
                     if (audioRefs.current[peerId]) {
