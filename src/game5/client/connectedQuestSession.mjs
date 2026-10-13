@@ -80,6 +80,7 @@ export function createConnectedQuestSession({ transport = null, onChange = () =>
     getState,
     refresh: () => request('load'),
     dispatch: (action, payload) => {
+      if (inFlight || disposed) return Promise.resolve({ ok: false, reason: 'busy_or_disposed' });
       if (!ACTIONS.has(action)) return Promise.resolve({ ok: false, reason: 'invalid_action' });
       if (!state.snapshot || state.phase !== 'ready') return Promise.resolve({ ok: false, reason: 'not_loaded' });
       return request(action, payload);
