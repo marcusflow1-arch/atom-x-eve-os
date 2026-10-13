@@ -1,0 +1,17 @@
+{
+  "schema_version": "game5.task.v1",
+  "task_id": "G5-0001",
+  "title": "Retrieve the Lost Card: quest event contract",
+  "agent_role": "quest_npc",
+  "status": "planned",
+  "depends_on": [],
+  "allowed_paths": [
+    "src/game5/quests/**",
+    "tests/game5/quests/**"
+  ],
+  "acceptance_tests": [
+    "Item pickup advances quest once",
+    "Server awards exactly once",
+    "Quest state survives reload"
+  ]
+}
