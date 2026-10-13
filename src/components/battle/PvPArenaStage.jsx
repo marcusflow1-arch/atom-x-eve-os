@@ -765,7 +765,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const observer = new ResizeObserver(resize); observer.observe(mount);
 
     const remoteMove = (event) => {
-      const d=event.detail||{}; if(d.kind!=='pvp_move'||String(d.matchId||'')!==String(match.id)||String(d.player_id||d.sourcePlayerId||'')===String(user.id))return;
+      const d=event.detail||{}; if(d.kind!=='pvp_move'||String(d.matchId||'')!==String(match.id)||String(d.player_id||d.sourcePlayerId||'')!==String(opponent.id))return;
       const receivedAt=Date.now();
       const last=remoteSamples.current.at(-1);
       const verdict=classifyArenaMovement(last,d,receivedAt,retiredMovementSessions);
