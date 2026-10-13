@@ -957,7 +957,7 @@ function LayoutContent({ children, currentPageName }) {
                     </button>
 
 
-                    {p_lower.includes('/lunatemplate') && user?.role === 'admin' && (
+                    {showLunaHeaderBar && (
                       <button
                         type="button"
                         onClick={() => navigate(createPageUrl('Game5'))}
