@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { DEV_WORLD } from '../gameplay/world.mjs';
 import { presentation } from './questUi.mjs';
+import { createGame5MovementTransport } from './game5MovementTransport.mjs';
 import { createConnectedQuestSession, isAuthoritativelyCollected } from './connectedQuestSession.mjs';
 import { GAME5_BROWSER_DEMO_KEY, browserQuestSnapshot, createBrowserQuest, performBrowserQuestAction, restoreBrowserQuest } from './browserQuestDemo.mjs';
 
@@ -37,6 +38,12 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
   const demoRef = useRef(null);
   const connectedRef = useRef(null);
   const snapshotRef = useRef(null);
+  const movementRef = useRef(null);
+  const movementPositionRef = useRef(null);
+  const movementReadyRef = useRef(false);
+  const reconnectMovementRef = useRef(null);
+  const [movementStatus, setMovementStatus] = useState('disconnected');
+  const [movementError, setMovementError] = useState('');
   const [connectedState, setConnectedState] = useState({ phase: 'disconnected', snapshot: null, notice: '', error: '', busy: false });
   const dialogueRef = useRef(false);
   const interactRef = useRef(null);
@@ -61,6 +68,70 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
       if (connectedRef.current === session) connectedRef.current = null;
     };
   }, [connectedMode, connectedTransport]);
+  // G5-0004-B: the Connected Test client sends ONLY keyboard/mobile movement
+  // intents. This never imports server movement authority and never authenticates
+  // an actor using browser-supplied player ID or position.
+  useEffect(() => {
+    if (!connectedMode) return undefined;
+    const movement = createGame5MovementTransport();
+    let alive = true;
+    movementRef.current = movement;
+    movementReadyRef.current = false;
+    movementPositionRef.current = null;
+    async function connectMovement() {
+      if (!alive) return;
+      setMovementStatus('connecting');
+      setMovementError('');
+      movementReadyRef.current = false;
+      try {
+        const connected = await movement.connect();
+        if (!connected || !alive) return;
+        // A successful connect only creates a session: a fresh accepted input
+        // must update the server observation before quest proximity is usable.
+        const ack = await movement.submit({ moveX: 0, moveZ: 0, sprint: false });
+        if (!ack || !alive) return;
+        movementPositionRef.current = { ...ack.position };
+        if (gameRef.current?.player) {
+          gameRef.current.player.position.x = ack.position.x;
+          gameRef.current.player.position.z = ack.position.z;
+        }
+        movementReadyRef.current = true;
+        setMovementStatus('ready');
+      } catch (error) {
+        if (!alive) return;
+        movementReadyRef.current = false;
+        setMovementStatus('disconnected');
+        setMovementError('Game 5 movement authority unavailable: ' + (error.message || 'connection failed'));
+      }
+    }
+    reconnectMovementRef.current = connectMovement;
+    connectMovement();
+    const loop = setInterval(async () => {
+      if (!alive || !movementReadyRef.current) return;
+      const keys = pressedRef.current;
+      const moveX = dialogueRef.current ? 0 : Number(keys.has('d') || keys.has('arrowright')) - Number(keys.has('a') || keys.has('arrowleft'));
+      const moveZ = dialogueRef.current ? 0 : Number(keys.has('s') || keys.has('arrowdown')) - Number(keys.has('w') || keys.has('arrowup'));
+      try {
+        const ack = await movement.submit({ moveX, moveZ, sprint: !dialogueRef.current && keys.has('shift') });
+        if (alive && ack) movementPositionRef.current = { ...ack.position };
+      } catch (error) {
+        if (!alive) return;
+        movementReadyRef.current = false;
+        setMovementStatus('disconnected');
+        setMovementError('Movement disconnected: ' + (error.message || 'request failed') + '. Reconnect to continue.');
+      }
+    }, 100);
+    return () => {
+      alive = false;
+      clearInterval(loop);
+      reconnectMovementRef.current = null;
+      movementReadyRef.current = false;
+      movementRef.current = null;
+      movementPositionRef.current = null;
+      movement.disconnect().catch(() => {}); // best effort; server lease expires
+    };
+  }, [connectedMode]);
+
   const questDialogue = {
     not_started: 'Traveler, an ancestral card lies lost beyond the temple path. Will you recover it?',
     active: 'Follow the road, then travel east. Retrieve the card near the grove and return to me.',
@@ -92,6 +163,10 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
   async function interact() {
     const player = gameRef.current?.player;
     if (!player) return;
+    if (connectedMode && !movementReadyRef.current) {
+      setMessage('Connected Test movement is disconnected. Reconnect before quest interactions.');
+      return;
+    }
     const pos = player.position;
     const radius = DEV_WORLD.interactionRadius;
     if (Math.hypot(pos.x - DEV_WORLD.npc.x, pos.z - DEV_WORLD.npc.z) <= radius) {
@@ -229,6 +304,15 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
           player.position.z = THREE.MathUtils.clamp(player.position.z + dz * speed * dt, -DEV_WORLD.bounds, DEV_WORLD.bounds);
           if (dx || dz) player.rotation.y = Math.atan2(dx, dz);
         }
+        // Visual client prediction is not an authorization source. Server
+        // acknowledgments reconcile it; all quest proximity remains server-only.
+        const confirmed = connectedMode ? movementPositionRef.current : null;
+        if (confirmed) {
+          const deviation = Math.hypot(player.position.x - confirmed.x, player.position.z - confirmed.z);
+          const factor = deviation > 1.5 ? 1 : Math.min(1, dt * 7);
+          player.position.x += (confirmed.x - player.position.x) * factor;
+          player.position.z += (confirmed.z - player.position.z) * factor;
+        }
         camera.position.lerp(new THREE.Vector3(player.position.x + .2, 12, player.position.z + 15), Math.min(1, dt * 4));
         camera.lookAt(player.position.x, 1.2, player.position.z - 2);
         const hidden = connectedMode ? isAuthoritativelyCollected(snapshotRef.current) : demoRef.current?.cardCollected === true;
@@ -312,9 +396,13 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-cyan-200">Retrieve the Lost Card · {connectedMode ? 'CONNECTED TEST' : 'SIMULATED DEMO'}</div>
           <div className="text-sm font-semibold">{ui.objective}</div>
           <div className="mt-1 text-xs text-amber-200">{connectedMode ? 'Server test reward: ' : 'Simulated test tokens: '}{connectedMode && !currentSnapshot ? 'Not loaded' : ui.testWallet ?? 'Not provided'}</div>
-          {connectedMode && <div data-testid="game5-connection-status" className="mt-1 text-xs text-cyan-100/80">Server: {connectedState.phase}{connectedState.busy ? ' · requesting…' : ''}</div>}
+          {connectedMode && <>
+            <div data-testid="game5-connection-status" className="mt-1 text-xs text-cyan-100/80">Quest: {connectedState.phase}{connectedState.busy ? ' · requesting…' : ''}</div>
+            <div data-testid="game5-movement-status" className="mt-1 text-xs text-cyan-100/80">Movement: {movementStatus}</div>
+          </>}
         </div>
         <div className="pointer-events-none absolute bottom-3 left-3 max-w-[70%] rounded-lg bg-black/65 px-3 py-2 text-xs text-white/90 backdrop-blur-md">{nearby || message}</div>
+        {connectedMode && movementError && <div role="alert" className="absolute right-3 top-24 max-w-[54%] rounded-lg border border-red-400/60 bg-red-950/95 px-3 py-2 text-sm text-red-100">{movementError}</div>}
         {connectedMode && (connectedState.error || connectedState.notice) &&
           <div role={connectedState.error ? 'alert' : 'status'} className={`absolute right-3 top-3 max-w-[54%] rounded-lg border px-3 py-2 text-sm ${connectedState.error ? 'border-red-400/60 bg-red-950/95 text-red-100' : 'border-emerald-400/60 bg-emerald-950/95 text-emerald-100'}`}>
             {connectedState.error || connectedState.notice}
@@ -326,7 +414,7 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
             <button onPointerDown={e=>{e.preventDefault();pointer('s',true)}} onPointerUp={()=>pointer('s',false)} onPointerCancel={()=>pointer('s',false)} className="rounded-lg bg-white/25 px-3 py-2 text-white">↓</button>
             <button onPointerDown={e=>{e.preventDefault();pointer('d',true)}} onPointerUp={()=>pointer('d',false)} onPointerCancel={()=>pointer('d',false)} className="rounded-lg bg-white/25 px-3 py-2 text-white">→</button>
           </div>
-          <button type="button" onClick={interact} disabled={connectedMode && connectedState.busy} className="rounded-xl border border-amber-100/30 bg-amber-300 px-4 py-3 text-sm font-bold text-slate-950 shadow-lg disabled:opacity-50">E · Interact</button>
+          <button type="button" onClick={interact} disabled={connectedMode && (connectedState.busy || !movementReadyRef.current)} className="rounded-xl border border-amber-100/30 bg-amber-300 px-4 py-3 text-sm font-bold text-slate-950 shadow-lg disabled:opacity-50">E · Interact</button>
         </div>
         {dialogue && <div className="absolute inset-0 flex items-end justify-center bg-black/35 p-4 sm:items-center">
           <section className="w-full max-w-sm rounded-2xl border border-amber-200/30 bg-[#12212a]/95 p-5 shadow-2xl backdrop-blur-xl">
@@ -341,7 +429,7 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-white/60">
         <span>WASD / arrows: move · Shift: sprint · E: interact</span>
-        {connectedMode ? <button type="button" onClick={() => connectedRef.current?.refresh()} disabled={connectedState.busy} className="rounded-lg border border-white/15 px-3 py-1.5 text-cyan-200 hover:bg-white/10 disabled:opacity-50">Retry server</button> : <button type="button" onClick={reset} className="rounded-lg border border-white/15 px-3 py-1.5 text-amber-200 hover:bg-white/10">Reset browser demo</button>}
+        {connectedMode ? <button type="button" onClick={() => { reconnectMovementRef.current?.(); connectedRef.current?.refresh(); }} disabled={connectedState.busy || movementStatus === 'connecting'} className="rounded-lg border border-white/15 px-3 py-1.5 text-cyan-200 hover:bg-white/10 disabled:opacity-50">Reconnect movement + quest</button> : <button type="button" onClick={reset} className="rounded-lg border border-white/15 px-3 py-1.5 text-amber-200 hover:bg-white/10">Reset browser demo</button>}
       </div>
       <p className="text-xs leading-relaxed text-amber-200/75">{connectedMode ? 'Connected Test never substitutes browser simulation. Backend authentication and the G5-0003-A server contract must be approved and connected before quest requests are enabled; no local browser data is treated as server progression.' : 'Browser demonstration only. Quest progress is stored in this tab, and the displayed test token is simulated. This does not connect to the Game 5 server-side quest, inventory, or production economy.'}</p>
     </div>
