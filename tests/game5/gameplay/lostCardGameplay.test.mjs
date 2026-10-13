@@ -59,3 +59,65 @@ test('repository errors propagate and never create false success',async()=>{
  await assert.rejects(()=>controller.snapshot(),/storage unavailable/);
  await assert.rejects(()=>controller.accept(npc),/storage unavailable/);
 });
+
+test('restart repairs crash between committed card receipt and quest progression', async(t)=>{
+ const {file,repository}=await setup(t);
+ let faultOnce=true;
+ const crashAfterReceipt={
+   read:(...args)=>repository.read(...args),
+   transact:async(...args)=>{
+     const committed=await repository.transact(...args);
+     if(faultOnce && committed?.type==='game5.inventory.card_collected.v1'){
+       faultOnce=false;
+       throw new Error('SIMULATED CRASH: receipt committed before quest event');
+     }
+     return committed;
+   },
+ };
+ const beforeCrash=createLostCardGameplayController({repository:crashAfterReceipt});
+ await beforeCrash.accept(npc);
+ await assert.rejects(()=>beforeCrash.pickup(card),/SIMULATED CRASH/);
+ const onDisk=await repository.read('game5-dev-player');
+ assert.equal(onDisk.quests['G5-0001'].status,'active');
+ assert.equal(onDisk.quests['G5-0001'].objective.current,0);
+ assert.ok(onDisk.devClaims[DEV_WORLD.card.id], 'card receipt survived simulated crash');
+ const recovered=createLostCardGameplayController({repository:new DevQuestRepository({file})});
+ const state=await recovered.snapshot(); // GET /state after refresh repairs pending receipt
+ assert.equal(state.quest.status,'ready_to_complete');
+ assert.equal(state.quest.objective.current,1);
+ assert.equal(state.cardCollected,true);
+ const replay=await recovered.pickup(card);
+ assert.match(replay.notice,/already collected/);
+ const result=await Promise.all(Array.from({length:20},()=>recovered.complete(npc)));
+ assert.equal(result.filter(x=>/Quest Complete!/.test(x.notice)).length,1);
+ const last=await recovered.snapshot();
+ assert.equal(last.quest.status,'completed');
+ assert.equal(last.testWallet,1);
+ assert.equal(Object.keys((await repository.read('game5-dev-player')).rewardLedger).length,1);
+});
+
+test('crash-recovery failure never returns a false collected snapshot',async(t)=>{
+ const {repository}=await setup(t);
+ const original=createLostCardGameplayController({repository});
+ await original.accept(npc);
+ await repository.transact('game5-dev-player',record=>{
+   record.devClaims[DEV_WORLD.card.id]={
+     type:'game5.inventory.card_collected.v1',
+     eventId:'crash-pending-receipt',
+     cardId:'game5:lost-card',
+     cardInstanceId:DEV_WORLD.card.cardInstanceId,
+     playerId:'game5-dev-player'
+   };
+ });
+ const offline={
+   read:(...args)=>repository.read(...args),
+   transact:()=>Promise.reject(new Error('storage offline during recovery')),
+ };
+ await assert.rejects(()=>createLostCardGameplayController({repository:offline}).snapshot(),/storage offline/);
+ const record=await repository.read('game5-dev-player');
+ assert.equal(record.quests['G5-0001'].objective.current,0);
+ // Once storage is restored a fresh snapshot reconciles the receipt.
+ const recovered=await original.snapshot();
+ assert.equal(recovered.quest.objective.current,1);
+ assert.equal(recovered.cardCollected,true);
+});
