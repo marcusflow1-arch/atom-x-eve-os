@@ -5,6 +5,9 @@ on:
       - 'src/components/network/remote/**'
       - 'src/components/game3d/RemotePlayersManager.jsx'
       - 'src/components/battle/**'
+      - 'src/components/game/MultiplayerSystem.jsx'
+      - 'src/components/shared/useWebRTCVoice.jsx'
+      - 'tests/ai-battle-peer-readiness.test.mjs'
       - 'tests/network-position-correction.test.mjs'
       - '.github/workflows/network-smoothing.yml'
   push:
@@ -27,6 +30,6 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - name: Validate shared position reconciliation
-        run: node --test tests/network-position-correction.test.mjs tests/ai-battle-attack-preview.test.mjs tests/pvp-latency.test.mjs
+        run: node --test tests/network-position-correction.test.mjs tests/ai-battle-attack-preview.test.mjs tests/pvp-latency.test.mjs tests/ai-battle-peer-readiness.test.mjs
       - name: Check full application build
         run: npm run build
