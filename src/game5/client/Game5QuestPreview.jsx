@@ -73,7 +73,8 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
     if (!player) { setMessage('The 3D scene has not finished loading.'); return; }
     const position = { x: player.position.x, z: player.position.z };
     if (connectedMode) {
-      const payload = action === 'pickup' ? { position, pickupId: DEV_WORLD.card.id } : { position, npcId: DEV_WORLD.npc.id };
+      // G5-0003-A rejects all browser-reported positions; server owns proximity.
+      const payload = action === 'pickup' ? { pickupId: DEV_WORLD.card.id } : { npcId: DEV_WORLD.npc.id };
       const result = await connectedRef.current?.dispatch(action, payload);
       // Never hide the card or complete a quest before receiving authoritative state.
       if (result?.ok) { setMessage('Quest state confirmed by server.'); setDialogue(false); }
