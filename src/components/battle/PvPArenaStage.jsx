@@ -602,7 +602,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   // already promoted the shared match to `connecting` AND both fighter models
   // are present locally. Both clients must report this second-stage readiness.
   useEffect(() => {
-    if (graphicsError || loaded !== 2 || !match?.id || match.status !== 'connecting') return undefined;
+    if (graphicsError || loaded !== 2 || !peerConnected || !match?.id || match.status !== 'connecting') return undefined;
     let cancelled = false;
     let busy = false;
     const reportReady = async () => {
@@ -622,7 +622,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     // once both fighters are ready. Resend slowly only in case it was lost.
     const timer = window.setInterval(reportReady, 4000);
     return () => { cancelled = true; window.clearInterval(timer); };
-  }, [loaded, graphicsError, match?.id, match?.status, queryClient, user?.id]);
+  }, [loaded, graphicsError, peerConnected, match?.id, match?.status, queryClient, user?.id]);
 
   const requestDodge = async () => {
     if (actionPending.current) return;
