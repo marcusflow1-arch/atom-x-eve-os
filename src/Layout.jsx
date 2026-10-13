@@ -957,17 +957,6 @@ function LayoutContent({ children, currentPageName }) {
                     </button>
 
 
-                    {showLunaHeaderBar && (
-                      <button
-                        type="button"
-                        onClick={() => navigate(createPageUrl('Game5'))}
-                        aria-label="Open Game 5 development dashboard"
-                        className="shrink-0 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-400/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
-                      >
-                        Game 5
-                      </button>
-                    )}
-
                     {showStoreHeader && (
                       <>
                         {/* Store identity/navigation button restored to the far-left header cluster. */}
@@ -1198,6 +1187,17 @@ function LayoutContent({ children, currentPageName }) {
                           >
                             <Gamepad2 className="w-4 h-4" />
                             Game 2
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => navigate(createPageUrl('Game5'))}
+                            className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-cyan-500/15 border-cyan-300/35 text-cyan-100 hover:bg-cyan-500/30 hover:text-white items-center gap-2"
+                            title="Open Game 5 — Wuxia MMORPG development dashboard"
+                            aria-label="Open Game 5 development dashboard"
+                          >
+                            <Gamepad2 className="w-4 h-4" />
+                            Game 5
                           </button>
                         </div>
                       </>
