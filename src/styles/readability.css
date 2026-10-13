@@ -1,0 +1,49 @@
+/* Atom XE-wide readability baseline (October 2026).
+   Most legacy interface labels used absolute 5–11px fonts. Increase only
+   typography; preserve existing glass UI, icon sizing, panels and scroll bars.
+   Tiny interface tags get a sensible floor; normal body/headings stay intact.
+   Use exact class tokens so responsive variants remain independently controlled. */
+
+/* Previously 4.5–7.5px: compact labels remain compact, but legible. */
+#root :is([class~="text-[4.5px]"], [class~="text-[5px]"], [class~="text-[5.5px]"], [class~="text-[6px]"], [class~="text-[6.5px]"], [class~="text-[7px]"], [class~="text-[7.5px]"]) {
+  font-size: 10px !important;
+  line-height: 1.3 !important;
+}
+
+/* Previously 8px: e.g. sidebar tags, badges and metadata. */
+#root :is([class~="text-[8px]"], [class~="text-[8.5px]"]) {
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+}
+
+/* Previously 9px: user-facing secondary information. */
+#root :is([class~="text-[9px]"], [class~="text-[9.5px]"]) {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+/* Previously 10px: menus, tabs, filters and action captions. */
+#root :is([class~="text-[10px]"], [class~="text-[10.5px]"]) {
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+}
+
+/* Previously 11px: primary labels and supporting metadata. */
+#root [class~="text-[11px]"] {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+/* Shared Tailwind small-copy utilities used by forms, cards and dialogs.
+   Leave any responsive typography variant to its breakpoint-specific rule. */
+#root .text-xs:not([class*="sm:text-"]):not([class*="md:text-"]):not([class*="lg:text-"]):not([class*="xl:text-"]) {
+  font-size: 14px;
+  line-height: 1.4;
+}
+#root .text-sm:not([class*="sm:text-"]):not([class*="md:text-"]):not([class*="lg:text-"]):not([class*="xl:text-"]) {
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+/* Height-constrained Luna cards already scroll internally; do not enlarge
+   their outer shells or force text into a fixed number of lines. */
