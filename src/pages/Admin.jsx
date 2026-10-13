@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,7 +37,6 @@ import { showError, showSuccess } from '@/components/error/ErrorToast';
 
 export default function Admin() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -466,14 +463,7 @@ export default function Admin() {
     <PageErrorBoundary pageName="Admin">
     <div className="min-h-screen bg-slate-950 text-white p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-4xl font-black">Admin Panel</h1>
-          <button type="button" onClick={() => navigate(createPageUrl('Game5'))}
-            className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2.5 text-sm font-semibold text-cyan-200 transition hover:border-cyan-300 hover:bg-cyan-400/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
-            aria-label="Open Game 5 development dashboard">
-            <Gamepad2 size={17} /> Game 5 <ChevronRight size={15}/>
-          </button>
-        </div>
+        <h1 className="text-4xl font-black mb-2">Admin Panel</h1>
         <p className="text-slate-400 mb-8">Manage hero backgrounds, games, and site content</p>
 
         <Tabs defaultValue="backgrounds" className="space-y-6">
