@@ -53,7 +53,7 @@ test('Luna Friends has clickable Profile and Trade actions using the existing tr
         if (Object.hasOwn(mocks,base)) return {path:base,namespace:'friends-fixture'};
         return undefined;
       });
-      builder.onLoad({filter:/.*/,namespace:'friends-fixture'},args=>({loader:'js',contents:mocks[args.path]}));
+      builder.onLoad({filter:/.*/,namespace:'friends-fixture'},args=>({loader:'js',contents:mocks[args.path],resolveDir:process.cwd()}));
     }}],
   });
   const filename=process.cwd()+'/tests/__friends_actions_bundle.cjs';
