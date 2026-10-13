@@ -31,7 +31,8 @@ export function assertServerSnapshot(value) {
 
 function classify(error) {
   const status = Number(error?.status ?? error?.response?.status ?? 0);
-  if (status === 401 || status === 403) return 'unauthorized';
+  if (status === 401 || (status === 403 && error?.code !== 'NOT_NEAR_TARGET')) return 'unauthorized';
+  if (status === 403 && error?.code === 'NOT_NEAR_TARGET') return 'rejected';
   if (status === 409 || status === 422 || status === 400) return 'rejected';
   if (error?.code === 'invalid_snapshot') return 'backend_failure';
   if (status >= 500) return 'backend_failure';
