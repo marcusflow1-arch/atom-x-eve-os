@@ -7,6 +7,7 @@ import App from '@/App.jsx'
 import '@/index.css'
 import '@/styles/streaming-home-achievement-cards.css'
 import '@/styles/streaming-home-cards-tab-overlay.css'
+import '@/styles/readability.css'
 
 // Suppress harmless Three.js WebGL shader warnings that don't affect gameplay
 const origError = console.error;
