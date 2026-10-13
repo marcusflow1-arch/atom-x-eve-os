@@ -37,3 +37,32 @@ node --test tests/game5/quests/*.test.mjs  # existing independent quest tests (L
 ```
 
 Full production integration needs authenticated identity, server-authoritative positions and NPC/pickup instances, an inventory-backed immutable collection event, shared ACID persistence, atomic real reward settlement, outbox delivery, world-state replication, comprehensive crash/multi-node QA, and explicit app routing approval.
+
+## G5-0003-B — Game 5 dashboard two-mode integration
+
+The already registered admin-only `/Game5` dashboard continues to mount the **same** Three.js scene in `Game5QuestPreview.jsx`. The visual meshes, camera, lighting, keyboard movement, and mobile controls have not been replaced.
+
+- **Browser Demo:** browser-only, tab-scoped simulation using `browserQuestDemo.mjs`. Simulated token counts are explicitly labeled; none are posted to a backend.
+- **Connected Test:** fail-closed, separate `connectedQuestSession.mjs` state machine. It requires a reviewed `connectedTransport` supplied by the Game 5 dashboard; when absent it displays `disconnected` and a missing-backend message. It does **not** run or copy Browser Demo state. Requests are serialized; NPC dialogue refreshes the authoritative snapshot; card geometry disappears only at authoritative `ready_to_complete` or `completed` state.
+
+### Dependency gate — G5-0003-A
+
+G5-0003-A now defines an isolated **logical API v1** on the unmerged branch `game5/G5-0003-A-authenticated-quest` in `src/game5/quests/G5-0003-INTEGRATION.md`. That branch explicitly states the handler is **NOT hosted or deployed**, and requires a trusted Base44 session adapter, a real server-owned movement authority, and a verified transactional repository before connected claims are safe. The dashboard now supplies a same-origin HTTP transport for its logical `/api/game5/quest/{state,accept,pickup,complete}` endpoints, but cannot claim those endpoints are actually mounted or authenticated on the hosted application. Missing endpoints produce visible disconnected/errors, never Browser Demo fallback.
+
+Before Connected Test can pass live QA, the Quest Developer / backend owner must confirm and deliver:
+1. The exact authenticated browser API transport (URL or existing sanctioned SDK function), session binding, CSRF/CORS policy, and account/character ownership enforcement.
+2. Mount the documented logical `state`, `accept`, `pickup`, and `complete` routes behind real authentication. The connected client sends only `npcId` or `pickupId`, **never browser positions**; server-owned proximity must enforce the contract.
+3. A normalized response of `{snapshot:{quest:{status,objective:{current,required}},cardCollected?,testWallet?},notice?}`, or an explicit mapping adapter agreed with the Quest Developer, and server error status mapping.
+4. The dedicated test-only inventory, reward, idempotency, and persistence guarantees; do not connect real player wallets/inventory.
+
+The browser transport in `src/game5/client/game5QuestHttpTransport.mjs` currently uses fixed same-origin Fetch requests with `credentials:'same-origin'`. This alone does not establish that a Base44 session token is forwarded or verified; the backend mounting team must confirm that the platform actually uses appropriate same-origin credentials, or supply an approved SDK function-invoke adapter. Never create a client-side trusted actor or fabricated authenticated response. A separate narrow integration PR is needed for changed backend contracts or protected files.
+
+### Test evidence and remaining verification
+
+```sh
+node --test tests/game5/client/connectedQuestSession.test.mjs tests/game5/client/game5QuestHttpTransport.test.mjs
+# 10 tests cover no-fallback, transport request schemas, server snapshots/reload, duplicate in-flight action,
+# rejected pickup, unauthorized/disconnect/503 errors, and invalid responses.
+```
+
+These tests use test transport fixtures **only inside test files**. They do not prove a live authenticated server connection or browser interaction. Browser end-to-end verification of **both** modes on the Luna → Game 5 entry route remains blocked until an installed/full environment and real G5-0003-A endpoints are provided. No QA or deployment approval is implied.

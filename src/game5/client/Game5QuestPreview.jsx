@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { DEV_WORLD } from '../gameplay/world.mjs';
 import { presentation } from './questUi.mjs';
+import { createConnectedQuestSession, isAuthoritativelyCollected } from './connectedQuestSession.mjs';
 import { GAME5_BROWSER_DEMO_KEY, browserQuestSnapshot, createBrowserQuest, performBrowserQuestAction, restoreBrowserQuest } from './browserQuestDemo.mjs';
 
 function readSavedQuest() {
@@ -28,11 +29,15 @@ function createCharacter(color, withHat = false) {
   return group;
 }
 
-export default function Game5QuestPreview() {
+export default function Game5QuestPreview({ mode = 'demo', connectedTransport = null }) {
+  const connectedMode = mode === 'connected';
   const hostRef = useRef(null);
   const gameRef = useRef(null);
   const pressedRef = useRef(new Set());
   const demoRef = useRef(null);
+  const connectedRef = useRef(null);
+  const snapshotRef = useRef(null);
+  const [connectedState, setConnectedState] = useState({ phase: 'disconnected', snapshot: null, notice: '', error: '', busy: false });
   const dialogueRef = useRef(false);
   const interactRef = useRef(null);
   const [demo, setDemo] = useState(readSavedQuest);
@@ -43,7 +48,19 @@ export default function Game5QuestPreview() {
   demoRef.current = demo;
   dialogueRef.current = dialogue;
 
-  const ui = presentation(browserQuestSnapshot(demo));
+  const currentSnapshot = connectedMode ? connectedState.snapshot : browserQuestSnapshot(demo);
+  snapshotRef.current = currentSnapshot;
+  const ui = presentation(currentSnapshot);
+  useEffect(() => {
+    if (!connectedMode) return undefined;
+    const session = createConnectedQuestSession({ transport: connectedTransport, onChange: setConnectedState });
+    connectedRef.current = session;
+    session.refresh();
+    return () => {
+      session.dispose();
+      if (connectedRef.current === session) connectedRef.current = null;
+    };
+  }, [connectedMode, connectedTransport]);
   const questDialogue = {
     not_started: 'Traveler, an ancestral card lies lost beyond the temple path. Will you recover it?',
     active: 'Follow the road, then travel east. Retrieve the card near the grove and return to me.',
@@ -51,32 +68,46 @@ export default function Game5QuestPreview() {
     completed: 'The ancestral card is safe. You have my gratitude, traveler.',
   };
 
-  function perform(action) {
+  async function perform(action) {
     const player = gameRef.current?.player;
     if (!player) { setMessage('The 3D scene has not finished loading.'); return; }
+    const position = { x: player.position.x, z: player.position.z };
+    if (connectedMode) {
+      // G5-0003-A rejects all browser-reported positions; server owns proximity.
+      const payload = action === 'pickup' ? { pickupId: DEV_WORLD.card.id } : { npcId: DEV_WORLD.npc.id };
+      const result = await connectedRef.current?.dispatch(action, payload);
+      // Never hide the card or complete a quest before receiving authoritative state.
+      if (result?.ok) { setMessage('Quest state confirmed by server.'); setDialogue(false); }
+      return;
+    }
     try {
-      const position = { x: player.position.x, z: player.position.z };
       const result = performBrowserQuestAction(demoRef.current, action, position);
       demoRef.current = result.state;
       setDemo(result.state);
       setMessage(result.notice);
       setDialogue(false);
-    } catch (error) {
-      setMessage(error.message || 'Unable to interact.');
-    }
+    } catch (error) { setMessage(error.message || 'Unable to interact.'); }
   }
 
-  function interact() {
+  async function interact() {
     const player = gameRef.current?.player;
     if (!player) return;
     const pos = player.position;
     const radius = DEV_WORLD.interactionRadius;
     if (Math.hypot(pos.x - DEV_WORLD.npc.x, pos.z - DEV_WORLD.npc.z) <= radius) {
+      if (connectedMode) {
+        const refreshed = await connectedRef.current?.refresh();
+        if (!refreshed?.ok) return;
+      }
       setDialogue(true);
       return;
     }
     if (Math.hypot(pos.x - DEV_WORLD.card.x, pos.z - DEV_WORLD.card.z) <= radius) {
-      perform('pickup');
+      if (connectedMode && isAuthoritativelyCollected(snapshotRef.current)) {
+        setMessage('The Lost Card was already collected on the server.');
+        return;
+      }
+      await perform('pickup');
       return;
     }
     setMessage('Move closer to Elder Shen or the Lost Card.');
@@ -200,7 +231,7 @@ export default function Game5QuestPreview() {
         }
         camera.position.lerp(new THREE.Vector3(player.position.x + .2, 12, player.position.z + 15), Math.min(1, dt * 4));
         camera.lookAt(player.position.x, 1.2, player.position.z - 2);
-        const hidden = demoRef.current?.cardCollected === true;
+        const hidden = connectedMode ? isAuthoritativelyCollected(snapshotRef.current) : demoRef.current?.cardCollected === true;
         card.visible = !hidden;
         ring.visible = !hidden;
         glow.visible = !hidden;
@@ -278,11 +309,16 @@ export default function Game5QuestPreview() {
         <div ref={hostRef} className="absolute inset-0" role="img" aria-label="Interactive three-dimensional wuxia temple and forest" />
         {renderError && <div role="alert" className="absolute inset-0 flex items-center justify-center bg-slate-950/95 p-6 text-center text-red-200">{renderError}</div>}
         <div className="pointer-events-none absolute left-3 top-3 max-w-[270px] rounded-xl border border-white/10 bg-[#081320]/80 p-3 text-white shadow-lg backdrop-blur-md">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-cyan-200">Retrieve the Lost Card</div>
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-cyan-200">Retrieve the Lost Card · {connectedMode ? 'CONNECTED TEST' : 'SIMULATED DEMO'}</div>
           <div className="text-sm font-semibold">{ui.objective}</div>
-          <div className="mt-1 text-xs text-amber-200">Demo test tokens: {ui.testWallet || 0}</div>
+          <div className="mt-1 text-xs text-amber-200">{connectedMode ? 'Server test reward: ' : 'Simulated test tokens: '}{connectedMode && !currentSnapshot ? 'Not loaded' : ui.testWallet ?? 'Not provided'}</div>
+          {connectedMode && <div data-testid="game5-connection-status" className="mt-1 text-xs text-cyan-100/80">Server: {connectedState.phase}{connectedState.busy ? ' · requesting…' : ''}</div>}
         </div>
         <div className="pointer-events-none absolute bottom-3 left-3 max-w-[70%] rounded-lg bg-black/65 px-3 py-2 text-xs text-white/90 backdrop-blur-md">{nearby || message}</div>
+        {connectedMode && (connectedState.error || connectedState.notice) &&
+          <div role={connectedState.error ? 'alert' : 'status'} className={`absolute right-3 top-3 max-w-[54%] rounded-lg border px-3 py-2 text-sm ${connectedState.error ? 'border-red-400/60 bg-red-950/95 text-red-100' : 'border-emerald-400/60 bg-emerald-950/95 text-emerald-100'}`}>
+            {connectedState.error || connectedState.notice}
+          </div>}
         <div className="absolute bottom-3 right-3 flex items-end gap-2">
           <div className="grid grid-cols-3 gap-1 md:hidden">
             <span/><button onPointerDown={e=>{e.preventDefault();pointer('w',true)}} onPointerUp={()=>pointer('w',false)} onPointerCancel={()=>pointer('w',false)} className="rounded-lg bg-white/25 px-3 py-2 text-white">↑</button><span/>
@@ -290,24 +326,24 @@ export default function Game5QuestPreview() {
             <button onPointerDown={e=>{e.preventDefault();pointer('s',true)}} onPointerUp={()=>pointer('s',false)} onPointerCancel={()=>pointer('s',false)} className="rounded-lg bg-white/25 px-3 py-2 text-white">↓</button>
             <button onPointerDown={e=>{e.preventDefault();pointer('d',true)}} onPointerUp={()=>pointer('d',false)} onPointerCancel={()=>pointer('d',false)} className="rounded-lg bg-white/25 px-3 py-2 text-white">→</button>
           </div>
-          <button type="button" onClick={interact} className="rounded-xl border border-amber-100/30 bg-amber-300 px-4 py-3 text-sm font-bold text-slate-950 shadow-lg">E · Interact</button>
+          <button type="button" onClick={interact} disabled={connectedMode && connectedState.busy} className="rounded-xl border border-amber-100/30 bg-amber-300 px-4 py-3 text-sm font-bold text-slate-950 shadow-lg disabled:opacity-50">E · Interact</button>
         </div>
         {dialogue && <div className="absolute inset-0 flex items-end justify-center bg-black/35 p-4 sm:items-center">
           <section className="w-full max-w-sm rounded-2xl border border-amber-200/30 bg-[#12212a]/95 p-5 shadow-2xl backdrop-blur-xl">
             <h3 className="text-lg font-semibold text-amber-200">Elder Shen</h3>
-            <p className="mt-2 text-sm leading-relaxed text-white/85">{questDialogue[demo.status]}</p>
+            <p className="mt-2 text-sm leading-relaxed text-white/85">{questDialogue[ui.status] || 'Waiting for verified server quest state.'}</p>
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={()=>setDialogue(false)} className="rounded-lg border border-white/15 px-4 py-2 text-xs text-white/80">Close</button>
-              {(demo.status === 'not_started' || demo.status === 'ready_to_complete') && <button type="button" onClick={()=>perform(demo.status === 'not_started' ? 'accept' : 'complete')} className="rounded-lg bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950">{dialogues[demo.status]}</button>}
+              {(ui.status === 'not_started' || ui.status === 'ready_to_complete') && <button type="button" disabled={connectedMode && (connectedState.busy || connectedState.phase !== 'ready')} onClick={()=>perform(ui.status === 'not_started' ? 'accept' : 'complete')} className="rounded-lg bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 disabled:opacity-50">{dialogues[ui.status]}</button>}
             </div>
           </section>
         </div>}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-white/60">
         <span>WASD / arrows: move · Shift: sprint · E: interact</span>
-        <button type="button" onClick={reset} className="rounded-lg border border-white/15 px-3 py-1.5 text-amber-200 hover:bg-white/10">Reset browser demo</button>
+        {connectedMode ? <button type="button" onClick={() => connectedRef.current?.refresh()} disabled={connectedState.busy} className="rounded-lg border border-white/15 px-3 py-1.5 text-cyan-200 hover:bg-white/10 disabled:opacity-50">Retry server</button> : <button type="button" onClick={reset} className="rounded-lg border border-white/15 px-3 py-1.5 text-amber-200 hover:bg-white/10">Reset browser demo</button>}
       </div>
-      <p className="text-xs leading-relaxed text-amber-200/75">Browser demonstration only. Quest progress is stored in this tab, and the displayed test token is simulated. This does not connect to the original Game 5 server-side quest, inventory, or production economy.</p>
+      <p className="text-xs leading-relaxed text-amber-200/75">{connectedMode ? 'Connected Test never substitutes browser simulation. Backend authentication and the G5-0003-A server contract must be approved and connected before quest requests are enabled; no local browser data is treated as server progression.' : 'Browser demonstration only. Quest progress is stored in this tab, and the displayed test token is simulated. This does not connect to the Game 5 server-side quest, inventory, or production economy.'}</p>
     </div>
   );
 }
