@@ -401,6 +401,21 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     return startPvPPingProbe({ matchId: match.id });
   }, [sessionBridge, match?.id, match?.status, user?.id]);
 
+  // Recheck a pending queue or active match immediately after connectivity
+  // returns. This is event-driven; normal poll rates and Base44 load stay put.
+  useEffect(() => {
+    if (!polling || !user?.id) return undefined;
+    const recover = () => {
+      const current = queryClient.getQueryData(aiBattleQueryKey(user.id));
+      if (queueIsActive(current) || matchIsActive(current)) {
+        if (refreshSignal.current) refreshSignal.current();
+        else queryClient.invalidateQueries({ queryKey: aiBattleQueryKey(user.id) });
+      }
+    };
+    window.addEventListener('online', recover);
+    return () => window.removeEventListener('online', recover);
+  }, [polling, user?.id, queryClient]);
+
   // Reliable peer cast is only visual prediction. Damage remains server-owned.
   useEffect(() => {
     if (!sessionBridge || typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
