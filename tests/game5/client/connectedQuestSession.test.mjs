@@ -9,7 +9,7 @@ const snap = (status, current, testWallet = 0) => ({
   quest: { questId: 'G5-0001', status, objective: { id: 'collect-lost-card', current, required: 1 } },
   testWallet,
   cardCollected: current === 1,
-  developmentOnly: true,
+  isolatedTestOnly: true,
 });
 
 test('modes are explicit and missing backend never silently uses browser demo', async () => {
