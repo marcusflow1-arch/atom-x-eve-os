@@ -8,8 +8,8 @@
 .luna-env-picker__heading{display:flex;align-items:center;gap:11px;padding:17px 19px 14px;border-bottom:1px solid rgba(178,204,223,.28);flex-shrink:0}
 .luna-env-picker__heading-icon{width:40px;height:40px;display:grid;place-items:center;flex:none;border:1px solid rgba(192,223,243,.46);border-radius:8px;color:#d3eafa;background:#355e793e}
 .luna-env-picker__heading h2{font-size:15px;font-weight:700;letter-spacing:.015em;line-height:1.4}
-.luna-env-picker__heading p{margin-top:3px;font-size:11px;color:#bacfdf;line-height:1.45}
-.luna-env-picker__count{margin-left:auto;font-size:11px;font-weight:650;border:1px solid rgba(177,203,220,.38);border-radius:5px;padding:5px 9px;color:#d2e5f2}
+.luna-env-picker__heading p{margin-top:3px;font-size:14px;color:#bacfdf;line-height:1.45}
+.luna-env-picker__count{margin-left:auto;font-size:14px;font-weight:650;border:1px solid rgba(177,203,220,.38);border-radius:5px;padding:5px 9px;color:#d2e5f2}
 .luna-env-picker__list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:15px 17px;scrollbar-width:thin;scrollbar-color:#65869d #11283d}
 .luna-env-picker__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:10px}
 .luna-env-picker__cell{position:relative;min-width:0}
@@ -22,18 +22,18 @@
 .luna-env-picker__card[aria-pressed=true]{border-color:#d5ebfa;box-shadow:inset 0 0 0 1px rgba(194,226,244,.5)}
 .luna-env-picker__preview{position:relative;display:grid;place-items:center;width:100%;height:110px;overflow:hidden;color:#89b1c7;background:linear-gradient(155deg,#345d76,#183047)}
 .luna-env-picker__preview img{width:100%;height:100%;object-fit:cover}
-.luna-env-picker__active{position:absolute;right:7px;top:7px;display:flex;gap:3px;align-items:center;padding:4px 6px;border:1px solid #b7e6ed83;border-radius:4px;font-size:9px;font-weight:650;color:#e8fffa;background:#103f51d9}
+.luna-env-picker__active{position:absolute;right:7px;top:7px;display:flex;gap:3px;align-items:center;padding:4px 6px;border:1px solid #b7e6ed83;border-radius:4px;font-size:12px;font-weight:650;color:#e8fffa;background:#103f51d9}
 .luna-env-picker__label{padding:10px 11px;min-width:0}
-.luna-env-picker__label strong{display:block;font-size:11px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.luna-env-picker__label small{display:block;margin-top:4px;font-size:9px;color:#aac8dd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.luna-env-picker__label strong{display:block;font-size:14px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.luna-env-picker__label small{display:block;margin-top:4px;font-size:12px;color:#aac8dd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .luna-env-picker__footer{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 17px;background:#1e3e58;border-top:1px solid rgba(182,211,230,.36)}
-.luna-env-picker__footer>span{font-size:11px;font-weight:600;max-width:55%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#d9e9f5}
-.luna-env-picker__footer>button{display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 13px;border-radius:6px;border:1px solid rgba(199,232,245,.72);background:#b6e5f4;color:#12364b;font-size:11px;font-weight:750;white-space:nowrap}
+.luna-env-picker__footer>span{font-size:14px;font-weight:600;max-width:55%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#d9e9f5}
+.luna-env-picker__footer>button{display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 13px;border-radius:6px;border:1px solid rgba(199,232,245,.72);background:#b6e5f4;color:#12364b;font-size:14px;font-weight:750;white-space:nowrap}
 .luna-env-picker__footer>button:hover:not(:disabled){background:#e1f5fa}
 .luna-env-picker__footer>button:disabled{opacity:.45;cursor:default}
-.luna-env-picker__error{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 17px;font-size:11px;line-height:1.45;color:#fce0d8;background:#6a37364d}
+.luna-env-picker__error{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 17px;font-size:14px;line-height:1.45;color:#fce0d8;background:#6a37364d}
 .luna-env-picker__error button{display:flex;align-items:center;gap:5px;flex:none;color:#f9ded7;text-decoration:underline}
-.luna-env-picker__empty{min-height:170px;display:flex;align-items:center;justify-content:center;gap:10px;color:#c0d7e6;font-size:12px}
+.luna-env-picker__empty{min-height:170px;display:flex;align-items:center;justify-content:center;gap:10px;color:#c0d7e6;font-size:15px}
 .luna-env-picker button:focus-visible{outline:2px solid #cdf5ff;outline-offset:-2px}
 @media(max-width:480px){.luna-env-picker__heading{padding:12px}.luna-env-picker__list{padding:10px}.luna-env-picker__grid{gap:7px}.luna-env-picker__preview{height:85px}.luna-env-picker__footer{padding:10px}}
 @media(prefers-reduced-motion:reduce){.luna-env-picker *{transition:none!important;animation:none!important}}
