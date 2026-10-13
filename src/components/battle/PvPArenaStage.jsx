@@ -263,7 +263,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const seq = useRef(0);
   const lastNetworkSend = useRef(0);
   const [loaded, setLoaded] = useState(0);
-  const [peerConnected, setPeerConnected] = useState(false);
+  // Peer connectivity is derived from the live data-channel hook.
   const [graphicsError, setGraphicsError] = useState(false);
   const [graphicsAttempt, setGraphicsAttempt] = useState(0);
   const [clockNow, setClockNow] = useState(() => Date.now());
