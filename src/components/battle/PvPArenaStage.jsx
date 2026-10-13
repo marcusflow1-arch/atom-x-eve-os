@@ -35,6 +35,8 @@ import { characterBodyBounds } from '@/lib/characterModelOverrides';
 import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, RUN_SPEED, SPAWN_Z, WALK_SPEED } from './arenaConfig';
 import { reconcileNetworkPosition } from '../network/remote/positionCorrection';
 import { makeAttackPreview, PREVIEW_KINDS } from './attackPreview';
+import { classifyArenaMovement } from './arenaMovementSequence';
+import { useBattlePeerLink } from './useBattlePeerLink';
 
 const lerpAngle = (a, b, maxStep) => {
   let delta = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI;
@@ -261,6 +263,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const seq = useRef(0);
   const lastNetworkSend = useRef(0);
   const [loaded, setLoaded] = useState(0);
+  // Peer connectivity is derived from the live data-channel hook.
   const [graphicsError, setGraphicsError] = useState(false);
   const [graphicsAttempt, setGraphicsAttempt] = useState(0);
   const [clockNow, setClockNow] = useState(() => Date.now());
@@ -304,6 +307,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
 
   const local = useMemo(() => (match?.players || []).find((p) => String(p.id || p.player_id) === String(user?.id)), [match?.players, user?.id]);
   const opponent = useMemo(() => (match?.players || []).find((p) => String(p.id || p.player_id) !== String(user?.id)), [match?.players, user?.id]);
+  const peerConnected = useBattlePeerLink(match, opponent);
   const localRef = useRef(local);
   const opponentRef = useRef(opponent);
   localRef.current = local;
@@ -311,6 +315,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const localSide = String(user?.id) === String(match?.host_id) ? 'host' : 'guest';
   const opponentSide = localSide === 'host' ? 'guest' : 'host';
   const reconnectPaused = Object.keys(match?.disconnects || {}).length > 0;
+  // The next countdown must wait for a genuine real-time player link.
   const active = match?.status === 'fighting' && !reconnectPaused && Date.now() + serverOffsetMs >= Date.parse(match?.fight_starts_at || 0);
   const turnPlayerId = String(match?.turn_player_id || match?.host_id || '');
   const localOwnsTurn = turnPlayerId === String(user?.id);
@@ -597,7 +602,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   // already promoted the shared match to `connecting` AND both fighter models
   // are present locally. Both clients must report this second-stage readiness.
   useEffect(() => {
-    if (graphicsError || loaded !== 2 || !match?.id || match.status !== 'connecting') return undefined;
+    if (graphicsError || loaded !== 2 || !peerConnected || !match?.id || match.status !== 'connecting') return undefined;
     let cancelled = false;
     let busy = false;
     const reportReady = async () => {
@@ -617,7 +622,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     // once both fighters are ready. Resend slowly only in case it was lost.
     const timer = window.setInterval(reportReady, 4000);
     return () => { cancelled = true; window.clearInterval(timer); };
-  }, [loaded, graphicsError, match?.id, match?.status, queryClient, user?.id]);
+  }, [loaded, graphicsError, peerConnected, match?.id, match?.status, queryClient, user?.id]);
 
   const requestDodge = async () => {
     if (actionPending.current) return;
@@ -717,6 +722,8 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     courtLine(scene,-5.5,1,5.5,1,0x5de8ff,.18);courtLine(scene,-5.5,7.5,5.5,7.5,0x5de8ff,.18);courtLine(scene,-5.5,-1,5.5,-1,0xff7799,.18);courtLine(scene,-5.5,-7.5,5.5,-7.5,0xff7799,.18);
 
     let disposed = false, frame = 0, previous = performance.now(), shoulder = 1, cameraDistance = 6.2;
+    const moveSessionId = crypto.randomUUID?.() || String(Date.now());
+    const retiredMovementSessions = new Set();
     // Only smooth the visible opponent; combat uses positions.current.opponent.
     let opponentVisualPos = null;
     const smoothOpponent = new URLSearchParams(window.location.search).get('aibattlesmooth') !== '0';
@@ -758,8 +765,14 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     const observer = new ResizeObserver(resize); observer.observe(mount);
 
     const remoteMove = (event) => {
-      const d=event.detail||{}; if(d.kind!=='pvp_move'||String(d.matchId||'')!==String(match.id)||String(d.player_id||d.sourcePlayerId||'')===String(user.id))return;
-      const last=remoteSamples.current.at(-1); if(last&&Number(d.seq)<=Number(last.seq))return; remoteSamples.current.push({...d,receivedAt:Date.now()}); if(remoteSamples.current.length>90)remoteSamples.current.splice(0,remoteSamples.current.length-90);
+      const d=event.detail||{}; if(d.kind!=='pvp_move'||String(d.matchId||'')!==String(match.id)||String(d.player_id||d.sourcePlayerId||'')!==String(opponent.id))return;
+      const receivedAt=Date.now();
+      const last=remoteSamples.current.at(-1);
+      const verdict=classifyArenaMovement(last,d,receivedAt,retiredMovementSessions);
+      if(!verdict.accept)return;
+      if(verdict.reset)remoteSamples.current=[];
+      remoteSamples.current.push({...d,receivedAt});
+      if(remoteSamples.current.length>90)remoteSamples.current.splice(0,remoteSamples.current.length-90);
     };
     const remoteCast = (event) => {
       const d=event.detail||{}; const currentMatch=matchRef.current; const currentOpponent=opponentRef.current;
@@ -896,7 +909,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         lf.root.rotation.y=lf.yaw;of.root.rotation.y=of.yaw;
 
         window.__lunaPvPPosition={x:lp.x,z:lp.z};
-        if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;window.webrtcBroadcast?.({type:'movement',payload:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,x:lp.x,z:lp.z,yaw:lf.yaw,anim:moveAnim,moving,running:moving&&!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}});}
+        if(now-lastNetworkSend.current>=NETWORK_SEND_MS){lastNetworkSend.current=now;window.webrtcBroadcast?.({type:'movement',payload:{kind:'pvp_move',matchId:currentMatch?.id,seq:++seq.current,move_session_id:moveSessionId,x:lp.x,z:lp.z,yaw:lf.yaw,anim:moveAnim,moving,running:moving&&!held.current.has('ShiftLeft')&&!held.current.has('ShiftRight'),t:Date.now()+offset}});}
         if(currentMatch?.status==='ended'){
           of.root.visible=false;
           setMotion(lf,'idle');
@@ -1078,6 +1091,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     <div ref={mountRef} className="absolute inset-0" />
     {graphicsError && <ArenaGraphicsRecovery onRetry={() => setGraphicsAttempt((attempt) => attempt + 1)} />}
     {!graphicsError&&loaded<2&&<div className="absolute inset-0 z-50 grid place-items-center bg-black/70 text-lg font-black text-white">Loading fighters {loaded}/2</div>}
+    {!graphicsError&&loaded===2&&match?.status==='connecting'&&<div className="pointer-events-none absolute inset-0 z-50 grid place-items-center bg-black/65 text-center text-white"><div><div className="text-xl font-black">{peerConnected?'Both fighters loaded':'Connecting to opponent…'}</div><p className="mt-2 text-xs text-white/70">{peerConnected?'Synchronizing both players for the countdown.':'Waiting for real-time movement before the fight begins.'}</p></div></div>}
     {match?.status==='countdown'&&loaded===2&&<div className="pointer-events-none absolute inset-0 z-50 grid place-items-center text-[80px] font-black text-white drop-shadow-[0_0_30px_rgba(60,220,255,.8)]">{count||'FIGHT'}</div>}
     {loaded===2&&!ended&&['countdown','fighting'].includes(String(match?.status||''))&&!reconnectPaused&&<div className={`pointer-events-none absolute left-1/2 top-5 z-[74] -translate-x-1/2 border px-5 py-2 text-center shadow-xl ${localOwnsTurn?'border-cyan-200/30 bg-cyan-950/92':'border-white/12 bg-[#0b111c]/92'}`}><div className={`text-[10px] font-black uppercase tracking-[.28em] ${localOwnsTurn?'text-cyan-100':'text-white/65'}`}>{match?.status==='countdown'?(localOwnsTurn?'You Move First':`${opponent?.name || 'Opponent'} Moves First`):(isMyTurn?'Your Turn':`${opponent?.name || 'Opponent'}'s Turn`)}</div><div className={`mt-0.5 text-[8px] uppercase tracking-[.16em] ${localStunned?'text-sky-200':'text-white/35'}`}>{match?.status==='countdown'?'Turn order locked':localStunned?'You are stunned':'Choose one action'}</div></div>}
     {error&&<div className="absolute left-1/2 top-20 z-[70] -translate-x-1/2 rounded-full border border-red-300/30 bg-red-950/80 px-4 py-2 text-sm font-bold text-red-100">{error}</div>}
