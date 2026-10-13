@@ -6,7 +6,6 @@ import { once } from 'node:events';
 import { mkdtemp, mkdir, readdir, rm, stat, utimes } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { FileQuestRepository } from '../../../src/game5/quests/fileQuestRepository.mjs';
 
 const onLinux = { skip: process.platform !== 'linux' && 'requires Linux flock(2)' };
