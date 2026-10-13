@@ -16,7 +16,7 @@ export function assertServerSnapshot(value) {
   const snap = value?.snapshot;
   const quest = snap?.quest;
   const objective = quest?.objective;
-  if (!quest || !STATES.has(quest.status) ||
+  if (snap?.isolatedTestOnly !== true || !quest || !STATES.has(quest.status) ||
       !objective || objective.required !== 1 ||
       !Number.isInteger(objective.current) ||
       ![0, 1].includes(objective.current) ||
