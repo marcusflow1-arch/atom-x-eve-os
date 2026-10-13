@@ -93,3 +93,22 @@ test('disconnect disables quest proximity; bad, stale and forged intents fail cl
  assert.equal(r.authority.getAuthoritativePosition({playerId:'base44:alice'}),null);
  assert.throws(()=>r.send('base44:alice',c.sessionId,2,1,0),/MOVEMENT_SESSION_EXPIRED/);
 });
+
+test('temple facade and grove tree collision block direct straight-line penetration',()=>{
+ let t=5000;
+ const templeWorld={...DEV_WORLD,spawn:{x:-10,z:-11}};
+ const temple=createGame5MovementAuthority({world:templeWorld,now:()=>t});
+ const s=temple.connect({playerId:'base44:temple-player'});
+ temple.input({playerId:'base44:temple-player',intent:{sessionId:s.sessionId,seq:1,moveX:0,moveZ:-1,sprint:true}});
+ for(let i=2;i<35;i++){t+=100;temple.input({playerId:'base44:temple-player',intent:{sessionId:s.sessionId,seq:i,moveX:0,moveZ:-1,sprint:true}});}
+ const stopped=temple.getAuthoritativePosition({playerId:'base44:temple-player'}).position;
+ assert.ok(stopped.z> -14,'cannot enter temple facade at z=-14');
+ let b=10000;
+ const groveWorld={...DEV_WORLD,spawn:{x:7,z:8}};
+ const grove=createGame5MovementAuthority({world:groveWorld,now:()=>b});
+ const c=grove.connect({playerId:'base44:grove-player'});
+ grove.input({playerId:'base44:grove-player',intent:{sessionId:c.sessionId,seq:1,moveX:0,moveZ:-1,sprint:true}});
+ for(let i=2;i<30;i++){b+=100;grove.input({playerId:'base44:grove-player',intent:{sessionId:c.sessionId,seq:i,moveX:0,moveZ:-1,sprint:true}});}
+ const treeStopped=grove.getAuthoritativePosition({playerId:'base44:grove-player'}).position;
+ assert.ok(treeStopped.z>4.6,'cannot pass through tree trunk at z=4');
+});
