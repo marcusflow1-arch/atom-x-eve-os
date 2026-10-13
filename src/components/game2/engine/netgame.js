@@ -117,7 +117,9 @@ export class NetGame {
     this.sendEvery = 1; this.stepN = 0; this.sendMs = 0;
     // Separate opt-in comparison for multiplayer-only remote movement; default unchanged.
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-    this.smoothRemote = params.get('g2netsmooth') === '1';
+    // Default to bounded remote correction for real Game 2 multiplayer.
+    // ?g2netsmooth=0 restores the previous hard-snap path immediately.
+    this.smoothRemote = params.get('g2netsmooth') !== '0';
     this.netDebug = params.get('g2netdebug') === '1';
     this.remoteArrival = new Map();
     this.remoteNetStats = { received: 0, outOfOrder: 0, lastGapMs: 0, maxGapMs: 0, longGaps: 0, largeCorrections: 0, hardSnaps: 0, worstCorrection: 0, lastRttMs: null };
