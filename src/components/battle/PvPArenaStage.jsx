@@ -313,6 +313,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const localSide = String(user?.id) === String(match?.host_id) ? 'host' : 'guest';
   const opponentSide = localSide === 'host' ? 'guest' : 'host';
   const reconnectPaused = Object.keys(match?.disconnects || {}).length > 0;
+  // The next countdown must wait for a genuine real-time player link.
   const active = match?.status === 'fighting' && !reconnectPaused && Date.now() + serverOffsetMs >= Date.parse(match?.fight_starts_at || 0);
   const turnPlayerId = String(match?.turn_player_id || match?.host_id || '');
   const localOwnsTurn = turnPlayerId === String(user?.id);
