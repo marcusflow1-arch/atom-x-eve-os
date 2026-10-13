@@ -766,7 +766,13 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
 
     const remoteMove = (event) => {
       const d=event.detail||{}; if(d.kind!=='pvp_move'||String(d.matchId||'')!==String(match.id)||String(d.player_id||d.sourcePlayerId||'')===String(user.id))return;
-      const last=remoteSamples.current.at(-1); if(last&&Number(d.seq)<=Number(last.seq))return; remoteSamples.current.push({...d,receivedAt:Date.now()}); if(remoteSamples.current.length>90)remoteSamples.current.splice(0,remoteSamples.current.length-90);
+      const receivedAt=Date.now();
+      const last=remoteSamples.current.at(-1);
+      const verdict=classifyArenaMovement(last,d,receivedAt,retiredMovementSessions);
+      if(!verdict.accept)return;
+      if(verdict.reset)remoteSamples.current=[];
+      remoteSamples.current.push({...d,receivedAt});
+      if(remoteSamples.current.length>90)remoteSamples.current.splice(0,remoteSamples.current.length-90);
     };
     const remoteCast = (event) => {
       const d=event.detail||{}; const currentMatch=matchRef.current; const currentOpponent=opponentRef.current;
