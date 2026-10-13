@@ -48,6 +48,42 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
 
         let isMounted = true;
         let unsubscribe = null;
+        const reconnectTimers = new Map();
+        const reconnectAttempts = new Map();
+        const connectionTimers = new Map();
+        const channelState = { roomId: String(roomId), peers: {} };
+        if (dataEnabled) window.__atomxeWebRTCPeerState = channelState;
+        const publishPeerState = (peerId) => {
+            if (!dataEnabled || !isMounted) return;
+            const channels = dataChannelsRef.current[peerId] || {};
+            const ready = Object.values(channels).some(ch => ch?.readyState === 'open');
+            channelState.peers[String(peerId)] = ready;
+            window.dispatchEvent(new CustomEvent('atomxeWebRTCPeerState', {
+                detail: { roomId: String(roomId), peerId: String(peerId), ready },
+            }));
+        };
+        // When a connection fails (or signaling loses an offer), the previous
+        // code removed the peer without negotiating again. That can leave
+        // AI Battle with two stationary avatars for the entire match.
+        const scheduleReconnect = (peerId) => {
+            const id = String(peerId);
+            if (!isMounted || !dataEnabled || String(user.id) <= id
+                || !participantsRef.current.map(String).includes(id) || reconnectTimers.has(id)) return;
+            const attempt = reconnectAttempts.get(id) || 0;
+            const delay = Math.min(15000, 1200 * (2 ** Math.min(4, attempt)));
+            reconnectAttempts.set(id, attempt + 1);
+            reconnectTimers.set(id, window.setTimeout(() => {
+                reconnectTimers.delete(id);
+                if (!isMounted || !participantsRef.current.map(String).includes(id)) return;
+                const current = peersRef.current[id];
+                if (current?.connectionState === 'connected') return;
+                if (current) {
+                    current.close();
+                    if (peersRef.current[id] === current) delete peersRef.current[id];
+                }
+                initiateCall(id);
+            }, delay));
+        };
         const startedAt = Date.now() - 15000;
         processedSignals.current = new Set();
         let queue = Promise.resolve();
@@ -113,12 +149,20 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
             });
             audioRefs.current = {};
             pendingCandidates.current = {};
+            for (const timer of reconnectTimers.values()) window.clearTimeout(timer);
+            for (const timer of connectionTimers.values()) window.clearTimeout(timer);
+            reconnectTimers.clear();
+            connectionTimers.clear();
+            if (window.__atomxeWebRTCPeerState === channelState) {
+                delete window.__atomxeWebRTCPeerState;
+            }
         };
 
         function setupDataChannel(channel, peerId) {
             if (!['gameData', 'gameReliable'].includes(channel.label)) return;
             if (!dataChannelsRef.current[peerId]) dataChannelsRef.current[peerId] = {};
             dataChannelsRef.current[peerId][channel.label] = channel;
+            channel.onopen = () => publishPeerState(peerId);
             channel.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
@@ -165,6 +209,10 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
             channel.onclose = () => {
                 if (dataChannelsRef.current[peerId]?.[channel.label] === channel) delete dataChannelsRef.current[peerId][channel.label];
                 if (!Object.keys(dataChannelsRef.current[peerId] || {}).length) delete dataChannelsRef.current[peerId];
+                publishPeerState(peerId);
+                if (!Object.values(dataChannelsRef.current[peerId] || {}).some(ch => ch?.readyState === 'open')) {
+                    scheduleReconnect(peerId);
+                }
             }; 
         }
 
@@ -173,6 +221,16 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
 
             const pc = new RTCPeerConnection({ iceServers: iceServersRef.current });
             peersRef.current[peerId] = pc;
+            // A lost initial offer can leave signalingState/ICE hanging without
+            // reaching 'failed'. Restart after a bounded negotiation window.
+            connectionTimers.set(String(peerId), window.setTimeout(() => {
+                connectionTimers.delete(String(peerId));
+                if (!isMounted || peersRef.current[peerId] !== pc || pc.connectionState === 'connected') return;
+                pc.close();
+                if (peersRef.current[peerId] === pc) delete peersRef.current[peerId];
+                publishPeerState(peerId);
+                scheduleReconnect(peerId);
+            }, 20000));
 
             // Create Data Channel for this peer
             const dataChannel = dataEnabled && user.id > peerId && pc.createDataChannel('gameData', {
@@ -218,6 +276,17 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
             };
 
             pc.onconnectionstatechange = () => {
+                if (!isMounted) return;
+                if (pc.connectionState === 'connected') {
+                    const timer = connectionTimers.get(String(peerId));
+                    if (timer) window.clearTimeout(timer);
+                    connectionTimers.delete(String(peerId));
+                    const retry = reconnectTimers.get(String(peerId));
+                    if (retry) window.clearTimeout(retry);
+                    reconnectTimers.delete(String(peerId));
+                    reconnectAttempts.delete(String(peerId));
+                    publishPeerState(peerId);
+                }
                 if (['failed', 'closed'].includes(pc.connectionState)) {
                     pc.onconnectionstatechange = null;
                     if (audioRefs.current[peerId]) {
@@ -231,7 +300,12 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                     if (peersRef.current[peerId] === pc) delete peersRef.current[peerId];
                     delete dataChannelsRef.current[peerId];
                     delete pendingCandidates.current[peerId];
+                    const timer = connectionTimers.get(String(peerId));
+                    if (timer) window.clearTimeout(timer);
+                    connectionTimers.delete(String(peerId));
                     pc.close();
+                    publishPeerState(peerId);
+                    scheduleReconnect(peerId);
                 }
             };
 
@@ -261,6 +335,12 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                 });
             } catch (err) {
                 console.error("Error initiating call", err);
+                const current = peersRef.current[peerId];
+                if (current && current.connectionState !== 'connected') {
+                    current.close();
+                    if (peersRef.current[peerId] === current) delete peersRef.current[peerId];
+                }
+                scheduleReconnect(peerId);
             }
         }
 
