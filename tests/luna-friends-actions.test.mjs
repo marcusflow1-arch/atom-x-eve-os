@@ -50,10 +50,13 @@ test('Luna Friends has clickable Profile and Trade actions using the existing tr
       builder.onResolve({filter:/.*/},args=>{
         const base=args.path.split('/').at(-1).replace(/\.(jsx|js)$/,'');
         if (args.path==='@tanstack/react-query') return {path:'react-query',namespace:'friends-fixture'};
+        if (args.path==='lucide-react') return {path:'icons',namespace:'friends-fixture'};
         if (Object.hasOwn(mocks,base)) return {path:base,namespace:'friends-fixture'};
         return undefined;
       });
-      builder.onLoad({filter:/.*/,namespace:'friends-fixture'},args=>({loader:'js',contents:mocks[args.path],resolveDir:process.cwd()}));
+      builder.onLoad({filter:/.*/,namespace:'friends-fixture'},args=>({loader:'js',contents:args.path==='icons'
+        ? 'export const '+['ArrowLeftRight','Gamepad2','MessageSquare','Search','Send','UserRound','Users'].map(name=>name+'=()=>null').join(',')+';'
+        : mocks[args.path],resolveDir:process.cwd()}));
     }}],
   });
   const filename=process.cwd()+'/tests/__friends_actions_bundle.cjs';
