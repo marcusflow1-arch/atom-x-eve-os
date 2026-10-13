@@ -35,6 +35,7 @@ import { characterBodyBounds } from '@/lib/characterModelOverrides';
 import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, RUN_SPEED, SPAWN_Z, WALK_SPEED } from './arenaConfig';
 import { reconcileNetworkPosition } from '../network/remote/positionCorrection';
 import { makeAttackPreview, PREVIEW_KINDS } from './attackPreview';
+import { classifyArenaMovement } from './arenaMovementSequence';
 
 const lerpAngle = (a, b, maxStep) => {
   let delta = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI;
@@ -261,6 +262,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
   const seq = useRef(0);
   const lastNetworkSend = useRef(0);
   const [loaded, setLoaded] = useState(0);
+  const [peerConnected, setPeerConnected] = useState(false);
   const [graphicsError, setGraphicsError] = useState(false);
   const [graphicsAttempt, setGraphicsAttempt] = useState(0);
   const [clockNow, setClockNow] = useState(() => Date.now());
