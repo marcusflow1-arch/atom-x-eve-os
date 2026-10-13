@@ -51,7 +51,7 @@ test('Vite dev root only exposes Game 5 client, gameplay and existing dependenci
  assert.equal(vite.server.middlewareMode,true);
  assert.equal(vite.server.fs.strict,true);
  assert.equal(vite.server.fs.allow.length,3);
- assert.ok(vite.server.fs.allow.some(p=>p.endsWith('/src/game5/gameplay')));
+ assert.ok(vite.server.fs.allow.some(p=>p.endsWith('/src/game5/gameplay/world.mjs')));
  assert.ok(vite.server.fs.allow.some(p=>p.endsWith('/node_modules')));
  assert.ok(vite.server.fs.allow.every(p=>!p.endsWith('/src')&&!p.endsWith('/src/game5/quests')));
  assert.ok(vite.server.fs.deny.includes('**/.git/**'));
