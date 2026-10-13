@@ -68,7 +68,7 @@ export function createDevApiHandler(controller, { port = null } = {}) {
 }
 /**
  * Vite uses a dedicated Game 5 document root, NOT the app repository root.
- * Only Game 5 client/gameplay imports and existing installed dependencies may
+ * Only Game 5 client/world imports and existing installed dependencies may
  * be resolved via /@fs. This is defense in depth for a localhost-only tool.
  */
 export function createDevViteConfig() {
@@ -82,7 +82,7 @@ export function createDevViteConfig() {
       host: HOST,
       fs: {
         strict: true,
-        allow: [CLIENT_ROOT, GAMEPLAY_ROOT, resolve(ROOT, 'node_modules')],
+        allow: [CLIENT_ROOT, resolve(GAMEPLAY_ROOT, 'world.mjs'), resolve(ROOT, 'node_modules')],
         deny: ['**/.env', '**/.env.*', '**/.git/**'],
       },
     },
