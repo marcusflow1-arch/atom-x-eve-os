@@ -77,12 +77,13 @@ try {
     assert.ok(popup(id),label+' must open its own floating window');
     assert.equal(popup(id).getAttribute('aria-modal'),'false');
   }
-  assert.equal(document.querySelectorAll('[data-luna-window]').length,8,
-    'opening all eight features simultaneously must not replace earlier windows');
+  assert.equal(document.querySelectorAll('[data-luna-window]').length,9,
+    'opening eight features keeps both independent Inventory and Equipment Slots windows');
+  assert.ok(popup('equipment-slots'),'Inventory opens its separate Equipment Slots window');
   const allIds=[...document.querySelectorAll('[data-luna-window]')].map(e=>e.dataset.lunaWindow);
-  assert.deepEqual(new Set(allIds).size,8);
+  assert.deepEqual(new Set(allIds).size,9);
   await run(()=>tile('Inventory').click());
-  assert.equal(document.querySelectorAll('[data-luna-window]').length,8,'reopening a tile focuses rather than duplicates its window');
+  assert.equal(document.querySelectorAll('[data-luna-window]').length,9,'reopening a tile focuses rather than duplicates its windows');
   const inventory=popup('inventory');
   assert.ok(+inventory.style.zIndex > +popup('leaderboard').style.zIndex,'clicked tile brings an existing window to front');
   await run(()=>inventory.querySelector('[aria-label="Close Inventory window"]').click());
