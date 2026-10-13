@@ -27,6 +27,6 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - name: Validate shared position reconciliation
-        run: node --test tests/network-position-correction.test.mjs
+        run: node --test tests/network-position-correction.test.mjs tests/ai-battle-attack-preview.test.mjs tests/pvp-latency.test.mjs
       - name: Check full application build
         run: npm run build
