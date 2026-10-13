@@ -1,6 +1,6 @@
 import { usePartySession } from '@/components/social/partySession';
 import { useDashboardRoom } from '@/components/social/useDashboardRoom';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useWebRTCVoice } from '@/components/shared/useWebRTCVoice';
@@ -48,7 +48,9 @@ export default function MultiplayerSystem({ envUrl, surface = 'dashboard' }) {
     ? (activeBattle.player_ids || []).map(String).filter(id => id && id !== String(user.id))
     : [];
   const roomPeers = currentChannel?.startsWith('dashboard_') ? dashboardParticipants : participantIds;
-  const livePeers = [...new Set([...roomPeers.map(String), ...battlePeers])].sort();
+  const roomPeerKey = roomPeers.map(String).join('|');
+  const battlePeerKey = battlePeers.join('|');
+  const livePeers = useMemo(() => [...new Set([...roomPeers.map(String), ...battlePeers])].sort(), [roomPeerKey, battlePeerKey]);
   useWebRTCVoice(currentChannel, user, !micEnabled || partyVoice, partyVoice, livePeers);
   useWebRTCVoice(party.party?.voiceRoomId, user, !micEnabled || !partyVoice, !partyVoice, (party.members || []).map(m=>m.user_id), {data:false});
 
