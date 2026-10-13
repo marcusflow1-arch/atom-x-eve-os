@@ -106,7 +106,7 @@ test('rejected pickup and backend failures do not falsely advance or hide card',
   assert.match(session.getState().error, /Item out of range/);
   assert.equal(isAuthoritativelyCollected(session.getState().snapshot), false);
   shouldFail = false;
-  await session.refresh();
+  // After moving closer, retry directly using the last verified 0/1 snapshot.
   assert.equal((await session.dispatch('pickup', {})).ok, true);
   assert.equal(isAuthoritativelyCollected(session.getState().snapshot), true);
   const invalid = createConnectedQuestSession({ transport: { load: async () => ({ snapshot: snap('active', 1) }) } });
