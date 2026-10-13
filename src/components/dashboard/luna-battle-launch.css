@@ -21,7 +21,7 @@
   content:"";position:absolute;width:18px;height:18px;border:1px solid rgba(164,200,220,.18);
   border-radius:3px;transform:rotate(45deg);background:rgba(156,199,222,.045);z-index:-1;
 }
-.luna-battle-launch__label{font-size:8px;font-weight:650;line-height:11px;letter-spacing:.025em;white-space:nowrap;color:#f1f6fa;pointer-events:none}
+.luna-battle-launch__label{font-size:10.4px;font-weight:650;line-height:14.3px;letter-spacing:.025em;white-space:nowrap;color:#f1f6fa;pointer-events:none}
 .luna-battle-launch__status{position:absolute;top:5px;right:5px;width:3px;height:3px;border-radius:50%;background:#9cd9e9;opacity:0;pointer-events:none}
 .axe-attribute-actions .luna-battle-launch:hover{
   border-color:#d2e9f5;transform:translateY(-1px);
