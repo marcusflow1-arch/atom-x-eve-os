@@ -34,6 +34,16 @@
   line-height: 1.4 !important;
 }
 
+/* Explicit 12–13px utilities are likewise promoted to normal readable copy. */
+#root :is([class~="text-[12px]"], [class~="text-[12.5px]"]) {
+  font-size: 15px !important;
+  line-height: 1.4 !important;
+}
+#root :is([class~="text-[13px]"], [class~="text-[13.5px]"]) {
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+}
+
 /* Shared Tailwind small-copy utilities used by forms, cards and dialogs.
    Leave any responsive typography variant to its breakpoint-specific rule. */
 #root .text-xs:not([class*="sm:text-"]):not([class*="md:text-"]):not([class*="lg:text-"]):not([class*="xl:text-"]) {
