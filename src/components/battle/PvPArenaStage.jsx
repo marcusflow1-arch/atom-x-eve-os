@@ -33,6 +33,7 @@ import { requestAIBattle } from './battleClient';
 import { skillSlotFromKey } from '@/components/luna/skillSlots';
 import { characterBodyBounds } from '@/lib/characterModelOverrides';
 import { boxFor, COURT, FACING_SPEED, INTERPOLATION_DELAY_MS, NETWORK_SEND_MS, RUN_SPEED, SPAWN_Z, WALK_SPEED } from './arenaConfig';
+import { reconcileNetworkPosition } from '../network/remote/positionCorrection';
 
 const lerpAngle = (a, b, maxStep) => {
   let delta = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI;
@@ -705,6 +706,9 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
     courtLine(scene,-5.5,1,5.5,1,0x5de8ff,.18);courtLine(scene,-5.5,7.5,5.5,7.5,0x5de8ff,.18);courtLine(scene,-5.5,-1,5.5,-1,0xff7799,.18);courtLine(scene,-5.5,-7.5,5.5,-7.5,0xff7799,.18);
 
     let disposed = false, frame = 0, previous = performance.now(), shoulder = 1, cameraDistance = 6.2;
+    // Only smooth the visible opponent; combat uses positions.current.opponent.
+    let opponentVisualPos = null;
+    const smoothOpponent = new URLSearchParams(window.location.search).get('aibattlesmooth') !== '0';
     const barRoots = [];
     const barObjects = [];
     const addBar = (fighter, isLocal) => {
@@ -724,6 +728,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       runtimes.current = { local: localFighter, opponent: opponentFighter };
       positions.current.local.set(0,0,localSide === 'host' ? SPAWN_Z : -SPAWN_Z);
       positions.current.opponent.set(0,0,opponentSide === 'host' ? SPAWN_Z : -SPAWN_Z);
+      opponentVisualPos = [positions.current.opponent.x, 0, positions.current.opponent.z];
       addBar(localFighter,true); addBar(opponentFighter,false);
       // Do the expensive material/program compilation while the arena still says
       // "Loading fighters". WebGL can otherwise compile a material on its first
@@ -817,6 +822,11 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
           }
         }
         const renderTime=Date.now()+offset-INTERPOLATION_DELAY_MS; const samples=remoteSamples.current; if(samples.length){let a=samples[0],b=samples[samples.length-1];for(let i=0;i<samples.length-1;i++){if(Number(samples[i].t)<=renderTime&&Number(samples[i+1].t)>=renderTime){a=samples[i];b=samples[i+1];break;}}const span=Math.max(1,Number(b.t)-Number(a.t));const t=THREE.MathUtils.clamp((renderTime-Number(a.t))/span,0,1);const box=boxFor(opponentSide);const p=clampPos({x:THREE.MathUtils.lerp(Number(a.x),Number(b.x),t),z:THREE.MathUtils.lerp(Number(a.z),Number(b.z),t)},box);op.x=p.x;op.z=p.z;setMotion(of,(Date.now()-Number(b.receivedAt||0)>500||b.moving===false)?'idle':`${b.running?'run':'walk'}_${b.anim||'forward'}`);}else{const stored=currentMatch?.positions?.[currentOpponent?.id];if(stored){op.x=Number(stored.x||op.x);op.z=Number(stored.z||op.z);}}
+        // Prevent delayed network corrections from warping the visible opponent.
+        // Targeting, skill timing and server combat continue using op unchanged.
+        if (!opponentVisualPos) opponentVisualPos = [op.x, 0, op.z];
+        else if (smoothOpponent) opponentVisualPos = reconcileNetworkPosition(opponentVisualPos, [op.x, 0, op.z], dt).pos;
+        else opponentVisualPos = [op.x, 0, op.z];
         lf.yaw=lerpAngle(lf.yaw,Math.atan2(op.x-lp.x,op.z-lp.z),FACING_SPEED*dt);of.yaw=lerpAngle(of.yaw,Math.atan2(lp.x-op.x,lp.z-op.z),FACING_SPEED*dt);
         // Lunge/recoil offsets are presentation only; the logical positions
         // (lp/op) that are sent to the server and the peer are unchanged.
@@ -840,7 +850,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
         }
         const localMotion=motionOffset(lf,now,gap), opponentMotion=motionOffset(of,now,gap);
         lf.root.position.x=lp.x+towardX*localMotion.push;lf.root.position.z=lp.z+towardZ*localMotion.push;lf.root.position.y=(lf.baseY||0)+localMotion.lift;
-        of.root.position.x=op.x-towardX*opponentMotion.push;of.root.position.z=op.z-towardZ*opponentMotion.push;of.root.position.y=(of.baseY||0)+opponentMotion.lift;
+        of.root.position.x=opponentVisualPos[0]-towardX*opponentMotion.push;of.root.position.z=opponentVisualPos[2]-towardZ*opponentMotion.push;of.root.position.y=(of.baseY||0)+opponentMotion.lift;
         // Auto-lock owns world facing even while an authored ability clip is
         // running. Push the continuously updated opponent yaw into both runtimes,
         // update the mixers, then re-apply wrapper rotation after animation so a
@@ -912,6 +922,7 @@ export default function PvPArenaStage({ match, serverOffsetMs = 0 }) {
       runtimes.current.opponent?.runtime?.dispose?.();
       runtimes.current = { local: null, opponent: null };
       remoteSamples.current = [];
+      opponentVisualPos = null;
       held.current.clear();
       if (arenaVisualRef.current.scene === scene) arenaVisualRef.current = { scene: null, camera: null };
       renderer.dispose();
