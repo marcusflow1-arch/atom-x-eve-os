@@ -15,6 +15,9 @@ export const THROW_SPIN = 72, THROW_SEEK = 7, THROW_TURN = 4.5, THROW_LODGE_S = 
 export const WALL_SLAM_SPEED = 6;
 // Force Levitate: the victim floats LEVITATE_HEIGHT m up, helpless, for the caster's duration; any hit drops them
 export const LEVITATE_HEIGHT = 2.1;
+// Taunts (T): the original Jedi Outcast gesture animations, a set for each side; moving, attacking or jumping cuts one short
+export const TAUNTS = Object.freeze({ light: ['BOTH_ENGAGETAUNT', 'BOTH_SILENCEGESTURE1', 'BOTH_TALKGESTURE2'], dark: ['BOTH_THREATEN1', 'BOTH_ENGAGETAUNT', 'BOTH_TALKGESTURE10'] });
+export const TAUNT_COOLDOWN = 1;
 const FORCE_JUMP_HEIGHT = [0.8, 3.3, 5.7, 10.4]; // JO forceJumpHeight[] in metres
 export const emptyCmd = () => ({ fwd: 0, right: 0, up: 0, walk: false, crouch: false, attack: false, alt: false, jump: false, jumpPressed: false, crouchPressed: false });
 const DEATHS = ['BOTH_DEATH1', 'BOTH_DEATH2', 'BOTH_DEATH3', 'BOTH_DEATH4', 'BOTH_DEATH5', 'BOTH_DEATH6', 'BOTH_DEATH7', 'BOTH_DEATH8', 'BOTH_DEATH9'];
@@ -244,6 +247,15 @@ export class Fighter {
     if (!wasFlung) this.playWhole(opts.deathAnim || DEATHS[Math.floor(Math.random() * DEATHS.length)], { blend: 0.08 }); else this.playWhole('BOTH_KNOCKDOWN1', { blend: 0.05 });
     this.g.onDeath && this.g.onDeath(this);
   }
+  tauntSide() { return this.side === 'dark' || this.team === 'enemy' || this.team === 'red' ? 'dark' : 'light'; }
+  taunt() {
+    if (this.status !== 'normal' || !this.onGround || this.thrown || this.saber.isActiveSwing() || this.forceUntil > this.now || this.now < (this.tauntUntil ?? -9) + TAUNT_COOLDOWN) return false;
+    const side = this.tauntSide(), list = TAUNTS[side], n = this.tauntN = ((this.tauntN ?? -1) + 1) % list.length;
+    const len = Math.min(2.4, this.playWhole(list[n], { blend: 0.12 })); this.legsLockUntil = this.tauntUntil = this.now + len; this.vel[0] = this.vel[2] = 0;
+    if (this.g.onTaunt) this.g.onTaunt(this, side, n);
+    return true;
+  }
+  endTaunt() { this.tauntUntil = 0; this.legsLockUntil = 0; this.actor.followLegs(); this.actor.torso.cur = null; }
   // Force Pulse: burned away (a defeat credited to the caster; the body fades out in Game.drawFighter)
   vaporize(from) {
     if (this.status === 'dead' || this.spawnShield > this.now) return;
@@ -252,7 +264,7 @@ export class Fighter {
   }
   // another player's game executes this fighter (RPC on their puppet of us): run our side of the same execution
   executedBy(att, kind, o = {}) { if (this.g.startExecution) this.g.startExecution(att, this, kind, { ...o, fromNet: true }); }
-  revive(at) { this.vaporized = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
+  revive(at) { this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
   chest() { const y = this.status === 'down' || this.status === 'dead' ? 0.3 : this.ducked ? 0.75 : 1.15; return [this.pos[0], this.pos[1] + y, this.pos[2]]; }
   headPos() { return this.actor.bonePos('cranium', [0, 0, 0]); }
   // ---------- per-frame update
@@ -325,6 +337,7 @@ export class Fighter {
     if (c.crouchPressed && this.onGround && (c.fwd || c.right) && !c.walk && !this.ducked && !(S.isActiveSwing() && S.weaponTime > 0 && !this.isPlayer) && this.canRoll()) { this.startRoll(); return; }
     if (wantDuck !== this.ducked && this.onGround) { this.ducked = wantDuck; }
     // jumping
+    if (this.tauntUntil > now && (c.fwd || c.right || c.attack || c.jumpPressed || c.crouchPressed)) this.endTaunt(); // any action cuts a taunt short
     const special = this.specialLocked();
     if (this.trySpecialJumpAttack()) { c.jumpPressed = false; }
     if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) this.startJump();
@@ -333,7 +346,7 @@ export class Fighter {
     const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); const fwd = [sinY, 0, cosY], right = [-cosY, 0, sinY];
     let f = special ? 0 : c.fwd, r = special ? 0 : c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }
     const crouched = this.ducked; const base = crouched ? 2.1 : c.walk ? 2.4 : 5.6; let sp = base * this.speedMul * (f < 0 ? 0.82 : 1);
-    if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY)) sp *= 0.0;
+    if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY) || this.tauntUntil > now) sp *= 0.0;
     if (this.elecUntil > now) sp *= 0.72;                              // lightning slows the victim (they keep control)
     const wish = [(fwd[0] * f + right[0] * r) * sp, (fwd[2] * f + right[2] * r) * sp];
     if (this.onGround) {

@@ -46,3 +46,14 @@ test('Force Pulse: the meter fills from damage and defeats; X vaporizes every fo
   assert.notEqual(c.status, 'dead', 'out of reach');
   assert.equal(F.pulse, 2 * PULSE_PER_KILL, 'the two defeats start the next charge');
 });
+
+test('taunts (T): an original gesture for your side; moving cuts it short; a short cooldown; the AI gloats', async () => {
+  const { TAUNTS, TAUNT_COOLDOWN } = await import('../src/components/game2/engine/fighter.js');
+  const g = makeGame(), P = g.player;
+  run(g, 5); g.input.pressedSet.add('KeyT'); g.frameInput(1 / 60); g.input.endFrame(); run(g, 1);
+  assert.ok(TAUNTS.light.includes(P.actor.legs.name), 'plays a Jedi taunt: ' + P.actor.legs.name);
+  run(g, 20, () => ({ held: keys('KeyW') }));
+  assert.ok(!(P.tauntUntil > g.t), 'moving ends it'); assert.ok(Math.hypot(P.pos[0], P.pos[2]) > 0.3, 'and you move');
+  assert.equal(P.taunt(), false, 'cooldown'); run(g, Math.ceil(TAUNT_COOLDOWN * 60) + 2); assert.equal(P.taunt(), true);
+  const f = addFoe(g, [0, 0, 3]); f.team = 'enemy'; run(g, 5); assert.equal(f.taunt(), true); assert.ok(TAUNTS.dark.includes(f.actor.legs.name), 'Dark side set for the enemy');
+});

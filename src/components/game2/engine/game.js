@@ -207,7 +207,12 @@ export class Game {
   onSwing(f, move) { const lv = f.saber.level; this.sfx.play(Math.random() < 0.5 ? 'swing1' : 'swing2', { pos: f.pos, vol: f.isPlayer ? 0.8 : 0.55, rate: (lv === 1 ? 1.12 : lv === 3 ? 0.88 : 1) * (f.saber.rageMul > 1 ? 1.1 : 1), vary: 0.1 }); }
   onThud(f) { this.sfxAt('hit1', f.pos, 0.7); this.dust(f.pos, 0.9, 10); if (f.isPlayer) this.shake(0.18); }
   onLand(f, impact) { if (impact > 8) { this.dust(f.pos, 0.6 + impact * 0.03, 8); } } // no camera shake: Jedi Outcast lands with a short LAND1 only
-  onDeath(f) { if (f.killedBy && f.killedBy !== f && !f.remote) this.creditKill(f.killedBy); this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (this.teamMatch) this.teamMatch.onDeath(f); if (this.net) this.net.onDeath(f); if (f.isPlayer && !this.online) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
+  // a taunt: the voice line (when the optional voices are installed) and, online, everyone else hears it too
+  onTaunt(f, side, n, fromNet = false) {
+    this.sfx.voice?.(side, n, { pos: f.pos, vol: f.isPlayer ? 0.9 : 0.75 });
+    if (this.net && !fromNet && !f.remote && f.fid) this.net.fx('taunt', { fid: f.fid, side, n });
+  }
+  onDeath(f) { if (f.killedBy && f.killedBy !== f && !f.remote) this.creditKill(f.killedBy); const K = f.killedBy; if (K && !K.isPlayer && !K.remote && K.taunt && K !== f && Math.random() < 0.6) K.after(0.9, () => { if (K.status === 'normal') K.taunt(); }); /* the AI gloats now and then */ this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (this.teamMatch) this.teamMatch.onDeath(f); if (this.net) this.net.onDeath(f); if (f.isPlayer && !this.online) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
   endRound(state) { if (this.round.state === 'won' || this.round.state === 'lost') return; this.round = { state, t: 0 }; this.hud.banners.length = 0; } // the result overlay in hud.js replaces any banner
   onForceJump(f) { this.sfxAt('jump', f.pos, 0.9); this.sfxAt('jumpbuild', f.pos, 0.5); this.fx.ring({ p: [f.pos[0], 0.05, f.pos[2]], n: [0, 1, 0], r0: 0.3, r1: 2.2, life: 0.5, w: 0.14, c: [0.6, 0.85, 1, 0.9] }); this.dust(f.pos, 1.0, 14); if (f.isPlayer) this.shake(0.12); }
   dust(p, size = 0.8, n = 8) { for (let i = 0; i < n; i++) { const a = rnd(0, 6.28); this.fx.emit({ p: [p[0] + Math.cos(a) * 0.3, 0.08, p[2] + Math.sin(a) * 0.3], v: [Math.cos(a) * rnd(0.8, 2.6) * size, rnd(0.2, 0.9), Math.sin(a) * rnd(0.8, 2.6) * size], life: rnd(0.4, 0.9), size: rnd(0.12, 0.28), grow: 0.5, c0: [0.5, 0.48, 0.55, 0.22], c1: [0.4, 0.38, 0.45, 0], drag: 2.5 }); } }
@@ -432,6 +437,7 @@ export class Game {
     // R: from the pistol, the saber; otherwise execute the foe that is ready for it (the prompt shows), else draw / holster
     if (i.pressed('KeyR')) { if (this.playerWeapon === 'bryar') this.switchWeapon('saber'); else { const ex = this.execCandidate && findExecutable(this, p); if (ex) this.startExecution(p, ex.victim, ex.kind); else p.toggleSaber(); } }
     if (i.pressed('KeyQ') && this.playerWeapon) this.switchWeapon();
+    if (i.pressed('KeyT')) p.taunt();
     if (i.pressed('Tab')) { p.setStyle(p.saber.level % 3 + 1); h.msg('Saber style: ' + STYLE_NAMES[p.saber.level]); }
     if (i.btnPressed[2] && !p.saber.holstered && p.status === 'normal') { if (p.throwSaber(this.aimDir())) h.msg('Saber throw'); }
     if (p.status === 'normal' && (i.pressed('KeyF') || FORCE_QUICK_BINDINGS.some(({ code }) => i.pressed(code)))) p.yaw = p.targetYaw = c.yaw; // snap to aim on either cast path

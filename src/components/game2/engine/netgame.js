@@ -312,6 +312,7 @@ export class NetGame {
       case 'throwRes': { if (m.to !== g.player.fid) return; const T = { knockdown: ['KNOCKDOWN', [0.7, 1, 0.75]], staggered: ['PARTLY BLOCKED', [0.75, 0.95, 0.8]], hit: [(m.pull ? 'PULL' : 'PUSH') + ' HIT', [0.7, 1, 0.75]], countered: ['COUNTERED', [1, 0.65, 0.35]], absorbed: ['ABSORBED', [0.78, 0.5, 1]] }[m.outcome]; if (T) g.banner(T[0], T[1]); return; }
       case 'died': if (m.fid && String(m.fid).startsWith(from + ':')) { this.noteDeath(m.fid, m.by); const k = m.by && this.byId.get(m.by); if (k && !k.remote) g.creditKill(k); } return;
       case 'crack': if (Array.isArray(m.p) && Array.isArray(m.n)) g.addCrack(m.p, m.n, Math.min(2, Number(m.s) || 0.8)); return;
+      case 'taunt': { const f = this.byId.get(m.fid); if (f && f.remote) g.onTaunt(f, m.side === 'dark' ? 'dark' : 'light', Number(m.n) || 0, true); return; }
       case 'pulse': { const f = this.byId.get(m.fid); if (f && f.remote) g.forcePulse(f, Math.min(10, Number(m.r) || 7), true); return; }
       case 'cut': { const f = this.byId.get(m.fid); if (f && f.remote && Array.isArray(m.dir)) g.cutFighter(f, { y: Number(m.y), dir: m.dir, floor: Number(m.floor) }, true); return; }
     }
