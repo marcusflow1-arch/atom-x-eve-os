@@ -20,6 +20,19 @@ export const TAUNTS = Object.freeze({ light: ['BOTH_ENGAGETAUNT', 'BOTH_SILENCEG
 export const TAUNT_COOLDOWN = 1;
 // Lightsaber kits: one blade, a blade in each hand ('dual'), or a saberstaff with a blade at each end ('staff')
 export const SABER_KITS = Object.freeze(['single', 'dual', 'staff']);
+// Saber kata (Jedi Academy bg_saber.c: both attack buttons, SABER_ALT_ATTACK_POWER = 50 Force): a scripted chain of the
+// stance's attacks (dual sabers and the saberstaff have their own) at KATA_SPEED, every hit KATA_DAMAGE times harder and
+// harder to parry and wounding each target once per swing; the fighter presses forward at KATA_ADVANCE whatever the keys say
+export const KATA_COST = 50, KATA_SPEED = 1.3, KATA_DAMAGE = 1.5, KATA_ADVANCE = 1.1; // m/s it steps forward
+export const KATA_STEPS = Object.freeze({
+  1: ['LS_A_T2B', 'LS_A_L2R', 'LS_A_BR2TL', 'LS_A_R2L', 'LS_A_TL2BR', 'LS_A_BL2TR', 'LS_A_BACK'],
+  2: ['LS_A_TL2BR', 'LS_A_BL2TR', 'LS_A_R2L', 'LS_A_TR2BL', 'LS_A_L2R', 'LS_A_BACK'],
+  3: ['LS_A_T2B', 'LS_A_BR2TL', 'LS_A_TL2BR', 'LS_A_BACK'],
+  dual: ['LS_A_L2R', 'LS_A_R2L', 'LS_A_BACK', 'LS_A_BR2TL'],
+  staff: ['LS_A_BACK', 'LS_A_L2R', 'LS_A_R2L', 'LS_A_BACK_CR'],
+});
+// Force Pull from above lifts the victim to the caster; they hang there this long (helpless: a Push now blows them away)
+export const PULL_HANG = 0.45;
 const FLIP_X = Q.axisAngle([1, 0, 0], Math.PI);
 const FORCE_JUMP_HEIGHT = [0.8, 3.3, 5.7, 10.4]; // JO forceJumpHeight[] in metres
 export const emptyCmd = () => ({ fwd: 0, right: 0, up: 0, walk: false, crouch: false, attack: false, alt: false, jump: false, jumpPressed: false, crouchPressed: false });
@@ -173,6 +186,8 @@ export class Fighter {
     if (this.status === 'dead') { this.vel[0] = dirXZ[0] * speed * 0.6; this.vel[2] = dirXZ[2] * speed * 0.6; return; }
     this.endForce(); this.cancelAttackState();
     this.status = 'flung'; this.statusT = 0; this.vel = [dirXZ[0] * speed, up, dirXZ[2] * speed]; this.onGround = false; this.ducked = false; this.knockAt = this.now; this.quickerGetup = !!opts.quicker;
+    this.pullLand = false; this.pullHang = null; // knocked away out of a pull: they fly the whole way
+    this.bounced = false; this.hitWall = false;
     const anim = opts.anim || ['BOTH_KNOCKDOWN1', 'BOTH_KNOCKDOWN2', 'BOTH_KNOCKDOWN4', 'BOTH_KNOCKDOWN5'][Math.floor(Math.random() * 4)];
     this.faceYaw = Math.atan2(-dirXZ[0], -dirXZ[2]) + Math.PI; // face the pusher (so they fall backward)
     if (!opts.keepYaw) this.yaw = Math.atan2(-dirXZ[0], -dirXZ[2]);
@@ -194,7 +209,8 @@ export class Fighter {
     if (o.to) {
       const d = [o.to[0] - this.pos[0], o.to[1] - this.pos[1], o.to[2] - this.pos[2]], L = Math.hypot(d[0], d[2]) || 0.01, tau = clamp(Math.hypot(...d) / 15, 0.28, 0.65), k = clamp(o.power ?? 1, 0.2, 1);
       this.vel = [d[0] / tau * k, d[1] / tau + 0.5 * G * tau, d[2] / tau * k]; dirXZ = [d[0] / L, 0, d[2] / L]; this.pullLand = true; // stop where they land
-    } else this.vel = [dirXZ[0] * speed, 3.2, dirXZ[2] * speed];
+      this.pullHang = d[1] > 0.6 && k > 0.95 ? { at: this.now + tau, until: this.now + tau + PULL_HANG } : null; // pulled up into the air: they stop in front of the caster
+    } else { this.vel = [dirXZ[0] * speed, 3.2, dirXZ[2] * speed]; this.pullHang = null; }
     this.yaw = Math.atan2(-dirXZ[0], -dirXZ[2]); this.statusAnim = 'BOTH_KNOCKDOWN3'; this.playWhole('BOTH_KNOCKDOWN3', { blend: 0.06 });
   }
   // Force Levitate (the victim's side): float up and turn slowly, unable to act, until `until` or any hit (hurt) drops them
@@ -235,7 +251,33 @@ export class Fighter {
   shock(on) {
     if (on) { if (this.status === 'dead' || this.status === 'flung') return; if (this.status !== 'shocked') { this.endForce(); this.cancelAttackState(); this.status = 'shocked'; this.statusT = 0; this.nextPain = 0; this.onGround = true; } this.shockKeep = this.now + 0.15; }
   }
-  cancelAttackState() { this.saber.weaponTime = 0; this.saber.torsoTimer = 0; this.saber.blocked = null; if (this.thrown) this.catchSaber(); }
+  cancelAttackState() { if (this.kata) this.endKata(true); this.saber.weaponTime = 0; this.saber.torsoTimer = 0; this.saber.blocked = null; if (this.thrown) this.catchSaber(); }
+  // ---------- saber kata (both attack buttons; KATA_COST Force): the KATA_STEPS chain for the stance or kit, played back to back
+  startKata() {
+    const S = this.saber, F = this.force;
+    if (this.kata || this.status !== 'normal' || !this.onGround || !this.hasSaber || S.holstered || this.thrown || this.tauntUntil > this.now || this.executing) return false;
+    if (!F || F.fp < KATA_COST) { if (this.isPlayer) F?.say?.('A saber kata needs ' + KATA_COST + ' Force'); return false; }
+    F.fp -= KATA_COST; this.endForce();
+    const steps = KATA_STEPS[this.saberKit === 'dual' || this.saberKit === 'staff' ? this.saberKit : S.level] || KATA_STEPS[2];
+    this.kata = { steps: steps.slice(), rage: S.rageMul, hits: 0 }; S.rageMul = Math.max(S.rageMul, KATA_SPEED);
+    S.weaponTime = 0; S.torsoTimer = 0; S.blocked = null; this.vel[0] = this.vel[2] = 0;
+    this.g.sfxAt?.('rage', this.pos, 0.45);
+    return true;
+  }
+  // the saber logic is driven here instead of by the attack button: each move runs its full time, then the next starts
+  tickKata(dtMs) {
+    const S = this.saber, K = this.kata;
+    if (this.status !== 'normal' || S.holstered) return this.endKata(true);
+    S.weaponTime -= dtMs; if (S.torsoTimer > 0) S.torsoTimer -= dtMs;
+    if (S.weaponTime > 0) return;
+    if (!K.steps.length) return this.endKata();
+    const mv = S.I[K.steps.shift()]; if (mv == null) return;
+    S.setMove(mv, this.now, { restart: true }); S.weaponTime = S.torsoTimer; S.state = 'firing'; S.attackStartedAt = this.now; S.active = true; K.hits++;
+  }
+  endKata(cut = false) {
+    const S = this.saber, K = this.kata; if (!K) return; this.kata = null; S.rageMul = K.rage;
+    if (!cut) { S.setMove(S.I.LS_READY, this.now); S.weaponTime = 0; S.torsoTimer = 0; }
+  }
   // who gets the credit if this fighter falls to their death: whoever last hurt, pushed, pulled or lifted them (10 s)
   markAttacker(from) { if (from && from !== this) { this.lastAttacker = from; this.lastAttackerAt = this.now; } }
   // below the map's kill height (a chasm, off a bridge, out of bounds): dead, credited to the last attacker
@@ -276,7 +318,7 @@ export class Fighter {
   }
   // another player's game executes this fighter (RPC on their puppet of us): run our side of the same execution
   executedBy(att, kind, o = {}) { if (this.g.startExecution) this.g.startExecution(att, this, kind, { ...o, fromNet: true }); }
-  revive(at) { this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
+  revive(at) { this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.pullHang = null; this.kata = null; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
   chest() { const y = this.status === 'down' || this.status === 'dead' ? 0.3 : this.ducked ? 0.75 : 1.15; return [this.pos[0], this.pos[1] + y, this.pos[2]]; }
   headPos() { return this.actor.bonePos('cranium', [0, 0, 0]); }
   // ---------- per-frame update
@@ -315,6 +357,8 @@ export class Fighter {
   frictionMove(dt, f) { const k = Math.max(0, 1 - f * dt); this.vel[0] *= k; this.vel[2] *= k; this.pos[0] += this.vel[0] * dt; this.pos[2] += this.vel[2] * dt; this.g.world.collide(this.pos, this.radius); }
   physicsFlung(dt) {
     if ((this.slamUntil ?? 0) > this.now) return this.finishFlung(dt); // pinned against the wall for a moment after a wall slam
+    const H = this.pullHang; // pulled up: hangs in front of the caster for PULL_HANG s, then drops
+    if (H && this.now >= H.at) { if (this.now < H.until) { this.vel = [0, 0, 0]; return this.finishFlung(dt); } this.pullHang = null; }
     this.vel[1] -= G * dt; this.pos[0] += this.vel[0] * dt; this.pos[1] += this.vel[1] * dt; this.pos[2] += this.vel[2] * dt;
     const before = [this.pos[0], this.pos[2]]; this.g.world.collide(this.pos, this.radius);
     if (before[0] !== this.pos[0] || before[1] !== this.pos[2]) {
@@ -360,6 +404,7 @@ export class Fighter {
     let f = special ? 0 : c.fwd, r = special ? 0 : c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }
     const crouched = this.ducked; const base = crouched ? 2.1 : c.walk ? 2.4 : 5.6; let sp = base * this.speedMul * (f < 0 ? 0.82 : 1);
     if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY) || this.tauntUntil > now) sp *= 0.0;
+    if (this.kata) { f = 1; r = 0; sp = KATA_ADVANCE; } // a kata presses forward at its own pace, whatever the keys say
     if (this.elecUntil > now) sp *= 0.72;                              // lightning slows the victim (they keep control)
     const wish = [(fwd[0] * f + right[0] * r) * sp, (fwd[2] * f + right[2] * r) * sp];
     if (this.onGround) {
@@ -470,7 +515,7 @@ export class Fighter {
       const pos = this.ctxInfo();
       // mouse travel since the wind-up began (the player's flick re-aims the swing until the strike starts)
       const gs = this.gesture ??= { dx: 0, dy: 0 }; if (S.inStart(S.move)) { gs.dx += c.mouseDX || 0; gs.dy += c.mouseDY || 0; } else gs.dx = gs.dy = 0;
-      S.update(dt * 1000, { attack: cmdAttack && !this.thrown, alt: c.alt, aimPitch: c.aimPitch || 0, fwd: Math.sign(Math.round(c.fwd * 2) / 2), right: Math.sign(Math.round(c.right * 2) / 2), up: c.up, ducked: this.ducked, velZ: this.vel[1], groundDist: this.pos[1], enemyFront: pos.front, enemyBehind: pos.behind, busy, gesture: this.isPlayer ? gs : null, airborne: !this.onGround }, now);
+      if (this.kata) this.tickKata(dt * 1000); else S.update(dt * 1000, { attack: cmdAttack && !this.thrown, alt: c.alt, aimPitch: c.aimPitch || 0, fwd: Math.sign(Math.round(c.fwd * 2) / 2), right: Math.sign(Math.round(c.right * 2) / 2), up: c.up, ducked: this.ducked, velZ: this.vel[1], groundDist: this.pos[1], enemyFront: pos.front, enemyBehind: pos.behind, busy, gesture: this.isPlayer ? gs : null, airborne: !this.onGround }, now);
       if (S.move !== this.prevMove) { this.onMoveChanged(S.move); this.prevMove = S.move; }
       // idle torso: re-evaluate stance vs follow-legs each frame when nothing is playing
       if (S.move === S.I.LS_READY && S.torsoTimer <= 0 && !busy && !this.thrown) {

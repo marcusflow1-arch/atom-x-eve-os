@@ -31,6 +31,7 @@ function layout() {
   L.bridges = SPANS.map(s => ({ ...s, y: 0 }));
   L.teamHomes = { blue: [-55, 0.3, 0], red: [55, 0.3, 0] };
   L.teamYaw = { blue: Math.PI / 2, red: -Math.PI / 2 };
+  L.music = 'skybridge'; // its own generated battle score (music.js)
 
   // ---------- the two fortresses (mirror images: s = -1 Blue in the west, s = +1 Red in the east)
   for (const s of [-1, 1]) {

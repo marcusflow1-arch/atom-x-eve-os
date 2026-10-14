@@ -14,11 +14,11 @@ export const HELP = [
 ];
 export const HELP_DUEL = [
   ['Move · look', 'W A S D (Shift = walk)  ·  mouse  ·  C crouch / roll'], ['Jump / Force Jump', 'Space  (hold Space = Force Jump)'],
-  ['Saber on / off · execute · stance', 'R toggles saber, or executes a foe glowing red  ·  Tab cycles Fast / Medium / Strong'], ['Saber attack · throw', 'Left mouse (look up/down to direct slash) · hold right mouse: the throw homes in and spins inside whoever it hits'],
+  ['Saber on / off · execute · stance', 'R toggles saber, or executes a foe glowing red  ·  Tab cycles Fast / Medium / Strong'], ['Saber attack · throw · kata', 'Left mouse (look up/down to direct slash) · hold right mouse: homing throw · both buttons: kata (50 Force)'],
   ['Force menu', 'Mouse wheel or [ ] selects highlighted Force power'], ['Cast highlighted Force', 'F to cast  ·  hold F for Grip / Lightning / Heal / Drain'],
-  ['Quick cast 1–5', '1 Push (hold to charge) · 2 Pull · 3 Grip · 4 Lightning · 5 Heal'], ['Quick cast 6–0', '6 Speed · 7 Mind Trick · 8 Rage · 9 Protect · 0 Absorb'], ['Other Force powers', 'G Levitate · X Force Pulse (meter full) · Drain and Sight with wheel + F'],
+  ['Quick cast 1–5', '1 Push (hold to charge) · 2 Pull · 3 Grip · 4 Lightning · 5 Heal'], ['Quick cast 6–0', '6 Speed · 7 Mind Trick · 8 Rage · 9 Protect · 0 Absorb'], ['Other Force powers', 'G Levitate · X Force Repulse (meter full) · Drain and Sight with wheel + F'],
   ['Break a Grip', 'press 1 (Push), 2 (Pull), 0 (Absorb) or select one with wheel + F'], ['Block a push / pull', 'stand still on the ground with Force left, not mid-swing; moving = weaker'],
-  ['Combos · taunt', 'Push then 6 Speed: dash to them as they land · Lightning on your thrown saber charges it · T taunts'],
+  ['Combos · taunt', 'Jump + Pull, then Push: blown away · Push then 6 Speed: dash to them · Lightning on a thrown saber charges it · T'],
   ['Zoom · rematch · controls · mute', 'Ctrl + wheel or - = · Enter · F1 · M'],
 ];
 const HELP_COMBOS = HELP_DUEL[11];
@@ -79,7 +79,7 @@ export class HUD {
     if (F.charging) { const ch = F.chargeLevel(); x.strokeStyle = ch >= 1 ? '#ffffff' : 'rgba(140,210,255,0.95)'; x.lineWidth = 3; x.beginPath(); x.arc(cx, cy, 15, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.04, ch)); x.stroke(); x.font = '700 10px system-ui,sans-serif'; x.textAlign = 'center'; x.fillStyle = '#cfeaff'; x.fillText(ch >= 1 ? 'FULL PUSH' : 'PUSH', cx, cy + 30); x.textAlign = 'left'; } // charged Force Push
     // bars bottom-left
     const bx = 22, by = H - 62; this.bar(x, bx, by, 250, 18, P.hp / P.maxHp, ['#c01818', '#ff6a4a'], 'HEALTH  ' + Math.ceil(P.hp)); this.bar(x, bx, by + 26, 250, 18, F.fp / F.max, ['#1f5fd6', '#6fd2ff'], 'FORCE  ' + Math.floor(F.fp));
-    { const pr = F.pulseReady && F.pulseReady(), k = (F.pulse || 0) / 100; x.globalAlpha = pr ? 0.75 + 0.25 * Math.sin(g.t * 7) : 1; this.bar(x, bx, by - 20, 250, 13, k, ['#a86a12', '#ffd27a'], pr ? '[X]  FORCE PULSE READY' : 'PULSE  ' + Math.floor(k * 100) + '%'); x.globalAlpha = 1; } // Force Pulse meter
+    { const pr = F.pulseReady && F.pulseReady(), k = (F.pulse || 0) / 100; x.globalAlpha = pr ? 0.75 + 0.25 * Math.sin(g.t * 7) : 1; this.bar(x, bx, by - 20, 250, 13, k, ['#a86a12', '#ffd27a'], pr ? '[X]  FORCE REPULSE READY' : 'REPULSE  ' + Math.floor(k * 100) + '%'); x.globalAlpha = 1; } // Force Repulse meter
     // power chips bottom-center
     const chips = g.forceMenu ? F.list.map(id => POWER_BY_ID[id]) : POWERS; const chip = 64, gap = 6; const perRow = W < 1280 ? (g.forceMenu ? 6 : 7) : (g.forceMenu ? 12 : 14); const rows = Math.ceil(chips.length / perRow); const totalW = Math.min(perRow, chips.length) * (chip + gap) - gap; const sx = Math.max(300, (W - totalW) / 2 + (W > 1280 ? 120 : 130)); void sx;
     const x0 = Math.min(W - totalW - 16, Math.max(bx + 270, (W - totalW) / 2)); const y0 = H - 18 - rows * (46 + gap) + gap;
