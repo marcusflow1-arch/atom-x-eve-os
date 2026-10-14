@@ -27,6 +27,7 @@ import { Execution, findExecutable, cutTransforms, EXECUTION_NAMES } from './exe
 const STEP = 1 / 60;
 export const RESPAWN_SHIELD = 3; // seconds of immunity after coming back from a defeat (every mode)
 export const CRACK_LIFE = 14;    // seconds a wall crack from a wall slam stays
+export const KATA_CHORD = 0.1;   // s the right button waits for the left one (both = saber kata) before it throws the saber
 const rnd = (a, b) => a + Math.random() * (b - a);
 const SPAWN = [0, 0, -9];
 const clearCmd = c => { c.fwd = c.right = c.up = 0; c.walk = c.crouch = c.attack = c.alt = c.jump = c.jumpPressed = c.crouchPressed = false; };
@@ -264,7 +265,9 @@ export class Game {
     if (victim.remote && this.net) { this.net.rpc(victim, 'throw', [{ from: att, pull, lv: F.lv[kind], dmgScale: F.dmgScale ?? 1, dir: o.dir, dist: o.dist ?? 5, fall: o.fall, flatD: o.flatD, charge: o.charge || 0 }]); return null; } // resolved by that player's game
     const dist = o.dist ?? 5, fall = o.fall ?? clamp(1 - dist / 15, 0.2, 1), dir = o.dir, ch = clamp(o.charge || 0, 0, 1);
     victim.markAttacker?.(att);
-    if (!pull && victim.status === 'levitated') return this.launchLevitated(F, victim, dir, ch); // Levitate + Push: nothing to stand on, nothing to counter with
+    // Levitate + Push, or a Push on someone already flying (pulled up from above, knocked into the air): nothing to stand
+    // on, nothing to counter with
+    if (!pull && (victim.status === 'levitated' || (victim.status === 'flung' && !victim.onGround))) return this.launchLevitated(F, victim, dir, ch);
     const def = this.defSnapshot(victim, att, pull);
     const res = resolveThrow({ attackerLevel: F.lv[kind] + (ch >= 0.75 ? 1 : 0), pull, def, dist, forceSpent: THROW_COST, knockdownDist: KNOCKDOWN_DIST + 4 * ch });
     if (res.fpGain && VF) VF.fp = Math.min(VF.max, VF.fp + res.fpGain);
@@ -308,10 +311,11 @@ export class Game {
     }
     return res;
   }
-  // Levitate + Push: a levitated fighter is thrown hard (no counter: they are in the air) and slams into whatever is behind
+  // a Push on someone helpless in the air (levitated, pulled up, flying): thrown hard with the Force Push knockdown
+  // (BOTH_KNOCKDOWN1, blown backward), no counter, and they slam into whatever is behind
   launchLevitated(F, victim, dir, ch = 0) {
-    const att = F.p; victim.levitate?.(false, { quiet: true });
-    victim.push(dir, 15 + 6 * ch, 3.2, { keepYaw: false }); const dmg = (8 + 6 * ch) * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true });
+    const att = F.p; if (victim.status === 'levitated') victim.levitate?.(false, { quiet: true });
+    victim.push(dir, 15 + 6 * ch, 3.2, { keepYaw: false, anim: 'BOTH_KNOCKDOWN1' }); const dmg = (8 + 6 * ch) * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true });
     this.sfxAt('hit2', victim.pos, 0.8); this.fx.ring({ p: victim.chest(), n: dir, r0: 0.2, r1: 2.4, life: 0.4, w: 0.16, c: [0.75, 0.9, 1, 0.95], move: v3.scale(dir, 10) });
     if (victim.isPlayer || att.isPlayer) { this.banner('LAUNCHED', [0.7, 0.95, 1]); this.shake(0.3); }
     return { outcome: 'knockdown', scale: 1, knockdown: true, launched: true, reason: '', countered: false };
@@ -346,22 +350,29 @@ export class Game {
       if (c.t < 0.5) R.billboard(c.p, c.size * 0.8, [1, 0.6, 0.3, 0.6 * (1 - c.t / 0.5)], 0);
     }
   }
-  // ---------------- Force Pulse (Force.startPulse): vaporize every foe within `radius`
+  // ---------------- Force Repulse burst (Force.startPulse): the caster, curled up in the air, bursts open. A shockwave
+  // in every direction; every foe within `radius` is blasted outward and disintegrates in the air a moment later
   forcePulse(att, radius, fromNet = false) {
-    const c = att.chest();
-    for (let k = 0; k < 3; k++) this.fx.ring({ p: [att.pos[0], att.pos[1] + 0.2 + k * 0.7, att.pos[2]], n: [0, 1, 0], r0: 0.4, r1: radius * (1.15 - k * 0.15), life: 0.6 + k * 0.1, w: 0.35, c: [1, 0.85 - k * 0.15, 0.5, 0.95] });
-    this.fx.ring({ p: c, n: [1, 0, 0], r0: 0.3, r1: radius, life: 0.5, w: 0.25, c: [1, 1, 1, 0.8] }); this.fx.ring({ p: c, n: [0, 0, 1], r0: 0.3, r1: radius, life: 0.5, w: 0.25, c: [1, 1, 1, 0.8] });
-    for (let i = 0; i < 90; i++) { const a = rnd(0, 6.28), up = rnd(-0.2, 0.7); this.fx.emit({ p: c, v: [Math.cos(a) * rnd(8, 16), up * 8, Math.sin(a) * rnd(8, 16)], life: rnd(0.35, 0.7), size: rnd(0.06, 0.14), c0: [1, 0.9, 0.6, 1], c1: [1, 0.4, 0.1, 0], drag: 2 }); }
-    this.dust(att.pos, 2.4, 30); this.flashLight(c, [1, 0.85, 0.6], 0.5); this.sfxAt('push', att.pos, 1); this.sfxAt('hit3', att.pos, 1); this.sfxAt('rage', att.pos, 0.6);
-    if (att.isPlayer || v3.dist(this.player.pos, att.pos) < radius + 4) this.shake(0.8);
-    if (att.isPlayer) this.banner('FORCE PULSE', [1, 0.85, 0.5], 1.8);
+    const c = att.chest(), gy = this.world.floorAt(att.pos[0], att.pos[2], att.pos[1] + 0.5) ?? att.pos[1];
+    for (let k = 0; k < 3; k++) this.fx.ring({ p: [att.pos[0], gy + 0.2 + k * 0.7, att.pos[2]], n: [0, 1, 0], r0: 0.4, r1: radius * (1.15 - k * 0.15), life: 0.6 + k * 0.1, w: 0.35, c: [1, 0.85 - k * 0.15, 0.5, 0.95] });
+    for (const n of [[1, 0, 0], [0, 0, 1], [0.7, 0, 0.7], [0.7, 0, -0.7], [0, 1, 0]]) this.fx.ring({ p: c, n, r0: 0.3, r1: radius, life: 0.5, w: 0.25, c: [1, 1, 1, 0.8] }); // a sphere of force
+    for (let i = 0; i < 140; i++) { const a = rnd(0, 6.28), up = rnd(-0.6, 0.8); this.fx.emit({ p: c, v: [Math.cos(a) * rnd(8, 18), up * 9, Math.sin(a) * rnd(8, 18)], life: rnd(0.35, 0.75), size: rnd(0.06, 0.15), c0: [1, 0.92, 0.65, 1], c1: [1, 0.4, 0.1, 0], drag: 2 }); }
+    this.dust([att.pos[0], gy, att.pos[2]], 2.6, 36); this.flashLight(c, [1, 0.88, 0.65], 0.6); this.sfxAt('push', att.pos, 1); this.sfxAt('hit3', att.pos, 1); this.sfxAt('rage', att.pos, 0.6);
+    if (att.isPlayer || v3.dist(this.player.pos, att.pos) < radius + 4) this.shake(0.9);
+    if (att.isPlayer) this.banner('FORCE REPULSE', [1, 0.85, 0.5], 1.8);
     if (this.net && !fromNet && att.fid) this.net.fx('pulse', { fid: att.fid, r: radius });
-    if (fromNet) return; // the blast's victims are vaporized by the caster's game (vaporize RPCs)
-    for (const f of this.foesOf(att)) if (v3.dist(f.pos, att.pos) <= radius && Math.abs(f.pos[1] - att.pos[1]) < 4 && !(f.spawnShield > this.t)) f.vaporize(att);
+    if (fromNet) return; // the blast's victims are thrown and vaporized by the caster's game (push / vaporize RPCs)
+    for (const f of this.foesOf(att)) {
+      if (v3.dist(f.pos, att.pos) > radius || Math.abs(f.pos[1] - att.pos[1]) > 4 || f.spawnShield > this.t || f.executor) continue;
+      const d = v3.sub(f.pos, att.pos), L = Math.hypot(d[0], d[2]), dir = L > 0.01 ? [d[0] / L, 0, d[2] / L] : [Math.sin(att.yaw), 0, Math.cos(att.yaw)];
+      f.markAttacker?.(att); if (f.status === 'levitated') f.levitate?.(false, { quiet: true });
+      f.push(dir, 15 + 7 * (1 - L / radius), 5.5, { keepYaw: false, anim: 'BOTH_KNOCKDOWN1' }); // blasted outward...
+      f.after(0.22 + 0.14 * L / radius, () => f.vaporize(att));                                // ...and burns away in the air
+    }
     for (const b of this.world.bodies) { const d = v3.sub(b.pos, att.pos), L = Math.hypot(d[0], d[2]); if (L < radius * 1.5 && L > 0.01) this.world.impulse(b, [d[0] / L * 18, 7, d[2] / L * 18]); }
   }
   onVaporize(f) { const c = f.chest(); for (let i = 0; i < 50; i++) this.fx.emit({ p: [c[0] + rnd(-0.3, 0.3), c[1] + rnd(-0.9, 0.7), c[2] + rnd(-0.3, 0.3)], v: [rnd(-1.5, 1.5), rnd(0.5, 3), rnd(-1.5, 1.5)], life: rnd(0.6, 1.4), size: rnd(0.03, 0.08), c0: [1, 0.7, 0.3, 1], c1: [0.3, 0.25, 0.25, 0], drag: 1 }); }
-  // the Force Pulse meter: damage dealt and defeats (only the attacker's own game counts them)
+  // the Force Repulse meter: damage dealt and defeats (only the attacker's own game counts them)
   creditDamage(from, dmg) { const F = from && this.forceOf(from); if (F && !F.remote && F.gainPulse) F.gainPulse(dmg * PULSE_PER_HP); }
   creditKill(from) { const F = from && this.forceOf(from); if (F && !F.remote && F.gainPulse) F.gainPulse(PULSE_PER_KILL); }
   // ---------------- executions (executions.js)
@@ -442,7 +453,11 @@ export class Game {
     if (i.pressed('KeyQ') && this.playerWeapon) this.switchWeapon();
     if (i.pressed('KeyT')) p.taunt();
     if (i.pressed('Tab')) { p.setStyle(p.saber.level % 3 + 1); h.msg('Saber style: ' + STYLE_NAMES[p.saber.level]); }
-    if (i.btnPressed[2] && !p.saber.holstered && p.status === 'normal') { if (p.throwSaber(this.aimDir())) h.msg('Saber throw'); }
+    // both mouse buttons: a saber kata (Jedi Academy: attack + alt attack, 50 Force). The right button alone throws the
+    // saber once it has been held KATA_CHORD s, so pressing both together never throws first
+    if ((i.btnPressed[0] || i.btnPressed[2]) && i.btn[0] && i.btn[2] && !p.saber.holstered && !p.thrown && p.status === 'normal') { this.throwAt = null; if (p.startKata()) h.msg('Saber kata'); }
+    else if (i.btnPressed[2]) this.throwAt = this.t + KATA_CHORD;
+    if (this.throwAt != null && this.t >= this.throwAt) { this.throwAt = null; if (i.btn[2] && !i.btn[0] && !p.saber.holstered && p.status === 'normal' && !p.kata) { if (p.throwSaber(this.aimDir())) h.msg('Saber throw'); } }
     if (p.status === 'normal' && (i.pressed('KeyF') || FORCE_QUICK_BINDINGS.some(({ code }) => i.pressed(code)))) p.yaw = p.targetYaw = c.yaw; // snap to aim on either cast path
   }
   // respawn immunity: no damage, Force or grabs for RESPAWN_SHIELD s (a soft blue glow while it lasts)

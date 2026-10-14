@@ -3,7 +3,7 @@
 // the floating practice remote, and flung props hitting people.
 import { v3, clamp, lerp } from './math.js';
 import { geo } from './gl.js';
-import { THROW_LODGE_DPS } from './fighter.js';
+import { THROW_LODGE_DPS, KATA_DAMAGE } from './fighter.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const BLOCKS = ['block1', 'block2', 'block3', 'block4', 'block5', 'block6', 'block7', 'block8', 'block9'];
@@ -88,7 +88,7 @@ export class Combat {
     if (Math.hypot(T.vel?.[0] || 0, T.vel?.[2] || 0) > 2) p *= 0.45;
     return clamp(p, 0, 0.97);
   }
-  bladeDamage(A) { const S = A.saber; let d = [0, 12, 18, 28][S.level]; if (S.inSpecial(S.move)) d *= 1.6; return d * A.damageMul * (A.isPlayer ? 1 : (A.dmgScale ?? 0.55)); }
+  bladeDamage(A) { const S = A.saber; let d = [0, 12, 18, 28][S.level]; if (S.inSpecial(S.move)) d *= 1.6; if (A.kata) d *= KATA_DAMAGE; return d * A.damageMul * (A.isPlayer ? 1 : (A.dmgScale ?? 0.55)); }
   // ---------- per-step update
   step(dt) {
     const g = this.g; const F = g.fighters ? g.fighters() : [g.player, ...g.npcs];
@@ -123,7 +123,7 @@ export class Combat {
         const wk = A.name + '>' + B.name; if ((wound.get(wk) ?? -1) > g.t) continue;
         let hit = null; for (let k = 0; k < segs.length && !hit; k++) hit = sweptBladeContact(prevs[k], segs[k], B._prevCap, caps.get(B));
         if (!hit) continue;
-        if (attacking) wound.set(wk, g.t + (this.bladeHit(A, B, hit.a) === 'blocked' ? 0.3 : 0.1));
+        if (attacking) { const r = this.bladeHit(A, B, hit.a); wound.set(wk, A.kata ? Math.max(g.t + 0.1, A.saber.moveStart + A.saber.moveLen / 1000) : g.t + (r === 'blocked' ? 0.3 : 0.1)); } // a kata swing wounds each target once
         else if (this.touchHit) { this.touchHit(A, B, hit.a); wound.set(wk, g.t + 0.2); }
       }
       // remote droid
@@ -167,12 +167,12 @@ export class Combat {
     if (!A.remote) { if (aSwing) A.saber.blocked = 'BOUNCE'; else A.saber.blocked = this.sideOf(A, pt); } // each game bounces its own fighters
     if (!B.remote) { if (bSwing) B.saber.blocked = 'BOUNCE'; else if (B.canParry !== false) B.saber.blocked = this.sideOf(B, pt); }
     if (A.isPlayer || B.isPlayer) g.shake(0.12);
-    if (aSwing && this.wound) this.wound.set(A.name + '>' + B.name, g.t + 0.3); // a clash spends the swing on the other blade
+    if (aSwing && this.wound) { const k = A.name + '>' + B.name; this.wound.set(k, Math.max(this.wound.get(k) ?? 0, g.t + 0.3)); } // a clash spends the swing on the other blade
   }
   bladeHit(A, B, pt) {
     const g = this.g, I = A.saber.I, m = A.saber.move;
     const unblockable = !!I && (m === I.LS_A_BACK || m === I.LS_A_BACK_CR || m === I.LS_A_BACKSTAB || m === I.LS_A_JUMP_T__B_); // w_saber.c
-    if (!unblockable && this.canBlock(B, A.pos) && Math.random() < this.blockProb(B)) { // blocked
+    if (!unblockable && this.canBlock(B, A.pos) && Math.random() < this.blockProb(B) - (A.kata ? 0.25 : 0)) { // blocked (a kata is harder to parry)
       g.fx.sparks(pt, [0, 1, 0], 14, [1, 0.9, 0.55, 1]); g.sfxAt(BLOCKS[Math.floor(Math.random() * BLOCKS.length)], pt, 1); g.flashLight(pt, A.blade.color, 0.2);
       const side = B.saber.isActiveSwing() ? 'BOUNCE' : this.sideOf(B, pt); if (B.remote && g.net) g.net.rpc(B, 'blocked', [side]); else B.saber.blocked = side; A.saber.blocked = 'BOUNCE'; if (A.isPlayer || B.isPlayer) g.shake(0.1);
       if (g.net) g.net.onHit(A, B, pt, { blocked: true }); return 'blocked';

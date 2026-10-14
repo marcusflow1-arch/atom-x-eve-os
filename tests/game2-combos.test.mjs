@@ -41,7 +41,7 @@ test('Force Pulse: the meter fills from damage and defeats; X vaporizes every fo
   const d = addFoe(g, [9, 0, 9], { name: 'd', hp: 10 }); d.hurt(50, P); assert.equal(F.pulse, 40 * PULSE_PER_HP + 10 * PULSE_PER_HP + PULSE_PER_KILL, 'a defeat adds a chunk (damage counts up to their health)');
   run(g, 1, () => ({ pressed: keys('KeyX') })); assert.ok(!F.pulsing, 'not charged yet: nothing');
   F.pulse = PULSE_MAX; run(g, 1, () => ({ pressed: keys('KeyX') })); assert.ok(F.pulsing, 'charged: the build-up starts'); assert.equal(F.pulse, 0);
-  run(g, 40);
+  run(g, 90); // the Repulse: rise and curl up (0.95 s), burst, and the victims burn away in the air a moment later
   for (const f of [a, b]) { assert.equal(f.status, 'dead', f.name + ' vaporized'); assert.ok(f.vaporized); assert.equal(f.killedBy, P); }
   assert.notEqual(c.status, 'dead', 'out of reach');
   assert.equal(F.pulse, 2 * PULSE_PER_KILL, 'the two defeats start the next charge');

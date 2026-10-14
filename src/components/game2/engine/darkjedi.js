@@ -10,7 +10,7 @@ import { executionFor } from './executions.js';
 const rnd = (a, b) => a + Math.random() * (b - a);
 const clear = c => { c.fwd = c.right = c.up = 0; c.walk = c.crouch = c.attack = c.alt = c.jump = c.jumpPressed = c.crouchPressed = false; };
 const toward = (f, P) => Math.atan2(P.pos[0] - f.pos[0], P.pos[2] - f.pos[2]);
-const newBrain = () => ({ mode: 'approach', t: 0, think: 1.2, react: 0, strafe: 1, style: 2, atkDir: 0, holdT: 0, gripT: 0, gripPlan: undefined, gripWait: 0, cd: { push: 3, pull: 2, grip: 6, lightning: 5, heal: 0, speed: 8, rage: 0, protect: 10, absorb: 0, levitate: 8 } });
+const newBrain = () => ({ mode: 'approach', t: 0, think: 1.2, react: 0, strafe: 1, style: 2, atkDir: 0, holdT: 0, gripT: 0, gripPlan: undefined, gripWait: 0, cd: { push: 3, pull: 2, grip: 6, lightning: 5, heal: 0, speed: 8, rage: 0, protect: 10, absorb: 0, levitate: 8, kata: 6 } });
 
 export function aiDarkJedi(g, f, dt) {
   const P = g.aiTarget ? g.aiTarget(f) : g.player, c = f.cmd, F = f.force; clear(c);
@@ -21,7 +21,7 @@ export function aiDarkJedi(g, f, dt) {
   if (f.status === 'dead') { F.want = {}; return; }
   if (f.status === 'gripped') { gripReaction(f, a, F, dt); return; }
   a.gripT = 0; a.gripPlan = undefined;
-  if (f.status !== 'normal') { F.want = {}; return; }
+  if (f.status !== 'normal' || f.kata) { F.want = {}; return; } // a saber kata plays out on its own
   if (f.saber.holstered) f.igniteNow();
   f.targetYaw = toward(f, P);
   const dx = P.pos[0] - f.pos[0], dz = P.pos[2] - f.pos[2], dist = Math.hypot(dx, dz);
@@ -44,7 +44,7 @@ export function aiDarkJedi(g, f, dt) {
     a.react = rnd(0.25, 0.7);
     if (Math.random() < 0.7) { F.cast('absorb'); return; }
   }
-  // ---- Force Pulse when it is charged and the foe is close
+  // ---- Force Repulse when it is charged and the foe is close
   if (F.pulseReady && F.pulseReady() && dist < 5.5 && f.forceUntil <= g.t && Math.random() < dt * 2) { F.startPulse(); return; }
   // ---- Levitate + Push: push the fighter it lifted a moment ago (they are launched)
   if (a.comboPushAt && g.t >= a.comboPushAt) { a.comboPushAt = 0; if (P.status === 'levitated' && f.forceUntil <= g.t && F.gcd <= 0) { F.cast('push'); return; } }
@@ -85,6 +85,8 @@ function decideForce(f, a, F, P, dist, hpf, facing) {
   if (up && dist > 8 && a.cd.pull <= 0 && fp >= 45 && facing && r < 0.55) { a.cd.pull = rnd(7, 11); if (F.cast('pull')) return true; }
   if (up && dist > 3.5 && dist < 10.5 && a.cd.lightning <= 0 && fp >= 45 && facing && r < 0.4) { a.cd.lightning = rnd(9, 14); a.holdT = rnd(1.1, 2.2); F.want.lightning = true; if (F.cast('lightning')) return true; F.want.lightning = false; }
   if ((up || P.status === 'down') && dist > 2 && dist < GRIP_MAX_DIST - 0.5 && a.cd.grip <= 0 && fp >= 40 && facing && r < 0.4) { a.cd.grip = rnd(11, 16); a.holdT = 4.4; F.want.grip = true; if (F.cast('grip')) return true; F.want.grip = false; }
+  // saber kata (both attack buttons, 50 Force) up close, keeping some Force in reserve
+  if (up && dist < 2.6 && a.cd.kata <= 0 && fp >= 70 && facing && r < 0.35) { a.cd.kata = rnd(10, 16); if (f.startKata && f.startKata()) return true; }
   if (up && dist < 4.2 && a.cd.push <= 0 && fp >= 35 && facing && r < 0.45) { a.cd.push = rnd(4.5, 8); if (F.cast('push')) return true; }
   return false;
 }

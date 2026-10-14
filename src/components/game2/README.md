@@ -99,6 +99,10 @@ Hold right mouse to send the saber out and keep it spinning at range, steering t
 release right mouse to recall it. This works while jumping or Force-jumping as well. Thrown at a fighter it homes in, and
 when it hits it lodges and keeps spinning inside them, cutting, until it is recalled or pushed loose.
 
+Both mouse buttons together start a saber kata (Jedi Academy's `SABER_ALT_ATTACK_POWER`: 50 Force): a scripted chain of
+the stance's attacks (dual sabers and the saberstaff have their own spinning chains), 30% faster, 1.5x damage and harder
+to parry, pressing forward; each swing wounds a target once. A right click alone waits 0.1 s for the left one, then throws.
+
 R on a foe that glows red (at or under 25% health, in front of you) executes them: within 3.6 m a Force Grip that crushes
 their throat, further out (up to 10 m) Force Pull, Lightning, then a Force Speed dash that cuts them in half. T taunts.
 
@@ -106,10 +110,12 @@ their throat, further out (up to 10 m) Force Pull, Lightning, then a Force Speed
 1 Push, 2 Pull, 3 Grip, 4 Lightning, 5 Heal, 6 Speed, 7 Mind Trick,
 8 Rage, 9 Protect, 0 Absorb. The numeric keypad also works. Hold 1 to charge Force Push (farther and harder, more Force).
 G is Force Levitate: lifts the foe (or prop) in front of you helplessly for 3.5 s so you can get away (any hit drops
-them; a Force Push launches them). X unleashes Force Pulse once its meter (filled by damage and defeats) is full:
-everything around you is vaporized.
+them; a Force Push launches them). X unleashes Force Repulse once its meter (filled by damage and defeats) is full, the
+way Starkiller does it: you rise, curl into a ball while the Force gathers, then burst open with your arms flung wide;
+everyone within 7 m is blasted outward and disintegrates in the air, and you float back down.
 
-**Combos:** Push then Speed (6) dashes you in front of the pushed foe as they hit the ground, with a bonus hit. Lightning
+**Combos:** Jump and Pull a foe below you: they are lifted up in front of you and hang there for a moment; Push them then
+and they are blown away with the Force Push knockdown (any foe flying helplessly is). Push then Speed (6) dashes you in front of the pushed foe as they hit the ground, with a bonus hit. Lightning
 while your saber is thrown charges it: the lightning spreads around it as it flies (and drains Force much faster).
 Push someone into a wall hard enough and the wall cracks.
 

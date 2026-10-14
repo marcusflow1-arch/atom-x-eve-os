@@ -37,9 +37,17 @@ export const LEVITATE_S = 3.5;
 //  Saber throw + Lightning: lightning aimed at your thrown saber charges it; while it flows, arcs jump from the spinning
 //  blade to every foe within SABER_ARC_R m of it (SABER_ARC_DPS each) and the Force drains twice as fast.
 export const INTERCEPT_WINDOW = 1.6, INTERCEPT_BONUS = 1.5, SABER_ARC_R = 4, SABER_ARC_DPS = 30;
-// Force Pulse (special, X): the PULSE meter fills from damage you deal (PULSE_PER_HP per point) and defeats (PULSE_PER_KILL);
-// when full, a short build-up and a blast that vaporizes every foe within PULSE_RADIUS m.
-export const PULSE_MAX = 100, PULSE_PER_HP = 0.25, PULSE_PER_KILL = 35, PULSE_RADIUS = 7, PULSE_WINDUP = 0.55;
+// Force Repulse (special, X; "pulse" in the code): the meter fills from damage you deal (PULSE_PER_HP per point) and
+// defeats (PULSE_PER_KILL). When it is full the caster rises REPULSE_RISE m and curls into a ball while the Force gathers
+// (PULSE_WINDUP s), then bursts open with the arms flung wide: every foe within PULSE_RADIUS m is blasted outward and
+// disintegrates in the air (Game.forcePulse). The arms stay open REPULSE_HOLD s, then the caster comes down.
+export const PULSE_MAX = 100, PULSE_PER_HP = 0.25, PULSE_PER_KILL = 35, PULSE_RADIUS = 7, PULSE_WINDUP = 0.95;
+export const REPULSE_RISE = 1.4, REPULSE_HOLD = 0.5, REPULSE_FALL = 0.45;
+// poses held by playing an animation at 2% speed from that moment, measured on the skeleton: the tightest tuck of the
+// backflip (head 0.23 m from the knees) and the widest arms of the Force fountain (hands 1.23 m apart)
+export const REPULSE_BALL = ['BOTH_FLIP_B', 0.15], REPULSE_OPEN = ['BOTH_FORCEFOUNTAIN1_MIDDLE', 1.15];
+const holdPose = (f, [anim, at], blend) => f.actor.setBoth(anim, { blend, restart: true, loop: false, speed: 0.02, startAt: at / 0.02 });
+const smoothstep = x => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
 const OFFENSIVE = new Set(['push', 'pull', 'grip', 'lightning', 'drain']);
 export const POWER_BY_ID = Object.fromEntries(POWERS.map(p => [p.id, p]));
 // Ten direct-cast slots. Remaining powers stay reachable in the mouse-wheel selector.
@@ -106,7 +114,7 @@ export class Force {
   update(dt, input) {
     const g = this.g, p = this.p, now = g.t; this.gcd -= dt; this.selShow = Math.max(0, this.selShow - dt); this.absorbMsgT -= dt;
     if (p.status === 'dead') { this.releaseAll(true); return; }
-    const free = p.status === 'normal' || p.status === 'roll', gripped = p.status === 'gripped';
+    const free = (p.status === 'normal' || p.status === 'roll') && !p.kata, gripped = p.status === 'gripped'; // no casting mid-kata
     this.updateLevitation();
     if (!this.npc && input) {
       if (this.gcd <= 0 && !this.holding && !this.charging && (free || gripped || p.status === 'down' || p.status === 'getup' || p.status === 'levitated')) {
@@ -299,20 +307,39 @@ export class Force {
     for (let i = 0; i < 3; i++) g.fx.emit({ p: [p.pos[0] + rnd(-0.3, 0.3), p.pos[1] + rnd(0.1, 1.7), p.pos[2] + rnd(-0.3, 0.3)], v: [0, 0, 0], life: 0.3, size: 0.1, grow: 0.3, c0: [0.5, 0.8, 1, 0.7], c1: [0.3, 0.5, 1, 0] });
     if (k >= 1) { this.dash = null; if (!this.npc) g.cam.yaw = D.face; }
   }
-  // ---------------- Force Pulse (special)
+  // ---------------- Force Repulse (special)
   gainPulse(n) { if (n > 0) this.pulse = Math.min(PULSE_MAX, (this.pulse || 0) + n); }
   pulseReady() { return (this.pulse || 0) >= PULSE_MAX; }
   startPulse() {
-    const g = this.g, p = this.p; if (!this.pulseReady() || this.pulsing || this.holding) { if (!this.npc && !this.pulseReady()) this.say('Force Pulse is not charged yet'); return false; }
-    this.pulse = 0; this.pulsing = { t0: g.t }; p.playForce('BOTH_FORCEFOUNTAIN1_START', { durMs: 900, whole: true }); g.sfxAt('jumpbuild', p.pos, 1); g.sfxAt('rage', p.pos, 0.8);
+    const g = this.g, p = this.p;
+    if (!this.pulseReady() || this.pulsing || this.holding || (p.status !== 'normal' && p.status !== 'roll')) { if (!this.npc && !this.pulseReady()) this.say('Force Repulse is not charged yet'); return false; }
+    this.pulse = 0; this.charging = null; p.endForce(); p.cancelAttackState();
+    // the caster is locked into the move like an execution: this tick moves and poses them
+    p.status = 'executing'; p.statusT = 0; p.vel = [0, 0, 0]; p.onGround = false; p.ducked = false;
+    this.pulsing = { t0: g.t, y0: p.pos[1], burst: 0 }; holdPose(p, REPULSE_BALL, 0.25);
+    g.sfxAt('jumpbuild', p.pos, 1); g.sfxAt('rage', p.pos, 0.8);
     if (g.net) g.net.onCast(this, 'pulse'); return true;
   }
   tickPulse(dt) {
-    const g = this.g, p = this.p, T = g.t - this.pulsing.t0, c = p.chest();
-    if (p.status === 'dead') { this.pulsing = null; return; }
-    for (let i = 0; i < 4; i++) { const a = rnd(0, 6.28), r = rnd(1.5, 3.5), from = [c[0] + Math.cos(a) * r, c[1] + rnd(-1, 1.2), c[2] + Math.sin(a) * r]; g.fx.emit({ p: from, v: v3.scale(v3.sub(c, from), 1 / 0.35), life: 0.35, size: 0.05, c0: [1, 0.9, 0.6, 0.9], c1: [1, 0.6, 0.2, 0.2] }); }
-    g.lightFlash = Math.max(g.lightFlash, T * 1.2); g.lightFlashPos = c;
-    if (T >= PULSE_WINDUP) { this.pulsing = null; g.forcePulse(p, PULSE_RADIUS); }
+    const g = this.g, p = this.p, S = this.pulsing, T = g.t - S.t0, top = S.y0 + REPULSE_RISE;
+    if (p.status !== 'executing') { this.pulsing = null; return; } // knocked, gripped or killed out of it
+    if (!S.burst) { // rise and curl up while the Force gathers into the ball
+      p.pos[1] = S.y0 + REPULSE_RISE * smoothstep(T / 0.55); p.yaw += dt * 1.8; p.targetYaw = p.yaw;
+      const c = p.chest(), n = T > 0.55 ? 7 : 4;
+      for (let i = 0; i < n; i++) { const a = rnd(0, 6.28), r = rnd(1.5, 3.5), from = [c[0] + Math.cos(a) * r, c[1] + rnd(-1.2, 1.2), c[2] + Math.sin(a) * r]; g.fx.emit({ p: from, v: v3.scale(v3.sub(c, from), 1 / 0.35), life: 0.35, size: 0.05, c0: [1, 0.9, 0.6, 0.9], c1: [1, 0.6, 0.2, 0.2] }); }
+      g.lightFlash = Math.max(g.lightFlash, T * 1.2); g.lightFlashPos = c;
+      if (T >= PULSE_WINDUP) { S.burst = g.t; holdPose(p, REPULSE_OPEN, 0.06); g.forcePulse(p, PULSE_RADIUS); } // burst open
+      return;
+    }
+    const tb = g.t - S.burst; if (tb < REPULSE_HOLD) { p.pos[1] = top; return; }
+    const fl = g.world.floorAt(p.pos[0], p.pos[2], top);
+    if (fl === null) return this.endPulse(false); // nothing below (a chasm): just drop
+    const k = smoothstep((tb - REPULSE_HOLD) / REPULSE_FALL); p.pos[1] = top + (fl - top) * k;
+    if (k >= 1) this.endPulse(true);
+  }
+  endPulse(landed) {
+    const p = this.p; this.pulsing = null; if (p.status !== 'executing') return;
+    p.status = 'normal'; p.statusT = 0; p.vel = [0, 0, 0]; p.onGround = landed; p.endForce(); p.actor.followLegs(); p.actor.torso.cur = null;
   }
   do_rage() { this.anim('BOTH_FORCEFOUNTAIN1_START', { durMs: 1100 }); this.startTimed('rage'); this.g.sfxAt('rage', this.p.pos, 1); this.shake(0.3); }
   do_protect() { this.anim('BOTH_FORCEHEAL_QUICK', { durMs: 800 }); this.startTimed('protect'); this.g.sfxAt('protect', this.p.pos, 1); }
