@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { useRevoAvatar } from '@/components/onboarding/useRevoAvatar';
+import { loadAvatarModel, applyPlayerAppearance, disposeAvatarModel } from '@/components/onboarding/avatarAssetRuntime';
 import { DEV_WORLD } from '../gameplay/world.mjs';
 import { presentation } from './questUi.mjs';
 import { createGame5MovementTransport } from './game5MovementTransport.mjs';
@@ -32,6 +34,9 @@ function createCharacter(color, withHat = false) {
 
 export default function Game5QuestPreview({ mode = 'demo', connectedTransport = null }) {
   const connectedMode = mode === 'connected';
+  const revo = useRevoAvatar('game5');
+  const revoKey = revo ? `${revo.avatarId}:${revo.appearance.gender}:${revo.appearance.model_url}` : '';
+  const [revoStatus, setRevoStatus] = useState('loading');
   const hostRef = useRef(null);
   const gameRef = useRef(null);
   const pressedRef = useRef(new Set());
@@ -263,7 +268,8 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
         foliage.castShadow = true;
         scene.add(foliage);
       }
-      const player = createCharacter(0xaebfc7);
+      // Revo is the signed-in player's saved Luna avatar; no Game 5 character is generated.
+      const player = new THREE.Group();
       player.position.set(DEV_WORLD.spawn.x, 0, DEV_WORLD.spawn.z);
       scene.add(player);
       const elder = createCharacter(0x9c7141, true);
@@ -326,6 +332,18 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
         const cardDist = Math.hypot(player.position.x - DEV_WORLD.card.x, player.position.z - DEV_WORLD.card.z);
         const currentNearby = npcDist <= DEV_WORLD.interactionRadius ? 'Elder Shen · Press E or Interact' : cardDist <= DEV_WORLD.interactionRadius && !hidden ? 'Lost Card · Press E or Interact' : '';
         if (currentNearby !== lastNearby) { lastNearby = currentNearby; setNearby(currentNearby); }
+        const animator = gameRef.current?.avatarAnimation;
+        if (animator) {
+          const moving = !dialogueRef.current && [...pressedRef.current].some(key => ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key));
+          const wanted = moving ? (pressedRef.current.has('shift') ? 'run' : 'walk') : 'idle';
+          const next = animator.actions[wanted] || animator.actions[moving ? 'walk' : 'idle'] || animator.actions.idle;
+          if (next && next !== animator.active) {
+            animator.active?.fadeOut(.16);
+            next.reset().fadeIn(.16).play();
+            animator.active = next;
+          }
+          animator.mixer.update(dt);
+        }
         renderer.render(scene, camera);
       };
       const onKeyDown = (event) => {
@@ -349,6 +367,8 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
         window.removeEventListener('blur', onBlur);
         window.removeEventListener('resize', resize);
         resizeObserver?.disconnect();
+        const savedModel = gameRef.current?.avatarModel;
+        if (savedModel) player.remove(savedModel); // disposed separately by the Revo loader effect
         gameRef.current = null;
         scene.traverse(obj => {
           obj.geometry?.dispose();
@@ -365,6 +385,58 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
       return undefined;
     }
   }, []);
+
+  // Load the actual saved Luna/Revo body, using the same canonical asset and appearance
+  // pipeline as the dashboard. The game never substitutes a newly generated player.
+  useEffect(() => {
+    const player = gameRef.current?.player;
+    if (!revo || !player) {
+      setRevoStatus(revo ? 'unavailable' : 'missing');
+      return undefined;
+    }
+    let cancelled = false;
+    let body = null;
+    let mixer = null;
+    setRevoStatus('loading');
+    loadAvatarModel(revo.appearance, 2.45).then(model => {
+      if (cancelled) { disposeAvatarModel(model); return; }
+      body = model;
+      player.add(body);
+      mixer = new THREE.AnimationMixer(body);
+      const clips = body.animations || [];
+      const lookup = regex => clips.find(clip => regex.test(clip.name));
+      const selected = { idle: lookup(/(?:^|[ _])idle/i) || clips[0], walk: lookup(/walk/i), run: lookup(/run/i) };
+      const actions = {};
+      for (const [name, clip] of Object.entries(selected)) if (clip) actions[name] = mixer.clipAction(clip);
+      const first = actions.idle || actions.walk || actions.run;
+      first?.play();
+      if (gameRef.current?.player === player) gameRef.current = {
+        ...gameRef.current, avatarModel: body, avatarAnimation: { mixer, actions, active: first },
+      };
+      setRevoStatus('ready');
+    }).catch(() => {
+      if (!cancelled) setRevoStatus('unavailable');
+    });
+    return () => {
+      cancelled = true;
+      mixer?.stopAllAction();
+      if (body) {
+        player.remove(body);
+        disposeAvatarModel(body);
+      }
+      if (gameRef.current?.avatarModel === body) {
+        gameRef.current.avatarModel = null;
+        gameRef.current.avatarAnimation = null;
+      }
+    };
+  }, [revoKey]);
+
+  // Appearance edits made in Luna update the same loaded body without changing identity.
+  const appearanceJSON = revo ? JSON.stringify(revo.appearance) : '';
+  useEffect(() => {
+    if (!revo || !gameRef.current?.avatarModel) return;
+    applyPlayerAppearance(gameRef.current.avatarModel, revo.appearance);
+  }, [appearanceJSON]);
 
   function reset() {
     if (!window.confirm('Reset only this browser-demo quest progress?')) return;
@@ -392,9 +464,11 @@ export default function Game5QuestPreview({ mode = 'demo', connectedTransport = 
       <div className="relative h-[410px] w-full overflow-hidden rounded-xl border border-cyan-200/10 bg-[#101e26] md:h-[500px]">
         <div ref={hostRef} className="absolute inset-0" role="img" aria-label="Interactive three-dimensional wuxia temple and forest" />
         {renderError && <div role="alert" className="absolute inset-0 flex items-center justify-center bg-slate-950/95 p-6 text-center text-red-200">{renderError}</div>}
+        {['missing','unavailable'].includes(revoStatus) && <div role="alert" className="absolute bottom-20 left-3 max-w-sm rounded-lg border border-amber-300/40 bg-slate-950/95 px-3 py-2 text-xs text-amber-200">Your saved Revo avatar could not be loaded. Return to Luna to verify its model; Game 5 does not create a substitute character.</div>}
         <div className="pointer-events-none absolute left-3 top-3 max-w-[270px] rounded-xl border border-white/10 bg-[#081320]/80 p-3 text-white shadow-lg backdrop-blur-md">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-cyan-200">Retrieve the Lost Card · {connectedMode ? 'CONNECTED TEST' : 'SIMULATED DEMO'}</div>
           <div className="text-sm font-semibold">{ui.objective}</div>
+          <div className="mt-1 text-xs text-cyan-100/80">Revo: {revo?.name || 'saved AI avatar required'} · {revoStatus === 'ready' ? 'loaded' : revoStatus === 'loading' ? 'loading model…' : 'model unavailable'}</div>
           <div className="mt-1 text-xs text-amber-200">{connectedMode ? 'Server test reward: ' : 'Simulated test tokens: '}{connectedMode && !currentSnapshot ? 'Not loaded' : ui.testWallet ?? 'Not provided'}</div>
           {connectedMode && <>
             <div data-testid="game5-connection-status" className="mt-1 text-xs text-cyan-100/80">Quest: {connectedState.phase}{connectedState.busy ? ' · requesting…' : ''}</div>
