@@ -127,3 +127,8 @@
 
 .creator-tools{display:flex;align-items:center;gap:8px;border:1px solid var(--cc-border);border-radius:5px;padding:9px 12px;background:transparent;color:#a6c2ce;font-size:14px!important}@media(max-width:720px){.creator-tools{padding:8px}.creator-tools span{display:none}}
 .creator-color-original{display:inline-block;margin-top:9px;padding:0;background:transparent;border:0;color:#7d99a8;font-size:13px;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+/* Walk / Run on the Avatar Studio stage (GenesisModelPreview stage) */
+.creator-stage-gaits{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:4;flex-wrap:nowrap}
+@media(max-width:760px){.creator-stage-gaits{bottom:58px}}
+.creator-stage-gaits button{background:#15232d;border-color:var(--cc-border);color:#cfe0e6;min-width:58px}
+.creator-stage-gaits button[aria-pressed=true]{color:#b0dec9;border-color:#6fb6a0}
