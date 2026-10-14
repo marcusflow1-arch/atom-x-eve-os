@@ -21,6 +21,7 @@ import { bolt, drawBolt } from './fx.js';
 import { geo } from './gl.js';
 import { Game2TeamMatch, TEAM_MODES } from './teamMatch.js';
 import { AUTHORED_LEVELS } from './levels/index.js';
+import { Score, SCORES } from './music.js';
 import { Execution, findExecutable, cutTransforms, EXECUTION_NAMES } from './executions.js';
 // Team arenas use the real Drive BSP selected by the player, or an authored arena (levels/) such as Skybridge Citadel.
 
@@ -51,6 +52,7 @@ export class Game {
     const gun = geo(); gun.box(0, 0.03, 0, 0.05, 0.13, 0.06, [0.16, 0.16, 0.19, 1]).box(0, -0.12, 0, 0.045, 0.2, 0.05, [0.32, 0.33, 0.38, 1]).box(0, -0.235, 0, 0.03, 0.05, 0.03, [0.9, 0.25, 0.15, 1]); this.gunMesh = R.uploadStatic(gun.build());
     this.arenaDef = this.teamMode ? AUTHORED_LEVELS[opts.mapId] || null : null; // a large authored arena instead of a BSP
     const level = this.missionDef ? buildLevel(this.missionDef.layout) : this.arenaDef ? buildLevel(this.arenaDef.layout) : null;
+    this.scoreDef = level?.music ? SCORES[level.music] || null : null; // an authored arena's own generated score (music.js)
     const arena = (this.duel || this.online || this.teamMode || this.attract) && !this.arenaDef;
     if (arena && !A.duelMap) throw new Error('Game 2 selected map not loaded');
     this.world = new World(R, arena ? A.duelMap : null, level);
@@ -175,7 +177,12 @@ export class Game {
   }
   humStop(f) { if (f.hum) { f.hum.stop(0.1); f.hum = null; } }
   startMapMusic() {
-    if (this.disposed || typeof window === 'undefined' || typeof Audio === 'undefined') return;
+    if (this.disposed) return;
+    if (this.scoreDef) { // the arena's own score, played through the game's audio context once the first click / key opened it
+      if (this.score || !this.sfx.ctx) return;
+      this.score = new Score(this.sfx.ctx, this.scoreDef, { level: this.musicLevel() }); this.score.start(); return;
+    }
+    if (typeof window === 'undefined' || typeof Audio === 'undefined') return;
     if (this.battleMusic) {
       if (this.battleMusic.paused) this.battleMusic.play().catch(() => {});
       return;
@@ -192,7 +199,16 @@ export class Game {
     this.battleMusic = audio;
     audio.play().catch(() => { /* First player interaction retries playback. */ });
   }
+  // Settings' Music volume under the master volume; silent while muted (M)
+  musicLevel() { return this.sfx.muted ? 0 : (this.settings?.musicVolume ?? 0.5) * (this.sfx.volume ?? 0.7); }
+  // the score follows the fight: battle when a foe is close to the player or they were just hurt, calm otherwise
+  updateMusic(dt) {
+    const S = this.score; if (!S) return; S.setLevel(this.musicLevel());
+    const P = this.player, close = P.status !== 'dead' && this.foesOf(P).some(f => Math.hypot(f.pos[0] - P.pos[0], f.pos[2] - P.pos[2]) < 14);
+    S.setIntensity(close || this.t - (P.lastHurt ?? -99) < 4 ? 1 : 0.3, dt); S.tick();
+  }
   stopMapMusic() {
+    if (this.score) { this.score.stop(); this.score = null; }
     if (typeof window !== 'undefined' && this.battleMusicUnlock) {
       window.removeEventListener('pointerdown', this.battleMusicUnlock);
       window.removeEventListener('keydown', this.battleMusicUnlock);
@@ -544,7 +560,7 @@ export class Game {
     while (this.acc >= STEP && n++ < 6) { this.step(STEP); this.acc -= STEP; }
     if (n >= 6) this.acc = 0;
     if (this.net) this.net.updatePuppets(dt); // other players every rendered frame: a snapshot shows as soon as it arrives, not at our next 60 Hz step
-    this.updateCamera(dt); this.input.endFrame();
+    this.updateCamera(dt); this.input.endFrame(); this.updateMusic(dt);
   }
   // menu background camera: a slow orbit around the two fighters, pulled back as they part
   updateAttractCamera(dt) {
