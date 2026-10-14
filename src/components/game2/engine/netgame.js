@@ -26,7 +26,7 @@ export const SIDES = {
   dark: { name: 'Dark Jedi', blade: [1, 0.06, 0.05], tint: [0.12, 0.09, 0.17], tintAmt: 0.66, css: '#ff7a6a' },
 };
 export const RESPAWN_S = 3, SHIELD_S = 3; // back after 3 s, then 3 s of immunity
-const RPC_METHODS = ['hurt', 'push', 'pullTo', 'shove', 'stagger', 'electrify', 'shock', 'grip', 'unlodgeSaber', 'levitate'];
+const RPC_METHODS = ['hurt', 'push', 'pullTo', 'shove', 'stagger', 'electrify', 'shock', 'grip', 'unlodgeSaber', 'levitate', 'executedBy'];
 const STATUS = ['normal', 'dead', 'flung', 'down', 'getup', 'gripped', 'shocked', 'roll', 'whole', 'levitated', 'executed', 'executing'];
 const HILT = ['hand', 'thigh', 'thrown', 'none'];
 const TIMED = ['speed', 'rage', 'protect', 'absorb', 'see'];
@@ -287,6 +287,7 @@ export class NetGame {
       case 'push': case 'pullTo': case 'shove': case 'stagger': case 'electrify': case 'shock': if (f.spawnShield > g.t) return; f[m.m](...a); return;
       case 'unlodgeSaber': f.unlodgeSaber(); return;
       case 'levitate': { const [on, o] = a; if (on && f.spawnShield > g.t) return; f.levitate(!!on, o || {}); return; }
+      case 'executedBy': { const [att, kind, o] = a; if (att && (kind === 'crush' || kind === 'bisect') && f.status !== 'dead' && !(f.spawnShield > g.t)) g.startExecution(att, f, kind, { ...(o || {}), fromNet: true }); return; }
       case 'grip': { const [on, lift, o] = a; if (on) { if (f.spawnShield > g.t) return; f.grip(true, lift, { carry: o && o.carry && o.from ? this.carryOf(o.from) : null }); } else f.grip(false, 0, o || {}); return; }
       case 'blocked': if (!f.saber.holstered && f.status === 'normal') f.saber.blocked = a[0]; return;
       case 'fp': { const F = g.forceOf(f); if (F) F.fp = clamp(F.fp + a[0], 0, F.max); return; }
@@ -309,6 +310,7 @@ export class NetGame {
       case 'throwRes': { if (m.to !== g.player.fid) return; const T = { knockdown: ['KNOCKDOWN', [0.7, 1, 0.75]], staggered: ['PARTLY BLOCKED', [0.75, 0.95, 0.8]], hit: [(m.pull ? 'PULL' : 'PUSH') + ' HIT', [0.7, 1, 0.75]], countered: ['COUNTERED', [1, 0.65, 0.35]], absorbed: ['ABSORBED', [0.78, 0.5, 1]] }[m.outcome]; if (T) g.banner(T[0], T[1]); return; }
       case 'died': if (m.fid && String(m.fid).startsWith(from + ':')) this.noteDeath(m.fid, m.by); return;
       case 'crack': if (Array.isArray(m.p) && Array.isArray(m.n)) g.addCrack(m.p, m.n, Math.min(2, Number(m.s) || 0.8)); return;
+      case 'cut': { const f = this.byId.get(m.fid); if (f && f.remote && Array.isArray(m.dir)) g.cutFighter(f, { y: Number(m.y), dir: m.dir, floor: Number(m.floor) }, true); return; }
     }
   }
   recv(from, m, rel) {

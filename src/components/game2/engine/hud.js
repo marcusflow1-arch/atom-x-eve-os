@@ -2,6 +2,7 @@
 // 2D overlay: health / force bars, power chips, saber style, live animation names, messages, enemy bars, help.
 import { POWERS, POWER_BY_ID, FORCE_DUR, FORCE_HOTKEY_LABELS } from './force.js';
 import { STYLE_NAMES } from './saber.js';
+import { EXECUTION_NAMES } from './executions.js';
 
 const STYLE_COL = ['', '#7fd3ff', '#b6ff8a', '#ff9a6a'];
 const rr = (x, a, b, c, d, r) => { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + c, b, a + c, b + d, r); x.arcTo(a + c, b + d, a, b + d, r); x.arcTo(a, b + d, a, b, r); x.arcTo(a, b, a + c, b, r); x.closePath(); };
@@ -62,6 +63,8 @@ export class HUD {
       if (F.active.see) { x.strokeStyle = 'rgba(80,220,255,0.9)'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(s[0], s[1] + 4 * sc); x.lineTo(s[0] + 6 * sc, s[1] + 10 * sc); x.lineTo(s[0], s[1] + 16 * sc); x.lineTo(s[0] - 6 * sc, s[1] + 10 * sc); x.closePath(); x.stroke(); }
       x.globalAlpha = 1;
     }
+    // execution prompt over a foe low enough to be finished (R)
+    const EX = g.execCandidate; if (EX && !this.help) { const hh = EX.victim.headPos(), sp = this.project(g.R, [hh[0], hh[1] + 0.6, hh[2]]); if (sp) { const t = '[R]  EXECUTE  ·  ' + EXECUTION_NAMES[EX.kind]; x.font = '800 14px system-ui,sans-serif'; const tw = x.measureText(t).width + 26; x.fillStyle = `rgba(60,0,0,${0.7 + 0.15 * Math.sin(g.t * 8)})`; rr(x, sp[0] - tw / 2, sp[1] - 30, tw, 26, 13); x.fill(); x.strokeStyle = '#ff6a55'; x.lineWidth = 1.5; rr(x, sp[0] - tw / 2 + 0.5, sp[1] - 29.5, tw - 1, 25, 13); x.stroke(); x.fillStyle = '#ffe1d8'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t, sp[0], sp[1] - 17); x.textAlign = 'left'; } }
     // crosshair
     const cx = W / 2, cy = H / 2; const ready = !P.saber.holstered; x.strokeStyle = 'rgba(210,230,255,0.75)'; x.lineWidth = 1.5; x.beginPath(); x.arc(cx, cy, 7, 0, 7); x.stroke(); x.fillStyle = 'rgba(255,255,255,0.9)'; x.fillRect(cx - 1, cy - 1, 2, 2);
     if (F.charging) { const ch = F.chargeLevel(); x.strokeStyle = ch >= 1 ? '#ffffff' : 'rgba(140,210,255,0.95)'; x.lineWidth = 3; x.beginPath(); x.arc(cx, cy, 15, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.04, ch)); x.stroke(); x.font = '700 10px system-ui,sans-serif'; x.textAlign = 'center'; x.fillStyle = '#cfeaff'; x.fillText(ch >= 1 ? 'FULL PUSH' : 'PUSH', cx, cy + 30); x.textAlign = 'left'; } // charged Force Push

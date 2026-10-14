@@ -125,6 +125,7 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
           }
         }
         game = new Game(renderer, assets, canvas, hud, engineOptions);
+        if (import.meta.env?.DEV) window.__game2 = game; // development builds only: lets local tests stage scenes
         if (choice !== 'online') setStatus({ phase: 'ready', text: '' });
         // Online play must not look connected until the shared arena welcomes this player.
         if (choice === 'online') {

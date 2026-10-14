@@ -228,8 +228,9 @@ export class Fighter {
     if (this.status === 'dead') return; const by = this.lastAttacker && this.now - (this.lastAttackerAt ?? -99) < 10 ? this.lastAttacker : null;
     this.spawnShield = 0; this.fellOut = true; this.hp = 0; this.die(by, { deathAnim: 'BOTH_FALLDEATH1INAIR' }); this.vel = [0, 0, 0];
   }
+  // no damage while dead, shielded after a respawn, or being executed (the execution itself finishes the victim)
   hurt(dmg, from, opts = {}) {
-    if (this.status === 'dead' || this.hp <= 0 || this.spawnShield > this.now) return false; this.markAttacker(from); if (this.status === 'levitated' && dmg > 0) this.levitate(false, { hit: true }); dmg *= this.takeMul; this.hp -= dmg; this.lastHurt = this.now; this.dmgFlash = 1; this.flash = 0.25; if (this.force && this.force.onHurt) this.force.onHurt(dmg); // spawnShield: respawn protection
+    if (this.status === 'dead' || this.hp <= 0 || this.spawnShield > this.now || this.status === 'executed') return false; this.markAttacker(from); if (this.status === 'levitated' && dmg > 0) this.levitate(false, { hit: true }); dmg *= this.takeMul; this.hp -= dmg; this.lastHurt = this.now; this.dmgFlash = 1; this.flash = 0.25; if (this.force && this.force.onHurt) this.force.onHurt(dmg); // spawnShield: respawn protection
     if (this.hp <= 0) { this.die(from, opts); return true; }
     if (!opts.noFlinch && this.status === 'normal' && this.now - (this.lastFlinch || -9) > 0.5 && !this.forceUntil && !(this.saber.isActiveSwing() && !this.isPlayer)) {
       this.lastFlinch = this.now; const a = PAINS[Math.floor(Math.random() * PAINS.length)];
@@ -243,7 +244,9 @@ export class Fighter {
     if (!wasFlung) this.playWhole(opts.deathAnim || DEATHS[Math.floor(Math.random() * DEATHS.length)], { blend: 0.08 }); else this.playWhole('BOTH_KNOCKDOWN1', { blend: 0.05 });
     this.g.onDeath && this.g.onDeath(this);
   }
-  revive(at) { this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
+  // another player's game executes this fighter (RPC on their puppet of us): run our side of the same execution
+  executedBy(att, kind, o = {}) { if (this.g.startExecution) this.g.startExecution(att, this, kind, { ...o, fromNet: true }); }
+  revive(at) { this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
   chest() { const y = this.status === 'down' || this.status === 'dead' ? 0.3 : this.ducked ? 0.75 : 1.15; return [this.pos[0], this.pos[1] + y, this.pos[2]]; }
   headPos() { return this.actor.bonePos('cranium', [0, 0, 0]); }
   // ---------- per-frame update
@@ -253,7 +256,13 @@ export class Fighter {
     this.statusT += dt; this.flash = Math.max(0, this.flash - dt); this.dmgFlash = Math.max(0, this.dmgFlash - dt * 2.5); this.distracted = Math.max(0, this.distracted - dt);
     if (!this.remote && this.status !== 'dead' && this.pos[1] < (this.g.world?.killY ?? -Infinity)) this.fallDeath();
     switch (this.status) {
-      case 'dead': this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
+      case 'dead': { // a body killed in the air falls to the floor
+        const fl = this.g.world.floorAt(this.pos[0], this.pos[2], this.pos[1] + 0.3);
+        if (fl !== null && this.pos[1] > fl + 0.01) { this.vel[1] -= G * dt; this.pos[1] = Math.max(fl, this.pos[1] + this.vel[1] * dt); } else if (fl !== null) { this.pos[1] = fl; this.vel[1] = 0; }
+        if (this.landAnim && fl !== null && this.pos[1] <= fl + 0.01) { this.playWhole(this.landAnim, { blend: 0.08 }); this.landAnim = null; } // e.g. a body dropped from a grip lands
+        this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
+      }
+      case 'executing': case 'executed': return this.finish(dt); // an execution moves and animates both (executions.js)
       case 'flung': this.physicsFlung(dt); return this.finish(dt);
       case 'down': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= (this.isPlayer ? 0.5 : (this.downTime || 1.1))) this.startGetup(); return this.finish(dt);
       case 'getup': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= this.getupLen - 0.05) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; this.actor.setLegs(this.saber.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2', { blend: 0.15 }); } return this.finish(dt);

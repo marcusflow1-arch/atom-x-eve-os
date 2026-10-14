@@ -5,6 +5,7 @@
 // rules (forcerules.js via Game.applyThrow), and the player gets the same chances to answer it.
 import { wrapPi } from './math.js';
 import { GRIP_MAX_DIST } from './forcerules.js';
+import { executionFor } from './executions.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const clear = c => { c.fwd = c.right = c.up = 0; c.walk = c.crouch = c.attack = c.alt = c.jump = c.jumpPressed = c.crouchPressed = false; };
@@ -25,6 +26,8 @@ export function aiDarkJedi(g, f, dt) {
   f.targetYaw = toward(f, P);
   const dx = P.pos[0] - f.pos[0], dz = P.pos[2] - f.pos[2], dist = Math.hypot(dx, dz);
   if (g.round.state !== 'fight' || P.status === 'dead') { F.want = {}; return; } // intro / round over: stand and watch
+  const exec = g.startExecution && executionFor(g, f, P); // finish a foe who is low enough (about a second to decide)
+  if (exec && Math.random() < dt * 1.2) { F.want = {}; g.startExecution(f, P, exec); return; }
   const hpf = f.hp / f.maxHp, facing = Math.abs(wrapPi(f.targetYaw - f.yaw)) < 0.5;
   // ---- channelled powers: keep the pose, stop on a timer / when out of reach
   if (F.holding) {

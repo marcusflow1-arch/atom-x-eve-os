@@ -20,6 +20,7 @@ import { MISSIONS } from './missions/index.js';
 import { bolt, drawBolt } from './fx.js';
 import { geo } from './gl.js';
 import { Game2TeamMatch } from './teamMatch.js';
+import { Execution, findExecutable, cutTransforms, EXECUTION_NAMES } from './executions.js';
 // Team arenas use the real Drive BSP selected by the player.
 
 const STEP = 1 / 60;
@@ -337,6 +338,19 @@ export class Game {
       if (c.t < 0.5) R.billboard(c.p, c.size * 0.8, [1, 0.6, 0.3, 0.6 * (1 - c.t / 0.5)], 0);
     }
   }
+  // ---------------- executions (executions.js)
+  startExecution(att, vic, kind, o = {}) {
+    if (!att || !vic || vic.status === 'dead' || att.executing) return null;
+    const ex = new Execution(this, att, vic, kind, o); (this.executions ??= []).push(ex);
+    if (vic.remote && !o.fromNet && vic.executedBy) vic.executedBy(att, kind, { fwd: ex.fwd, hold: ex.hold }); // their game runs their side
+    return ex;
+  }
+  updateExecutions(dt) { if (!this.executions) return; for (const ex of this.executions) ex.update(dt); this.executions = this.executions.filter(ex => !ex.done); }
+  // cut a fighter in half (the bisect execution): both halves keep the pose of that moment; shown to everyone online
+  cutFighter(f, c, fromNet = false) {
+    if (f.cut) return; f.cut = { y: c.y, dir: v3.norm([c.dir[0], 0, c.dir[2]]), floor: c.floor, t: this.t }; f.actor.frozen = true;
+    if (this.net && !fromNet && f.fid) this.net.fx('cut', { fid: f.fid, y: Math.round(c.y * 1000) / 1000, dir: c.dir.map(v => Math.round(v * 1000) / 1000), floor: Math.round(c.floor * 1000) / 1000 });
+  }
   bodyArc(n) { if (Math.random() < 0.5) return; const names = ['lhand', 'rhand', 'cranium', 'lradius', 'rradius', 'ltibia', 'rtibia', 'thoracic']; const a = n.actor.bonePos(names[Math.floor(Math.random() * names.length)]), b = n.actor.bonePos(names[Math.floor(Math.random() * names.length)]); this.arcs.push({ pts: bolt(a, b, 5, 0.15), t: 0.06 }); }
   drawArcs(R) { for (let i = this.arcs.length - 1; i >= 0; i--) { const b = this.arcs[i]; drawBolt(R, b.pts, [0.6, 0.8, 1], 0.5); b.t -= this.dtFrame; if (b.t <= 0) this.arcs.splice(i, 1); } }
   onElecTick(f) { this.bodyArc(f); this.fx.sparks(f.chest(), [0, 1, 0], 3, [0.6, 0.8, 1, 1]); this.sfxAt('lhit' + (1 + Math.floor(Math.random() * 3)), f.pos, 0.3); f.flash = Math.max(f.flash, 0.1); if (f.isPlayer) { this.shake(0.1); this.hud.hit(0); } }
@@ -397,7 +411,8 @@ export class Game {
     if (this.director) { if (this.director.frameInput(i)) return; if (p.status === 'dead') return; }
     else if (this.duel) { if ((this.round.state === 'won' || this.round.state === 'lost') && this.round.t > 0.8 && i.pressed('Enter')) { this.resetDuel(); return; } if (p.status === 'dead') return; }
     else if (p.status === 'dead') { if (!this.teamMode && (i.pressed('Enter') || this.t - p.deadAt > 12)) this.respawnPlayer(); return; }
-    if (i.pressed('KeyR')) { if (this.playerWeapon === 'bryar') this.switchWeapon('saber'); else p.toggleSaber(); }
+    // R: from the pistol, the saber; otherwise execute the foe that is ready for it (the prompt shows), else draw / holster
+    if (i.pressed('KeyR')) { if (this.playerWeapon === 'bryar') this.switchWeapon('saber'); else { const ex = this.execCandidate && findExecutable(this, p); if (ex) this.startExecution(p, ex.victim, ex.kind); else p.toggleSaber(); } }
     if (i.pressed('KeyQ') && this.playerWeapon) this.switchWeapon();
     if (i.pressed('Tab')) { p.setStyle(p.saber.level % 3 + 1); h.msg('Saber style: ' + STYLE_NAMES[p.saber.level]); }
     if (i.btnPressed[2] && !p.saber.holstered && p.status === 'normal') { if (p.throwSaber(this.aimDir())) h.msg('Saber throw'); }
@@ -451,6 +466,8 @@ export class Game {
   step(dt) {
     this.t += dt; this.dtFrame = dt; const p = this.player;
     if (this.net) this.net.beforeStep(dt);
+    this.updateExecutions(dt); // before the fighters: they show where the execution put them this step
+    this.execCandidate = this.attract || p.status !== 'normal' ? null : findExecutable(this, p);
     this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.inp); if (this.playerWeapon) this.updatePistol(dt);
     for (const n of this.npcs) {
       const brain = BRAINS[n.kind]; n.aimPitch = this.aimPitchToward(n);
@@ -476,6 +493,7 @@ export class Game {
   }
   update(dt) {
     dt = Math.min(dt, 0.1); this.fps += (1 / Math.max(dt, 1e-3) - this.fps) * 0.08;
+    if (this.slowMo) { if (this.t < this.slowMo.until) dt *= this.slowMo.scale; else this.slowMo = null; } // the execution cut, offline
     this.frameNo++; if (!this.attract) this.frameInput(dt); this.acc += dt; let n = 0; this.firstSub = true;
     if (this.hud.help) this.stepPresses.clear(); else for (const c of this.input.pressedSet) this.stepPresses.add(c); if (!this.hud.help && this.input.btnPressed[0]) this.stepPresses.add('Mouse0');
     if (this.duel && this.hud.help) this.acc = 0; // controls panel open: the duel waits
@@ -534,9 +552,15 @@ export class Game {
     if (f.dmgFlash > 0) { tint = [1, 0.2, 0.15]; amt = Math.max(amt, f.dmgFlash * 0.55); }
     if (f.flash > 0 && f.status === 'shocked') { tint = [0.6, 0.8, 1]; amt = 0.5; }
     if (f.elecUntil > this.t && Math.sin(this.t * 55 + (f.humId || 0)) > 0) { tint = [0.6, 0.8, 1]; amt = 0.42; }
-    const far = !f.isPlayer && v3.dist(this.cam.eye, f.pos) > 9;
-    R.drawSkinned(far ? this.lodMesh : this.bodyMesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha });
-    if (f.hasSaber && f.hilt !== 'none') R.drawMesh(this.hiltMesh, f.hiltMat, { spec: 0.7 });
+    if (this.execCandidate && this.execCandidate.victim === f) { tint = [1, 0.12, 0.08]; amt = Math.max(amt, 0.25 + 0.15 * Math.sin(this.t * 8)); glow = Math.max(glow, 0.12); } // ready to be executed
+    const far = !f.isPlayer && v3.dist(this.cam.eye, f.pos) > 9, mesh = far ? this.lodMesh : this.bodyMesh;
+    if (f.cut) { // cut in half: two halves, each drawn on its side of the cut and moved on its own
+      const T = cutTransforms(f, this.t);
+      R.drawSkinned(mesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha, clip: T.lowerClip, post: T.lower });
+      R.drawSkinned(mesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha, clip: T.upperClip, post: T.upper });
+      if (this.t - f.cut.t < 1.5) for (const M of [T.lower, T.upper]) { const p = m4.transformPoint(M, [f.pos[0], f.cut.y, f.pos[2]]); R.billboard(p, 0.28, [1, 0.45, 0.15, 0.55 * (1 - (this.t - f.cut.t) / 1.5)], 0); }
+    } else R.drawSkinned(mesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha });
+    if (f.hasSaber && f.hilt !== 'none' && !f.cut) R.drawMesh(this.hiltMesh, f.hiltMat, { spec: 0.7 });
     if (f.gun && (!f.hasSaber || f.saber.holstered)) { const bm = a.boneMatrix(this.attach.grip.bone); const loc = m4.trs(this.attach.grip.t, this.attach.grip.q, [1, 1, 1]); R.drawMesh(this.gunMesh, m4.mul(bm, loc), { spec: 0.6 }); }
     const sh = f.status === 'dead' || f.status === 'down' ? 0.8 : 0.55; if (f.pos[1] < 3) this.fx.disc([f.pos[0], 0, f.pos[2]], sh * (1 - Math.min(0.5, f.pos[1] * 0.15)), [0, 0, 0, 0.42], 1);
   }
@@ -550,6 +574,7 @@ export class Game {
     this.drawCracks(R); this.fx.draw();
     if (this.teamMatch) this.teamMatch.drawWorld(R);
     for (const f of all) f.blade.draw(R, 1 + 0.05 * Math.sin(this.t * 41 + (f.humId || 0) * 2));
+    for (const ex of this.executions || []) ex.draw(R);
     this.force.draw(R); for (const n of this.npcs) if (n.force) n.force.draw(R); if (this.remotes) for (const n of this.remotes) if (n.force) n.force.draw(R); this.drawArcs(R); this.combat.drawBolts(R); if (this.director) this.director.draw(R);
     R.flushFx();
     if (this.attract) { this.hud.resize(); this.hud.x.setTransform(1, 0, 0, 1, 0, 0); this.hud.x.clearRect(0, 0, this.hud.c.width, this.hud.c.height); return; }

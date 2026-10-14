@@ -109,6 +109,7 @@ export class Actor {
     outPel[0] = rig.pelvisPos[0]; outPel[1] = rig.pelvisPos[1]; outPel[2] = rig.pelvisPos[2];
   }
   update(now) {
+    if (this.frozen) { this.now = now; return; } // a fighter cut in half keeps the pose of that moment (executions.js)
     this.now = now; const sk = this.skel, N = this.nBones;
     if (!this.legs.cur) this.setLegs('BOTH_STAND1');
     const lc = this.legs.cur, tc = this.torsoFollow || !this.torso.cur ? lc : this.torso.cur;
