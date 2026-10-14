@@ -103,6 +103,7 @@ export class Game {
     const startYaw = level ? level.playerYaw : 0;
     this.player = new Fighter(this, { name: 'player', isPlayer: true, team: 'player', pos: this.playerSpawn, yaw: startYaw, hp: 100, bladeColor: [0.22, 0.52, 1] }); this.player.label = 'You'; this.player.humId = 0;
     this.force = new Force(this, this.player, { list: this.forceMenu ? SELECT_ORDER : SELECT_ALL }); this.player.force = this.force; this.combat = new Combat(this);
+    this.player.setSaberKit(opts.saber || 'single'); // the lightsaber picked in the menu: single, dual or saberstaff
     this.world.onThud = b => { if (b.vel[1] < -4) this.sfxAt('hit1', b.pos, 0.5); };
     this.populate();
     if (this.online) this.net = new NetGame(this, opts.net || {}); // other players, rounds and the AI Reborn (host)
@@ -585,7 +586,7 @@ export class Game {
       R.drawSkinned(mesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha, clip: T.upperClip, post: T.upper });
       if (this.t - f.cut.t < 1.5) for (const M of [T.lower, T.upper]) { const p = m4.transformPoint(M, [f.pos[0], f.cut.y, f.pos[2]]); R.billboard(p, 0.28, [1, 0.45, 0.15, 0.55 * (1 - (this.t - f.cut.t) / 1.5)], 0); }
     } else R.drawSkinned(mesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha });
-    if (f.hasSaber && f.hilt !== 'none' && !f.cut) R.drawMesh(this.hiltMesh, f.hiltMat, { spec: 0.7 });
+    if (f.hasSaber && f.hilt !== 'none' && !f.cut) { R.drawMesh(this.hiltMesh, f.hiltMat, { spec: 0.7 }); if (f.hilt2Mat) R.drawMesh(this.hiltMesh, f.hilt2Mat, { spec: 0.7 }); }
     if (f.gun && (!f.hasSaber || f.saber.holstered)) { const bm = a.boneMatrix(this.attach.grip.bone); const loc = m4.trs(this.attach.grip.t, this.attach.grip.q, [1, 1, 1]); R.drawMesh(this.gunMesh, m4.mul(bm, loc), { spec: 0.6 }); }
     const sh = f.status === 'dead' || f.status === 'down' ? 0.8 : 0.55; if (f.pos[1] < 3) this.fx.disc([f.pos[0], 0, f.pos[2]], sh * (1 - Math.min(0.5, f.pos[1] * 0.15)), [0, 0, 0, 0.42], 1);
   }
@@ -598,7 +599,7 @@ export class Game {
     if (this.scorches) for (const m of this.scorches) { const a = Math.min(1, (8 - m.t) / 2); this.fx.disc(m.p, m.r, [0.04, 0.03, 0.03, 0.55 * a], 1); if (m.t < 0.6) this.fx.disc(m.p, m.r * 0.7, [m.c[0], m.c[1], m.c[2], 0.9 * (1 - m.t / 0.6)], 0); }
     this.drawCracks(R); this.fx.draw();
     if (this.teamMatch) this.teamMatch.drawWorld(R);
-    for (const f of all) f.blade.draw(R, 1 + 0.05 * Math.sin(this.t * 41 + (f.humId || 0) * 2));
+    for (const f of all) { const fl = 1 + 0.05 * Math.sin(this.t * 41 + (f.humId || 0) * 2); f.blade.draw(R, fl); if (f.blade2) f.blade2.draw(R, fl); }
     for (const ex of this.executions || []) ex.draw(R);
     this.force.draw(R); for (const n of this.npcs) if (n.force) n.force.draw(R); if (this.remotes) for (const n of this.remotes) if (n.force) n.force.draw(R); this.drawArcs(R); this.combat.drawBolts(R); if (this.director) this.director.draw(R);
     R.flushFx();

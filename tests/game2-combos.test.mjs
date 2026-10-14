@@ -57,3 +57,16 @@ test('taunts (T): an original gesture for your side; moving cuts it short; a sho
   assert.equal(P.taunt(), false, 'cooldown'); run(g, Math.ceil(TAUNT_COOLDOWN * 60) + 2); assert.equal(P.taunt(), true);
   const f = addFoe(g, [0, 0, 3]); f.team = 'enemy'; run(g, 5); assert.equal(f.taunt(), true); assert.ok(TAUNTS.dark.includes(f.actor.legs.name), 'Dark side set for the enemy');
 });
+
+test('dual sabers and the saberstaff: a second blade (left hand / far end of the staff); the staff also guards behind you', async () => {
+  const { Combat } = await import('../src/components/game2/engine/combat.js');
+  const n = (s) => { const d = [s[1][0] - s[0][0], s[1][1] - s[0][1], s[1][2] - s[0][2]], l = Math.hypot(...d); return d.map(v => v / l); };
+  const g = makeGame(), P = g.player; P.setSaberKit('staff'); P.igniteNow(); run(g, 40);
+  const segs = P.bladeSegs(); assert.equal(segs.length, 2, 'two blades lit');
+  const [a, b] = segs.map(n); assert.ok(a[0] * b[0] + a[1] * b[1] + a[2] * b[2] < -0.99, 'the staff blades point opposite ways');
+  const behind = [P.pos[0] - Math.sin(P.yaw) * 2, 0, P.pos[2] - Math.cos(P.yaw) * 2];
+  assert.equal(Combat.prototype.canBlock.call(g.combat, P, behind), true, 'the staff parries from behind');
+  P.setSaberKit('single'); assert.equal(Combat.prototype.canBlock.call(g.combat, P, behind), false, 'a single blade does not'); assert.equal(P.bladeSegs().length, 1);
+  const h = makeGame(), Q = h.player; Q.setSaberKit('dual'); Q.igniteNow(); run(h, 40);
+  const s2 = Q.bladeSegs()[1], lh = Q.actor.bonePos('lhand'); assert.ok(Math.hypot(s2[0][0] - lh[0], s2[0][1] - lh[1], s2[0][2] - lh[2]) < 0.35, 'the second saber is in the left hand');
+});

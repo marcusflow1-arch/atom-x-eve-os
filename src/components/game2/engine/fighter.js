@@ -4,7 +4,7 @@
 import { Actor } from './actor.js';
 import { SaberLogic } from './saber.js';
 import { Blade } from './fx.js';
-import { m4, v3, clamp, wrapPi, DEG, lerp } from './math.js';
+import { m4, v3, q as Q, clamp, wrapPi, DEG, lerp } from './math.js';
 
 const G = 20;                                   // gravity m/s^2 (JO 800 u/s^2)
 // Saber throw (Atom X Eve): spins at 72 rad/s (three times the original), homes in on the nearest foe within
@@ -18,6 +18,9 @@ export const LEVITATE_HEIGHT = 2.1;
 // Taunts (T): the original Jedi Outcast gesture animations, a set for each side; moving, attacking or jumping cuts one short
 export const TAUNTS = Object.freeze({ light: ['BOTH_ENGAGETAUNT', 'BOTH_SILENCEGESTURE1', 'BOTH_TALKGESTURE2'], dark: ['BOTH_THREATEN1', 'BOTH_ENGAGETAUNT', 'BOTH_TALKGESTURE10'] });
 export const TAUNT_COOLDOWN = 1;
+// Lightsaber kits: one blade, a blade in each hand ('dual'), or a saberstaff with a blade at each end ('staff')
+export const SABER_KITS = Object.freeze(['single', 'dual', 'staff']);
+const FLIP_X = Q.axisAngle([1, 0, 0], Math.PI);
 const FORCE_JUMP_HEIGHT = [0.8, 3.3, 5.7, 10.4]; // JO forceJumpHeight[] in metres
 export const emptyCmd = () => ({ fwd: 0, right: 0, up: 0, walk: false, crouch: false, attack: false, alt: false, jump: false, jumpPressed: false, crouchPressed: false });
 const DEATHS = ['BOTH_DEATH1', 'BOTH_DEATH2', 'BOTH_DEATH3', 'BOTH_DEATH4', 'BOTH_DEATH5', 'BOTH_DEATH6', 'BOTH_DEATH7', 'BOTH_DEATH8', 'BOTH_DEATH9'];
@@ -93,6 +96,15 @@ export class Fighter {
   }
   setStyle(lv) { this.saber.level = lv; if (!this.saber.holstered && this.saber.weaponTime <= 0 && this.saber.move === this.saber.I.LS_READY) this.saber.setMove(this.saber.I.LS_READY, this.now); }
   bladeSeg() { return this.blade.len > 0.3 ? [this.blade.base, this.blade.tip] : null; }
+  // every ignited blade: the second one comes with dual sabers or a saberstaff
+  bladeSegs() { const out = []; if (this.blade.len > 0.3) out.push([this.blade.base, this.blade.tip]); if (this.blade2 && this.blade2.len > 0.3) out.push([this.blade2.base, this.blade2.tip]); return out; }
+  setSaberKit(kit) {
+    this.saberKit = SABER_KITS.includes(kit) ? kit : 'single';
+    if (this.saberKit === 'single') { this.blade2 = null; this.hilt2Mat = null; return; }
+    if (!this.blade2) { this.blade2 = new Blade(this.blade.color); this.hilt2Mat = new Float32Array(16); }
+    this.blade2.color = this.blade.color;
+    if (this.saberKit === 'dual') this.setStyle(1); // the Fast stance is one-handed: the left hand is free for the second saber
+  }
   swingPhase() { const s = this.saber; if (!s.isActiveSwing() || s.moveLen <= 0) return -1; return (this.now - s.moveStart) * 1000 / s.moveLen; }
   swingActive() { return !this.saber.holstered && this.saber.isActiveSwing(); } // start / attack / transition: the blade is moving with intent
   attacking() { const s = this.saber; return !s.holstered && s.inAttack(s.move); } // BG_SaberInAttack: full attack damage (w_saber.c)
@@ -522,6 +534,16 @@ export class Fighter {
     else this.airBend = (this.airBend || 0) * Math.exp(-8 * dt);
     return this.airBend;
   }
+  // the second hilt and blade: a saberstaff continues the hilt end to end with the blade the other way (it spins along when
+  // thrown); dual sabers hold the second one in the left hand (mirrored grip), on the left thigh when holstered
+  updateHilt2(dt, M) {
+    const A = this.g.attach, a = this.actor, L = A.hiltLen * (this.hiltScaleY || 1), M2 = this.hilt2Mat, B2 = this.blade2; let len = L;
+    if (this.saberKit === 'staff') m4.mul(M, m4.trs([0, L, 0], FLIP_X, [1, 1, 1]), M2);
+    else if (this.hilt === 'thigh' || this.hilt === 'none') { m4.mul(a.boneMatrix('lfemurYZ'), m4.trs([-A.holster.t[0], A.holster.t[1], A.holster.t[2]], [A.holster.q[0], -A.holster.q[1], -A.holster.q[2], A.holster.q[3]], [1, 1, 1]), M2); len = A.hiltLen; }
+    else { const g = A.grip; m4.mul(a.boneMatrix('lhand'), m4.trs([-g.t[0], g.t[1], g.t[2]], [g.q[0], -g.q[1], -g.q[2], g.q[3]], g.s), M2); len = A.hiltLen * (g.s?.[1] || 1); }
+    if (B2.lit !== this.blade.lit) B2.set(this.blade.lit); B2.color = this.blade.color;
+    B2.update(dt, M2, len, 1, this.now); B2.trailOn = this.blade.trailOn;
+  }
   updateHilt(dt) {
     const A = this.g.attach, a = this.actor; let M = this.hiltMat;
     if (this.hilt === 'hand') { const bm = a.boneMatrix(A.grip.bone); const loc = m4.trs(A.grip.t, A.grip.q, A.grip.s); m4.mul(bm, loc, M); this.hiltScaleY = A.grip.s[1]; }
@@ -532,6 +554,7 @@ export class Fighter {
     }
     // the torso aim (Actor spineYaw / spinePitch) already turns the arm, so blade and hit test follow the mouse
     this.blade.update(dt, M, this.g.attach.hiltLen * (this.hiltScaleY || 1), 1, this.now);
+    if (this.blade2) this.updateHilt2(dt, M);
     this.blade.trailOn = (this.swingActive() || (this.thrown ? 0 : 0)) ? 1 : Math.max(0, this.blade.trailOn - dt * 6);
     if (this.swingActive()) this.blade.trailOn = 1;
   }

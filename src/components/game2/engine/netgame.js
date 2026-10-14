@@ -32,7 +32,8 @@ const HILT = ['hand', 'thigh', 'thrown', 'none'];
 const TIMED = ['speed', 'rage', 'protect', 'absorb', 'see'];
 const HOLD = ['', 'grip', 'lightning', 'heal', 'drain'];
 // snapshot layout (NetGame.snap): field -> position
-export const SN = { fid: 0, side: 1, name: 2, x: 3, y: 4, z: 5, vx: 6, vy: 7, vz: 8, yaw: 9, ayaw: 10, syaw: 11, spitch: 12, status: 13, hp: 14, maxHp: 15, legs: 16, torso: 20, move: 24, level: 25, holst: 26, lit: 27, hilt: 28, thrown: 29, fp: 30, fmax: 31, bits: 32, hold: 33, tgt: 34, duck: 35, glow: 36, flash: 37, match: 38, gripBase: 39, pitch: 40, dj: 41, legYaw: 42 };
+export const SN = { fid: 0, side: 1, name: 2, x: 3, y: 4, z: 5, vx: 6, vy: 7, vz: 8, yaw: 9, ayaw: 10, syaw: 11, spitch: 12, status: 13, hp: 14, maxHp: 15, legs: 16, torso: 20, move: 24, level: 25, holst: 26, lit: 27, hilt: 28, thrown: 29, fp: 30, fmax: 31, bits: 32, hold: 33, tgt: 34, duck: 35, glow: 36, flash: 37, match: 38, gripBase: 39, pitch: 40, dj: 41, legYaw: 42, kit: 43 };
+const KITS = ['single', 'dual', 'staff'];
 const pnow = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 const r3 = v => Math.round(v * 1000) / 1000;
 
@@ -199,7 +200,7 @@ export class NetGame {
       Math.max(0, STATUS.indexOf(f.status)), r3(f.hp), f.maxHp, ...this.layerOut(a.legs, a), ...(a.torsoFollow || !a.torso.cur ? [-1, 0, 1, 0] : this.layerOut(a.torso, a)),
       S.move, S.level, S.holstered ? 1 : 0, f.blade.lit ? 1 : 0, Math.max(0, HILT.indexOf(f.hilt)), T ? [r3(T.pos[0]), r3(T.pos[1]), r3(T.pos[2]), r3(T.ang)] : 0,
       F ? Math.round(F.fp) : 0, F ? F.max : 100, bits, F ? Math.max(0, HOLD.indexOf(F.holding || '')) : 0, tgt, f.ducked ? 1 : 0, r3(f.glow || 0), r3(f.dmgFlash || 0), a.matchPelvis ? 1 : 0, F ? F.gripBase || 0 : 0,
-      r3(f.isPlayer ? (f.cmd.aimPitch || 0) : (f.aimPitch || 0)), f.kind === 'darkjedi' ? 1 : 0, r3(a.legYaw || 0)];
+      r3(f.isPlayer ? (f.cmd.aimPitch || 0) : (f.aimPitch || 0)), f.kind === 'darkjedi' ? 1 : 0, r3(a.legYaw || 0), Math.max(0, KITS.indexOf(f.saberKit || 'single'))];
   }
   localFighters() { const g = this.g, out = [g.player]; if (this.isHost) for (const n of g.npcs) if (n.fid) out.push(n); return out; }
   takeSnap(from, m) {
@@ -256,6 +257,7 @@ export class NetGame {
     const S = f.saber, prevMove = S.move; S.move = e[SN.move]; S.level = e[SN.level]; S.holstered = !!e[SN.holst]; S.weaponTime = S.isActiveSwing() ? 1 : 0; S.moveStart = prevMove === S.move ? S.moveStart : g.t;
     if (S.move !== prevMove && S.inAttack(S.move)) g.onSwing(f, S.move);
     const lit = !!e[SN.lit] && status !== 'dead'; if (lit !== f.blade.lit) { f.blade.set(lit); g.sfxAt(lit ? 'saberon' : 'saberoff', f.pos, 0.6); if (lit) g.humStart(f); else g.humStop(f); }
+    const kit = KITS[e[SN.kit]] || 'single'; if ((f.saberKit || 'single') !== kit) f.setSaberKit(kit); // dual sabers / saberstaff
     f.hilt = HILT[e[SN.hilt]] || 'hand'; const T = e[SN.thrown];
     if (T && f.hilt === 'thrown') { if (!f.thrown) f.thrown = { pos: [T[0], T[1], T[2]], prevPos: [T[0], T[1], T[2]], ang: T[3], hit: new Map() }; f.thrown.prevPos = f.thrown.pos; f.thrown.pos = [T[0], T[1], T[2]]; f.thrown.ang = T[3]; } else f.thrown = null;
     const F = f.force; F.fp = e[SN.fp]; F.max = e[SN.fmax]; F.setActive(e[SN.bits]); F.setHolding(HOLD[e[SN.hold]] || ''); F.gripBase = e[SN.gripBase];
