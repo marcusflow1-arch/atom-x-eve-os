@@ -3,6 +3,7 @@ import {useNavigate} from 'react-router-dom';
 import {ArrowLeft,CarFront,Flag,Music2,Play,Pause,SkipBack,Upload,Volume2,VolumeX,Film,SkipForward,RotateCcw,Gauge} from 'lucide-react';
 import {createPageUrl} from '@/utils';
 import Game3Scene from '@/components/game3/Game3Scene';
+import { useRevoAvatar } from '@/components/onboarding/useRevoAvatar';
 import mediaManifest from '@/components/game3/mediaManifest.json';
 import {CARS,STORY_SCENES,makeRaceState,applyPerfectLaunch,shiftGear,activateGhost} from '@/components/game3/physics';
 
@@ -42,10 +43,11 @@ function Starter({go}){
 function Meter({title,value,color='#26e2ed',note}){
  return <div className="min-w-0"><div className="mb-1 flex justify-between gap-2 text-[10px] uppercase tracking-widest text-white/65"><span>{title}</span><span>{note}</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full transition-all" style={{width:String(Math.min(100,Math.max(0,value)))+'%',background:color}}/></div></div>;
 }
-function RaceHUD({data,gaugeStyle,slipColor,shiftColor}){
+function RaceHUD({data,gaugeStyle,slipColor,shiftColor,driverName}){
  const speed=Math.round(data.speed*2.23694);
  return <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
   <div className="w-[min(290px,54vw)] rounded-xl border border-white/10 bg-[#07121d]/75 p-3 backdrop-blur-lg">
+   <div className="mb-2 text-[10px] font-bold uppercase tracking-[.2em] text-cyan-200/80">Revo driver · {driverName || 'Saved avatar required'}</div>
    <div className="flex items-end justify-between gap-2">
     <div><div className="text-[10px] uppercase tracking-[.3em] text-white/45">{gaugeStyle==='classic'?'CLASSIC GAUGE':'VELOCITY'}</div><div className={'font-bold leading-none '+(gaugeStyle==='minimal'?'font-mono text-4xl':'text-5xl')} style={{color:gaugeStyle==='classic'?'#f3f4f6':'#ffffff'}}>{speed}<span className="ml-1 text-xs font-light text-white/50">MPH</span></div></div>
     <div className="text-right"><div className="text-[10px] text-white/50">GEAR</div><div className="text-4xl font-black text-cyan-300">{data.gear}</div></div>
@@ -65,6 +67,7 @@ function RaceHUD({data,gaugeStyle,slipColor,shiftColor}){
 }
 export default function Game3(){
  const navigate=useNavigate();
+ const revo = useRevoAvatar('game3');
  const [tab,setTab]=useState('race');
  const [selectedCar,setSelectedCar]=useState('sls');
  const [paint,setPaint]=useState('#24c9e4');
@@ -205,9 +208,9 @@ export default function Game3(){
    {snapshot.perfectShift>0&&<div className="pointer-events-none absolute inset-y-10 left-0 w-1/3 opacity-50" style={{background:'linear-gradient(90deg,'+shiftColor+'88,transparent)'}}/>}
    {snapshot.shiftFlash>0&&<div className="pointer-events-none absolute left-1/2 top-[18%] -translate-x-1/2 whitespace-nowrap text-xl font-black italic tracking-[.15em]" style={{color:snapshot.shiftStatus==='PERFECT SHIFT'?shiftColor:'#ffffff'}}>{snapshot.launchStatus&&snapshot.raceTime<2?snapshot.launchStatus:snapshot.shiftStatus}</div>}
    {tab==='race'&&<React.Fragment>
-    {snapshot.phase==='race'&&<RaceHUD data={snapshot} gaugeStyle={gaugeStyle} slipColor={slipColor} shiftColor={shiftColor}/>}
+    {snapshot.phase==='race'&&<RaceHUD data={snapshot} gaugeStyle={gaugeStyle} slipColor={slipColor} shiftColor={shiftColor} driverName={revo?.name}/>}
     {snapshot.phase==='idle'&&<div className="absolute left-1/2 top-1/2 w-[min(540px,90vw)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-cyan-400/20 bg-[#081523]/90 p-6 text-center shadow-2xl backdrop-blur-xl">
-     <p className="text-[11px] font-bold uppercase tracking-[.35em] text-cyan-300">The street is yours</p><h1 className="my-3 text-3xl font-black uppercase sm:text-5xl">Night Run</h1><p className="mb-5 text-sm text-slate-300">Two starter cars. An original racing story. Perfect starts, timed shifts, nitrous dodges, drifting and ghost slipstream.</p>
+     <p className="text-[11px] font-bold uppercase tracking-[.35em] text-cyan-300">The street is yours</p><h1 className="my-3 text-3xl font-black uppercase sm:text-5xl">Night Run</h1><p className="mb-5 text-sm text-slate-300">Two starter cars. An original racing story. Perfect starts, timed shifts, nitrous dodges, drifting and ghost slipstream. Your Luna/Revo AI avatar is your driver identity.</p>
      <div className="flex flex-wrap justify-center gap-2"><button onClick={restart} className={buttonBase+' flex items-center gap-2 border-cyan-300/50 bg-cyan-500/25 px-5 py-3 text-cyan-100'}><Play size={17}/> Start race</button><button onClick={enterStory} className={buttonBase+' border-white/20 bg-white/10 px-5 py-3'}>Story mode</button><button onClick={()=>setTab('garage')} className={buttonBase+' border-white/20 bg-white/10 px-5 py-3'}>Garage</button></div>
     </div>}
     {snapshot.phase==='countdown'&&<div className="absolute left-1/2 top-[32%] flex -translate-x-1/2 flex-col items-center rounded-2xl border border-white/10 bg-black/50 px-7 py-3 backdrop-blur-md">
