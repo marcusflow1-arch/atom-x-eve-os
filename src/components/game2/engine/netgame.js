@@ -26,7 +26,7 @@ export const SIDES = {
   dark: { name: 'Dark Jedi', blade: [1, 0.06, 0.05], tint: [0.12, 0.09, 0.17], tintAmt: 0.66, css: '#ff7a6a' },
 };
 export const RESPAWN_S = 3, SHIELD_S = 3; // back after 3 s, then 3 s of immunity
-const RPC_METHODS = ['hurt', 'push', 'pullTo', 'shove', 'stagger', 'electrify', 'shock', 'grip', 'unlodgeSaber', 'levitate', 'executedBy'];
+const RPC_METHODS = ['hurt', 'push', 'pullTo', 'shove', 'stagger', 'electrify', 'shock', 'grip', 'unlodgeSaber', 'levitate', 'executedBy', 'vaporize'];
 const STATUS = ['normal', 'dead', 'flung', 'down', 'getup', 'gripped', 'shocked', 'roll', 'whole', 'levitated', 'executed', 'executing'];
 const HILT = ['hand', 'thigh', 'thrown', 'none'];
 const TIMED = ['speed', 'rage', 'protect', 'absorb', 'see'];
@@ -270,6 +270,7 @@ export class NetGame {
   // ---------------- remote calls
   rpc(f, m, args) {
     if (!f || !f.owner) return;
+    if (m === 'hurt' && args[1] && !args[1].remote) this.g.creditDamage(args[1], Math.min(args[0], f.hp || args[0])); // our damage on their fighter fills our Force Pulse meter
     if (m === 'hurt' && args[2] && args[2].noFlinch && !args[2].touch) { // continuous damage (lightning, drain, grip): batched for 100 ms
       const key = f.fid + '|' + (args[1] && args[1].fid || ''); const b = this.batch.get(key) || { f, from: args[1] || null, dmg: 0 }; b.dmg += args[0]; this.batch.set(key, b); return;
     }
@@ -287,6 +288,7 @@ export class NetGame {
       case 'push': case 'pullTo': case 'shove': case 'stagger': case 'electrify': case 'shock': if (f.spawnShield > g.t) return; f[m.m](...a); return;
       case 'unlodgeSaber': f.unlodgeSaber(); return;
       case 'levitate': { const [on, o] = a; if (on && f.spawnShield > g.t) return; f.levitate(!!on, o || {}); return; }
+      case 'vaporize': { const [att] = a; if (att) f.vaporize(att); return; }
       case 'executedBy': { const [att, kind, o] = a; if (att && (kind === 'crush' || kind === 'bisect') && f.status !== 'dead' && !(f.spawnShield > g.t)) g.startExecution(att, f, kind, { ...(o || {}), fromNet: true }); return; }
       case 'grip': { const [on, lift, o] = a; if (on) { if (f.spawnShield > g.t) return; f.grip(true, lift, { carry: o && o.carry && o.from ? this.carryOf(o.from) : null }); } else f.grip(false, 0, o || {}); return; }
       case 'blocked': if (!f.saber.holstered && f.status === 'normal') f.saber.blocked = a[0]; return;
@@ -308,8 +310,9 @@ export class NetGame {
       case 'hit': g.fx.sparks(m.p, [0, 1, 0], m.touch ? 4 : m.blocked ? 14 : 10, m.blocked ? [1, 0.9, 0.55, 1] : [1, 0.5, 0.2, 1]); g.sfxAt(m.blocked ? 'block' + (1 + Math.floor(Math.random() * 9)) : 'hit' + (1 + Math.floor(Math.random() * 3)), m.p, m.touch ? 0.3 : 0.9); if (m.blocked) g.flashLight(m.p, [1, 0.9, 0.6], 0.15); return;
       case 'cast': { const f = this.byId.get(m.fid); if (f && f.remote && f.force.castFx) f.force.castFx(m.id, m.d || [0, 0, 1]); return; }
       case 'throwRes': { if (m.to !== g.player.fid) return; const T = { knockdown: ['KNOCKDOWN', [0.7, 1, 0.75]], staggered: ['PARTLY BLOCKED', [0.75, 0.95, 0.8]], hit: [(m.pull ? 'PULL' : 'PUSH') + ' HIT', [0.7, 1, 0.75]], countered: ['COUNTERED', [1, 0.65, 0.35]], absorbed: ['ABSORBED', [0.78, 0.5, 1]] }[m.outcome]; if (T) g.banner(T[0], T[1]); return; }
-      case 'died': if (m.fid && String(m.fid).startsWith(from + ':')) this.noteDeath(m.fid, m.by); return;
+      case 'died': if (m.fid && String(m.fid).startsWith(from + ':')) { this.noteDeath(m.fid, m.by); const k = m.by && this.byId.get(m.by); if (k && !k.remote) g.creditKill(k); } return;
       case 'crack': if (Array.isArray(m.p) && Array.isArray(m.n)) g.addCrack(m.p, m.n, Math.min(2, Number(m.s) || 0.8)); return;
+      case 'pulse': { const f = this.byId.get(m.fid); if (f && f.remote) g.forcePulse(f, Math.min(10, Number(m.r) || 7), true); return; }
       case 'cut': { const f = this.byId.get(m.fid); if (f && f.remote && Array.isArray(m.dir)) g.cutFighter(f, { y: Number(m.y), dir: m.dir, floor: Number(m.floor) }, true); return; }
     }
   }

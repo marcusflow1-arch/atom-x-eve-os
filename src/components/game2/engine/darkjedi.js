@@ -44,6 +44,8 @@ export function aiDarkJedi(g, f, dt) {
     a.react = rnd(0.25, 0.7);
     if (Math.random() < 0.7) { F.cast('absorb'); return; }
   }
+  // ---- Force Pulse when it is charged and the foe is close
+  if (F.pulseReady && F.pulseReady() && dist < 5.5 && f.forceUntil <= g.t && Math.random() < dt * 2) { F.startPulse(); return; }
   // ---- Levitate + Push: push the fighter it lifted a moment ago (they are launched)
   if (a.comboPushAt && g.t >= a.comboPushAt) { a.comboPushAt = 0; if (P.status === 'levitated' && f.forceUntil <= g.t && F.gcd <= 0) { F.cast('push'); return; } }
   // ---- Force powers (picked by distance, Force left and cooldowns)

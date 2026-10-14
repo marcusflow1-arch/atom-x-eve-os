@@ -173,7 +173,8 @@ export class Combat {
       const side = B.saber.isActiveSwing() ? 'BOUNCE' : this.sideOf(B, pt); if (B.remote && g.net) g.net.rpc(B, 'blocked', [side]); else B.saber.blocked = side; A.saber.blocked = 'BOUNCE'; if (A.isPlayer || B.isPlayer) g.shake(0.1);
       if (g.net) g.net.onHit(A, B, pt, { blocked: true }); return 'blocked';
     }
-    this.damage(A, B, pt, this.bladeDamage(A) * (B.hasSaber ? 1 : 1.5), { spark: true, saber: true }); // non-Jedi take 1.5x (w_saber.c)
+    const bonus = A.interceptBonusUntil > g.t && (B.status === 'flung' || B.status === 'down' || B.status === 'getup') ? (A.interceptBonus || 1) : 1; // Push + Speed intercept
+    this.damage(A, B, pt, this.bladeDamage(A) * (B.hasSaber ? 1 : 1.5) * bonus, { spark: true, saber: true }); // non-Jedi take 1.5x (w_saber.c)
     return 'hit';
   }
   // the blade resting on / brushing someone outside an attack: small stance-scaled damage, parried like any hit

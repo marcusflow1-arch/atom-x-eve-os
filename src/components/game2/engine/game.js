@@ -6,7 +6,7 @@ import { FX } from './fx.js';
 import { Sfx } from './audio.js';
 import { Input } from './input.js';
 import { Fighter, WALL_SLAM_SPEED } from './fighter.js';
-import { Force, SELECT_ORDER, SELECT_ALL, FORCE_QUICK_BINDINGS, THROW_COST } from './force.js';
+import { Force, SELECT_ORDER, SELECT_ALL, FORCE_QUICK_BINDINGS, THROW_COST, PULSE_PER_HP, PULSE_PER_KILL } from './force.js';
 import { STYLE_NAMES } from './saber.js';
 import { resolveThrow, KNOCKDOWN_DIST } from './forcerules.js';
 import { Combat, hostile } from './combat.js';
@@ -207,7 +207,7 @@ export class Game {
   onSwing(f, move) { const lv = f.saber.level; this.sfx.play(Math.random() < 0.5 ? 'swing1' : 'swing2', { pos: f.pos, vol: f.isPlayer ? 0.8 : 0.55, rate: (lv === 1 ? 1.12 : lv === 3 ? 0.88 : 1) * (f.saber.rageMul > 1 ? 1.1 : 1), vary: 0.1 }); }
   onThud(f) { this.sfxAt('hit1', f.pos, 0.7); this.dust(f.pos, 0.9, 10); if (f.isPlayer) this.shake(0.18); }
   onLand(f, impact) { if (impact > 8) { this.dust(f.pos, 0.6 + impact * 0.03, 8); } } // no camera shake: Jedi Outcast lands with a short LAND1 only
-  onDeath(f) { this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (this.teamMatch) this.teamMatch.onDeath(f); if (this.net) this.net.onDeath(f); if (f.isPlayer && !this.online) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
+  onDeath(f) { if (f.killedBy && f.killedBy !== f && !f.remote) this.creditKill(f.killedBy); this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (this.teamMatch) this.teamMatch.onDeath(f); if (this.net) this.net.onDeath(f); if (f.isPlayer && !this.online) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
   endRound(state) { if (this.round.state === 'won' || this.round.state === 'lost') return; this.round = { state, t: 0 }; this.hud.banners.length = 0; } // the result overlay in hud.js replaces any banner
   onForceJump(f) { this.sfxAt('jump', f.pos, 0.9); this.sfxAt('jumpbuild', f.pos, 0.5); this.fx.ring({ p: [f.pos[0], 0.05, f.pos[2]], n: [0, 1, 0], r0: 0.3, r1: 2.2, life: 0.5, w: 0.14, c: [0.6, 0.85, 1, 0.9] }); this.dust(f.pos, 1.0, 14); if (f.isPlayer) this.shake(0.12); }
   dust(p, size = 0.8, n = 8) { for (let i = 0; i < n; i++) { const a = rnd(0, 6.28); this.fx.emit({ p: [p[0] + Math.cos(a) * 0.3, 0.08, p[2] + Math.sin(a) * 0.3], v: [Math.cos(a) * rnd(0.8, 2.6) * size, rnd(0.2, 0.9), Math.sin(a) * rnd(0.8, 2.6) * size], life: rnd(0.4, 0.9), size: rnd(0.12, 0.28), grow: 0.5, c0: [0.5, 0.48, 0.55, 0.22], c1: [0.4, 0.38, 0.45, 0], drag: 2.5 }); } }
@@ -338,6 +338,24 @@ export class Game {
       if (c.t < 0.5) R.billboard(c.p, c.size * 0.8, [1, 0.6, 0.3, 0.6 * (1 - c.t / 0.5)], 0);
     }
   }
+  // ---------------- Force Pulse (Force.startPulse): vaporize every foe within `radius`
+  forcePulse(att, radius, fromNet = false) {
+    const c = att.chest();
+    for (let k = 0; k < 3; k++) this.fx.ring({ p: [att.pos[0], att.pos[1] + 0.2 + k * 0.7, att.pos[2]], n: [0, 1, 0], r0: 0.4, r1: radius * (1.15 - k * 0.15), life: 0.6 + k * 0.1, w: 0.35, c: [1, 0.85 - k * 0.15, 0.5, 0.95] });
+    this.fx.ring({ p: c, n: [1, 0, 0], r0: 0.3, r1: radius, life: 0.5, w: 0.25, c: [1, 1, 1, 0.8] }); this.fx.ring({ p: c, n: [0, 0, 1], r0: 0.3, r1: radius, life: 0.5, w: 0.25, c: [1, 1, 1, 0.8] });
+    for (let i = 0; i < 90; i++) { const a = rnd(0, 6.28), up = rnd(-0.2, 0.7); this.fx.emit({ p: c, v: [Math.cos(a) * rnd(8, 16), up * 8, Math.sin(a) * rnd(8, 16)], life: rnd(0.35, 0.7), size: rnd(0.06, 0.14), c0: [1, 0.9, 0.6, 1], c1: [1, 0.4, 0.1, 0], drag: 2 }); }
+    this.dust(att.pos, 2.4, 30); this.flashLight(c, [1, 0.85, 0.6], 0.5); this.sfxAt('push', att.pos, 1); this.sfxAt('hit3', att.pos, 1); this.sfxAt('rage', att.pos, 0.6);
+    if (att.isPlayer || v3.dist(this.player.pos, att.pos) < radius + 4) this.shake(0.8);
+    if (att.isPlayer) this.banner('FORCE PULSE', [1, 0.85, 0.5], 1.8);
+    if (this.net && !fromNet && att.fid) this.net.fx('pulse', { fid: att.fid, r: radius });
+    if (fromNet) return; // the blast's victims are vaporized by the caster's game (vaporize RPCs)
+    for (const f of this.foesOf(att)) if (v3.dist(f.pos, att.pos) <= radius && Math.abs(f.pos[1] - att.pos[1]) < 4 && !(f.spawnShield > this.t)) f.vaporize(att);
+    for (const b of this.world.bodies) { const d = v3.sub(b.pos, att.pos), L = Math.hypot(d[0], d[2]); if (L < radius * 1.5 && L > 0.01) this.world.impulse(b, [d[0] / L * 18, 7, d[2] / L * 18]); }
+  }
+  onVaporize(f) { const c = f.chest(); for (let i = 0; i < 50; i++) this.fx.emit({ p: [c[0] + rnd(-0.3, 0.3), c[1] + rnd(-0.9, 0.7), c[2] + rnd(-0.3, 0.3)], v: [rnd(-1.5, 1.5), rnd(0.5, 3), rnd(-1.5, 1.5)], life: rnd(0.6, 1.4), size: rnd(0.03, 0.08), c0: [1, 0.7, 0.3, 1], c1: [0.3, 0.25, 0.25, 0], drag: 1 }); }
+  // the Force Pulse meter: damage dealt and defeats (only the attacker's own game counts them)
+  creditDamage(from, dmg) { const F = from && this.forceOf(from); if (F && !F.remote && F.gainPulse) F.gainPulse(dmg * PULSE_PER_HP); }
+  creditKill(from) { const F = from && this.forceOf(from); if (F && !F.remote && F.gainPulse) F.gainPulse(PULSE_PER_KILL); }
   // ---------------- executions (executions.js)
   startExecution(att, vic, kind, o = {}) {
     if (!att || !vic || vic.status === 'dead' || att.executing) return null;
@@ -552,6 +570,7 @@ export class Game {
     if (f.dmgFlash > 0) { tint = [1, 0.2, 0.15]; amt = Math.max(amt, f.dmgFlash * 0.55); }
     if (f.flash > 0 && f.status === 'shocked') { tint = [0.6, 0.8, 1]; amt = 0.5; }
     if (f.elecUntil > this.t && Math.sin(this.t * 55 + (f.humId || 0)) > 0) { tint = [0.6, 0.8, 1]; amt = 0.42; }
+    if (f.vaporized) { const k = (this.t - f.vaporized) / 0.35; if (k >= 1) return; tint = [1, 0.8, 0.5]; amt = 0.85; glow = 0.8; f.alpha = 1 - k; } // Force Pulse: burns away
     if (this.execCandidate && this.execCandidate.victim === f) { tint = [1, 0.12, 0.08]; amt = Math.max(amt, 0.25 + 0.15 * Math.sin(this.t * 8)); glow = Math.max(glow, 0.12); } // ready to be executed
     const far = !f.isPlayer && v3.dist(this.cam.eye, f.pos) > 9, mesh = far ? this.lodMesh : this.bodyMesh;
     if (f.cut) { // cut in half: two halves, each drawn on its side of the cut and moved on its own

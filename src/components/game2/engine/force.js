@@ -31,6 +31,15 @@ export const POWERS = [
 // Force Levitate (Atom X Eve): lifts the target, helpless, for LEVITATE_S s. Any hit on them, or any attack by the caster,
 // drops them; Absorb breaks it. Push them while they float and they are launched (Game.launchLevitated).
 export const LEVITATE_S = 3.5;
+// Combos (Atom X Eve)
+//  Push + Speed: Force Speed within INTERCEPT_WINDOW s of a push that sent someone flying dashes you to where they will land,
+//  facing them; your saber hits on them while they are down or flying are worth INTERCEPT_BONUS x for a moment.
+//  Saber throw + Lightning: lightning aimed at your thrown saber charges it; while it flows, arcs jump from the spinning
+//  blade to every foe within SABER_ARC_R m of it (SABER_ARC_DPS each) and the Force drains twice as fast.
+export const INTERCEPT_WINDOW = 1.6, INTERCEPT_BONUS = 1.5, SABER_ARC_R = 4, SABER_ARC_DPS = 30;
+// Force Pulse (special, X): the PULSE meter fills from damage you deal (PULSE_PER_HP per point) and defeats (PULSE_PER_KILL);
+// when full, a short build-up and a blast that vaporizes every foe within PULSE_RADIUS m.
+export const PULSE_MAX = 100, PULSE_PER_HP = 0.25, PULSE_PER_KILL = 35, PULSE_RADIUS = 7, PULSE_WINDUP = 0.55;
 const OFFENSIVE = new Set(['push', 'pull', 'grip', 'lightning', 'drain']);
 export const POWER_BY_ID = Object.fromEntries(POWERS.map(p => [p.id, p]));
 // Ten direct-cast slots. Remaining powers stay reachable in the mouse-wheel selector.
@@ -108,6 +117,7 @@ export class Force {
         else if (want) this.tryCast(want.id, want.code);
       }
       if (this.charging) this.tickCharge(input);
+      if (input.pressed('KeyX') && free) this.startPulse();
       if (input.pressed('KeyJ')) { p.jumpLevel = p.jumpLevel % 3 + 1; g.hud.msg('Force Jump level ' + p.jumpLevel); }
     }
     // held powers
@@ -119,6 +129,8 @@ export class Force {
     }
     // timed powers
     for (const k of Object.keys(this.active)) { if (now >= this.active[k].until) this.endTimed(k); else this.tickTimed(k, dt); }
+    if (this.dash) this.tickDash(dt);
+    if (this.pulsing) this.tickPulse(dt);
     // delayed effects
     for (let i = this.pending.length - 1; i >= 0; i--) if (this.pending[i].t <= now) { const f = this.pending[i].fn; this.pending.splice(i, 1); f(); }
     // regen (none while healing: the heal is paid for in full)
@@ -190,7 +202,7 @@ export class Force {
   interrupt() { this.pending.length = 0; if (this.holding !== 'heal') this.release(); } // a push / pull that lands cancels what the target was casting
   release(silent) { const id = this.holding; if (!id) return; this['end_' + id] && this['end_' + id](silent); this.holding = null; this.beam = null; this.bolts.length = 0; if (this.loops.hold) { this.loops.hold.stop(0.1); this.loops.hold = null; } }
   releaseAll(silent) { this.release(silent); this.charging = null; this.dropLevitated('down'); for (const k of Object.keys(this.active)) this.endTimed(k); }
-  reset() { this.releaseAll(true); this.pending.length = 0; this.want = {}; this.fp = this.max; this.gcd = 0; this.target = null; this.bodyBolts = null; this.absorbMsgT = 0; }
+  reset() { this.releaseAll(true); this.dash = null; this.pulsing = null; this.pending.length = 0; this.want = {}; this.fp = this.max; this.gcd = 0; this.target = null; this.bodyBolts = null; this.absorbMsgT = 0; }
   // ---------------- grip bookkeeping
   gripperOf(f) { return this.g.gripperOf(f); }
   // a gripped fighter who pushes / pulls with a level >= the grip level breaks it (the gripper is busy, so he cannot counter)
@@ -211,8 +223,9 @@ export class Force {
       if (!this.alive()) return;
       const hands = this.hands(); const mid = v3.lerp(hands[0], hands[1], 0.5); this.pushFx(mid, d, col, ch);
       const range = 13 + 5 * ch;
+      this.lastPush = { t: g.t, targets: [] }; // for Push + Speed
       for (const h of this.cone(range, 52)) {
-        const t = h.t, fall = clamp(1 - h.L / (15 + 5 * ch), 0.2, 1); const dir = this.flat(h.v);
+        const t = h.t, fall = clamp(1 - h.L / (15 + 5 * ch), 0.2, 1); const dir = this.flat(h.v); if (t.type === 'npc') this.lastPush.targets.push(t.ref);
         if (t.type === 'npc') g.applyThrow(this, t.ref, false, { dir, dist: h.L, fall, charge: ch });
         else { g.world.impulse(t.ref, [dir[0] * (9 + 10 * fall) * (1 + ch), 3 + 3 * fall, dir[2] * (9 + 10 * fall) * (1 + ch)]); t.ref.glow = 1; }
       }
@@ -261,7 +274,46 @@ export class Force {
     const g = this.g; if (this.active.see) { this.endTimed('see'); this.fp += 20; return; }
     this.anim('BOTH_MINDTRICK2', { durMs: 700 }); this.startTimed('see'); g.sfxAt('see', this.p.pos, 1);
   }
-  do_speed() { this.anim('BOTH_FORCEHEAL_QUICK', { durMs: 700 }); this.startTimed('speed'); this.g.sfxAt('speed', this.p.pos, 1); }
+  do_speed() {
+    const v = this.interceptTarget(); // Push + Speed: dash to where the fighter you just pushed will land
+    if (v) this.intercept(v); else this.anim('BOTH_FORCEHEAL_QUICK', { durMs: 700 });
+    this.startTimed('speed'); this.g.sfxAt('speed', this.p.pos, 1);
+  }
+  // ---------------- Push + Speed
+  interceptTarget() {
+    const g = this.g; if (!this.lastPush || g.t - this.lastPush.t > INTERCEPT_WINDOW) return null;
+    return this.lastPush.targets.find(v => v.status === 'flung' && v3.dist(v.pos, this.p.pos) < 22) || null;
+  }
+  intercept(v) {
+    const g = this.g, p = this.p, fl = g.world.floorAt(v.pos[0], v.pos[2], v.pos[1] + 0.5) ?? v.pos[1], h = Math.max(0, v.pos[1] - fl);
+    const tl = (v.vel[1] + Math.sqrt(Math.max(0, v.vel[1] * v.vel[1] + 2 * 20 * h))) / 20; // time until they land (G = 20)
+    const land = [v.pos[0] + v.vel[0] * tl, fl, v.pos[2] + v.vel[2] * tl], sp = Math.hypot(v.vel[0], v.vel[2]) || 1, dir = [v.vel[0] / sp, 0, v.vel[2] / sp];
+    const to = [land[0] + dir[0] * 1.4, land[1], land[2] + dir[2] * 1.4]; g.world.collide(to, p.radius);
+    this.dash = { from: p.pos.slice(), to, t: 0, dur: 0.2, face: Math.atan2(-dir[0], -dir[2]) };
+    p.interceptBonusUntil = g.t + 1.6; p.interceptBonus = INTERCEPT_BONUS; this.lastPush = null; p.playForce('BOTH_RUN2', { durMs: 200, whole: true });
+    if (!this.npc) g.banner('INTERCEPT', [0.6, 0.9, 1]);
+  }
+  tickDash(dt) {
+    const D = this.dash, p = this.p, g = this.g; D.t += dt; const k = Math.min(1, D.t / D.dur), e = k * k * (3 - 2 * k);
+    p.pos = v3.lerp(D.from, D.to, e); p.vel = [0, 0, 0]; p.yaw = p.targetYaw = D.face;
+    for (let i = 0; i < 3; i++) g.fx.emit({ p: [p.pos[0] + rnd(-0.3, 0.3), p.pos[1] + rnd(0.1, 1.7), p.pos[2] + rnd(-0.3, 0.3)], v: [0, 0, 0], life: 0.3, size: 0.1, grow: 0.3, c0: [0.5, 0.8, 1, 0.7], c1: [0.3, 0.5, 1, 0] });
+    if (k >= 1) { this.dash = null; if (!this.npc) g.cam.yaw = D.face; }
+  }
+  // ---------------- Force Pulse (special)
+  gainPulse(n) { if (n > 0) this.pulse = Math.min(PULSE_MAX, (this.pulse || 0) + n); }
+  pulseReady() { return (this.pulse || 0) >= PULSE_MAX; }
+  startPulse() {
+    const g = this.g, p = this.p; if (!this.pulseReady() || this.pulsing || this.holding) { if (!this.npc && !this.pulseReady()) this.say('Force Pulse is not charged yet'); return false; }
+    this.pulse = 0; this.pulsing = { t0: g.t }; p.playForce('BOTH_FORCEFOUNTAIN1_START', { durMs: 900, whole: true }); g.sfxAt('jumpbuild', p.pos, 1); g.sfxAt('rage', p.pos, 0.8);
+    if (g.net) g.net.onCast(this, 'pulse'); return true;
+  }
+  tickPulse(dt) {
+    const g = this.g, p = this.p, T = g.t - this.pulsing.t0, c = p.chest();
+    if (p.status === 'dead') { this.pulsing = null; return; }
+    for (let i = 0; i < 4; i++) { const a = rnd(0, 6.28), r = rnd(1.5, 3.5), from = [c[0] + Math.cos(a) * r, c[1] + rnd(-1, 1.2), c[2] + Math.sin(a) * r]; g.fx.emit({ p: from, v: v3.scale(v3.sub(c, from), 1 / 0.35), life: 0.35, size: 0.05, c0: [1, 0.9, 0.6, 0.9], c1: [1, 0.6, 0.2, 0.2] }); }
+    g.lightFlash = Math.max(g.lightFlash, T * 1.2); g.lightFlashPos = c;
+    if (T >= PULSE_WINDUP) { this.pulsing = null; g.forcePulse(p, PULSE_RADIUS); }
+  }
   do_rage() { this.anim('BOTH_FORCEFOUNTAIN1_START', { durMs: 1100 }); this.startTimed('rage'); this.g.sfxAt('rage', this.p.pos, 1); this.shake(0.3); }
   do_protect() { this.anim('BOTH_FORCEHEAL_QUICK', { durMs: 800 }); this.startTimed('protect'); this.g.sfxAt('protect', this.p.pos, 1); }
   do_absorb() { if (this.p.status === 'levitated') this.p.levitate(false, { absorbed: true }); this.anim('BOTH_FORCEHEAL_QUICK', { durMs: 800 }); this.startTimed('absorb'); this.g.sfxAt('absorb', this.p.pos, 1); }
@@ -360,8 +412,21 @@ export class Force {
     const g = this.g, p = this.p; this.holding = 'lightning'; this.anim('BOTH_FORCELIGHTNING_START', { durMs: 160, hold: true }); this.lt = 0; this.ltPhase = 'start';
     g.sfxAt('lightning', p.pos, 1); this.loops.hold = g.sfx.loop('lightning2', { vol: this.npc ? 0.18 : 0.35 }); this.regenBolts(); this.hitT = 0;
   }
+  // Saber throw + Lightning: your own thrown saber in front of you takes the lightning
+  chargedSaber() {
+    const T = this.p.thrown; if (!T) return null; const o = this.origin(), v = v3.sub(T.pos, o), L = v3.len(v);
+    return L < 18 && L > 0.3 && v3.dot(v3.scale(v, 1 / L), this.aim()) > Math.cos(65 * Math.PI / 180) ? T : null;
+  }
   regenBolts() {
     const g = this.g, hands = this.hands(); const d = this.aim();
+    const S = this.chargedSaber();
+    if (S) { // hands -> saber, then saber -> every foe in reach of it
+      this.bolts.length = 0; const mk = (a, b, w, j) => this.bolts.push({ pts: bolt(a, b, 9, j), br: [], w });
+      mk(hands[0], S.pos, 1, 0.22); mk(hands[1], S.pos, 0.9, 0.22);
+      for (const f of g.foesOf(this.p)) if (v3.dist(f.chest(), S.pos) < SABER_ARC_R) mk(S.pos, f.chest(), 0.8, 0.3);
+      for (let i = 0; i < 2; i++) mk(S.pos, v3.addS(S.pos, v3.norm([rnd(-1, 1), rnd(-0.6, 1), rnd(-1, 1)]), rnd(0.6, 1.4)), 0.5, 0.15);
+      this.ltTargets = []; return;
+    }
     // Lightning locks onto one hostile target in the player's forward aim cone,
     // rather than indiscriminately damaging everything inside a radius.
     const list = this.cone(14, 65, { npcOnly: true }).filter(h => hostile(this.p, h.t.ref)).slice(0, 1);
@@ -375,6 +440,18 @@ export class Force {
     const g = this.g, p = this.p; this.fp -= 14 * dt; this.lt += dt;
     if (this.ltPhase === 'start' && this.lt > 0.16) { this.ltPhase = 'hold'; this.anim('BOTH_FORCELIGHTNING_HOLD', { durMs: 300, hold: true, loop: true }); }
     this.hitT -= dt; const hands = this.hands();
+    const S = this.chargedSaber();
+    if (S) { // the charged saber: double drain, arcs from the blade to every foe near it
+      this.fp -= 14 * dt; S.chargedUntil = g.t + 0.25;
+      for (const v of g.foesOf(p)) {
+        if (v.status === 'dead' || v3.dist(v.chest(), S.pos) >= SABER_ARC_R) continue;
+        const VF = g.forceOf(v), lm = lightningMul(this.absorbDef(v), this.lv.lightning, 1);
+        if (lm.mul <= 0) { if (VF) VF.addFp(12 * dt); this.absorbFx(v, dt); continue; }
+        v.electrify(0.25); v.hurt(SABER_ARC_DPS * dt * p.damageMul * this.dmgScale * lm.mul, p, { noFlinch: true });
+        if (this.hitT <= 0) g.sfxAt('lhit' + (1 + Math.floor(Math.random() * 3)), v.chest(), 0.7); if (Math.random() < 0.5) g.fx.sparks(v.chest(), [0, 1, 0], 2, [0.6, 0.8, 1, 1]);
+      }
+      if (this.hitT <= 0) this.hitT = 0.28; g.lightFlash = 0.7; g.lightFlashPos = S.pos; return;
+    }
     // Re-evaluate the lock as opponents move or die; the visual bolts use the
     // same target selection on their next refresh.
     this.ltTargets = this.cone(14, 65, { npcOnly: true }).filter(h => hostile(this.p, h.t.ref)).slice(0, 1);
@@ -445,6 +522,8 @@ export class Force {
     for (const id of ['protect', 'absorb']) if (this.active[id]) { const col = id === 'protect' ? [0.3, 0.9, 0.7] : [0.7, 0.4, 1]; const pulse = 0.5 + 0.15 * Math.sin(g.t * 5); R.billboard(c, 1.55, [col[0], col[1], col[2], 0.20 * pulse], 0); R.billboard(c, 1.2, [col[0], col[1], col[2], 0.12], 0); }
     if (this.active.rage) R.billboard(c, 1.4, [1, 0.1, 0.05, 0.12 + 0.05 * Math.sin(g.t * 8)], 0);
     if (this.active.speed) R.billboard(c, 1.3, [0.4, 0.7, 1, 0.07], 0);
+    const T = this.p.thrown; if (T && T.chargedUntil > g.t) { R.billboard(T.pos, 0.75 + 0.15 * Math.sin(g.t * 40), [0.55, 0.78, 1, 0.45], 0); R.billboard(T.pos, 0.3, [1, 1, 1, 0.8], 0); } // charged saber
+    if (this.pulsing) R.billboard(c, 0.6 + (g.t - this.pulsing.t0) * 3, [1, 0.8, 0.45, 0.25], 0);
   }
 }
 function POW(id) { return POWER_BY_ID[id]; }
