@@ -105,6 +105,9 @@ function LegacyGenesisModelPreview({ config, onCapabilities, onCustomizationStat
   const [controlArmed, setControlArmed] = useState(false);
   const [paused, setPaused] = useState(false);
   const [previewMotions, setPreviewMotions] = useState(COMPANION_MOTIONS);
+  // Creator stage: Idle / Walk / Run authored on the body itself (see creatorLocomotion.js)
+  const [gaits, setGaits] = useState([]);
+  const [gait, setGait] = useState('Idle');
 
   callback.current = onCapabilities;
   controlArmedRef.current = controlArmed;
@@ -154,7 +157,8 @@ function LegacyGenesisModelPreview({ config, onCapabilities, onCustomizationStat
             ? [COMPANION_MOTIONS[0]]
             : [...(set.idles || []).slice(0, 3), ...(set.showcase || [])].filter((item, index, items) => item?.url && items.findIndex((candidate) => candidate.name === item.name) === index)
       );
-      if (ready && !controlArmedRef.current) playIdle();
+      // the catalog can arrive after the creator stage was already set walking: never cut a chosen gait short
+      if (ready && !controlArmedRef.current && (scene.current?.gait?.() || 'Idle') === 'Idle') playIdle();
     });
     return () => { cancelled = true; };
   }, [config?.gender, compact, ready, playIdle, canonicalGetsugaMale]);
@@ -163,6 +167,8 @@ function LegacyGenesisModelPreview({ config, onCapabilities, onCustomizationStat
     setReady(false);
     setStatus('loading');
     setMotion('Idle');
+    setGaits([]);
+    setGait('Idle');
     if (!url) return undefined;
     try {
       scene.current = createGenesisScene(
@@ -171,6 +177,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, onCustomizationStat
         (caps) => {
           callback.current?.(caps);
           setReady(true);
+          setGaits(caps?.locomotion?.length ? ['Idle', ...caps.locomotion] : []);
           if (canonicalGetsugaMale) scene.current?.getsugaIdle?.();
           else if (fixedFemaleIdle) scene.current?.artemisIdle?.();
           else playMotion(motionSetRef.current.idles?.[0] || COMPANION_MOTIONS[0]);
@@ -198,6 +205,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, onCustomizationStat
           artemisFemale: fixedFemaleIdle,
           lockRootTranslation: false,
           lockModelPosition: fixedFemaleIdle,
+          locomotionShowcase: !compact,
         },
       );
       scene.current.appearance(config);
@@ -212,7 +220,11 @@ function LegacyGenesisModelPreview({ config, onCapabilities, onCustomizationStat
       scene.current?.dispose();
       scene.current = null;
     };
-  }, [url, playMotion, fixedFemaleIdle, canonicalGetsugaMale, initialYaw, skillEffects, Boolean(previewEffect), remoteSkillPlayerId, remoteFacingYaw, combatMovement, movementRadius, combatCamera, secondaryCharacter?.modelUrl, secondaryCharacter?.animationUrl, secondaryCharacter?.animationName]);
+  }, [url, playMotion, fixedFemaleIdle, canonicalGetsugaMale, initialYaw, skillEffects, Boolean(previewEffect), remoteSkillPlayerId, remoteFacingYaw, combatMovement, movementRadius, combatCamera, compact, secondaryCharacter?.modelUrl, secondaryCharacter?.animationUrl, secondaryCharacter?.animationName]);
+
+  const chooseGait = useCallback((name) => {
+    if (scene.current?.setGait?.(name)) setGait(name);
+  }, []);
 
   useEffect(() => { scene.current?.appearance(config); }, [config]);
 
@@ -376,7 +388,7 @@ function LegacyGenesisModelPreview({ config, onCapabilities, onCustomizationStat
         <div ref={mount} className="h-full w-full" />
         {(!ready || (compact && status === 'animation-loading')) && <span className="genesis-canvas-status" role="status">{status === 'error' ? '3D preview unavailable on this device' : 'Loading your companion…'}</span>}
       </div>
-      {!compact && <div className="genesis-stage-bottom"><div className="genesis-motion-buttons"><button type="button" aria-label="Rotate left" disabled={!ready} onClick={() => scene.current.rotate(-Math.PI / 4)}><RotateCcw size={14} /></button>{previewMotions.map((item) => <button type="button" key={`${item.name}-${item.url}`} disabled={!ready || status === 'animation-loading'} aria-pressed={motion === item.name} onClick={() => scene.current.play(item)}>{item.name}</button>)}<button type="button" aria-label="Rotate right" disabled={!ready} onClick={() => scene.current.rotate(Math.PI / 4)}><RotateCw size={14} /></button></div><p>{status === 'animation-error' ? 'This animation could not load. Try another.' : status === 'animation-loading' ? 'Loading movement…' : 'Drag to rotate · Scroll to zoom'}</p></div>}
+      {!compact && <div className="genesis-stage-bottom"><div className="genesis-motion-buttons"><button type="button" aria-label="Rotate left" disabled={!ready} onClick={() => scene.current.rotate(-Math.PI / 4)}><RotateCcw size={14} /></button>{gaits.map((name) => <button type="button" key={`gait-${name}`} data-gait={name} disabled={!ready} aria-pressed={gait === name} onClick={() => chooseGait(name)}>{name}</button>)}{previewMotions.filter((item) => !gaits.includes(item.name)).map((item) => <button type="button" key={`${item.name}-${item.url}`} disabled={!ready || status === 'animation-loading'} aria-pressed={motion === item.name} onClick={() => scene.current.play(item)}>{item.name}</button>)}<button type="button" aria-label="Rotate right" disabled={!ready} onClick={() => scene.current.rotate(Math.PI / 4)}><RotateCw size={14} /></button></div><p>{status === 'animation-error' ? 'This animation could not load. Try another.' : status === 'animation-loading' ? 'Loading movement…' : 'Drag to rotate · Scroll to zoom'}</p></div>}
     </div>
   );
 }

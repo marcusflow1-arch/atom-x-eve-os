@@ -13,12 +13,15 @@ import * as THREE from 'three';
 //          Rain_Of_Arrows, Lunar_Beam (full-body flow animation: hips, spine,
 //          legs and neck follow the arms), Chidori_Ultimate, Chidori_Hit_Stun_Fall.
 //          Adds eye, mouth and jaw rigs plus 30 facial shape keys on Artemis_Body.
+// v4 (Oct 2026) is v3 plus in-place Walk and Run clips authored on each body by
+// tools/avatar-motion/locomotion.mjs (every v3 byte, clip and skin weight is
+// unchanged; the new clips carry their speed in the animation extras).
 // They ship with the app (public/models/characters) so a GitHub sync is enough
 // to update them — no re-upload through the Base44 editor.
 // Versioned file name: a new body must never be served from a cached copy of
 // the previous one.
-export const MALE_CHARACTER_MODEL_URL = '/models/characters/Getsuga_Tensho_Character_v3.glb';
-export const FEMALE_CHARACTER_MODEL_URL = '/models/characters/Artemis_Character_v3.glb';
+export const MALE_CHARACTER_MODEL_URL = '/models/characters/Getsuga_Tensho_Character_v4.glb';
+export const FEMALE_CHARACTER_MODEL_URL = '/models/characters/Artemis_Character_v4.glb';
 
 // Avatar records, Skill Book cards and backend defaults still store the old
 // hosted URLs (they are validated identifiers on the server). Every load of
@@ -28,9 +31,9 @@ const LEGACY_MODEL_FILES = [
   { pattern: /96bb872db_Artemis_Character(?:_v2)?\.glb(?:[?#].*)?$/i, url: FEMALE_CHARACTER_MODEL_URL },
   { pattern: /^(?:https?:\/\/[^/]+)?\/getsuga\/Getsuga_Character\.glb(?:[?#].*)?$/i, url: MALE_CHARACTER_MODEL_URL },
   // Previous in-app female body (Sep / early Oct 2026).
-  { pattern: /^(?:https?:\/\/[^/]+)?\/models\/characters\/Artemis_Character(?:_v2)?\.glb(?:[?#].*)?$/i, url: FEMALE_CHARACTER_MODEL_URL },
+  { pattern: /^(?:https?:\/\/[^/]+)?\/models\/characters\/Artemis_Character(?:_v[23])?\.glb(?:[?#].*)?$/i, url: FEMALE_CHARACTER_MODEL_URL },
   // Previous in-app male bodies (Sep / early Oct 2026).
-  { pattern: /^(?:https?:\/\/[^/]+)?\/models\/characters\/Getsuga_Tensho_Character(?:_v2)?\.glb(?:[?#].*)?$/i, url: MALE_CHARACTER_MODEL_URL },
+  { pattern: /^(?:https?:\/\/[^/]+)?\/models\/characters\/Getsuga_Tensho_Character(?:_v[23])?\.glb(?:[?#].*)?$/i, url: MALE_CHARACTER_MODEL_URL },
 ];
 
 export function resolveCharacterModelUrl(url) {

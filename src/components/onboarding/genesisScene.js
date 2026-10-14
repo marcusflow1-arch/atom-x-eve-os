@@ -13,6 +13,7 @@ import { ArtemisDashboardRuntime } from '@/components/artemis/ArtemisDashboardRu
 import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPack';
 import { characterBodyBounds } from '@/lib/characterModelOverrides';
 import { createChidoriCaster, isChidoriCast } from '@/components/battle/chidoriCaster';
+import { CreatorLocomotion, clipExtras, createStageFloor } from '@/components/onboarding/creatorLocomotion';
 
 
 export function createGenesisScene(container, url, onReady, onStatus, options = {}) {
@@ -63,6 +64,9 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   let getsuga = null;
   let artemis = null;
   let customization = null, appearanceRoot = null, readyCapabilities = null;
+  // Creator stage locomotion (options.locomotionShowcase): Walk / Run in place over a scrolling floor, every change
+  // blended from the pose on screen. targetYaw smooths the stage's rotate buttons into a turn.
+  let locomotion = null, floor = null, targetYaw = null;
   // Male previews without the card runtime: the GLB's own looping Idle plus
   // its one-shot idle variants (stretch, look around…) at random moments.
   let maleIdleAction = null;
@@ -78,6 +82,33 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     maleIdleVariants?.rest();
     onStatus('ready', 'Idle');
     return true;
+  };
+  // A locomotion stop hands the body back to its own idle at full weight; the locomotion blends the change.
+  const startIdleNow = () => {
+    if (artemis) artemis.playIdle(true);
+    else if (maleIdleAction) {
+      maleIdleAction.enabled = true;
+      maleIdleAction.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
+      action = maleIdleAction;
+      maleIdleVariants?.rest();
+    }
+    onStatus('ready', 'Idle');
+  };
+  // The authored idles are lively (stretches, a yawn, looking around). The creator stage instead uses the calm Stand clip
+  // authored on each body (tools/avatar-motion/locomotion.mjs): weight on one leg, breathing, an unhurried glance, blinks.
+  function creatorStandClip(clips) {
+    return options.locomotionShowcase ? clips.find((clip) => clip?.name === 'Stand') || null : null;
+  }
+  const setGait = (name) => {
+    if (!locomotion || disposed || getsuga?.isPlaying() || artemis?.isPlaying()) return false;
+    setPaused(false);
+    if (name !== 'Idle' && !locomotion.moving()) {
+      maleIdleVariants?.interrupt();
+      action = null;
+    }
+    const accepted = locomotion.request(name);
+    if (accepted && name !== 'Idle') onStatus('ready', name);
+    return accepted;
   };
   // Chidori lightning for dashboard casts (no opponent here: the strike fires
   // into the air in front of the hand). Created on the first Chidori cast.
@@ -104,6 +135,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     }));
   };
   const playBoundEffect = (detail = {}, remote = false) => {
+    locomotion?.cancel();
     const effect = detail.effect || {};
     const effectId = String(effect?.id || '').trim().toLowerCase();
     const remoteTarget = remote ? {
@@ -217,6 +249,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     const dt = Math.min(clock.getDelta(), .05);
     if (!visible || document.hidden) return;
     if (!paused) maleIdleVariants?.update(dt);
+    if (!paused) locomotion?.drive(dt);
     mixer?.update(dt);
     if (options.lockModelPosition && model && basePosition) {
       model.position.copy(basePosition);
@@ -270,6 +303,13 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       const bob = THREE.MathUtils.clamp(sourceBob * 0.0035, -0.022, 0.022);
       secondaryModel.position.copy(childBasePosition);
       secondaryModel.position.y += bob;
+    }
+
+    if (!paused) locomotion?.settle(dt);
+    if (model && targetYaw !== null) model.rotation.y += (targetYaw - model.rotation.y) * (1 - Math.exp(-dt * 8));
+    if (floor && locomotion && model && !paused) {
+      const step = locomotion.speed * dt, yaw = model.rotation.y;
+      floor.scroll(-Math.sin(yaw) * step, -Math.cos(yaw) * step);
     }
 
     if (options.portrait && model) { const head = model.getObjectByName('Head'); if (head) { const p = head.getWorldPosition(new THREE.Vector3()); const shift = p.y - controls.target.y; controls.target.y = p.y; camera.position.y += shift; } }
@@ -436,6 +476,10 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   }
 
   async function play(motion) {
+    if (locomotion?.moving()) {
+      if (/idle/i.test(String(motion?.name || motion?.command || ''))) { setGait('Idle'); return; }
+      locomotion.cancel();
+    }
     if (artemis && /idle/i.test(String(motion?.name || motion?.command || ''))) {
       artemis.playIdle();
       onStatus('ready', 'Idle');
@@ -663,19 +707,21 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
           // The male GLB carries its own living idle (breathing, blinks, eye
           // movement, facial expression). Older bodies without one fall back
           // to the light idle derived from the attack clip.
-          const idleClip = clips.find((clip) => clip?.name === 'Idle') || createGetsugaIdleClip(attackClip);
+          // The creator stage stands calmly instead (see creatorStandClip).
+          const stand = creatorStandClip(clips);
+          const idleClip = stand || clips.find((clip) => clip?.name === 'Idle') || createGetsugaIdleClip(attackClip);
           if (idleClip) {
             action = mixer.clipAction(idleClip);
             action.setLoop(THREE.LoopRepeat, Infinity).play();
             maleIdleAction = action;
-            const director = new IdleVariantDirector({
+            const director = stand ? null : new IdleVariantDirector({
               mixer,
               clips,
               idleAction: action,
               canPlay: () => !paused && action === maleIdleAction && maleIdleAction.isRunning(),
             });
-            if (director.size) maleIdleVariants = director;
-            else director.dispose();
+            if (director?.size) maleIdleVariants = director;
+            else director?.dispose();
           }
           onStatus('ready', 'GetsugaIdle');
         }
@@ -692,10 +738,12 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
           // The authored Artemis package owns its skeleton, bow, transitions,
           // combat idles and ability clips. Never retarget these attacks onto a
           // different rig: Skill Book cards call their embedded clips directly.
+          // On the creator stage her calm Stand clip takes the place of the authored living idle.
+          const stand = creatorStandClip(asset.animations || []);
           artemis = new ArtemisDashboardRuntime({
             root: model,
             mixer,
-            animations: asset.animations || [],
+            animations: stand ? [...(asset.animations || []).filter((clip) => clip.name !== 'Idle'), Object.assign(stand.clone(), { name: 'Idle' })] : (asset.animations || []),
             onEvent: emitArtemisEvent,
             relaxAfter: 6,
           });
@@ -712,12 +760,21 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
         }
       }
 
+      if (options.locomotionShowcase && mixer && !getsuga) {
+        locomotion = new CreatorLocomotion({ root: model, mixer, clips: asset.animations || [], extras: clipExtras(asset), scale: model.scale.x, onIdle: startIdleNow });
+        if (locomotion.names().length) {
+          floor = createStageFloor();
+          scene.add(floor.mesh);
+          targetYaw = model.rotation.y;
+        } else locomotion = null;
+      }
+
       basePosition = model.position.clone();
       if (options.secondaryCharacter?.modelUrl) {
         await loadSecondaryCharacter(options.secondaryCharacter);
       }
 
-      readyCapabilities = { customization: inspectCustomization(avatarRoot), hi3d: preserveAppearance, runtimeRig: atomxeRuntimeRig, runtimeRigGenerated, boneCount: runtimeBoneCount, faceFit: preserveAppearance || Boolean(avatarRoot.getObjectByName('mixamorigHeadTop_End') || avatarRoot.getObjectByName('HeadTop_End')), materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] };
+      readyCapabilities = { locomotion: locomotion ? locomotion.names() : [], customization: inspectCustomization(avatarRoot), hi3d: preserveAppearance, runtimeRig: atomxeRuntimeRig, runtimeRigGenerated, boneCount: runtimeBoneCount, faceFit: preserveAppearance || Boolean(avatarRoot.getObjectByName('mixamorigHeadTop_End') || avatarRoot.getObjectByName('HeadTop_End')), materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] };
       onReady(readyCapabilities);
       customization.update(appearance);
       
@@ -770,6 +827,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     if (model && basePosition) {
       model.position.copy(basePosition);
       model.rotation.y = 0;
+      if (targetYaw !== null) targetYaw = 0;
     }
     if (secondaryRoot && secondaryBasePosition) {
       secondaryRoot.position.copy(secondaryBasePosition);
@@ -792,12 +850,17 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     play,
     command: (value) => {
       setPaused(false);
+      if (locomotion?.moving() && value === 'idle') { setGait('Idle'); return; }
       if (options.getsugaMale && value === 'idle') { if (getsuga) getsuga.playIdle?.(); else restoreMaleIdle(); }
       else if (options.artemisFemale && value === 'idle') artemis?.playIdle?.();
       else embeddedController?.command(value);
     },
-    getsugaIdle: () => (getsuga ? getsuga.playIdle?.() : restoreMaleIdle()),
-    artemisIdle: () => artemis?.playIdle?.(),
+    getsugaIdle: () => (locomotion?.moving() ? setGait('Idle') : getsuga ? getsuga.playIdle?.() : restoreMaleIdle()),
+    artemisIdle: () => (locomotion?.moving() ? setGait('Idle') : artemis?.playIdle?.()),
+    gaits: () => (locomotion ? ['Idle', ...locomotion.names()] : []),
+    gait: () => locomotion?.current() || 'Idle',
+    setGait,
+    locomotionState: () => (locomotion ? { state: locomotion.state, target: locomotion.target, phase: locomotion.phase, stopAt: locomotion.stopAt, speed: locomotion.speed, blending: locomotion.inertia.active() } : null),
     previewEffect: (effect) => playBoundEffect({ effect, accepted: false, source: 'preview' }, false),
     setArmLift: (value) => { setPaused(false); return embeddedController?.setArmLift(value); },
     animationState: () => embeddedController?.snapshot(),
@@ -808,7 +871,8 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     isPaused: () => paused,
     rotate: (amount) => {
       if (getsuga?.isPlaying() || artemis?.isPlaying()) return;
-      if (model) model.rotation.y += amount;
+      if (targetYaw !== null) targetYaw += amount;
+      else if (model) model.rotation.y += amount;
       if (secondaryRoot) secondaryRoot.rotation.y += amount;
     },
     dispose: () => {
@@ -849,6 +913,8 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       secondaryMotionBridge = null;
 
       if (!getsuga) disposeModel(model);
+      if (floor) { scene.remove(floor.mesh); floor.dispose(); floor = null; }
+      locomotion = null;
       shadowPlane.geometry.dispose();
       shadowMaterial.dispose();
       renderer.dispose();
