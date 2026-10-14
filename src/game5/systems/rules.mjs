@@ -1,5 +1,5 @@
 /** Game 5 only. Provisional balance constants are intentionally independent of Luna cards. */
-export const RULES={version:1,bagCapacity:80,enchantCap:200,safeEnchant:54,stageCap:20,maxLevel:200,mountLevel:50,headHaloCap:96,wingHaloCap:20,gcd:350,parryWindow:220};
+export const RULES={version:2,bagCapacity:80,enchantCap:200,safeEnchant:54,stageCap:20,maxLevel:200,mountLevel:50,headHaloCap:96,wingHaloCap:20,gcd:350,parryWindow:220};
 export const RARITIES={common:{label:'Common',color:'#8aaf71',multiplier:1,sockets:1},uncommon:{label:'Uncommon',color:'#68aad1',multiplier:1.05,sockets:2},rare:{label:'Rare',color:'#d8c56e',multiplier:1.15,sockets:2},unique:{label:'Unique',color:'#d89355',multiplier:1.3,sockets:2},epic:{label:'Epic',color:'#b88bda',multiplier:1.5,sockets:3},legendary:{label:'Legendary',color:'#db7772',multiplier:1.75,sockets:4},mythical:{label:'Mythical',color:'#f4dfa1',multiplier:2,sockets:4}};
 export const SLOTS=['weapon','head','armor','gloves','boots','ring','necklace','wings'];
 export const MOUNT_SLOTS=['headpiece','saddle','barding','stirrups','reins','harness','core'];
@@ -23,6 +23,26 @@ export class RuleError extends Error{constructor(code,message=code,status=400){s
 export function check(ok,code,message,status){if(!ok)throw new RuleError(code,message,status);}
 export function integer(n,min,max){check(Number.isSafeInteger(n)&&n>=min&&n<=max,'INVALID_NUMBER');return n;}
 export const owned=(p,id)=>{const i=p.inventory.find(x=>x.id===id);check(i,'ITEM_NOT_FOUND','Select an owned item.');return i;};
-export const isEquipped=(p,id)=>[...Object.values(p.equipment),...p.weapons,...Object.values(p.mount.equipment),...Object.values(p.mount.vanity)].includes(id);
+export const isEquipped=(p,id)=>[...Object.values(p.equipment),...p.weapons,...Object.values(p.mount.equipment),...Object.values(p.mount.vanity),...Object.values(p.vanity||{})].includes(id);
 export function spend(p,cost){for(const[k,v]of Object.entries(cost)){check(p.wallet[k]>=v,'INSUFFICIENT_FUNDS',`Requires ${v} ${k}.`);}for(const[k,v]of Object.entries(cost))p.wallet[k]-=v;}
 export function consume(p,cost){for(const[k,v]of Object.entries(cost))check((p.materials[k]||0)>=v,'MISSING_MATERIAL',`Requires ${v} ${MATERIALS[k]?.name||k}.`);for(const[k,v]of Object.entries(cost))p.materials[k]-=v;}
+
+/** Confirmed percentage ceilings; costs remain tuneable development balance. */
+export const OVERCHARGE = Object.freeze({
+ standard: {label:'Standard',cap:120,next:'basic',silver:50000,cp:100},
+ basic: {label:'Basic overcharge',cap:150,next:'mythical',silver:150000,cp:300},
+ mythical: {label:'Mythical overcharge',cap:200,next:null,silver:0,cp:0},
+});
+export const CULTIVATION = Object.freeze({
+ artDirection:'sumi-e ink',mountBaseShare:.25,mountGearShare:.02,mountShareCap:.39,
+ spiritualRankCap:20,spiritualXpPerRank:500,offensiveDamagePerRank:8,
+ utilityAgilityPerRank:1,utilityMovementPerRank:.005,utilityCritPerRank:.001,
+ // Retain existing limits until the dictated 12/25/25, 120 and 450 values are resolved.
+ refinementCap:RULES.stageCap,headHaloCap:RULES.headHaloCap,wingHaloCap:RULES.wingHaloCap,
+ protectionFrom:90,celestialProtectionFrom:160,
+});
+export const AUGMENTS = Object.freeze({
+ silver:[{stat:'attackSpeed',min:.01,max:.03},{stat:'critical',min:.01,max:.03}],
+ gold:[{stat:'attackPercent',min:.04,max:.08},{stat:'skillDamage',min:.05,max:.10}],
+});
+export const tierFor = i => i.overcharge || (i.enchant>150?'mythical':i.enchant>120?'basic':'standard');
