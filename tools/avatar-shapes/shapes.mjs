@@ -1,7 +1,8 @@
 // Bakes the creator's shape keys (CC_FaceWidth, CC_JawWidth, ... see base44/shared/avatarCustomization.ts) into a
 // character body. Each key is a smooth displacement field over bind-pose positions, placed from landmarks measured on
-// the body itself: the eyeballs (their own meshes), the mouth, nostrils and brows (from the face's own expression
-// shapes Mouth_Open, Nostril_Flare and Brow_Up_*), and the chest / glutes / shoulders (bones projected onto the skin).
+// the body itself: the eyeballs (their own meshes), the mouth, mouth corners, nostrils and brows (from the face's own
+// expression shapes Mouth_Open, Smile_*, Nostril_Flare and Brow_Up_*), and the chest / glutes / shoulders (bones
+// projected onto the skin).
 // The same field is applied to the body and to the separate eye and mouth meshes, so the eyes stay in their sockets and
 // the teeth inside the mouth. Keys are stored sparse (only moved vertices), and every animation that drives the body's
 // expression weights gets zeros for the new keys (the creator sets them each frame).
@@ -14,7 +15,9 @@ const smooth = (x) => { const t = Math.min(1, Math.max(0, x)); return t * t * (3
 const band = (x, a, b, soft) => smooth((x - a) / soft) * (1 - smooth((x - b) / soft));
 const gauss = (d, s) => Math.exp(-(d / s) * (d / s));
 
-export const SHAPE_KEYS = ['CC_FaceWidth', 'CC_JawWidth', 'CC_NoseWidth', 'CC_EyeSize', 'CC_BrowSize', 'CC_ChestSize', 'CC_GluteSize', 'CC_ShoulderWidth', 'CC_MuscleDefinition', 'CC_Age'];
+// The last four match the face measurements "Match from a photo" takes (avatarAppearanceData.js FACE_CONTROLS).
+export const SHAPE_KEYS = ['CC_FaceWidth', 'CC_JawWidth', 'CC_NoseWidth', 'CC_EyeSize', 'CC_BrowSize', 'CC_ChestSize', 'CC_GluteSize', 'CC_ShoulderWidth', 'CC_MuscleDefinition', 'CC_Age',
+  'CC_FaceHeight', 'CC_EyeSpacing', 'CC_NoseLength', 'CC_MouthWidth'];
 
 function meshData(glb, mi) {
   const J = glb.json, mesh = J.meshes[mi], node = J.nodes.find((n) => n.mesh === mi);
@@ -52,6 +55,12 @@ export function landmarks(glb, bodyMesh) {
   const mouth = shapeCentroid(glb, body, mesh, 'Mouth_Open', 0.5, near);
   const nose = shapeCentroid(glb, body, mesh, 'Nostril_Flare', 0.35, near);
   const brow = shapeCentroid(glb, body, mesh, 'Brow_Up_Left', 0.35, near).add(shapeCentroid(glb, body, mesh, 'Brow_Up_Right', 0.35, near)).multiplyScalar(0.5);
+  // mouth corners: where each smile shape moves the skin furthest
+  const corners = ['Smile_Left', 'Smile_Right'].map((name) => {
+    const d = readAccessor(glb, body[0].prim.targets[mesh.extras.targetNames.indexOf(name)].POSITION).map((r) => Math.hypot(...r));
+    let best = -1; d.forEach((m, i) => { if (near(body[0].pos[i]) && (best < 0 || m > d[best])) best = i; });
+    return body[0].pos[best].clone();
+  });
   // chin: the lowest point of the face's front near its centre line (the neck below sits further back)
   const mouthW = mouth.clone().sub(face).dot(forward); let chin = null;
   body[0].pos.forEach((p) => { const q = p.clone().sub(face); if (Math.abs(q.dot(lateral)) < 0.012 && q.dot(forward) > mouthW - 0.03 && q.y > -0.16 && q.y < mouth.y - face.y && (!chin || p.y < chin.y)) chin = p.clone(); });
@@ -61,7 +70,7 @@ export function landmarks(glb, bodyMesh) {
     body[0].pos.forEach((p) => { const off = p.clone().sub(at); if (Math.abs(off.x) > radius || Math.abs(off.y) > radius) return; const s = off.dot(dir); if (s > score) { score = s; best = p; } });
     return best.clone();
   };
-  return { body, mesh, mi, bone, eyeL, eyeR, face, lateral, forward, mouth, nose, brow, chin, surface, eyeIris: [center('EYE_Iris_L'), center('EYE_Iris_R')] };
+  return { body, mesh, mi, bone, eyeL, eyeR, face, lateral, forward, mouth, nose, brow, chin, corners, surface, eyeIris: [center('EYE_Iris_L'), center('EYE_Iris_R')] };
 }
 
 // per-body tuning (metres); the fields are shared
@@ -71,7 +80,7 @@ const TUNING = {
 };
 
 export function shapeFields(L, key) {
-  const t = TUNING[key], { face, lateral: Lat, forward: F, mouth, nose, brow, chin, bone, surface } = L;
+  const t = TUNING[key], { face, lateral: Lat, forward: F, mouth, nose, brow, chin, corners, bone, surface } = L;
   const Y = V(0, 1, 0), skull = face.clone().addScaledVector(F, -0.085).addScaledVector(Y, 0.04);
   const local = (p) => { const q = p.clone().sub(face); return { u: q.dot(Lat), v: q.y, w: q.dot(F) }; };
   // the head (fading out over the neck) and its front half
@@ -113,6 +122,25 @@ export function shapeFields(L, key) {
       for (const e of L.eyeIris) d.addScaledVector(F, 0.0012 * gauss(p.distanceTo(e.clone().addScaledVector(Y, -0.016)), 0.009));
       return d;
     },
+    // face height: the face below the lower lids lengthens (the chin moves most), the forehead above the brows a little;
+    // the eyes and lids stay put. Its own envelope (the front of the face down to just under the chin, not the throat)
+    // since head() fades before the chin.
+    CC_FaceHeight: ({ p, mesh }) => {
+      const { u, v, w } = local(p); if (/^EYE_/.test(mesh)) return V();
+      const k = v < 0 ? 0.11 * smooth((-v - 0.008) / 0.02) : 0.04 * smooth((v - 0.012) / 0.02);
+      return Y.clone().multiplyScalar(k * v * front(w) * smooth((v - chinV + 0.035) / 0.03) * (1 - smooth((Math.abs(u) - 0.05) / 0.04)) * (1 - smooth((v - browV - 0.04) / 0.03)));
+    },
+    // eye spacing: each eye slides sideways, away from or towards the other: the eye meshes rigidly, the lids and socket
+    // with a falloff
+    CC_EyeSpacing: ({ p, mesh }) => {
+      const side = (e) => Math.sign(e.clone().sub(face).dot(Lat));
+      if (/^EYE_/.test(mesh)) { const e = eyes.reduce((a, b) => (p.distanceTo(a) < p.distanceTo(b) ? a : b)); return Lat.clone().multiplyScalar(side(e) * 0.0042); }
+      const d = V(); for (const e of eyes) d.addScaledVector(Lat, side(e) * 0.0042 * (1 - smooth((p.distanceTo(e) - 0.016) / 0.016))); return d;
+    },
+    // nose length: the tip and nostrils move down and slightly forward; the bridge follows a little, the lip stays
+    CC_NoseLength: ({ p }) => { const q = p.clone().sub(nose), u = q.dot(Lat), w = q.dot(F), m = gauss(Math.hypot(u / 1.5, (q.y + 0.002) / 1.4, w), 0.017) * smooth((w + 0.02) / 0.015) * smooth((q.y + 0.016) / 0.01); return Y.clone().multiplyScalar(-0.0055 * m).addScaledVector(F, 0.0015 * m); },
+    // mouth width: the lip corners slide outward or inward along the lips
+    CC_MouthWidth: ({ p }) => { const d = V(), mid = corners[0].clone().add(corners[1]).multiplyScalar(0.5); for (const c of corners) { const q = p.clone().sub(c); d.addScaledVector(Lat, Math.sign(c.clone().sub(mid).dot(Lat)) * 0.0045 * gauss(Math.hypot(q.dot(Lat) / 1.3, q.y / 0.9, q.dot(F) / 1.2), 0.014)); } return d; },
   };
 }
 
@@ -131,7 +159,7 @@ export function bakeShapes(glb, key, bodyMesh) {
         const entries = [];
         d.pos.forEach((p, i) => {
           const bones = d.joints ? d.joints[i].map((j, k) => [d.names[j], d.weights[i][k]]) : null;
-          const delta = fields[name]({ p, n: d.nor?.[i], bones });
+          const delta = fields[name]({ p, n: d.nor?.[i], bones, mesh: mesh.name });
           if (delta.lengthSq() > 1e-8) { entries.push([i, delta.toArray()]); stats[name].max = Math.max(stats[name].max, delta.length()); }
         });
         if (mi === L.mi && d === data[0]) stats[name].vertices = entries.length;

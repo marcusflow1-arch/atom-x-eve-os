@@ -2,11 +2,17 @@
 export const CUSTOMIZATION_SLOTS = ['body','hair','eyebrows','facial_hair','outfit','top','bottom','footwear','accessory','tattoo','complexion'];
 // min -1: two-sided (0 is the original shape, -1 the opposite of +1)
 export const SHAPE_CONTROLS = [
- {id:'brow_size',label:'Brow ridge',morph:'CC_BrowSize',section:'face',min:-1},
+// (face_width, face_height, jaw_width, eye_spacing, nose_width, nose_length and mouth_width are also what "Match from a
+// photo" measures, see src/components/onboarding/avatarAppearanceData.js FACE_CONTROLS)
  {id:'face_width',label:'Face width',morph:'CC_FaceWidth',section:'face',min:-1},
+ {id:'face_height',label:'Face length',morph:'CC_FaceHeight',section:'face',min:-1},
  {id:'jaw_width',label:'Jaw width',morph:'CC_JawWidth',section:'face',min:-1},
- {id:'nose_width',label:'Nose width',morph:'CC_NoseWidth',section:'face',min:-1},
+ {id:'brow_size',label:'Brow ridge',morph:'CC_BrowSize',section:'face',min:-1},
  {id:'eye_size',label:'Eye size',morph:'CC_EyeSize',section:'face',min:-1},
+ {id:'eye_spacing',label:'Eye spacing',morph:'CC_EyeSpacing',section:'face',min:-1},
+ {id:'nose_width',label:'Nose width',morph:'CC_NoseWidth',section:'face',min:-1},
+ {id:'nose_length',label:'Nose length',morph:'CC_NoseLength',section:'face',min:-1},
+ {id:'mouth_width',label:'Mouth width',morph:'CC_MouthWidth',section:'face',min:-1},
  {id:'chest_size',label:'Chest size',morph:'CC_ChestSize',section:'body',min:-1},
  {id:'glute_size',label:'Glute size',morph:'CC_GluteSize',section:'body',min:-1},
  {id:'shoulder_width',label:'Shoulder width',morph:'CC_ShoulderWidth',section:'body',min:-1},

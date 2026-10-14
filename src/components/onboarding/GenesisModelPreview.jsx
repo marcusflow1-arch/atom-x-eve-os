@@ -81,7 +81,7 @@ function buildMotionSet(rows, gender) {
   };
 }
 
-function LegacyGenesisModelPreview({ config, onCapabilities, onCustomizationState, compact = false, interactive = false, idleOnly = compact, secondaryCharacter = null, initialYaw = 0, skillEffects = false, previewEffect = null, remoteSkillPlayerId = '', remoteFacingYaw, combatMovement = false, movementRadius = 10, combatCamera = false }) {
+function LegacyGenesisModelPreview({ config, onCapabilities, onCustomizationState, focus = 'body', compact = false, interactive = false, idleOnly = compact, secondaryCharacter = null, initialYaw = 0, skillEffects = false, previewEffect = null, remoteSkillPlayerId = '', remoteFacingYaw, combatMovement = false, movementRadius = 10, combatCamera = false }) {
   const mount = useRef(null);
   const scene = useRef(null);
   const callback = useRef(onCapabilities);
@@ -227,6 +227,8 @@ function LegacyGenesisModelPreview({ config, onCapabilities, onCustomizationStat
   }, []);
 
   useEffect(() => { scene.current?.appearance(config); }, [config]);
+  // creator framing: the face close up while editing the face or hair, the full body otherwise
+  useEffect(() => { if (ready) scene.current?.focus?.(focus); }, [ready, focus]);
 
   useEffect(() => {
     if (!ready || !previewEffect || !scene.current?.previewEffect) return;

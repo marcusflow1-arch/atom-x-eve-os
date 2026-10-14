@@ -9,6 +9,9 @@ export const FIT_DEFAULTS = {
 };
 export const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number(v)||0));
 export function normalizeFaceShape(value={}) { return Object.fromEntries(FACE_CONTROLS.map(([key])=>[key,clamp(value[key],-1,1)])); }
+// Bodies with the creator's shape keys (CC_FaceWidth, CC_FaceHeight, ...) take the photo's measurements as their face
+// sliders: every FACE_CONTROLS id is also a SHAPE_CONTROLS id (base44/shared/avatarCustomization.ts).
+export function shapeControlsFromFace(value={}) { return normalizeFaceShape(value); }
 const gaussian=(v,center,width)=>Math.exp(-Math.pow((v-center)/width,2));
 export function deformFace(x,y,z,raw={}) {
  const s=normalizeFaceShape(raw);

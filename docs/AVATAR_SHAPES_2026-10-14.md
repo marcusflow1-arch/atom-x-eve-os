@@ -3,11 +3,15 @@
 The creator's face and body sliders now work on Getsuga and Artemis. Before, they were greyed out, because neither body had the `CC_*` shape keys they drive.
 
 **Face** (Face section):
-- Brow ridge
 - Face width
+- Face length
 - Jaw width
-- Nose width
+- Brow ridge
 - Eye size
+- Eye spacing
+- Nose width
+- Nose length
+- Mouth width
 
 **Body** (Body section):
 - Chest size
@@ -66,7 +70,32 @@ All 38 avatar tests pass.
 - In the local motion viewer, each key at −1 and +1 on both bodies.
 - On the real creator stage, Face width, Jaw width and Eye size at +100 % against −100 %.
 
+## Later on 14 Oct: four more face keys, and "Match from a photo" drives them
+
+**New keys.**
+
+| Key | What it does |
+|---|---|
+| `CC_FaceHeight` | Lengthens or shortens the face below the lower lids, by up to 11–12 mm at the chin. The forehead above the brows moves a little. The eyes and lids stay put. It has its own envelope, from the front of the face down to just under the chin; the head envelope fades out before the chin. |
+| `CC_EyeSpacing` | Slides each eye sideways by 4.2 mm. The eye meshes move as one rigid piece; the lids and socket follow with a falloff. |
+| `CC_NoseLength` | Moves the nose tip and nostrils down and slightly forward. The bridge follows a little. The upper lip stays. |
+| `CC_MouthWidth` | Slides the lip corners outward or inward by 4.5 mm. The corners are found where `Smile_Left` and `Smile_Right` move the skin most. |
+
+The creator shows them as Face length, Eye spacing, Nose length and Mouth width.
+
+**Photo match.** "Match from a photo" measures seven proportions: face width, face height, jaw width, eye spacing, nose width, nose length and mouth width. Each of these ids is now also a slider id, so the fit writes the measurements straight into `shape_controls` (`shapeControlsFromFace` in `avatarAppearanceData.js`). The face sliders move to the measured values and can be refined from there. The step no longer says the body can't take face measurements (`faceFit` is true when the body has the face keys).
+
+Older bodies keep their fitted head geometry (`face_shape`), so nothing changes for them.
+
+**Tests.** `tests/avatar-locomotion.test.mjs` passes 17/17. New checks:
+- The new keys stay above the neck.
+- Eye spacing moves the eyeballs rigidly.
+- Face length moves the chin and leaves the eyes still.
+- All seven photo measurements reach their shape keys, and other sliders are kept.
+
+**Checked visually.** In the motion viewer, each new key at −1, neutral and +1 on both bodies, plus two mixed faces.
+
 ## Next
 
-- **Face scan.** Feed "Match from a photo" (`face_shape`) into these keys for the two bodies.
-- **More keys.** Face height, eye spacing, mouth width, and a fuller age set.
+- A fuller age set.
+- Hair and modular heads (Phase 2, Blender).

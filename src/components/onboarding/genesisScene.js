@@ -14,6 +14,7 @@ import { mergeAdamXeInjectedClips } from '@/components/battle/adamXeAnimationPac
 import { characterBodyBounds } from '@/lib/characterModelOverrides';
 import { createChidoriCaster, isChidoriCast } from '@/components/battle/chidoriCaster';
 import { CreatorLocomotion, clipExtras, createStageFloor } from '@/components/onboarding/creatorLocomotion';
+import { CreatorFace } from '@/components/onboarding/creatorFace';
 
 
 export function createGenesisScene(container, url, onReady, onStatus, options = {}) {
@@ -67,6 +68,34 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   // Creator stage locomotion (options.locomotionShowcase): Walk / Run in place over a scrolling floor, every change
   // blended from the pose on screen. targetYaw smooths the stage's rotate buttons into a turn.
   let locomotion = null, floor = null, targetYaw = null;
+  // creator stage: eye contact with the camera and reactions to changes (creatorFace.js); lookKey: the last look edited
+  let livingFace = null, lookKey = null;
+  // creator stage framing (focus): 'face' eases the camera in to the head, 'body' back out to the full body, keeping the
+  // user's orbit direction; home is the full-body framing set when the model loads
+  let framing = null, home = null;
+  const focus = (name) => {
+    if (!options.locomotionShowcase || !model || !home) return false;
+    const head = name === 'face' ? model.getObjectByName('head') : null, dir = camera.position.clone().sub(controls.target).normalize();
+    let target, distance, minDistance;
+    if (head) {
+      // the middle of the face: a little below the eyes (the head bone sits lower, at the base of the skull)
+      model.updateMatrixWorld(true);
+      const eyes = ['eye_l', 'eye_r'].map((name) => model.getObjectByName(name)).filter(Boolean);
+      target = eyes.length === 2 ? eyes[0].getWorldPosition(new THREE.Vector3()).add(eyes[1].getWorldPosition(new THREE.Vector3())).multiplyScalar(0.5).add(new THREE.Vector3(0, -0.035, 0))
+        : head.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.03, 0));
+      distance = 0.8; minDistance = 0.5;
+      dir.y = THREE.MathUtils.clamp(dir.y, -0.05, 0.3); dir.normalize();
+    } else ({ target, distance, minDistance } = home);
+    framing = { fromTarget: controls.target.clone(), fromPosition: camera.position.clone(), target: target.clone(), position: target.clone().addScaledVector(dir, distance), minDistance, t: 0 };
+    controls.minDistance = Math.min(controls.minDistance, minDistance);
+    return true;
+  };
+  // the user grabbing the camera ends a framing move where it is
+  controls.addEventListener('start', () => {
+    if (!framing) return;
+    controls.minDistance = Math.min(framing.minDistance, camera.position.distanceTo(controls.target));
+    framing = null;
+  });
   // Male previews without the card runtime: the GLB's own looping Idle plus
   // its one-shot idle variants (stretch, look around…) at random moments.
   let maleIdleAction = null;
@@ -248,6 +277,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     frame = requestAnimationFrame(animate);
     const dt = Math.min(clock.getDelta(), .05);
     if (!visible || document.hidden) return;
+    if (!paused) livingFace?.restore();
     if (!paused) maleIdleVariants?.update(dt);
     if (!paused) locomotion?.drive(dt);
     mixer?.update(dt);
@@ -311,7 +341,15 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       const step = locomotion.speed * dt, yaw = model.rotation.y;
       floor.scroll(-Math.sin(yaw) * step, -Math.cos(yaw) * step);
     }
+    if (livingFace && !paused) livingFace.update(dt, { speed: locomotion?.speed || 0, busy: Boolean(getsuga?.isPlaying() || artemis?.isPlaying()) });
 
+    if (framing) {
+      framing.t = Math.min(1, framing.t + dt / 0.9);
+      const k = framing.t * framing.t * (3 - 2 * framing.t);
+      controls.target.lerpVectors(framing.fromTarget, framing.target, k);
+      camera.position.lerpVectors(framing.fromPosition, framing.position, k);
+      if (framing.t >= 1) { controls.minDistance = framing.minDistance; framing = null; }
+    }
     if (options.portrait && model) { const head = model.getObjectByName('Head'); if (head) { const p = head.getWorldPosition(new THREE.Vector3()); const shift = p.y - controls.target.y; controls.target.y = p.y; camera.position.y += shift; } }
     controls.update();
     outline.render(scene, camera);
@@ -651,6 +689,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       camera.position.set(0, options.portrait ? 1.64 : 1.08, options.portrait ? 1.15 : 3.75);
       controls.target.set(0, (options.portrait ? 1.62 : .96) + framingOffsetY, 0);
       controls.update();
+      home = { target: controls.target.clone(), distance: camera.position.distanceTo(controls.target), minDistance: controls.minDistance };
 
       const materials = [], morphs = [];
       let hood = false, weapon = false, eyes = false, eyelashes = false, hair = false;
@@ -768,13 +807,16 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
           targetYaw = model.rotation.y;
         } else locomotion = null;
       }
+      if (options.locomotionShowcase && mixer && !getsuga) livingFace = CreatorFace.attach(model, { camera });
 
       basePosition = model.position.clone();
       if (options.secondaryCharacter?.modelUrl) {
         await loadSecondaryCharacter(options.secondaryCharacter);
       }
 
-      readyCapabilities = { locomotion: locomotion ? locomotion.names() : [], customization: inspectCustomization(avatarRoot), hi3d: preserveAppearance, runtimeRig: atomxeRuntimeRig, runtimeRigGenerated, boneCount: runtimeBoneCount, faceFit: preserveAppearance || Boolean(avatarRoot.getObjectByName('mixamorigHeadTop_End') || avatarRoot.getObjectByName('HeadTop_End')), materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] };
+      // faceFit: the photo's face measurements can change this body (fitted head geometry, or the creator's face shape keys)
+      const inspected = inspectCustomization(avatarRoot);
+      readyCapabilities = { locomotion: locomotion ? locomotion.names() : [], customization: inspected, hi3d: preserveAppearance, runtimeRig: atomxeRuntimeRig, runtimeRigGenerated, boneCount: runtimeBoneCount, faceFit: preserveAppearance || Boolean(avatarRoot.getObjectByName('mixamorigHeadTop_End') || avatarRoot.getObjectByName('HeadTop_End')) || inspected.shapes.includes('face_height'), materials: preserveAppearance ? [] : materials, morphs, hood, weapon: preserveAppearance ? false : weapon, eyes: preserveAppearance ? false : eyes, eyelashes, hair: preserveAppearance || hair, embeddedClips: (preserveAppearance || atomxeRuntimeRig) ? (asset.animations || []).map(clip => clip.name) : [] };
       onReady(readyCapabilities);
       customization.update(appearance);
       
@@ -846,7 +888,13 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
   const togglePaused = () => setPaused(!paused);
 
   return {
-    appearance: (value) => { appearance = value || {}; applyStyle(appearance); if (appearanceRoot) applyCompanionAppearance(appearanceRoot, appearance); customization?.update(appearance); },
+    appearance: (value) => {
+      appearance = value || {}; applyStyle(appearance); if (appearanceRoot) applyCompanionAppearance(appearanceRoot, appearance); customization?.update(appearance);
+      // the character reacts when its look is edited (not to the first look, nor to name / voice edits)
+      const key = JSON.stringify(Object.entries(appearance).filter(([k]) => /color|tone|tint|shape|morph|hair|eye|skin|style|asset|complexion|tattoo|facial|height|proportion|hood|weapon|finish|highlight/.test(k)));
+      if (livingFace && lookKey !== null && key !== lookKey) livingFace.react();
+      lookKey = key;
+    },
     play,
     command: (value) => {
       setPaused(false);
@@ -860,6 +908,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
     gaits: () => (locomotion ? ['Idle', ...locomotion.names()] : []),
     gait: () => locomotion?.current() || 'Idle',
     setGait,
+    focus,
     locomotionState: () => (locomotion ? { state: locomotion.state, target: locomotion.target, phase: locomotion.phase, stopAt: locomotion.stopAt, speed: locomotion.speed, blending: locomotion.inertia.active() } : null),
     previewEffect: (effect) => playBoundEffect({ effect, accepted: false, source: 'preview' }, false),
     setArmLift: (value) => { setPaused(false); return embeddedController?.setArmLift(value); },
@@ -915,6 +964,7 @@ export function createGenesisScene(container, url, onReady, onStatus, options = 
       if (!getsuga) disposeModel(model);
       if (floor) { scene.remove(floor.mesh); floor.dispose(); floor = null; }
       locomotion = null;
+      livingFace = null;
       shadowPlane.geometry.dispose();
       shadowMaterial.dispose();
       renderer.dispose();

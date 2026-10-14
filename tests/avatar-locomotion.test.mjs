@@ -8,6 +8,7 @@ import { CreatorLocomotion, clipExtras } from '../src/components/onboarding/crea
 import { SHAPE_KEYS, landmarks } from '../tools/avatar-shapes/shapes.mjs';
 import { inspectCustomization, applyCustomizationAppearance, applyPersistentShapes } from '../src/components/onboarding/customizationRuntime.js';
 import { SHAPE_CONTROLS } from '../base44/shared/avatarCustomization.ts';
+import { FACE_CONTROLS, shapeControlsFromFace } from '../src/components/onboarding/avatarAppearanceData.js';
 
 const BODIES = [
   ['male', 'Getsuga_Tensho_Character', null],
@@ -77,7 +78,7 @@ for (const [body, name, reskinned] of BODIES) {
       return m.primitives.flatMap((p) => { const pos = readAccessor(v5, p.attributes.POSITION), d = readAccessor(v5, p.targets[k].POSITION); return pos.map((x, i) => [x, Math.hypot(...d[i])]); });
     };
     const neck = L.chin.y - 0.06;
-    for (const key of ['CC_FaceWidth', 'CC_JawWidth', 'CC_NoseWidth', 'CC_EyeSize', 'CC_BrowSize', 'CC_Age']) {
+    for (const key of ['CC_FaceWidth', 'CC_JawWidth', 'CC_NoseWidth', 'CC_EyeSize', 'CC_BrowSize', 'CC_Age', 'CC_FaceHeight', 'CC_EyeSpacing', 'CC_NoseLength', 'CC_MouthWidth']) {
       const d = deltas(bodyMesh, key), max = Math.max(...d.map(([, m]) => m));
       assert.ok(max > 0.001 && max < 0.016, `${key} moves the face up to ${(max * 1000).toFixed(1)} mm`);
       assert.ok(d.every(([p, m]) => m < 1e-4 || p[1] > neck), `${key} stays above the neck`);
@@ -90,7 +91,27 @@ for (const [body, name, reskinned] of BODIES) {
     for (const eye of ['EYE_Sclera_L', 'EYE_Iris_R']) {
       assert.ok(Math.max(...deltas(eye, 'CC_EyeSize').map(([, m]) => m)) > 0.001, eye + ' scales with the eye');
       assert.ok(Math.max(...deltas(eye, 'CC_ChestSize').map(([, m]) => m)) === 0, eye + ' ignores the chest');
+      // eye spacing moves the whole eyeball rigidly (every vertex the same amount)
+      const spread = deltas(eye, 'CC_EyeSpacing').map(([, m]) => m);
+      assert.ok(Math.min(...spread) > 0.004 && Math.max(...spread) - Math.min(...spread) < 1e-4, eye + ' slides with eye spacing');
     }
+    // face length moves the chin most and leaves the eyes in place
+    const length = deltas(bodyMesh, 'CC_FaceHeight'), near = (p, q, r) => Math.hypot(p[0] - q.x, p[1] - q.y, p[2] - q.z) < r;
+    assert.ok(Math.max(...length.filter(([p]) => near(p, L.chin, 0.01)).map(([, m]) => m)) > 0.008, 'the chin moves with face length');
+    assert.ok(Math.max(...deltas('EYE_Sclera_L', 'CC_FaceHeight').map(([, m]) => m)) < 0.0005, 'the eyes stay with face length');
+  });
+
+  test(`${body}: a photo fit's seven face measurements drive the face shape keys`, async () => {
+    const ids = new Set(SHAPE_CONTROLS.map((c) => c.id));
+    assert.deepEqual(FACE_CONTROLS.map(([id]) => id).filter((id) => !ids.has(id)), [], 'every measurement has a slider');
+    const fit = { face_width: 0.4, face_height: -0.3, jaw_width: 0.2, eye_spacing: -0.5, nose_width: 0.6, nose_length: 0.35, mouth_width: -0.25 };
+    const gltf = await load(path(name, 5)), root = gltf.scene;
+    applyCustomizationAppearance(root, { shape_controls: { age: 0.3, ...shapeControlsFromFace({ ...fit, nose_width: 4 }) } });
+    let body; root.traverse((n) => { if (n.isMesh && n.morphTargetDictionary?.Blink_Left !== undefined && !body) body = n; });
+    applyPersistentShapes(body);
+    const at = (id) => body.morphTargetInfluences[body.morphTargetDictionary[SHAPE_CONTROLS.find((c) => c.id === id).morph]];
+    for (const [id, v] of Object.entries(fit)) assert.equal(at(id), id === 'nose_width' ? 1 : v, id);
+    assert.equal(at('age'), 0.3, 'other sliders are kept');
   });
 
   test(`${body}: the creator's shape sliders reach the mesh both ways and survive the clips' face track`, async () => {
