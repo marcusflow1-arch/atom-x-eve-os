@@ -64,6 +64,7 @@ export class HUD {
     }
     // crosshair
     const cx = W / 2, cy = H / 2; const ready = !P.saber.holstered; x.strokeStyle = 'rgba(210,230,255,0.75)'; x.lineWidth = 1.5; x.beginPath(); x.arc(cx, cy, 7, 0, 7); x.stroke(); x.fillStyle = 'rgba(255,255,255,0.9)'; x.fillRect(cx - 1, cy - 1, 2, 2);
+    if (F.charging) { const ch = F.chargeLevel(); x.strokeStyle = ch >= 1 ? '#ffffff' : 'rgba(140,210,255,0.95)'; x.lineWidth = 3; x.beginPath(); x.arc(cx, cy, 15, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.04, ch)); x.stroke(); x.font = '700 10px system-ui,sans-serif'; x.textAlign = 'center'; x.fillStyle = '#cfeaff'; x.fillText(ch >= 1 ? 'FULL PUSH' : 'PUSH', cx, cy + 30); x.textAlign = 'left'; } // charged Force Push
     // bars bottom-left
     const bx = 22, by = H - 62; this.bar(x, bx, by, 250, 18, P.hp / P.maxHp, ['#c01818', '#ff6a4a'], 'HEALTH  ' + Math.ceil(P.hp)); this.bar(x, bx, by + 26, 250, 18, F.fp / F.max, ['#1f5fd6', '#6fd2ff'], 'FORCE  ' + Math.floor(F.fp));
     // power chips bottom-center
@@ -74,7 +75,7 @@ export class HUD {
       const r = Math.floor(i / perRow), c = i % perRow; const X = x0 + c * (chip + gap), Y = y0 + r * (46 + gap); const act = F.active[pw.id], hold = F.holding === pw.id, afford = F.fp >= pw.cost;
       x.fillStyle = hold ? 'rgba(60,110,200,0.85)' : act ? 'rgba(40,120,110,0.8)' : 'rgba(8,10,22,0.62)'; rr(x, X, Y, chip, 46, 7); x.fill(); x.strokeStyle = hold || act ? '#9fe8ff' : afford ? 'rgba(160,190,255,0.38)' : 'rgba(255,90,90,0.4)'; x.lineWidth = hold || act ? 2 : 1; rr(x, X + .5, Y + .5, chip - 1, 45, 7); x.stroke();
       x.fillStyle = afford ? '#fff' : '#ff9b9b'; x.font = '700 15px system-ui,sans-serif'; x.textBaseline = 'top'; x.fillText(FORCE_HOTKEY_LABELS[pw.id] ?? '↕', X + 7, Y + 5);
-      x.font = '10.5px system-ui,sans-serif'; x.fillStyle = afford ? '#cfe0ff' : '#e99'; x.fillText(pw.name.replace('Force ', ''), X + 7, Y + 25); x.textAlign = 'right'; x.fillStyle = '#8fb4ff'; x.font = '10px system-ui,sans-serif'; x.fillText(pw.hold ? pw.cost + '/s' : String(pw.cost), X + chip - 6, Y + 7); x.textAlign = 'left';
+      x.font = '10.5px system-ui,sans-serif'; x.fillStyle = afford ? '#cfe0ff' : '#e99'; x.fillText(pw.name.replace('Force ', ''), X + 7, Y + 25); x.textAlign = 'right'; x.fillStyle = '#8fb4ff'; x.font = '10px system-ui,sans-serif'; x.fillText(pw.hold ? (pw.rate ?? pw.cost) + '/s' : String(pw.cost), X + chip - 6, Y + 7); x.textAlign = 'left';
       if (act) { const t = (F.active[pw.id].until - g.t) / (FORCE_DUR[pw.id] || 10); x.fillStyle = '#9fe8ff'; x.fillRect(X + 5, Y + 41, (chip - 10) * Math.max(0, t), 2); }
       if (pw.id === selId) { x.strokeStyle = '#ffd76a'; x.lineWidth = 2.5; rr(x, X - 1, Y - 1, chip + 2, 48, 8); x.stroke(); x.fillStyle = 'rgba(255,215,106,0.14)'; rr(x, X, Y, chip, 46, 7); x.fill(); }
     });
@@ -110,10 +111,12 @@ export class HUD {
     x.textAlign = 'right'; x.fillStyle = '#9aa6c8'; x.font = '12px system-ui,sans-serif'; x.textBaseline = 'top'; if (!g.net) x.fillText(g.duel ? 'reflected ' + g.combat.reflected + '   ·   F1 = controls' : 'defeated ' + g.combat.kills + ' · reflected ' + g.combat.reflected + '   ·   F1 = controls', W - 18, 16); x.textAlign = 'left';
     // pointer lock hint
     if (!g.input.locked && !this.help && g.started) { x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '600 13px system-ui,sans-serif'; const tw = x.measureText('Click to capture the mouse').width + 28; x.fillStyle = 'rgba(8,10,22,0.72)'; rr(x, W / 2 - tw / 2, H * 0.62 + 20, tw, 26, 13); x.fill(); x.fillStyle = '#dfeaff'; x.fillText('Click to capture the mouse', W / 2, H * 0.62 + 33); x.textAlign = 'left'; }
+    if (!g.net && P.spawnShield > g.t && P.status !== 'dead') { x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '600 13px system-ui,sans-serif'; x.fillStyle = '#bfe3ff'; x.fillText('Respawn immunity  ' + Math.ceil(P.spawnShield - g.t) + ' s', W / 2, H * 0.36); x.textAlign = 'left'; }
     if (g.duel) this.drawDuel(g, x, W, H, dt);
     else if (g.net) g.net.drawHud(this, x, W, H, dt);
     else if (g.director) g.director.drawHud(this, x, W, H, dt);
     else if (P.status === 'dead') { x.fillStyle = 'rgba(30,0,0,0.5)'; x.fillRect(0, 0, W, H); x.fillStyle = '#ffd8d0'; x.textAlign = 'center'; x.font = '700 34px system-ui,sans-serif'; x.fillText('You have fallen', W / 2, H * 0.42); x.font = '16px system-ui,sans-serif'; x.fillText('Press Enter to rise again', W / 2, H * 0.42 + 44); x.textAlign = 'left'; }
+    if (this.showFps) { x.textAlign = 'right'; x.textBaseline = 'bottom'; x.font = '600 11px ui-monospace,Menlo,Consolas,monospace'; x.fillStyle = '#9fd0ff'; x.fillText(Math.round(g.fps) + ' FPS', W - 14, H - 10); x.textAlign = 'left'; }
     if (this.help) this.drawHelp(x, W, H);
   }
   // duel overlay: boss HP / Force bars, banners, grip prompt, round intro / result

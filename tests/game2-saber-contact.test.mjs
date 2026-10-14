@@ -62,7 +62,7 @@ test('held saber throw stays deployed in midair, tracks aim and recalls on relea
     onGround: false, pos: [0, 4, 0], thrown: null, hilt: 'hand',
     cmd: { alt: true }, actor: { bonePos: () => [0, 5, 0] },
     saber: { holstered: false, inFlight: false, I: { LS_READY: 1 }, setMove() {}, weaponTime: 0 },
-    updateThrown: Fighter.prototype.updateThrown, catchSaber: Fighter.prototype.catchSaber,
+    updateThrown: Fighter.prototype.updateThrown, catchSaber: Fighter.prototype.catchSaber, throwPrey: Fighter.prototype.throwPrey,
     get now() { return this.g.t; },
   };
   assert.equal(Fighter.prototype.throwSaber.call(fighter, [0, 0, 1]), true);

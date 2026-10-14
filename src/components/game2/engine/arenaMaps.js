@@ -21,3 +21,16 @@ export const GAME2_ARENA_MAPS = Object.freeze({
     source: 'Drive /maps/duel_carbon.bsp',
   },
 });
+
+// Authored large arenas (engine/levels/*.js, built by level/builder.js like the story mission) for the bigger modes.
+export const GAME2_AUTHORED_MAPS = Object.freeze({
+  skybridge: { id: 'skybridge', label: 'Skybridge Citadel', authored: true },
+});
+
+// What the Skirmish menu offers: the large authored map first, then the three original duel arenas.
+export const GAME2_SKIRMISH_MAPS = Object.freeze({
+  skybridge: { ...GAME2_AUTHORED_MAPS.skybridge, size: 'Large', blurb: 'Two fortress platforms over a bottomless chasm. Energy bridges can be switched off under your enemies; a fall is fatal.' },
+  training: { ...GAME2_ARENA_MAPS.training, size: 'Small', blurb: 'The original duel arena.' },
+  hangar: { ...GAME2_ARENA_MAPS.hangar, size: 'Small', blurb: 'Original hangar duel map.' },
+  carbon: { ...GAME2_ARENA_MAPS.carbon, size: 'Small', blurb: 'Original carbon-freezing chamber.' },
+});

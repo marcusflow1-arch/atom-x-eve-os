@@ -177,7 +177,7 @@ test('saber throw: the throw animation plays once and holds with the arm out (no
 test('Force Push / Pull land on the cast frame and Heal can be used on the move', () => {
   const src = readFileSync(new URL('src/components/game2/engine/force.js', root), 'utf8');
   for (const pw of ['push', 'pull', 'mind']) {
-    const body = src.slice(src.indexOf(`do_${pw}() {`)), delay = /this\.later\(([\d.]+),/.exec(body)[1];
+    const body = src.slice(src.indexOf(`do_${pw}(`)), delay = /this\.later\(([\d.]+),/.exec(body)[1];
     assert.equal(Number(delay), 0, `${pw} takes effect immediately`);
   }
   assert.doesNotMatch(src.match(/do_heal\(\) \{[^\n]*/)[0], /freeze|whole: true/);

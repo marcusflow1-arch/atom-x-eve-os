@@ -13,6 +13,9 @@ export class World {
   constructor(R, map = null, level = null) {
     this.R = R; this.pillars = []; this.bodies = []; this.time = 0; this.braziers = []; this.lamps = [];
     this.map = map;
+    // falling below killY (out of the map, off a bridge, into a chasm) is fatal: 8 m under the lowest floor of the map
+    const lowest = tris => { let y = Infinity; for (const t of tris || []) y = Math.min(y, t.a[1], t.b[1], t.c[1]); return y; };
+    this.killY = level ? (level.killY ?? lowest(level.tris) - 8) : map ? lowest(map.tris) - 8 : -20;
     if (level) { this.initLevel(R, level); return; }
     if (map) {
       this.mapCollision = new BSPCollision(map);

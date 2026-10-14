@@ -142,7 +142,7 @@ export class Game2TeamMatch {
       g.hud.msg('Respawned · recover your flag');
     }
     for (const n of g.npcs) {
-      if (!isAlive(n) && now - n.deadAt >= this.config.respawn) g.respawnNpc(n);
+      if (!isAlive(n) && now - n.deadAt >= this.config.respawn) { g.respawnNpc(n); g.shield?.(n); }
     }
 
     for (const [team, flag] of Object.entries(this.flags)) {

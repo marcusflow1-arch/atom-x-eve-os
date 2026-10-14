@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, ChevronRight, Loader2, Menu, Swords, Users } from 'lucide-react';
+import { AlertTriangle, Loader2, Menu, Swords, Users } from 'lucide-react';
 import { getAccessToken } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
 import { game2RailwayUrl } from './net/railway.js';
 import Game2Lobby from './Game2Lobby';
-import { GAME2_ARENA_MAPS } from './engine/arenaMaps.js';
+import Game2Menu from './Game2Menu';
+import { GAME2_AUTHORED_MAPS } from './engine/arenaMaps.js';
+import { loadSettings } from './settings.js';
 
-// Game 2 start screen: Single Player (story missions) or Multiplayer (the online free-for-all arena, Game2Lobby.jsx;
-// the offline Dark Jedi duel is the lobby's practice mode).
+// Game 2 starts on the main menu (Game2Menu.jsx: Story Mode, Multiplayer, Skirmish, Duel Practice, Settings, Controls)
+// over a live AI duel. Multiplayer goes through the online lobby (Game2Lobby.jsx); everything else starts here.
 // The engine (src/components/game2/engine) is a small WebGL2 renderer + Ghoul2 style skeleton player with the original
 // Jedi Outcast animations; the Force rules (push / pull / grip / absorb / lightning) come from Raven's w_force.c,
 // see engine/forcerules.js. Both modes run the same combat code; missions add a level, objectives and enemy AI on top.
@@ -22,6 +24,14 @@ const MODES = {
   online: {
     tag: 'Multiplayer', title: 'Free-for-all arena', loading: 'Entering the arena', icon: Users,
     blurb: 'One real-time Railway arena for up to 10 human-controlled Jedi or Dark Jedi. Fight other players from different browsers and countries. Optional AI Reborn opponents; offline practice remains available.',
+  },
+  ffa: {
+    tag: 'Skirmish', title: 'Free-for-all · 8 fighters', loading: 'Free-for-all', icon: Swords,
+    blurb: 'You and seven AI fighters, every one for themselves. First to 15 defeats.',
+  },
+  tdm: {
+    tag: 'Skirmish', title: 'Team Deathmatch · 6v6', loading: 'Team Deathmatch', icon: Users,
+    blurb: 'Blue: you and five AI teammates. Red: six enemy bots. First team to 30 defeats.',
   },
   ctf: {
     tag: 'AI team battle', title: 'Capture the Flag · 7v7', loading: 'Capture the Flag', icon: Users,
@@ -38,70 +48,22 @@ function fillParent(el) {
   Object.assign(el.style, { position: 'absolute', inset: '0', width: '100%', height: '100%', display: 'block', outline: 'none' });
 }
 
+const TEAM_CHOICES = ['ctf', 'sudden', 'ffa', 'tdm']; // offline matches against AI (engine/teamMatch.js)
+
 // Fills its nearest positioned parent (Game2.jsx gives it a relative flex-1 section).
 export default function Game2Duel() {
-  const [choice, setChoice] = useState(null); // 'single' | 'online' | 'multi' | 'ctf' | 'sudden'
-  const [mapId, setMapId] = useState('training');
+  const [choice, setChoice] = useState(null); // 'single' | 'online' | 'multi' (duel practice) | 'ffa' | 'tdm' | 'ctf' | 'sudden'
+  const [mapId, setMapId] = useState('skybridge');
+  const [saber, setSaber] = useState('single'); // 'single' | 'dual' | 'staff'
   const [online, setOnline] = useState(null); // lobby result: { name, side, selfId, local }
-  if (!choice) return <Game2Menu onPick={setChoice} mapId={mapId} onMapChange={setMapId} />;
+  const fromMenu = (r) => { setMapId(r.mapId || 'training'); setSaber(r.saber || 'single'); setChoice(r.choice); };
+  if (!choice) return <Game2Menu onStart={fromMenu} />;
   if (choice === 'online' && !online) return <Game2Lobby onBack={() => setChoice(null)} onStart={setOnline} onPractice={() => setChoice('multi')} />;
-  const exit = () => { if (choice === 'online') setOnline(null); else setChoice(choice === 'multi' ? 'online' : null); }; // online / practice go back to the lobby
-  return <Game2Session key={choice + mapId + (online ? online.selfId : '')} choice={choice} online={online} mapId={mapId} onExit={exit} />;
+  const exit = () => { if (choice === 'online') setOnline(null); else setChoice(null); }; // online goes back to the lobby, everything else to the menu
+  return <Game2Session key={choice + mapId + saber + (online ? online.selfId : '')} choice={choice} online={online} mapId={mapId} saber={saber} onExit={exit} />;
 }
 
-function Game2Menu({ onPick, mapId, onMapChange }) {
-  return (
-    <div className="absolute inset-0 overflow-y-auto bg-[radial-gradient(ellipse_at_top,#1a1530_0%,#070812_55%,#05060c_100%)] text-white">
-      <div className="mx-auto flex min-h-full max-w-4xl flex-col justify-center px-4 py-10">
-        <div className="mb-8 text-center">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-300/80">Game 2 · Jedi Outcast</div>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-wide sm:text-4xl">Choose your fight</h1>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-white/55">Both modes share the same lightsaber, Force and combat rules.</p>
-        </div>
-        <div className="mb-4 rounded-xl border border-cyan-200/20 bg-cyan-400/[0.045] p-3">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-cyan-200/80">AI team-battle maps · three different original BSP arenas</div>
-          <div className="grid gap-2 sm:grid-cols-3" role="group" aria-label="Choose AI match map">
-            {Object.values(GAME2_ARENA_MAPS).map(map => (
-              <button key={map.id} type="button" onClick={() => onMapChange(map.id)}
-                aria-pressed={mapId === map.id}
-                className={`rounded-lg border px-3 py-2 text-left text-xs transition ${mapId === map.id ? 'border-cyan-200/65 bg-cyan-200/15 text-white' : 'border-white/10 text-white/60 hover:border-cyan-200/40'}`}>
-                {map.label}
-              </button>
-            ))}
-          </div>
-          <p className="mt-2 text-[11px] text-white/45">All three map choices load distinct original BSP geometry from your Google Drive. Mission and online modes remain unchanged.</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {Object.entries(MODES).map(([id, m]) => {
-            const Icon = m.icon;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => onPick(id)}
-                className="group flex flex-col rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-left transition hover:border-cyan-300/50 hover:bg-white/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-200"><Icon className="h-5 w-5" /></span>
-                  <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">{m.tag}</div>
-                    <div className="text-lg font-bold">{m.title}</div>
-                  </div>
-                </div>
-                <p className="mt-3 flex-1 text-[13px] leading-relaxed text-white/60">{m.blurb}</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-cyan-200 group-hover:text-cyan-100">
-                  Play <ChevronRight className="h-4 w-4" />
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Game2Session({ choice, online, mapId, onExit }) {
+function Game2Session({ choice, online, mapId, saber, onExit }) {
   const hostRef = useRef(null);
   const mode = MODES[choice] || PRACTICE;
   const [status, setStatus] = useState({ phase: 'loading', text: `Loading ${mode.loading}` });
@@ -122,13 +84,15 @@ function Game2Session({ choice, online, mapId, onExit }) {
     canvas.tabIndex = 0;
     hud.style.pointerEvents = 'none';
     host.append(canvas, hud);
-    const duel = choice === 'multi', teamMode = choice === 'ctf' || choice === 'sudden';
+    const duel = choice === 'multi', teamMode = TEAM_CHOICES.includes(choice);
     const arena = choice !== 'single';
+    const authored = teamMode && !!GAME2_AUTHORED_MAPS[mapId]; // a large authored level instead of a BSP
+    const common = { sfxBase: `${ASSET_BASE}sfx/`, settings: loadSettings(), saber };
     let engineOptions = teamMode
-      ? { mode: choice, mapId, sfxBase: `${ASSET_BASE}sfx/` }
+      ? { mode: choice, mapId, ...common }
       : duel
-        ? { mode: 'duel', sfxBase: `${ASSET_BASE}sfx/` }
-        : { mode: 'mission', mission: 'kejim', sfxBase: `${ASSET_BASE}sfx/` };
+        ? { mode: 'duel', ...common }
+        : { mode: 'mission', mission: 'kejim', ...common };
 
     (async () => {
       try {
@@ -139,24 +103,24 @@ function Game2Session({ choice, online, mapId, onExit }) {
         ]);
         if (cancelled) return;
         renderer = new Renderer(canvas);
-        renderer.maxDpr = 1.5;
+        renderer.maxDpr = { performance: 1, balanced: 1.5, sharp: 2 }[common.settings.quality] ?? 1.5;
         const assets = await loadAll(ASSET_BASE, (what) => {
           if (!cancelled) setStatus({ phase: 'loading', text: `Loading ${what}` });
-        }, { map: arena, mapId: teamMode ? mapId : 'training' });
+        }, { map: arena && !authored, mapId: teamMode ? mapId : 'training' });
         if (cancelled) return;
         if (choice === 'online') {
           if (online.local) { // isolated localhost developer test; never on editor/live
             const { LocalSignaling } = await import('./net/signaling.js');
             const signaling = new LocalSignaling(online.selfId);
             if (cancelled) { signaling.close(); return; }
-            engineOptions = { mode: 'online', sfxBase: `${ASSET_BASE}sfx/`,
+            engineOptions = { mode: 'online', ...common,
               net: { ...online, signaling, iceServers: [] } };
           } else {
             // One Railway WebSocket carries realtime movement and combat. Base44
             // only authenticates the account once, not each animation/attack.
             const token = getAccessToken() || appParams.token;
             if (!token) throw new Error('Sign in to your Atom XE account again before joining multiplayer.');
-            engineOptions = { mode: 'online', sfxBase: `${ASSET_BASE}sfx/`,
+            engineOptions = { mode: 'online', ...common,
               net: { ...online, transport: 'railway', url: game2RailwayUrl(), token } };
           }
         }
@@ -204,7 +168,7 @@ function Game2Session({ choice, online, mapId, onExit }) {
       canvas.remove();
       hud.remove();
     };
-  }, [choice, online, mapId]);
+  }, [choice, online, mapId, saber]);
 
   return (
     <div className="absolute inset-0 select-none overflow-hidden bg-[#05060c]" style={{ touchAction: 'none' }}>

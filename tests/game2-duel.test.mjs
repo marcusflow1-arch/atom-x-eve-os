@@ -65,7 +65,7 @@ test('the dark Jedi uses the same Force class as the player (same powers, costs 
   const ai = read('src/components/game2/engine/darkjedi.js');
   for (const id of ['push', 'pull', 'grip', 'lightning', 'heal', 'rage', 'protect', 'absorb', 'speed']) assert.match(ai, new RegExp("cast\\('" + id + "'\\)"), id);
   const force = read('src/components/game2/engine/force.js');
-  for (const fn of ['do_push', 'do_pull', 'do_grip', 'do_lightning', 'do_heal', 'do_absorb', 'do_protect', 'do_rage', 'do_speed', 'do_mind', 'do_drain']) assert.match(force, new RegExp(fn + '\\(\\)'), fn);
+  for (const fn of ['do_push', 'do_pull', 'do_grip', 'do_lightning', 'do_heal', 'do_absorb', 'do_protect', 'do_rage', 'do_speed', 'do_mind', 'do_drain']) assert.match(force, new RegExp(fn + '\\('), fn); // do_push takes the charge: do_push(o)
 });
 
 test('push and pull outcomes come from the shared rules, not ad-hoc damage in the cast code', () => {

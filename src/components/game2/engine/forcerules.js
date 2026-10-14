@@ -61,7 +61,9 @@ const PARTIAL = { 1: 0.2, 2: 0.6, 3: 0.8 };
 // Returns { outcome, scale, knockdown, fpGain, reason, countered }
 //   outcome: 'absorbed' | 'countered' | 'staggered' | 'hit' | 'knockdown'
 //   scale  : 0..1 share of full power that reaches the defender (multiply the engine's push/pull speed by this)
-export function resolveThrow({ attackerLevel, pull = false, def, dist = 0, forceSpent = 20, rng = Math.random }) {
+// knockdownDist: how close a knock-down throw has to be (KNOCKDOWN_DIST in the retail game; a charged push reaches further).
+// attackerLevel may be 4: a fully charged push (Atom X Eve) out-ranks a level-3 defender by one.
+export function resolveThrow({ attackerLevel, pull = false, def, dist = 0, forceSpent = 20, rng = Math.random, knockdownDist = KNOCKDOWN_DIST }) {
   const res = { outcome: 'hit', scale: 1, knockdown: false, fpGain: 0, reason: '', countered: false, modLevel: attackerLevel, otherLevel: 0 };
   const ab = absorbConversion(def, attackerLevel, forceSpent);
   let mod = attackerLevel;
@@ -85,7 +87,7 @@ export function resolveThrow({ attackerLevel, pull = false, def, dist = 0, force
     }
   }
   // knockdown: only a level-3 throw that out-ranks the defender (after the moving penalty), and only close up
-  res.knockdown = mod > other && mod === 3 && dist <= KNOCKDOWN_DIST && !def.knockedDown;
+  res.knockdown = mod > other && mod >= 3 && dist <= knockdownDist && !def.knockedDown;
   res.scale = scale;
   if (scale === 0) res.outcome = 'countered';
   else if (res.knockdown) res.outcome = 'knockdown';

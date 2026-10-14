@@ -3,6 +3,7 @@
 // the floating practice remote, and flung props hitting people.
 import { v3, clamp, lerp } from './math.js';
 import { geo } from './gl.js';
+import { THROW_LODGE_DPS } from './fighter.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const BLOCKS = ['block1', 'block2', 'block3', 'block4', 'block5', 'block6', 'block7', 'block8', 'block9'];
@@ -124,14 +125,20 @@ export class Combat {
       // remote droid
       const rm = this.remote;
       if (attacking && rm && !rm.dead && !A.hitSet.has('remote') && A.team === 'player') { const r = segSeg(seg[0], seg[1], rm.pos, rm.pos); if (r.d < 0.42) { A.hitSet.add('remote'); this.hitRemote(40, rm.pos); } }
-      // thrown saber
+      // thrown saber: the first contact lodges it in the victim, where it keeps spinning and cutting (THROW_LODGE_DPS)
       if (A.thrown && own) {
-        const T = A.thrown; for (const B of F) {
+        const T = A.thrown;
+        if (T.phase === 'lodged' && T.lodged) {
+          const B = T.lodged;
+          if (B.status !== 'dead' && g.t >= (T.lodgeTick || 0)) { T.lodgeTick = g.t + 0.2; this.damage(A, B, B.chest(), THROW_LODGE_DPS * 0.2 * A.damageMul, { spark: true, noFlinch: true }); }
+        } else for (const B of F) {
           if (B === A || !hostile(A, B) || B.status === 'dead' || (T.hit.get(B) || 0) > g.t) continue;
           const contact = sweptBladeContact([T.prevPos || T.pos, T.prevPos || T.pos], [T.pos, T.pos], B._prevCap, caps.get(B), 0.45);
           if (contact) {
-            T.hit.set(B, g.t + 0.4); // spinning near a moving enemy continues to make contact while held
+            T.hit.set(B, g.t + 0.4);
             this.damage(A, B, contact.a, 14 * A.damageMul, { spark: true });
+            if (B.status !== 'dead' && T.phase !== 'back' && A.lodgeSaber) A.lodgeSaber(B);
+            break;
           }
         }
         if (rm && !rm.dead && A.team === 'player' && segSeg(T.prevPos || T.pos, T.pos, rm.pos, rm.pos).d < 0.7) this.hitRemote(40, rm.pos);
@@ -178,7 +185,7 @@ export class Combat {
   }
   damage(A, B, pt, dmg, o = {}) {
     const g = this.g; if (B.isPlayer && g.force.active.protect) { g.sfxAt('protecthit', B.pos, 0.8); }
-    const died = B.hurt(dmg, A, o.touch ? { noFlinch: true, touch: true } : {}); g.fx.sparks(pt, [0, 1, 0], o.touch ? 4 : 10, [1, 0.5, 0.2, 1]); if (g.net) g.net.onHit(A, B, pt, o); g.sfxAt(['hit1', 'hit2', 'hit3'][Math.floor(Math.random() * 3)], pt, o.touch ? 0.3 : 0.9);
+    const died = B.hurt(dmg, A, o.touch ? { noFlinch: true, touch: true } : o.noFlinch ? { noFlinch: true } : {}); g.fx.sparks(pt, [0, 1, 0], o.touch ? 4 : 10, [1, 0.5, 0.2, 1]); if (g.net) g.net.onHit(A, B, pt, o); g.sfxAt(['hit1', 'hit2', 'hit3'][Math.floor(Math.random() * 3)], pt, o.touch ? 0.3 : 0.9);
     if (o.saber && A.saber.level === 3 && !died && Math.random() < 0.35 && B.status === 'normal') { const d = v3.norm([B.pos[0] - A.pos[0], 0, B.pos[2] - A.pos[2]]); B.push(d, 4.5, 2.5); }
     if (B.isPlayer) { g.hud.hit(dmg); g.shake(o.touch ? 0.05 : 0.2); }
     if (died && !B.isPlayer && !g.net) { this.kills++; g.hud.msg('Defeated ' + B.label); }

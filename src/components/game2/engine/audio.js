@@ -11,10 +11,10 @@ const FILES = {
   drain: 'force/drain.mp3', drained: 'force/drained.mp3', see: 'force/see.mp3', seeloop: 'force/seeloop.wav', distract: 'force/distract.wav', distractstop: 'force/distractstop.wav', teamheal: 'force/teamheal.mp3', teamforce: 'force/teamforce.mp3',
 };
 export class Sfx {
-  constructor(base) { this.base = base || 'assets/sfx/'; this.ctx = null; this.buf = {}; this.master = null; this.listener = [0, 0, 0]; this.muted = false; this.loading = null; }
+  constructor(base) { this.base = base || 'assets/sfx/'; this.ctx = null; this.buf = {}; this.master = null; this.listener = [0, 0, 0]; this.muted = false; this.loading = null; this.volume = 0.7; }
   resume() {
     if (this.ctx) { this.ctx.resume(); return; }
-    try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = 0.7; this.master.connect(this.ctx.destination); this.loading = this.loadAll(); } catch (e) { console.warn('audio unavailable', e); }
+    try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = this.volume; this.master.connect(this.ctx.destination); this.loading = this.loadAll(); } catch (e) { console.warn('audio unavailable', e); }
   }
   dispose() { try { if (this.ctx) this.ctx.close(); } catch (e) { } this.ctx = null; this.buf = {}; }
   async loadAll() {
