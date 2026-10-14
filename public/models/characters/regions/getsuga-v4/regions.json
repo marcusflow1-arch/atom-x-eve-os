@@ -1,0 +1,78 @@
+{
+  "body": "male",
+  "source": "public/models/characters/Getsuga_Tensho_Character_v4.glb",
+  "material": "M_Character",
+  "size": 1024,
+  "version": 1,
+  "regions": [
+    {
+      "id": "skin",
+      "label": "Skin",
+      "texture": 0,
+      "channel": "r",
+      "reference": [
+        0.43289,
+        0.23723,
+        0.1775
+      ],
+      "coverage": 0.2539,
+      "seedTexels": 3377
+    },
+    {
+      "id": "hair",
+      "label": "Hair",
+      "texture": 0,
+      "channel": "g",
+      "reference": [
+        0.00362,
+        0.00344,
+        0.00454
+      ],
+      "coverage": 0.064,
+      "seedTexels": 4150
+    },
+    {
+      "id": "shirt",
+      "label": "Shirt",
+      "texture": 0,
+      "channel": "b",
+      "reference": [
+        0.40792,
+        0.3925,
+        0.38789
+      ],
+      "coverage": 0.2855,
+      "seedTexels": 2986
+    },
+    {
+      "id": "shorts",
+      "label": "Shorts",
+      "texture": 0,
+      "channel": "a",
+      "reference": [
+        0.09658,
+        0.08594,
+        0.04964
+      ],
+      "coverage": 0.1347,
+      "seedTexels": 557
+    },
+    {
+      "id": "leather",
+      "label": "Sandals & straps",
+      "texture": 1,
+      "channel": "r",
+      "reference": [
+        0.06651,
+        0.03709,
+        0.03179
+      ],
+      "coverage": 0.0843,
+      "seedTexels": 949
+    }
+  ],
+  "textures": [
+    "mask-0.png",
+    "mask-1.png"
+  ]
+}

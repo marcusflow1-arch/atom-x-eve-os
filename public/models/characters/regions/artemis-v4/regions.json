@@ -1,0 +1,64 @@
+{
+  "body": "female",
+  "source": "public/models/characters/Artemis_Character_v4.glb",
+  "material": "M_Artemis",
+  "size": 1024,
+  "version": 1,
+  "regions": [
+    {
+      "id": "skin",
+      "label": "Skin",
+      "texture": 0,
+      "channel": "r",
+      "reference": [
+        0.54794,
+        0.25916,
+        0.18441
+      ],
+      "coverage": 0.1201,
+      "seedTexels": 363
+    },
+    {
+      "id": "hair",
+      "label": "Hair",
+      "texture": 0,
+      "channel": "g",
+      "reference": [
+        0.0975,
+        0.04279,
+        0.02989
+      ],
+      "coverage": 0.0469,
+      "seedTexels": 908
+    },
+    {
+      "id": "dress",
+      "label": "Dress",
+      "texture": 0,
+      "channel": "b",
+      "reference": [
+        0.22089,
+        0.17652,
+        0.17048
+      ],
+      "coverage": 0.5711,
+      "seedTexels": 4249
+    },
+    {
+      "id": "leather",
+      "label": "Leather & armour",
+      "texture": 0,
+      "channel": "a",
+      "reference": [
+        0.18147,
+        0.08396,
+        0.0478
+      ],
+      "coverage": 0.1343,
+      "seedTexels": 2635
+    }
+  ],
+  "textures": [
+    "mask-0.png"
+  ]
+}

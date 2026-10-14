@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { SHAPE_CONTROLS, RIG_IDS } from '../../../base44/shared/avatarCustomization.ts';
+import { applyRegionAppearance, bindBodyRegions, regionCapabilities } from './bodyRegions.js';
 
 const morphHooks=new WeakSet();
 const surfaceSources=new WeakMap();
@@ -27,6 +28,9 @@ export function inspectCustomization(root) {
   Object.keys(n.morphTargetDictionary||{}).forEach(name=>morphs.add(name));
  });
  result.shapes=SHAPE_CONTROLS.filter(c=>morphs.has(c.morph)).map(c=>c.id);
+ // bodies painted as one atlas expose skin, hair and garments through baked region masks (bodyRegions.js)
+ const regions=regionCapabilities(root);
+ result.skin ||= regions.skin;result.hair ||= regions.hair;result.garments=regions.garments;result.skinMask=regions.skin;
  return result;
 }
 export function applyCustomizationAppearance(root,appearance={}) {
@@ -46,6 +50,7 @@ export function applyCustomizationAppearance(root,appearance={}) {
   }
   const list=Array.isArray(mesh.material)?mesh.material:[mesh.material];
   const next=list.map(material=>{
+   if(applyRegionAppearance(material,appearance))return material;
    const channel=materialChannel(mesh,material);
    if(!channel)return material;
    if(!material.userData.creatorOriginal)material.userData.creatorOriginal={color:(material.userData.genesisBase?.color||material.color)?.clone(),roughness:material.roughness,metalness:material.metalness};
@@ -120,6 +125,7 @@ export function bindCustomizationLayer(baseRoot,layer,asset) {
 export class AvatarCustomizationRuntime {
  constructor(root,{gender='male',onChange=()=>{},onState=()=>{}}={}) {
   this.root=root;this.gender=gender;this.onChange=onChange;this.onState=onState;this.layers=new Map();this.hidden=new Map();this.revision=0;this.key='';this.disposed=false;this.appearance={};
+  this.regions=bindBodyRegions(root).then(bound=>{if(bound&&!this.disposed){this.apply();this.onChange(inspectCustomization(this.root));}return bound;});
  }
  async update(appearance={}) {
   this.appearance=appearance;
