@@ -11,7 +11,7 @@ import { STYLE_NAMES } from './saber.js';
 import { resolveThrow, KNOCKDOWN_DIST } from './forcerules.js';
 import { Combat, hostile } from './combat.js';
 import { NetGame } from './netgame.js';
-import { HUD, HELP_DUEL, HELP_MISSION, HELP_ONLINE } from './hud.js';
+import { HUD, HELP_DUEL, HELP_MISSION, HELP_ONLINE, HELP_SKIRMISH } from './hud.js';
 import { BRAINS } from './brains/index.js';
 import { ARCHETYPES } from './archetypes.js';
 import { buildLevel } from './level/builder.js';
@@ -19,9 +19,10 @@ import { MissionDirector } from './mission/director.js';
 import { MISSIONS } from './missions/index.js';
 import { bolt, drawBolt } from './fx.js';
 import { geo } from './gl.js';
-import { Game2TeamMatch } from './teamMatch.js';
+import { Game2TeamMatch, TEAM_MODES } from './teamMatch.js';
+import { AUTHORED_LEVELS } from './levels/index.js';
 import { Execution, findExecutable, cutTransforms, EXECUTION_NAMES } from './executions.js';
-// Team arenas use the real Drive BSP selected by the player.
+// Team arenas use the real Drive BSP selected by the player, or an authored arena (levels/) such as Skybridge Citadel.
 
 const STEP = 1 / 60;
 export const RESPAWN_SHIELD = 3; // seconds of immunity after coming back from a defeat (every mode)
@@ -37,7 +38,7 @@ class NullInput {
 
 export class Game {
   constructor(R, A, canvas, hudCanvas, opts = {}) {
-    this.opts = opts; this.mode = opts.mode || 'explorer'; this.duel = this.mode === 'duel'; this.online = this.mode === 'online'; this.teamMode = this.mode === 'ctf' || this.mode === 'sudden'; this.boss = null; this.round = { state: 'intro', t: 0 }; this.arcs = []; this.disposed = false;
+    this.opts = opts; this.mode = opts.mode || 'explorer'; this.duel = this.mode === 'duel'; this.online = this.mode === 'online'; this.teamMode = !!TEAM_MODES[this.mode]; this.boss = null; this.round = { state: 'intro', t: 0 }; this.arcs = []; this.disposed = false;
     this.attract = this.mode === 'attract'; // the main menu's background: two AI fighters duel under a slow cinematic camera
     this.openArena = this.online || this.teamMode || this.attract; // every fighter fights the fighters hostile to it (not just the player)
     this.missionDef = this.mode === 'mission' ? MISSIONS[opts.mission || 'kejim'] : null;
@@ -47,12 +48,13 @@ export class Game {
     this.t = 0; this.dtFrame = STEP; this.fps = 60; this.acc = 0; this.started = false; this.flashes = []; this.lightFlash = 0; this.lightFlashPos = [0, 2, 0]; this.shakeAmt = 0; this.frameNo = 0;
     this.bodyMesh = R.uploadSkinned(A.body); this.hiltMesh = R.uploadStatic(A.hilt); this.lodMesh = A.lod ? R.uploadSkinned(A.lod) : this.bodyMesh;
     const gun = geo(); gun.box(0, 0.03, 0, 0.05, 0.13, 0.06, [0.16, 0.16, 0.19, 1]).box(0, -0.12, 0, 0.045, 0.2, 0.05, [0.32, 0.33, 0.38, 1]).box(0, -0.235, 0, 0.03, 0.05, 0.03, [0.9, 0.25, 0.15, 1]); this.gunMesh = R.uploadStatic(gun.build());
-    const level = this.missionDef ? buildLevel(this.missionDef.layout) : null;
-    const arena = this.duel || this.online || this.teamMode || this.attract;
+    this.arenaDef = this.teamMode ? AUTHORED_LEVELS[opts.mapId] || null : null; // a large authored arena instead of a BSP
+    const level = this.missionDef ? buildLevel(this.missionDef.layout) : this.arenaDef ? buildLevel(this.arenaDef.layout) : null;
+    const arena = (this.duel || this.online || this.teamMode || this.attract) && !this.arenaDef;
     if (arena && !A.duelMap) throw new Error('Game 2 selected map not loaded');
     this.world = new World(R, arena ? A.duelMap : null, level);
     this.playerSpawn = arena ? this.world.spawns.player.slice() : level ? level.playerSpawn.slice() : SPAWN.slice();
-    this.enemySpawn = arena ? this.world.spawns.enemy.slice() : [0, 0, 8];
+    this.enemySpawn = arena ? this.world.spawns.enemy.slice() : level?.teamHomes ? level.teamHomes.red.slice() : [0, 0, 8];
     this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = this.attract ? new NullInput() : new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
     // Reuse Atom XE's configured battle theme from the moment the map loads.
     // Browser autoplay restrictions may require the first player gesture.
@@ -88,9 +90,9 @@ export class Game {
     } else if (this.teamMode) {
       const h = this.hud;
       this.input.wheelThrottle = 90;
-      h.helpList = HELP_ONLINE; h.helpW = 820;
-      h.title = this.mode === 'ctf' ? 'CAPTURE THE FLAG' : 'SUDDEN DEATH 8v8';
-      h.subtitle = 'Local AI team battle · F1 = controls · ' + (opts.mapId || 'training');
+      h.helpList = HELP_SKIRMISH; h.helpW = 820;
+      h.title = TEAM_MODES[this.mode].label.toUpperCase();
+      h.subtitle = 'Local AI battle · F1 = controls · ' + (this.arenaDef ? this.arenaDef.label : opts.mapId || 'training');
       h.debug = false; h.help = false; this.started = true;
     } else if (this.attract) {
       this.hud.help = false; this.hud.debug = false; this.started = true; this.sfx.muted = true; this.input.onFirstGesture = null;
@@ -444,9 +446,11 @@ export class Game {
     if (p.status === 'normal' && (i.pressed('KeyF') || FORCE_QUICK_BINDINGS.some(({ code }) => i.pressed(code)))) p.yaw = p.targetYaw = c.yaw; // snap to aim on either cast path
   }
   // respawn immunity: no damage, Force or grabs for RESPAWN_SHIELD s (a soft blue glow while it lasts)
+  // a Force pool for an AI fighter that has none (team match bots: Force Push, for instance off a bridge)
+  giveForce(f, fp = 100) { if (!f.force) f.force = new Force(this, f, { npc: true, fp, list: SELECT_ORDER }); return f.force; }
   shield(f, sec = RESPAWN_SHIELD) { f.spawnShield = this.t + sec; f.shieldGlow = true; f.glow = 0.35; f.glowCol = [0.55, 0.8, 1]; }
   respawnPlayer() {
-    const p = this.player; this.force.releaseAll(); this.force.fp = this.force.max; p.revive(this.playerSpawn.slice()); this.shield(p); p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1; p.blade.set(false); p.blade.len = 0; p.yaw = p.targetYaw = 0; this.cam.yaw = 0; this.cam.pitch = 0.2; this.hud.msg('You rise again');
+    const p = this.player; this.force.releaseAll(); this.force.fp = this.force.max; p.revive(this.playerSpawn.slice()); this.shield(p); p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1; p.blade.set(false); p.blade.len = 0; p.yaw = p.targetYaw = this.cam.yaw = this.playerSpawnYaw ?? 0; this.cam.pitch = 0.2; this.hud.msg('You rise again');
   }
   // ---------------- weapons (story mode)
   switchWeapon(to) {
@@ -588,7 +592,9 @@ export class Game {
     } else R.drawSkinned(mesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha });
     if (f.hasSaber && f.hilt !== 'none' && !f.cut) { R.drawMesh(this.hiltMesh, f.hiltMat, { spec: 0.7 }); if (f.hilt2Mat) R.drawMesh(this.hiltMesh, f.hilt2Mat, { spec: 0.7 }); }
     if (f.gun && (!f.hasSaber || f.saber.holstered)) { const bm = a.boneMatrix(this.attach.grip.bone); const loc = m4.trs(this.attach.grip.t, this.attach.grip.q, [1, 1, 1]); R.drawMesh(this.gunMesh, m4.mul(bm, loc), { spec: 0.6 }); }
-    const sh = f.status === 'dead' || f.status === 'down' ? 0.8 : 0.55; if (f.pos[1] < 3) this.fx.disc([f.pos[0], 0, f.pos[2]], sh * (1 - Math.min(0.5, f.pos[1] * 0.15)), [0, 0, 0, 0.42], 1);
+    const sh = f.status === 'dead' || f.status === 'down' ? 0.8 : 0.55;
+    if (this.world.level) { const gy = this.world.floorAt(f.pos[0], f.pos[2], f.pos[1] + 0.3), h = gy === null ? 9 : f.pos[1] - gy; if (h < 3) this.fx.disc([f.pos[0], gy + 0.03, f.pos[2]], sh * (1 - Math.min(0.5, h * 0.15)), [0, 0, 0, 0.42], 1); } // the floor under them (none over a chasm)
+    else if (f.pos[1] < 3) this.fx.disc([f.pos[0], 0, f.pos[2]], sh * (1 - Math.min(0.5, f.pos[1] * 0.15)), [0, 0, 0, 0.42], 1);
   }
   render() {
     const R = this.R, c = this.cam; R.resize(); R.time = this.t; this.setLights(); R.setCamera(c.eye, c.target, c.fov); R.begin();

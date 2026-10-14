@@ -11,6 +11,8 @@ The duel is a small WebGL2 engine in `engine/` (plain ES modules, loaded lazily 
 | `forcerules.js` | **Pure Force rules ported from `w_force.c`** (see below), unit tested |
 | `force.js` | Force powers for the player *and* the Dark Jedi (same class, same costs) |
 | `darkjedi.js` | Dark Jedi brain: saber fencing + Force use picked by range, Force left and cooldowns |
+| `executions.js` | Finishing moves (R): Grip crush and the Pull · Lightning · Speed cut |
+| `teamMatch.js`, `levels/` | Offline skirmish modes (FFA, TDM, CTF, Sudden Death) and the authored Skybridge Citadel arena |
 | `game.js`, `hud.js`, `input.js`, `audio.js`, `fx.js`, `world.js` | Game loop, rounds, HUD, input, sounds, effects, arena |
 
 ## Saber, movement and aim rules (checked against the original source)
@@ -29,11 +31,19 @@ Both modes share these rules; each line names the Raven source it follows.
 | Leap slash: jump held in the first 500 ms of a strong attack with the feet within 32 units (0.8 m) of the floor; no move input during it, no landing animation | `bg_pmove.c` `PM_CheckJump`, `PM_CrashLand`, `bg_saber.c` `PM_SaberJumpAttackMove` |
 | A slash from the air holds its strike until 100 ms after landing and leans into the ground; a downward slash aimed at the floor does the same. A blade that reaches the floor sparks, plays the wall-hit sound and leaves a scorch | `w_saber.c` world trace + Game 2 addition |
 
-## Start menu: Single Player and Multiplayer
+## Main menu
 
-Game 2 opens on a menu. **Multiplayer** opens the free-for-all arena (below); its *Practice* button starts the offline
-Dark Jedi duel described here. **Single Player** runs story missions on the *same* combat code: the saber, Force, block, damage
-and bolt rules above are shared, not copied. A mission only adds a level, objectives and enemy behaviour around them.
+Game 2 opens on `Game2Menu.jsx`: a menu down the left (Story Mode, Multiplayer, Skirmish, Duel Practice, Settings,
+Controls, Exit to Luna) with the chosen page on the right, over a live background: two AI fighters duel in the arena
+(the engine's `attract` mode) under a slow camera, with a drifting starfield. Settings (mouse sensitivity, invert Y,
+volume, field of view, quality, FPS counter, menu motion) are kept in `settings.js` / localStorage and read when a match
+starts. The lightsaber picked in Skirmish or Duel Practice (single, dual sabers or a double-bladed saberstaff) is kept too.
+
+**Multiplayer** opens the free-for-all arena (below); **Duel Practice** starts the offline Dark Jedi duel described here.
+**Skirmish** runs the offline AI modes (`docs/game2/team-ctf-sudden.md`): Free for All, Team Deathmatch, Capture the Flag
+and Sudden Death, on Skybridge Citadel (fortresses over a chasm, energy bridges a console switches off, fatal falls) or
+one of the three Raven duel arenas. **Story Mode** runs story missions on the *same* combat code: the saber, Force, block,
+damage and bolt rules above are shared, not copied. A mission only adds a level, objectives and enemy behaviour around them.
 
 | Module | What it does |
 | --- | --- |
@@ -86,11 +96,22 @@ Left mouse attacks; aiming the camera up or down during a slash selects an upwar
 and aims the displayed blade and collision in that direction. Slashes sample the full blade sweep
 and the opponent's movement between frames, including crouched and grounded targets.
 Hold right mouse to send the saber out and keep it spinning at range, steering toward the camera aim;
-release right mouse to recall it. This works while jumping or Force-jumping as well.
+release right mouse to recall it. This works while jumping or Force-jumping as well. Thrown at a fighter it homes in, and
+when it hits it lodges and keeps spinning inside them, cutting, until it is recalled or pushed loose.
+
+R on a foe that glows red (at or under 25% health, in front of you) executes them: within 3.6 m a Force Grip that crushes
+their throat, further out (up to 10 m) Force Pull, Lightning, then a Force Speed dash that cuts them in half. T taunts.
 
 **Force quick-cast (hold a key for channeled abilities):**
 1 Push, 2 Pull, 3 Grip, 4 Lightning, 5 Heal, 6 Speed, 7 Mind Trick,
-8 Rage, 9 Protect, 0 Absorb. The numeric keypad also works.
+8 Rage, 9 Protect, 0 Absorb. The numeric keypad also works. Hold 1 to charge Force Push (farther and harder, more Force).
+G is Force Levitate: lifts the foe (or prop) in front of you helplessly for 3.5 s so you can get away (any hit drops
+them; a Force Push launches them). X unleashes Force Pulse once its meter (filled by damage and defeats) is full:
+everything around you is vaporized.
+
+**Combos:** Push then Speed (6) dashes you in front of the pushed foe as they hit the ground, with a bonus hit. Lightning
+while your saber is thrown charges it: the lightning spreads around it as it flies (and drains Force much faster).
+Push someone into a wall hard enough and the wall cracks.
 
 **Force selection menu:** Scroll the mouse wheel (or use [ / ]) to choose any available
 Force power and press F to use the highlighted ability. Hold F for Grip, Lightning,

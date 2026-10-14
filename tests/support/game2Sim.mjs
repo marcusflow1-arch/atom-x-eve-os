@@ -40,6 +40,14 @@ export function makeGame(o = {}) {
   return g;
 }
 
+// a skirmish match (engine/teamMatch.js: 'ffa' | 'tdm' | 'ctf' | 'sudden') on an authored arena, bots and level included
+export function makeMatch(mode, mapId = 'skybridge', o = {}) {
+  stubDom();
+  const g = new Game(renderer(), assets(), canvas(), canvas(), { mode, mapId, ...(o.opts || {}) });
+  g.hud.help = false; g.started = true;
+  return g;
+}
+
 // a Reborn-like opponent with its own Force (no brain unless brain: true)
 export function addFoe(g, pos = [0, 0, 4], o = {}) {
   const f = g.addNpc(o.kind || 'darkjedi', pos[0], pos[2], { name: o.name || 'foe' + g.npcs.length, label: 'Foe', team: 'enemy', hp: o.hp ?? 200, saber: true, blade: [1, 0.1, 0.1], yaw: Math.PI, dmgScale: 0.6, blockSkill: 0 });

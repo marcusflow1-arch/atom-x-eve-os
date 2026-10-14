@@ -6,6 +6,8 @@ import { BSPCollision } from '../rbsp.js';
 
 const DOOR_SPEED = 1.15;   // fraction of the door height per second
 const DOOR_PASS = 0.82;    // a door this far up no longer blocks people
+export const BRIDGE_WARN = 0.6;  // s an energy bridge flickers after its console is used, before it drops
+export const BRIDGE_DOWN = 10;   // s it stays off before it reforms
 
 export class LevelSpace {
   constructor(level) {
@@ -17,6 +19,9 @@ export class LevelSpace {
     this.zones = new Map(level.zones.map(z => [z.id, z]));
     this.doors = new Map(level.doors.map(d => [d.id, { ...d, want: !!d.open, lift: d.open ? 1 : 0 }]));
     this.interactables = new Map(level.interactables.map(i => [i.id, i]));
+    // energy bridges: 'on' -> (console) 'warn' (still carries you) -> 'off' (nothing under you) -> 'on' again
+    this.bridges = new Map((level.bridges || []).map(b => [b.id, { ...b, state: 'on', t: 0 }]));
+    this.onBridge = null; // (bridge) => void, called on every state change
     // 4 m buckets of solid / clip boxes for fast point tests (navigation asks a lot of them)
     this.cell = 4; this.grid = new Map();
     for (const s of [...this.solids, ...this.clips]) for (let i = Math.floor(s.min[0] / 4); i <= Math.floor(s.max[0] / 4); i++) for (let j = Math.floor(s.min[2] / 4); j <= Math.floor(s.max[2] / 4); j++) { const k = i + ',' + j; if (!this.grid.has(k)) this.grid.set(k, []); this.grid.get(k).push(s); }
@@ -26,13 +31,23 @@ export class LevelSpace {
   snapDoor(id, open) { const d = this.doors.get(id); d.want = !!open; d.lift = open ? 1 : 0; }
   doorOpen(id) { const d = this.doors.get(id); return !!d && d.lift >= DOOR_PASS; }
   doorBox(d) { const h = d.max[1] - d.min[1], dy = d.lift * h * 0.96; return { min: [d.min[0], d.min[1] + dy, d.min[2]], max: [d.max[0], d.max[1] + dy, d.max[2]] }; }
+  // ---------- energy bridges
+  dropBridge(id) { const b = this.bridges.get(id); if (!b || b.state !== 'on') return false; b.state = 'warn'; b.t = BRIDGE_WARN; this.onBridge?.(b); return true; }
+  bridgeOpen(id) { const b = this.bridges.get(id); return !!b && b.state === 'on'; } // safe to walk onto (navigation)
+  bridgeAt(p) { for (const b of this.bridges.values()) if (p[0] >= b.x0 && p[0] <= b.x1 && p[2] >= b.z0 && p[2] <= b.z1) return b; return null; }
   update(dt) {
     let moved = false;
+    for (const b of this.bridges.values()) { if (b.state === 'on') continue; b.t -= dt; if (b.t > 0) continue; if (b.state === 'warn') { b.state = 'off'; b.t = BRIDGE_DOWN; } else { b.state = 'on'; b.t = 0; } this.onBridge?.(b); }
     for (const d of this.doors.values()) { const t = d.want ? 1 : 0; if (d.lift !== t) { const s = DOOR_SPEED * dt; d.lift = Math.abs(t - d.lift) <= s ? t : d.lift + Math.sign(t - d.lift) * s; moved = true; } }
     return moved;
   }
   // ---------- walking
-  floorAt(x, z, top = Infinity) { return this.collision.floorAt(x, z, top); }
+  // the highest floor at or below top; a bridge that is on (or still flickering) is a floor too (bridges = false: without them)
+  floorAt(x, z, top = Infinity, bridges = true) {
+    let y = this.collision.floorAt(x, z, top);
+    if (bridges) for (const b of this.bridges.values()) if (b.state !== 'off' && x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1 && b.y <= top + 0.005 && (y === null || b.y > y)) y = b.y;
+    return y;
+  }
   collide(pos, r) {
     this.collision.collide(pos, r);
     for (const d of this.doors.values()) {

@@ -289,6 +289,7 @@ export class Fighter {
       case 'dead': { // a body killed in the air falls to the floor
         const fl = this.g.world.floorAt(this.pos[0], this.pos[2], this.pos[1] + 0.3);
         if (fl !== null && this.pos[1] > fl + 0.01) { this.vel[1] -= G * dt; this.pos[1] = Math.max(fl, this.pos[1] + this.vel[1] * dt); } else if (fl !== null) { this.pos[1] = fl; this.vel[1] = 0; }
+        else if (this.pos[1] > (this.g.world.killY ?? -20) - 40) { this.vel[1] -= G * dt; this.pos[1] += this.vel[1] * dt; } // nothing below (a chasm): keep falling out of sight
         if (this.landAnim && fl !== null && this.pos[1] <= fl + 0.01) { this.playWhole(this.landAnim, { blend: 0.08 }); this.landAnim = null; } // e.g. a body dropped from a grip lands
         this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
       }

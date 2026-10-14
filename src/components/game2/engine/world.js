@@ -57,6 +57,7 @@ export class World {
     this.level = level; this.space = new LevelSpace(level); this.nav = new NavGrid(this.space, level.navBounds, 1);
     this.levelMeshes = { base: R.uploadStatic(level.render.base), glows: level.render.glows.map(g => ({ emis: g.glow.map(k => k * 0.75), mesh: R.uploadStatic(g.mesh) })) };
     this.doorMeshes = level.doorMeshes.map(d => ({ id: d.id, origin: d.origin, mesh: R.uploadStatic(d.mesh) }));
+    this.bridgeMeshes = (level.bridgeMeshes || []).map(b => ({ id: b.id, mesh: R.uploadStatic(b.mesh) }));
     this.lamps = level.lamps.map(l => l.p);
     this.uploadPropMeshes(R);
     level.props.forEach((p, i) => { const b = this.makeBody(p.kind, p.x, p.z, i); b.pos[1] = b.home[1] = this.floorAt(p.x, p.z, 3) ?? 0; this.bodies.push(b); });
@@ -87,7 +88,8 @@ export class World {
       b.flash = Math.max(0, b.flash - dt * 3); b.glow = Math.max(0, b.glow - dt * 2);
       if (b.lifted > 0) { b.vel[0] *= 0.9; b.vel[2] *= 0.9; b.vel[1] *= 0.9; b.rot[1] += dt * 1.6; b.rot[0] = Math.sin(this.time * 2 + b.id) * 0.25; b.rot[2] = Math.cos(this.time * 1.7 + b.id) * 0.25; b.pos[0] += b.vel[0] * dt; b.pos[1] += b.vel[1] * dt; b.pos[2] += b.vel[2] * dt; b.lifted -= dt; continue; }
       b.vel[1] -= 20 * dt; b.pos[0] += b.vel[0] * dt; b.pos[1] += b.vel[1] * dt; b.pos[2] += b.vel[2] * dt;
-      const fl = this.space ? (this.space.floorAt(b.pos[0], b.pos[2], b.pos[1] + 0.6) ?? 0) : 0;
+      const fl = this.space ? (this.space.floorAt(b.pos[0], b.pos[2], b.pos[1] + 0.6) ?? -Infinity) : 0; // nothing below: it falls
+      if (b.pos[1] < this.killY) { b.pos = b.home.slice(); b.vel = [0, 0, 0]; b.grounded = true; b.lifted = 0; b.flash = 1; continue; } // lost in the chasm: back where it started
       if (b.pos[1] <= fl) { b.pos[1] = fl; if (b.vel[1] < -2) { b.vel[1] *= -0.28; b.vel[0] *= 0.82; b.vel[2] *= 0.82; this.onThud && this.onThud(b); } else { b.vel[1] = 0; b.grounded = true; } }
       if (b.grounded) { const f = Math.max(0, 1 - 5 * dt); b.vel[0] *= f; b.vel[2] *= f; for (let k = 0; k < 3; k++) { b.w[k] *= Math.max(0, 1 - 6 * dt); } b.rot[0] *= Math.max(0, 1 - 8 * dt); b.rot[2] *= Math.max(0, 1 - 8 * dt); }
       for (let k = 0; k < 3; k++) b.rot[k] += b.w[k] * dt;
@@ -104,6 +106,10 @@ export class World {
       const I = m4.ident(); R.drawMesh(this.levelMeshes.base, I, { spec: 0.12 });
       for (const g of this.levelMeshes.glows) R.drawMesh(g.mesh, I, { spec: 0, emis: g.emis });
       for (const d of this.doorMeshes) { const D = this.space.doors.get(d.id), h = D.max[1] - D.min[1], M = m4.ident(); M[12] = d.origin[0]; M[13] = d.origin[1] + D.lift * h * 0.96; M[14] = d.origin[2]; R.drawMesh(d.mesh, M, { spec: 0.35 }); }
+      for (const b of this.bridgeMeshes) { // energy bridges: steady glow while on, flicker red-orange before they drop, gone while off
+        const B = this.space.bridges.get(b.id); if (B.state === 'off' || (B.state === 'warn' && Math.sin(this.time * 47) < -0.2)) continue;
+        const k = 0.85 + 0.15 * Math.sin(this.time * 9 + b.id.length); R.drawMesh(b.mesh, I, { spec: 0.4, emis: B.state === 'warn' ? [0.95, 0.4, 0.2] : [0.22 * k, 0.5 * k, 0.85 * k] });
+      }
       this.drawBodies(R); return;
     }
     if (this.mapMeshes) {

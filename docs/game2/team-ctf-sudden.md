@@ -1,4 +1,4 @@
-# Game Two — real Drive arenas, 7v7 CTF, 8v8 Sudden Death
+# Game Two — skirmish: Skybridge Citadel and the Drive arenas; FFA, TDM, 7v7 CTF, 8v8 Sudden Death
 
 This applies to **Atom XE → Luna → Game Two**, not the separate Unreal project.
 
@@ -6,8 +6,18 @@ This applies to **Atom XE → Luna → Game Two**, not the separate Unreal proje
 
 - **Capture the Flag**: Blue = player + 6 bots; Red = 7 bots. Take the enemy flag back to your own base while your flag is home. Flag drop on death, 20-second auto-return, 5-second respawn, first to three captures wins.
 - **Sudden Death**: Blue = player + 7 bots; Red = 8 bots. No respawns. Eliminate the entire opposing team.
+- **Team Deathmatch**: Blue = player + 5 bots; Red = 6 bots. 4-second respawns; the first team to 30 defeats wins.
+- **Free for All**: the player and 7 bots, each with their own blade colour, everyone hostile to everyone. 3-second respawns at the spawn point furthest from everyone; the first to 15 defeats wins.
 
-These are **local player vs AI matches**, not 16-player live networking. The existing 10-human Railway arena and the Jedi Outcast campaign remain separate.
+Every respawn comes with 3 seconds of immunity. These are **local player vs AI matches**, not 16-player live networking. The existing 10-human Railway arena and the Jedi Outcast campaign remain separate. Code: `src/components/game2/engine/teamMatch.js`.
+
+## Skybridge Citadel (authored, the default skirmish map)
+
+`engine/levels/skybridge.js`, original geometry built by `engine/level/builder.js` like the story mission. Two fortress platforms (Blue west, Red east, each with a flag dais, keep, pillars and cover) and a central island hang over a bottomless chasm. Each side has a permanent stone bridge in the middle lane and two energy bridges (north and south lanes).
+
+- **Energy bridges:** a console stands at each end of every energy bridge (8 in all; the HUD shows `[E] Cut the … bridge`). Using one makes the bridge flicker for 0.6 s, drop for 10 s, then reform. Anyone on it falls.
+- **Falls are fatal:** below the kill height (9 m under the floors) a fighter dies, credited to whoever last hurt, pushed, pulled or lifted them in the previous 10 s, or cut the bridge under them. The kill counts for TDM and FFA scores, and a flag dropped into the chasm returns home.
+- **Bots:** they route over the navigation grid (it knows which bridges are up and keeps a metre from every edge), never step off a ledge on their own, Force Push enemies who have a drop behind them, and cut a bridge from a console when it carries enemies and none of their friends. In TDM the defenders guard a bridge console on their own side.
 
 ## Real source maps used
 
@@ -26,7 +36,7 @@ The loader verifies actual BSP format, loads the specified geometry, positions t
 ## Verification
 
 ```bash
-node --test tests/game2-team-modes.test.mjs tests/game2-native-map.test.mjs tests/game2-multi-map.test.mjs tests/game2-mission.test.mjs
+node --test tests/game2-team-modes.test.mjs tests/game2-skybridge.test.mjs tests/game2-native-map.test.mjs tests/game2-multi-map.test.mjs tests/game2-mission.test.mjs
 npm run build
 ```
 

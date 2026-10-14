@@ -14,19 +14,28 @@ export const HELP = [
 ];
 export const HELP_DUEL = [
   ['Move · look', 'W A S D (Shift = walk)  ·  mouse  ·  C crouch / roll'], ['Jump / Force Jump', 'Space  (hold Space = Force Jump)'],
-  ['Saber on / off · stance', 'R toggles saber  ·  Tab cycles Fast / Medium / Strong'], ['Saber attack · throw', 'Left mouse (look up/down to direct slash) · hold right mouse to guide throw'],
+  ['Saber on / off · execute · stance', 'R toggles saber, or executes a foe glowing red  ·  Tab cycles Fast / Medium / Strong'], ['Saber attack · throw', 'Left mouse (look up/down to direct slash) · hold right mouse: the throw homes in and spins inside whoever it hits'],
   ['Force menu', 'Mouse wheel or [ ] selects highlighted Force power'], ['Cast highlighted Force', 'F to cast  ·  hold F for Grip / Lightning / Heal / Drain'],
-  ['Quick cast 1–5', '1 Push · 2 Pull · 3 Grip · 4 Lightning · 5 Heal'], ['Quick cast 6–0', '6 Speed · 7 Mind Trick · 8 Rage · 9 Protect · 0 Absorb'], ['Other Force powers', 'Drain and Sight available with wheel + F'],
+  ['Quick cast 1–5', '1 Push (hold to charge) · 2 Pull · 3 Grip · 4 Lightning · 5 Heal'], ['Quick cast 6–0', '6 Speed · 7 Mind Trick · 8 Rage · 9 Protect · 0 Absorb'], ['Other Force powers', 'G Levitate · X Force Pulse (meter full) · Drain and Sight with wheel + F'],
   ['Break a Grip', 'press 1 (Push), 2 (Pull), 0 (Absorb) or select one with wheel + F'], ['Block a push / pull', 'stand still on the ground with Force left, not mid-swing; moving = weaker'],
+  ['Combos · taunt', 'Push then 6 Speed: dash to them as they land · Lightning on your thrown saber charges it · T taunts'],
   ['Zoom · rematch · controls · mute', 'Ctrl + wheel or - = · Enter · F1 · M'],
 ];
+const HELP_COMBOS = HELP_DUEL[11];
 export const HELP_ONLINE = [
-  ...HELP_DUEL.slice(0, 11),
+  ...HELP_DUEL.slice(0, 11), HELP_COMBOS,
   ['Online', 'Jedi vs Dark Jedi, rounds: a side wins when the other has nobody standing · top right = ping and players'],
   ['Zoom · controls · mute', 'Ctrl + wheel or - =  ·  F1  ·  M  ·  Main menu leaves the match'],
 ];
+// the offline skirmish modes (engine/teamMatch.js)
+export const HELP_SKIRMISH = [
+  ...HELP_DUEL.slice(0, 11), HELP_COMBOS,
+  ['Bridges', 'E at a console cuts that energy bridge for 10 s: whoever is on it falls · a fall is fatal'],
+  ['Skirmish', 'FFA first to 15 · TDM first to 30 · CTF 3 captures · Sudden Death one life · 3 s immunity after a respawn'],
+  ['Zoom · controls · mute', 'Ctrl + wheel or - =  ·  F1  ·  M  ·  Main menu leaves the match'],
+];
 export const HELP_MISSION = [
-  ...HELP_DUEL.slice(0, 11),
+  ...HELP_DUEL.slice(0, 11), HELP_COMBOS,
   ['Weapons', 'Q switches Bryar pistol / lightsaber · R lights the saber · LMB fire · hold RMB = charged shot'],
   ['Use / interact', 'E  (consoles, terminals)'], ['Objective', 'follow the marker · top right shows the current goal'],
   ['Zoom · checkpoint · controls · mute', 'Ctrl + wheel or - =  ·  Enter (after falling)  ·  F1  ·  M'],
