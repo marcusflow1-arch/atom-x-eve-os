@@ -1,16 +1,17 @@
 // Shared contract for the creator, appearance saves, and uploaded asset catalog.
 export const CUSTOMIZATION_SLOTS = ['body','hair','eyebrows','facial_hair','outfit','top','bottom','footwear','accessory','tattoo','complexion'];
+// min -1: two-sided (0 is the original shape, -1 the opposite of +1)
 export const SHAPE_CONTROLS = [
- {id:'brow_size',label:'Eyebrow size',morph:'CC_BrowSize',section:'face'},
- {id:'face_width',label:'Face width',morph:'CC_FaceWidth',section:'face'},
- {id:'jaw_width',label:'Jaw width',morph:'CC_JawWidth',section:'face'},
- {id:'nose_width',label:'Nose width',morph:'CC_NoseWidth',section:'face'},
- {id:'eye_size',label:'Eye size',morph:'CC_EyeSize',section:'face'},
- {id:'chest_size',label:'Chest size',morph:'CC_ChestSize',section:'body'},
- {id:'glute_size',label:'Glute size',morph:'CC_GluteSize',section:'body'},
- {id:'shoulder_width',label:'Shoulder width',morph:'CC_ShoulderWidth',section:'body'},
- {id:'muscle_definition',label:'Muscle definition',morph:'CC_MuscleDefinition',section:'body'},
- {id:'age',label:'Age appearance',morph:'CC_Age',section:'skin'},
+ {id:'brow_size',label:'Brow ridge',morph:'CC_BrowSize',section:'face',min:-1},
+ {id:'face_width',label:'Face width',morph:'CC_FaceWidth',section:'face',min:-1},
+ {id:'jaw_width',label:'Jaw width',morph:'CC_JawWidth',section:'face',min:-1},
+ {id:'nose_width',label:'Nose width',morph:'CC_NoseWidth',section:'face',min:-1},
+ {id:'eye_size',label:'Eye size',morph:'CC_EyeSize',section:'face',min:-1},
+ {id:'chest_size',label:'Chest size',morph:'CC_ChestSize',section:'body',min:-1},
+ {id:'glute_size',label:'Glute size',morph:'CC_GluteSize',section:'body',min:-1},
+ {id:'shoulder_width',label:'Shoulder width',morph:'CC_ShoulderWidth',section:'body',min:-1},
+ {id:'muscle_definition',label:'Muscle',morph:'CC_MuscleDefinition',section:'body',min:-1},
+ {id:'age',label:'Age appearance',morph:'CC_Age',section:'skin',min:0},
 ];
 export const RIG_IDS = {male:'getsuga-v1',female:'artemis-v1'};
 const bound=(v,min,max,f)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):f;
@@ -21,7 +22,7 @@ export function normalizeCustomization(value={}) {
  return {
   customization_version:1,
   selected_assets:Object.fromEntries(CUSTOMIZATION_SLOTS.filter(s=>/^[a-zA-Z0-9_-]{1,100}$/.test(String(chosen[s]||''))).map(s=>[s,String(chosen[s])])),
-  shape_controls:Object.fromEntries(SHAPE_CONTROLS.map(c=>[c.id,bound(a.shape_controls?.[c.id],0,1,0)])),
+  shape_controls:Object.fromEntries(SHAPE_CONTROLS.map(c=>[c.id,bound(a.shape_controls?.[c.id],c.min??0,1,0)])),
   skin_finish:bound(a.skin_finish,0,1,.35),
   skin_finish_enabled:a.skin_finish_enabled===true,
   skin_highlight_color:color(a.skin_highlight_color,'#fff3e5'),

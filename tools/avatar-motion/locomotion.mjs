@@ -1,7 +1,7 @@
 // Authors locomotion clips (Walk, Run) directly on the Getsuga and Artemis skeletons and appends them to new versioned
 // GLBs. Nothing that is already in the file changes: the new clips only add accessors and animations.
 //
-//   node tools/avatar-motion/locomotion.mjs            -> public/models/characters/*_v4.glb + a report
+//   node tools/avatar-motion/locomotion.mjs            -> public/models/characters/*_v5.glb + a report
 //
 // How a frame is built:
 //  - base pose: trunk, neck, head and legs from the bind pose (straight, symmetric); arms, hands, eyes, jaw and every
@@ -21,7 +21,8 @@
 // Every curve is periodic in the gait cycle and each clip holds whole cycles, so the loop is seamless. Run is baked at
 // 60 keys per second (its knee and ankle turn fast enough that 30 shows as corners).
 import * as THREE from 'three';
-import { readGlb, readAccessor, addAccessor, writeAccessorInPlace, writeGlb, sampleAnimation } from './glb-io.mjs';
+import { readGlb, readAccessor, addAccessor, writeAccessorInPlace, writeGlb, compactGlb, sampleAnimation } from './glb-io.mjs';
+import { bakeShapes } from '../avatar-shapes/shapes.mjs';
 
 const ROOT = new URL('../../', import.meta.url);
 const DEG = Math.PI / 180, TAU = Math.PI * 2;
@@ -29,10 +30,10 @@ const FPS_DEFAULT = 30;
 
 export const BODIES = {
   // armOut: extra degrees the arms hang away from the body (clearing wider hips, a belt and the quiver strap)
-  male: { src: 'public/models/characters/Getsuga_Tensho_Character_v3.glb', out: 'public/models/characters/Getsuga_Tensho_Character_v4.glb', armOut: 2, mesh: 'SK_Character_mesh' },
+  male: { src: 'public/models/characters/Getsuga_Tensho_Character_v3.glb', out: 'public/models/characters/Getsuga_Tensho_Character_v5.glb', armOut: 2, mesh: 'SK_Character_mesh' },
   // Artemis carries a long bow in her left hand: that arm swings less, bends less when running, and the bow keeps its
   // Idle orientation (it follows the chest, only a little of the hand), so it never sweeps through the legs.
-  female: { src: 'public/models/characters/Artemis_Character_v3.glb', out: 'public/models/characters/Artemis_Character_v4.glb', armOut: 5, mesh: 'Artemis_Body',
+  female: { src: 'public/models/characters/Artemis_Character_v3.glb', out: 'public/models/characters/Artemis_Character_v5.glb', armOut: 5, mesh: 'Artemis_Body',
     reskin: { side: 'r', radius: 0.085 }, // see reskinUpperArm
     // her right arm is modelled fused to her side along their contact: a smaller swing keeps that seam from tearing
     armSwing: { r: 0.6 },
@@ -437,13 +438,16 @@ export function buildBody(key, gaits = GAITS) {
   const rig = new Rig(glb, body.hold, body.armOut), results = [];
   rig.armSwing = body.armSwing || {};
   for (const [name, g] of Object.entries(gaits)) results.push(buildClip(rig, body, name, g.stand ? g : fitGait(rig, name, g)));
+  // the creator's shape keys (tools/avatar-shapes/shapes.mjs) go in last, so every clip's face track is padded for them
+  const shapes = bakeShapes(glb, key, body.mesh);
+  compactGlb(glb);
   const bytes = writeGlb(glb, new URL(body.out, ROOT));
-  return { key, out: body.out, bytes, results, weightRepair };
+  return { key, out: body.out, bytes, results, weightRepair, shapes };
 }
 
 if (import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}` || process.argv[1]?.endsWith('locomotion.mjs')) {
   for (const key of Object.keys(BODIES)) {
     const r = buildBody(key);
-    console.log(JSON.stringify({ body: r.key, out: r.out, mb: +(r.bytes / 1048576).toFixed(2), weightRepair: r.weightRepair, clips: r.results.map(c => Object.fromEntries(Object.entries(c).map(([k, x]) => [k, typeof x === "number" ? +x.toFixed(3) : x]))) }));
+    console.log(JSON.stringify({ body: r.key, out: r.out, mb: +(r.bytes / 1048576).toFixed(2), weightRepair: r.weightRepair, shapes: r.shapes, clips: r.results.map(c => Object.fromEntries(Object.entries(c).map(([k, x]) => [k, typeof x === "number" ? +x.toFixed(3) : x]))) }));
   }
 }

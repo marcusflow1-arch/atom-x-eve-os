@@ -1,5 +1,6 @@
-// Minimal GLB reader / writer for the avatar motion tools: parse the JSON and BIN chunks, read accessors, append new
-// accessors (data goes to the end of the BIN chunk, existing bytes are untouched) and write the file back.
+// Minimal GLB reader / writer for the avatar tools: parse the JSON and BIN chunks, read accessors (dense or sparse),
+// append new accessors (data goes to the end of the BIN chunk, existing bytes are untouched), compact away data nothing
+// refers to any more, and write the file back.
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const COMPONENT = { 5120: [Int8Array, 127], 5121: [Uint8Array, 255], 5122: [Int16Array, 32767], 5123: [Uint16Array, 65535], 5125: [Uint32Array, 0], 5126: [Float32Array, 0] };
@@ -13,21 +14,36 @@ export function readGlb(path) {
   return { json, bin, extra: [] };
 }
 
-// accessor -> array of tuples (Float32 values; normalized integer types are converted to 0..1 / -1..1)
-export function readAccessor(glb, index) {
-  const { json, bin } = glb, a = json.accessors[index], v = json.bufferViews[a.bufferView];
-  const [Type, norm] = COMPONENT[a.componentType], n = SIZE[a.type], bytes = Type.BYTES_PER_ELEMENT;
-  const stride = v.byteStride || n * bytes, base = (v.byteOffset || 0) + (a.byteOffset || 0), out = [];
-  for (let i = 0; i < a.count; i++) {
+// raw rows of a buffer view region (normalized integer types are converted to 0..1 / -1..1)
+function readRows(glb, viewIndex, byteOffset, componentType, count, n, normalized) {
+  // data appended since the last read is still pending: fold it in (its offsets already assume this layout)
+  if (glb.extra.length) { glb.bin = Buffer.concat([glb.bin, ...glb.extra]); glb.extra = []; }
+  const { json, bin } = glb, v = json.bufferViews[viewIndex], [Type, norm] = COMPONENT[componentType], bytes = Type.BYTES_PER_ELEMENT;
+  const stride = v.byteStride || n * bytes, base = (v.byteOffset || 0) + (byteOffset || 0), out = [];
+  for (let i = 0; i < count; i++) {
     const row = [];
     for (let k = 0; k < n; k++) {
       const off = base + i * stride + k * bytes;
       let x = Type === Float32Array ? bin.readFloatLE(off) : Type === Uint8Array ? bin.readUInt8(off) : Type === Int8Array ? bin.readInt8(off)
         : Type === Uint16Array ? bin.readUInt16LE(off) : Type === Int16Array ? bin.readInt16LE(off) : bin.readUInt32LE(off);
-      if (a.normalized && norm) x = Math.max(-1, x / norm);
+      if (normalized && norm) x = Math.max(-1, x / norm);
       row.push(x);
     }
     out.push(row);
+  }
+  return out;
+}
+
+// accessor -> array of tuples (Float32 values; normalized integer types are converted to 0..1 / -1..1); an accessor
+// without a buffer view reads as zeros, and sparse entries override their rows
+export function readAccessor(glb, index) {
+  const a = glb.json.accessors[index], n = SIZE[a.type];
+  const out = a.bufferView !== undefined ? readRows(glb, a.bufferView, a.byteOffset, a.componentType, a.count, n, a.normalized)
+    : Array.from({ length: a.count }, () => new Array(n).fill(0));
+  if (a.sparse) {
+    const idx = readRows(glb, a.sparse.indices.bufferView, a.sparse.indices.byteOffset, a.sparse.indices.componentType, a.sparse.count, 1, false);
+    const vals = readRows(glb, a.sparse.values.bufferView, a.sparse.values.byteOffset, a.componentType, a.sparse.count, n, a.normalized);
+    idx.forEach(([i], k) => { out[i] = vals[k]; });
   }
   return out;
 }
@@ -41,22 +57,76 @@ export function writeAccessorInPlace(glb, index, rows) {
   rows.forEach((r, i) => { for (let k = 0; k < n; k++) put(r[k], base + i * stride + k * bytes); });
 }
 
+// append raw bytes as a new buffer view (4-byte aligned); returns its index
+function addView(glb, data) {
+  const pending = glb.extra.reduce((t, x) => t + x.length, 0);
+  let offset = glb.bin.length + pending;
+  const pad = (4 - (offset % 4)) % 4; if (pad) { glb.extra.push(Buffer.alloc(pad)); offset += pad; }
+  glb.extra.push(data);
+  glb.json.bufferViews.push({ buffer: 0, byteOffset: offset, byteLength: data.length });
+  return glb.json.bufferViews.length - 1;
+}
+
 // append float data as a new accessor; returns its index
 export function addAccessor(glb, rows, type, withMinMax = false) {
   const n = SIZE[type], f = new Float32Array(rows.length * n);
   rows.forEach((r, i) => { for (let k = 0; k < n; k++) f[i * n + k] = r[k]; });
-  const pending = glb.extra.reduce((s, x) => s + x.length, 0);
-  let offset = glb.bin.length + pending;
-  const pad = (4 - (offset % 4)) % 4; if (pad) { glb.extra.push(Buffer.alloc(pad)); offset += pad; }
-  const data = Buffer.from(f.buffer, f.byteOffset, f.byteLength); glb.extra.push(data);
-  glb.json.bufferViews.push({ buffer: 0, byteOffset: offset, byteLength: data.length });
-  const acc = { bufferView: glb.json.bufferViews.length - 1, componentType: 5126, count: rows.length, type };
+  const acc = { bufferView: addView(glb, Buffer.from(f.buffer, f.byteOffset, f.byteLength)), componentType: 5126, count: rows.length, type };
   if (withMinMax) {
     acc.min = Array.from({ length: n }, (_, k) => Math.min(...rows.map(r => r[k])));
     acc.max = Array.from({ length: n }, (_, k) => Math.max(...rows.map(r => r[k])));
   }
   glb.json.accessors.push(acc);
   return glb.json.accessors.length - 1;
+}
+
+// a float accessor of `count` rows that are zero except `entries` ([[row, [values...]], ...]): stored sparse, or with no
+// data at all when every row is zero. min / max cover every row (glTF requires them on morph-target positions).
+export function addSparseAccessor(glb, count, entries, type) {
+  const n = SIZE[type], sorted = [...entries].sort((x, y) => x[0] - y[0]), hasZeros = sorted.length < count;
+  const min = new Array(n).fill(hasZeros ? 0 : Infinity), max = new Array(n).fill(hasZeros ? 0 : -Infinity);
+  for (const [, r] of sorted) for (let k = 0; k < n; k++) { min[k] = Math.min(min[k], r[k]); max[k] = Math.max(max[k], r[k]); }
+  const acc = { componentType: 5126, count, type, min, max };
+  if (sorted.length) {
+    const ids = new Uint32Array(sorted.map(([i]) => i)), vals = new Float32Array(sorted.length * n);
+    sorted.forEach(([, r], i) => { for (let k = 0; k < n; k++) vals[i * n + k] = r[k]; });
+    acc.sparse = { count: sorted.length, indices: { bufferView: addView(glb, Buffer.from(ids.buffer)), componentType: 5125 }, values: { bufferView: addView(glb, Buffer.from(vals.buffer)) } };
+  }
+  glb.json.accessors.push(acc);
+  return glb.json.accessors.length - 1;
+}
+
+// Drop accessors and buffer views nothing refers to any more (data replaced by a rebuild) and repack the binary chunk.
+export function compactGlb(glb) {
+  const J = glb.json, used = new Set(), use = (i) => { if (i !== undefined) used.add(i); };
+  for (const m of J.meshes || []) for (const p of m.primitives) { Object.values(p.attributes).forEach(use); use(p.indices); (p.targets || []).forEach((t) => Object.values(t).forEach(use)); }
+  for (const s of J.skins || []) use(s.inverseBindMatrices);
+  for (const a of J.animations || []) for (const s of a.samplers) { use(s.input); use(s.output); }
+  const order = [...used].sort((x, y) => x - y), map = new Map(order.map((i, k) => [i, k])), ra = (i) => (i === undefined ? undefined : map.get(i));
+  for (const m of J.meshes || []) for (const p of m.primitives) {
+    for (const k of Object.keys(p.attributes)) p.attributes[k] = ra(p.attributes[k]);
+    if (p.indices !== undefined) p.indices = ra(p.indices);
+    for (const t of p.targets || []) for (const k of Object.keys(t)) t[k] = ra(t[k]);
+  }
+  for (const s of J.skins || []) if (s.inverseBindMatrices !== undefined) s.inverseBindMatrices = ra(s.inverseBindMatrices);
+  for (const a of J.animations || []) for (const s of a.samplers) { s.input = ra(s.input); s.output = ra(s.output); }
+  const accessors = order.map((i) => J.accessors[i]), views = new Set();
+  for (const a of accessors) { if (a.bufferView !== undefined) views.add(a.bufferView); if (a.sparse) { views.add(a.sparse.indices.bufferView); views.add(a.sparse.values.bufferView); } }
+  for (const im of J.images || []) if (im.bufferView !== undefined) views.add(im.bufferView);
+  const all = Buffer.concat([glb.bin, ...glb.extra]), parts = [], viewMap = new Map(), bufferViews = [];
+  let offset = 0;
+  for (const i of [...views].sort((x, y) => x - y)) {
+    const v = J.bufferViews[i], pad = (4 - (offset % 4)) % 4;
+    if (pad) { parts.push(Buffer.alloc(pad)); offset += pad; }
+    parts.push(all.subarray(v.byteOffset || 0, (v.byteOffset || 0) + v.byteLength));
+    viewMap.set(i, bufferViews.length); bufferViews.push({ ...v, byteOffset: offset }); offset += v.byteLength;
+  }
+  for (const a of accessors) {
+    if (a.bufferView !== undefined) a.bufferView = viewMap.get(a.bufferView);
+    if (a.sparse) { a.sparse.indices.bufferView = viewMap.get(a.sparse.indices.bufferView); a.sparse.values.bufferView = viewMap.get(a.sparse.values.bufferView); }
+  }
+  for (const im of J.images || []) if (im.bufferView !== undefined) im.bufferView = viewMap.get(im.bufferView);
+  J.accessors = accessors; J.bufferViews = bufferViews; glb.bin = Buffer.concat(parts); glb.extra = [];
 }
 
 export function writeGlb(glb, path) {

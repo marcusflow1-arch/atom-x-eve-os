@@ -1,12 +1,17 @@
 # Avatar creator locomotion (12 Oct 2026)
 
-**Bodies:**
-- `Getsuga_Tensho_Character_v4.glb` (male)
-- `Artemis_Character_v4.glb` (female)
+**Bodies (current):**
+- `Getsuga_Tensho_Character_v5.glb` (male)
+- `Artemis_Character_v5.glb` (female)
 
-Each v4 file is its v3 file plus two clips, `Walk` and `Run`. These clips were authored directly on that body's own skeleton by `tools/avatar-motion/locomotion.mjs`. Every v3 byte, clip, skin weight and shape key is unchanged; `tests/avatar-locomotion.test.mjs` checks this.
+They are built from v3 by one command, `node tools/avatar-motion/locomotion.mjs`, which adds:
+- the clips `Walk`, `Run` and `Stand`, authored directly on each body's own skeleton;
+- the creator's `CC_*` shape keys (see `AVATAR_SHAPES_2026-10-14.md`);
+- on Artemis, her right upper arm re-skinned (see the 14 Oct update below).
 
-`src/lib/characterModelOverrides.js` now serves v4, and redirects v3 and every older URL to it.
+Everything else in v3 is unchanged: meshes, textures, skins, and every clip and its values. `tests/avatar-locomotion.test.mjs` checks this. v4 (12 to 14 Oct) was v3 plus the clips only; it has been removed.
+
+`src/lib/characterModelOverrides.js` serves v5 and redirects v4, v3 and every older URL to it.
 
 ## What the player sees
 

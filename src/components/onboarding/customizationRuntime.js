@@ -40,7 +40,7 @@ export function applyCustomizationAppearance(root,appearance={}) {
   // own blinks, lips, brows and the jaw throughout the authored animation.
   if(mesh.morphTargetDictionary) {
    const indices=SHAPE_CONTROLS.filter(c=>mesh.morphTargetDictionary[c.morph]!==undefined);
-   mesh.userData.creatorMorphs=indices.map(c=>[mesh.morphTargetDictionary[c.morph],Number(appearance.shape_controls?.[c.id]||0)]);
+   mesh.userData.creatorMorphs=indices.map(c=>[mesh.morphTargetDictionary[c.morph],THREE.MathUtils.clamp(Number(appearance.shape_controls?.[c.id]||0),c.min??0,1)]);
    if(!morphHooks.has(mesh)) {
     const before=mesh.onBeforeRender;
     mesh.onBeforeRender=function(...args){before?.apply(this,args);applyPersistentShapes(this);};
@@ -78,7 +78,8 @@ export function applyCustomizationAppearance(root,appearance={}) {
  });
 }
 export function applyPersistentShapes(mesh) {
- for(const [index,value] of mesh.userData.creatorMorphs||[])mesh.morphTargetInfluences[index]=THREE.MathUtils.clamp(value,0,1);
+ // two-sided keys go negative (the opposite shape); values are already clamped per control above
+ for(const [index,value] of mesh.userData.creatorMorphs||[])mesh.morphTargetInfluences[index]=THREE.MathUtils.clamp(value,-1,1);
 }
 const disposeLayer=root=>{
  const geometries=new Set(),materials=new Set(),textures=new Set(),skeletons=new Set();

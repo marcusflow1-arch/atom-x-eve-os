@@ -36,7 +36,7 @@ const along = (b, from, to, t, offset = [0, 0, 0], r = 0.035) => ({ at: b(from).
 
 export const BODIES = {
   male: {
-    src: 'public/models/characters/Getsuga_Tensho_Character_v4.glb', mesh: 'SK_Character_mesh', material: 'M_Character',
+    src: 'public/models/characters/Getsuga_Tensho_Character_v5.glb', mesh: 'SK_Character_mesh', material: 'M_Character',
     out: 'public/models/characters/regions/getsuga-v4',
     regions: (b, f) => [
       { id: 'skin', label: 'Skin', priority: 0, where: ALL, seeds: [...cheekSeeds(f), along(b, 'lowerarm_l', 'hand_l', 0.45, [0, 0, 0.03]), along(b, 'lowerarm_r', 'hand_r', 0.45, [0, 0, 0.03]), along(b, 'calf_l', 'foot_l', 0.4, [0, 0, 0.05]), along(b, 'calf_r', 'foot_r', 0.4, [0, 0, 0.05])] },
@@ -47,7 +47,7 @@ export const BODIES = {
     ],
   },
   female: {
-    src: 'public/models/characters/Artemis_Character_v4.glb', mesh: 'Artemis_Body', material: 'M_Artemis',
+    src: 'public/models/characters/Artemis_Character_v5.glb', mesh: 'Artemis_Body', material: 'M_Artemis',
     lightnessSpread: 40, // her leather and armour are skin-coloured but darker: keep the skin model tight in lightness
     out: 'public/models/characters/regions/artemis-v4',
     regions: (b, f) => [

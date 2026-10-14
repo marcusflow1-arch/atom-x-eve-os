@@ -5,10 +5,13 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { readGlb, readAccessor } from '../tools/avatar-motion/glb-io.mjs';
 import { CreatorLocomotion, clipExtras } from '../src/components/onboarding/creatorLocomotion.js';
+import { SHAPE_KEYS, landmarks } from '../tools/avatar-shapes/shapes.mjs';
+import { inspectCustomization, applyCustomizationAppearance, applyPersistentShapes } from '../src/components/onboarding/customizationRuntime.js';
+import { SHAPE_CONTROLS } from '../base44/shared/avatarCustomization.ts';
 
 const BODIES = [
   ['male', 'Getsuga_Tensho_Character', null],
-  // Artemis' right upper arm is re-skinned in place (tools/avatar-motion/locomotion.mjs, reskinUpperArm)
+  // Artemis' right upper arm is re-skinned (tools/avatar-motion/locomotion.mjs, reskinUpperArm)
   ['female', 'Artemis_Character', 'Artemis_Body'],
 ];
 const path = (name, v) => `public/models/characters/${name}_v${v}.glb`;
@@ -23,30 +26,87 @@ async function load(file) {
 }
 
 for (const [body, name, reskinned] of BODIES) {
-  test(`${body}: v4 is v3 plus the Walk, Run and Stand clips${reskinned ? ' and the right-arm skin fix' : ''}, nothing else changed`, () => {
-    const v3 = readGlb(path(name, 3)), v4 = readGlb(path(name, 4));
-    const a = v3.bin, b = Buffer.from(v4.bin.subarray(0, v3.bin.length));
-    if (reskinned) {
-      // the only bytes allowed to differ: the body's own joint / weight data
-      const prim = v3.json.meshes.find((m) => m.name === reskinned).primitives[0];
-      for (const attr of ['JOINTS_0', 'WEIGHTS_0']) {
-        const view = v3.json.bufferViews[v3.json.accessors[prim.attributes[attr]].bufferView];
-        b.set(a.subarray(view.byteOffset, view.byteOffset + view.byteLength), view.byteOffset);
-      }
+  test(`${body}: v5 is v3 plus the Walk, Run and Stand clips and the shape keys${reskinned ? ' and the right-arm skin fix' : ''}, nothing else changed`, () => {
+    const v3 = readGlb(path(name, 3)), v5 = readGlb(path(name, 5)), A = v3.json, B = v5.json;
+    const same = (x, y, what) => assert.deepEqual(readAccessor(v5, y), readAccessor(v3, x), what);
+    for (const key of ['nodes', 'materials', 'textures', 'samplers', 'scenes', 'scene', 'asset']) assert.deepEqual(B[key], A[key], key);
+    A.images.forEach((im, i) => {
+      const a = A.bufferViews[im.bufferView], b = B.bufferViews[B.images[i].bufferView];
+      assert.ok(v3.bin.subarray(a.byteOffset, a.byteOffset + a.byteLength).equals(v5.bin.subarray(b.byteOffset, b.byteOffset + b.byteLength)), 'image ' + im.name);
+    });
+    A.skins.forEach((s, i) => { assert.deepEqual(B.skins[i].joints, s.joints); same(s.inverseBindMatrices, B.skins[i].inverseBindMatrices, 'bind matrices'); });
+    const shaped = new Set();
+    A.meshes.forEach((m, mi) => {
+      const n = B.meshes[mi];
+      assert.equal(n.name, m.name); assert.equal(n.primitives.length, m.primitives.length);
+      const added = (n.extras?.targetNames?.length || 0) - (m.extras?.targetNames?.length || 0);
+      if (added) { shaped.add(mi); assert.deepEqual(n.extras.targetNames, [...(m.extras?.targetNames || []), ...SHAPE_KEYS], m.name + ' shape keys'); }
+      m.primitives.forEach((p, k) => {
+        const q = n.primitives[k];
+        assert.equal(q.material, p.material); assert.deepEqual(Object.keys(q.attributes).sort(), Object.keys(p.attributes).sort());
+        for (const attr of Object.keys(p.attributes)) if (!(m.name === reskinned && k === 0 && /^(JOINTS|WEIGHTS)_0$/.test(attr))) same(p.attributes[attr], q.attributes[attr], `${m.name}/${k}/${attr}`);
+        if (p.indices !== undefined) same(p.indices, q.indices, m.name + ' indices');
+        (p.targets || []).forEach((t, j) => same(t.POSITION, q.targets[j].POSITION, `${m.name} target ${j}`));
+        assert.equal((q.targets || []).length, (p.targets || []).length + added, m.name + ' target count');
+      });
+    });
+    assert.deepEqual(B.animations.map((a) => a.name), [...A.animations.map((a) => a.name), 'Walk', 'Run', 'Stand']);
+    A.animations.forEach((a, ai) => {
+      const b = B.animations[ai];
+      assert.deepEqual(b.channels.map((c) => c.target), a.channels.map((c) => c.target), a.name);
+      a.channels.forEach((c, ci) => {
+        const sa = a.samplers[c.sampler], sb = b.samplers[b.channels[ci].sampler];
+        same(sa.input, sb.input, `${a.name} input`);
+        const oa = readAccessor(v3, sa.output), ob = readAccessor(v5, sb.output);
+        if (c.target.path === 'weights' && shaped.has(A.nodes[c.target.node].mesh)) {
+          const keys = readAccessor(v3, sa.input).length, nOld = oa.length / keys, nNew = nOld + SHAPE_KEYS.length;
+          assert.equal(ob.length, keys * nNew, `${a.name} padded weights`);
+          for (let k = 0; k < keys; k++) {
+            assert.deepEqual(ob.slice(k * nNew, k * nNew + nOld), oa.slice(k * nOld, k * nOld + nOld));
+            assert.ok(ob.slice(k * nNew + nOld, (k + 1) * nNew).every((r) => r[0] === 0));
+          }
+        } else assert.deepEqual(ob, oa, `${a.name} ${c.target.path} output`);
+      });
+    });
+  });
+
+  test(`${body}: shape keys stay in their regions and keep the eyes and mouth with the face`, () => {
+    const v5 = readGlb(path(name, 5)), J = v5.json, bodyMesh = name === 'Artemis_Character' ? 'Artemis_Body' : 'SK_Character_mesh', L = landmarks(v5, bodyMesh);
+    const deltas = (meshName, key) => {
+      const m = J.meshes.find((x) => x.name === meshName), k = m.extras.targetNames.indexOf(key);
+      return m.primitives.flatMap((p) => { const pos = readAccessor(v5, p.attributes.POSITION), d = readAccessor(v5, p.targets[k].POSITION); return pos.map((x, i) => [x, Math.hypot(...d[i])]); });
+    };
+    const neck = L.chin.y - 0.06;
+    for (const key of ['CC_FaceWidth', 'CC_JawWidth', 'CC_NoseWidth', 'CC_EyeSize', 'CC_BrowSize', 'CC_Age']) {
+      const d = deltas(bodyMesh, key), max = Math.max(...d.map(([, m]) => m));
+      assert.ok(max > 0.001 && max < 0.016, `${key} moves the face up to ${(max * 1000).toFixed(1)} mm`);
+      assert.ok(d.every(([p, m]) => m < 1e-4 || p[1] > neck), `${key} stays above the neck`);
     }
-    assert.ok(a.equals(b), 'every other v3 byte is kept in place');
-    for (const key of Object.keys(v3.json)) {
-      if (['accessors', 'bufferViews', 'animations', 'buffers'].includes(key)) continue;
-      assert.deepEqual(v4.json[key], v3.json[key], key);
+    for (const key of ['CC_ChestSize', 'CC_GluteSize', 'CC_ShoulderWidth', 'CC_MuscleDefinition']) {
+      const d = deltas(bodyMesh, key), max = Math.max(...d.map(([, m]) => m));
+      assert.ok(max > 0.004 && max < 0.04, `${key} moves the body up to ${(max * 1000).toFixed(1)} mm`);
+      if (key !== 'CC_ShoulderWidth') assert.ok(d.every(([p, m]) => m < 1e-4 || p[1] < L.chin.y), `${key} leaves the head alone`);
     }
-    assert.deepEqual(v4.json.accessors.slice(0, v3.json.accessors.length), v3.json.accessors);
-    assert.deepEqual(v4.json.bufferViews.slice(0, v3.json.bufferViews.length), v3.json.bufferViews);
-    assert.deepEqual(v4.json.animations.slice(0, v3.json.animations.length), v3.json.animations);
-    assert.deepEqual(v4.json.animations.slice(v3.json.animations.length).map((a) => a.name), ['Walk', 'Run', 'Stand']);
+    for (const eye of ['EYE_Sclera_L', 'EYE_Iris_R']) {
+      assert.ok(Math.max(...deltas(eye, 'CC_EyeSize').map(([, m]) => m)) > 0.001, eye + ' scales with the eye');
+      assert.ok(Math.max(...deltas(eye, 'CC_ChestSize').map(([, m]) => m)) === 0, eye + ' ignores the chest');
+    }
+  });
+
+  test(`${body}: the creator's shape sliders reach the mesh both ways and survive the clips' face track`, async () => {
+    const gltf = await load(path(name, 5)), root = gltf.scene, mixer = new THREE.AnimationMixer(root);
+    const caps = inspectCustomization(root);
+    assert.deepEqual([...caps.shapes].sort(), SHAPE_CONTROLS.map((c) => c.id).sort(), 'every slider unlocks');
+    applyCustomizationAppearance(root, { shape_controls: { face_width: -0.6, chest_size: 0.8, age: 0.5, eye_size: -3 } });
+    mixer.clipAction(gltf.animations.find((c) => c.name === 'Stand')).play(); mixer.update(0.5); // the face track writes zeros there
+    let body; root.traverse((n) => { if (n.isMesh && n.morphTargetDictionary?.Blink_Left !== undefined && !body) body = n; });
+    applyPersistentShapes(body); // what onBeforeRender does every frame
+    const at = (k) => body.morphTargetInfluences[body.morphTargetDictionary[k]];
+    assert.equal(at('CC_FaceWidth'), -0.6); assert.equal(at('CC_ChestSize'), 0.8); assert.equal(at('CC_Age'), 0.5); assert.equal(at('CC_EyeSize'), -1);
   });
 
   if (reskinned) test(`${body}: the skin fix only moves right-upper-arm vertices onto the upper arm, weights stay normalized`, () => {
-    const v3 = readGlb(path(name, 3)), v4 = readGlb(path(name, 4));
+    const v3 = readGlb(path(name, 3)), v4 = readGlb(path(name, 5));
     const prim = v4.json.meshes.find((m) => m.name === reskinned).primitives[0], mi = v4.json.meshes.findIndex((m) => m.name === reskinned);
     const names = v4.json.skins[v4.json.nodes.find((n) => n.mesh === mi).skin].joints.map((j) => v4.json.nodes[j].name);
     const pos = readAccessor(v4, prim.attributes.POSITION), j3 = readAccessor(v3, prim.attributes.JOINTS_0), w3 = readAccessor(v3, prim.attributes.WEIGHTS_0);
@@ -64,7 +124,7 @@ for (const [body, name, reskinned] of BODIES) {
   });
 
   test(`${body}: arms stay natural: elbows never fold past a running bend, arms hang close to the body when standing`, async (t) => {
-    const gltf = await load(path(name, 4)), root = gltf.scene, mixer = new THREE.AnimationMixer(root);
+    const gltf = await load(path(name, 5)), root = gltf.scene, mixer = new THREE.AnimationMixer(root);
     const P = (n) => root.getObjectByName(n).getWorldPosition(new THREE.Vector3());
     for (const [clipName, maxBend, maxOut] of [['Stand', 25, 16], ['Walk', 35, 20], ['Run', 95, 24]]) {
       const clip = gltf.animations.find((c) => c.name === clipName), action = mixer.clipAction(clip).play();
@@ -85,7 +145,7 @@ for (const [body, name, reskinned] of BODIES) {
   });
 
   test(`${body}: Stand keeps both feet planted, barely moves and loops seamlessly`, async (t) => {
-    const gltf = await load(path(name, 4)), root = gltf.scene, mixer = new THREE.AnimationMixer(root), extras = clipExtras(gltf);
+    const gltf = await load(path(name, 5)), root = gltf.scene, mixer = new THREE.AnimationMixer(root), extras = clipExtras(gltf);
     const clip = gltf.animations.find((c) => c.name === 'Stand'), info = extras.get('Stand');
     assert.ok(info.idle && info.loop && info.speed === 0, 'Stand extras');
     const action = mixer.clipAction(clip).play(), feet = ['foot_l', 'foot_r', 'ball_l', 'ball_r'].map((n) => root.getObjectByName(n));
@@ -104,7 +164,7 @@ for (const [body, name, reskinned] of BODIES) {
   });
 
   test(`${body}: Walk and Run loop seamlessly and keep planted feet still at their authored speed`, async (t) => {
-    const gltf = await load(path(name, 4)), extras = clipExtras(gltf);
+    const gltf = await load(path(name, 5)), extras = clipExtras(gltf);
     for (const clipName of ['Walk', 'Run']) {
       const clip = gltf.animations.find((c) => c.name === clipName), info = extras.get(clipName);
       assert.ok(info?.loop && info.inPlace && info.speed > 0.5 && info.cycleSeconds > 0.4, clipName + ' extras');
@@ -137,7 +197,7 @@ for (const [body, name, reskinned] of BODIES) {
   });
 
   test(`${body}: creator locomotion changes gait without pops and stops on a heel strike`, async (t) => {
-    const gltf = await load(path(name, 4)), root = gltf.scene, mixer = new THREE.AnimationMixer(root);
+    const gltf = await load(path(name, 5)), root = gltf.scene, mixer = new THREE.AnimationMixer(root);
     const idleClip = gltf.animations.find((c) => c.name === 'Stand'); // the creator stage's idle
     let idle = mixer.clipAction(idleClip).play();
     const loco = new CreatorLocomotion({ root, mixer, clips: gltf.animations, extras: clipExtras(gltf), onIdle: () => { idle = mixer.clipAction(idleClip); idle.reset().setEffectiveWeight(1).play(); } });
