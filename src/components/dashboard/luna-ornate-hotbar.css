@@ -6,7 +6,7 @@
 .luna-hotbar:not([data-embedded]) .luna-hotbar-slot:hover,.luna-hotbar:not([data-embedded]) .luna-hotbar-slot[data-pending],.luna-hotbar:not([data-embedded]) .luna-hotbar-slot[data-drag-over]{border-color:#9fefff!important;background:linear-gradient(145deg,#255b72,#112a46)!important;filter:drop-shadow(0 0 4px rgba(21,215,255,.42))}
 .luna-hotbar:not([data-embedded]) .luna-hotbar-slot[data-selected]{border-color:#e9c383!important}
 .luna-hotbar:not([data-embedded]) .luna-hotbar-slot>svg{color:#cdefff;stroke-width:1.2;filter:drop-shadow(0 0 3px rgba(19,204,250,.3))}
-.luna-hotbar:not([data-embedded]) .luna-hotbar-key{border:1px solid rgba(169,132,87,.4);background:rgba(3,11,23,.96);font-size:9px}
+.luna-hotbar:not([data-embedded]) .luna-hotbar-key{border:1px solid rgba(169,132,87,.4);background:rgba(3,11,23,.96);font-size:12px}
 .luna-hotbar:not([data-embedded]) .luna-hotbar-exp{margin-top:7px}
 .luna-hotbar:not([data-embedded]) .luna-hotbar-exp-track{height:9px;border:1px solid rgba(165,116,70,.65);box-shadow:inset 0 0 8px rgba(0,4,16,.9),0 1px 0 rgba(238,197,135,.15);background:linear-gradient(180deg,rgba(5,15,28,.97),rgba(16,29,42,.97))}
 .luna-hotbar:not([data-embedded]) .luna-hotbar-exp-track>div{background:linear-gradient(90deg,#0f6c9d,#05c7ee,#92f5ff);box-shadow:0 0 12px rgba(52,219,255,.55)}

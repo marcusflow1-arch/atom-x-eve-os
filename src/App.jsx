@@ -24,6 +24,8 @@ import Plan from './pages/Plan';
 import AvatarGenesisGate from '@/components/onboarding/AvatarGenesisGate';
 import AIReflectionBridge from '@/components/avatar/AIReflectionBridge';
 import SetupPreview from '@/pages/SetupPreview';
+import Game5 from '@/pages/Game5';
+import GenesisWizard from '@/components/onboarding/GenesisWizard';
 import AuraLife from '@/pages/AuraLife';
 import GenesisLoadingScreen from '@/components/onboarding/GenesisLoadingScreen';
 import CalendarReminderBridge from '@/components/calendar/CalendarReminderBridge';
@@ -82,7 +84,11 @@ const AuthenticatedApp = () => {
         <Route path="/game/:gameId" element={<LayoutWrapper currentPageName="GameHub"><GameHub /></LayoutWrapper>} />
         <Route path="/studio" element={<LayoutWrapper currentPageName="Studio"><Studio /></LayoutWrapper>} />
         <Route path="/dev-studio/:studioId" element={<LayoutWrapper currentPageName="DevStudio"><DevStudio /></LayoutWrapper>} />
+        {/* Game 5 is an isolated admin-only development page. The generated page registry does not yet include it. */}
+        {!Pages.Game5 && <Route path="/Game5" element={<Game5 />} />}
         <Route path="/SetupPreview" element={<SetupPreview />} />
+        {/* Run the first-login wizard in non-saving test mode for existing players. */}
+        <Route path="/CharacterCreationTest" element={<GenesisWizard user={user} testMode />} />
         <Route path="/AuraLife" element={<LayoutWrapper currentPageName="AuraLife"><AuraLife /></LayoutWrapper>} />
         <Route path="/NetworkTest" element={<NetworkTest />} />
         <Route path="/ChainBreak" element={<ChainBreak />} />

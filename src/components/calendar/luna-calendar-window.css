@@ -149,7 +149,7 @@
 @container (max-width:520px){
   .luna-calendar-rail{display:none!important}
   .luna-calendar-header{height:55px}
-  .luna-calendar-header h1{font-size:13px!important}
+  .luna-calendar-header h1{font-size:16px!important}
   .luna-calendar-header [class*="tracking-"]{letter-spacing:normal}
   [data-calendar-day]{padding:2px!important}
   [data-calendar-day] .h-6.w-6{width:21px;height:21px}

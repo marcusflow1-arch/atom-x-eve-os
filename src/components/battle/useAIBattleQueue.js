@@ -1,4 +1,5 @@
 import { startPvPPingProbe } from './pvpPingProbe';
+import { isAttackPreview } from './attackPreview';
 // @refresh reset
 // Remount consumers on edits: matchmaking hook additions must not reuse old hook slots.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -401,6 +402,21 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
     return startPvPPingProbe({ matchId: match.id });
   }, [sessionBridge, match?.id, match?.status, user?.id]);
 
+  // Recheck a pending queue or active match immediately after connectivity
+  // returns. This is event-driven; normal poll rates and Base44 load stay put.
+  useEffect(() => {
+    if (!polling || !user?.id) return undefined;
+    const recover = () => {
+      const current = queryClient.getQueryData(aiBattleQueryKey(user.id));
+      if (queueIsActive(current) || matchIsActive(current)) {
+        if (refreshSignal.current) refreshSignal.current();
+        else queryClient.invalidateQueries({ queryKey: aiBattleQueryKey(user.id) });
+      }
+    };
+    window.addEventListener('online', recover);
+    return () => window.removeEventListener('online', recover);
+  }, [polling, user?.id, queryClient]);
+
   // Reliable peer cast is only visual prediction. Damage remains server-owned.
   useEffect(() => {
     if (!sessionBridge || typeof window === 'undefined' || !match?.id || !user?.id) return undefined;
@@ -409,10 +425,12 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       const detail = event?.detail || {};
       const sourcePlayerId = String(detail.player_id || detail.sourcePlayerId || '');
       if (!sourcePlayerId || sourcePlayerId === localId || !ids.has(sourcePlayerId) || String(detail.matchId || '') !== matchId) return;
-      // Every recognized combat event triggers an immediate authoritative state refresh.
-      // Peer packets only predict visuals; never use them to change HP or turn ownership.
+      // The early preview is ONLY an animation cue; a follow-up confirmed
+      // event still wakes the server state. This avoids extra Base44 polling
+      // and preserves authority for misses, damage, cooldowns and turn order.
       const kind = String(detail.kind || '');
-      if (!['pvp_cast', 'pvp_melee', 'pvp_dodge', 'ai_battle_card_cast'].includes(kind)) return;
+      const preview = isAttackPreview(kind);
+      if (!preview && !['pvp_cast', 'pvp_melee', 'pvp_dodge', 'ai_battle_card_cast'].includes(kind)) return;
       const receivedAt = performance.now();
       window.dispatchEvent(new CustomEvent('atomxePvPLatency', { detail: {
         kind: 'peer_combat_received', castId: String(detail.cast_id || ''),
@@ -421,7 +439,7 @@ export default function useAIBattleQueue({ sessionBridge = true, polling = true 
       if (kind !== 'pvp_dodge') {
         window.dispatchEvent(new CustomEvent('lunaAIBattleRemoteCardCast', { detail: { ...detail, sourcePlayerId, targetPlayerId: localId, network: true } }));
       }
-      refreshSignal.current?.();
+      if (!preview) refreshSignal.current?.();
     };
     window.addEventListener('webrtcRemoteAction', receive);
     return () => window.removeEventListener('webrtcRemoteAction', receive);

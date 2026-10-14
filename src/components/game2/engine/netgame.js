@@ -17,6 +17,7 @@ import { Fighter } from './fighter.js';
 import { Force, SELECT_ORDER } from './force.js';
 import { hostile } from './combat.js';
 import { v3, clamp, wrapPi } from './math.js';
+import { reconcileRemotePosition } from '../net/remoteSmoothing.js';
 
 // Jedi / Dark Jedi is the look a player picks (blade and robe tint); in the free-for-all everybody fights everybody.
 // Players are team 'ffa' (hostile to every other fighter); the AI Reborn are team 'enemy' (they do not fight each other).
@@ -114,6 +115,15 @@ export class NetGame {
     this.g = g; this.o = o; this.side = o.side === 'dark' ? 'dark' : 'light'; this.isHost = false; this.ai = clamp(o.ai ?? 1, 0, 3);
     this.byId = new Map(); this.snaps = new Map(); this.batch = new Map(); this.lastElec = new Map(); this.kd = new Map(); this.feed = [];
     this.sendEvery = 1; this.stepN = 0; this.sendMs = 0;
+    // Separate opt-in comparison for multiplayer-only remote movement; default unchanged.
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+    // Default to bounded remote correction for real Game 2 multiplayer.
+    // ?g2netsmooth=0 restores the previous hard-snap path immediately.
+    this.smoothRemote = params.get('g2netsmooth') !== '0';
+    this.netDebug = params.get('g2netdebug') === '1';
+    this.remoteArrival = new Map();
+    this.remoteNetStats = { received: 0, outOfOrder: 0, lastGapMs: 0, maxGapMs: 0, longGaps: 0, largeCorrections: 0, hardSnaps: 0, worstCorrection: 0, lastRttMs: null };
+    if (this.netDebug && typeof window !== 'undefined') window.__atomxeGame2NetStats = this.remoteNetStats;
     this.animNames = g.skel.rigJson.anims.map(a => a.name); this.animIdx = Object.fromEntries(this.animNames.map((n, i) => [n, i]));
     this.spawns = arenaSpawns(g.world);
     g.net = this; g.remotes = []; g.round = { state: 'fight', t: 0 }; g.noDamage = false; // no rounds: a continuous deathmatch
@@ -175,7 +185,7 @@ export class NetGame {
     f.actor.setBoth('BOTH_STAND1', { blend: 0 }); g.remotes.push(f); this.byId.set(fid, f); return f;
   }
   removePuppet(fid) {
-    const g = this.g, f = this.byId.get(fid); if (!f || !f.remote) return; this.byId.delete(fid); this.snaps.delete(fid);
+    const g = this.g, f = this.byId.get(fid); if (!f || !f.remote) return; this.byId.delete(fid); this.snaps.delete(fid); this.remoteArrival.delete(fid);
     g.humStop(f); if (f.force && f.force.loops.hold) f.force.loops.hold.stop(0.1); const i = g.remotes.indexOf(f); if (i >= 0) g.remotes.splice(i, 1);
   }
   dropPeer(id, e) { for (const [fid, f] of [...this.byId]) if (f.remote && f.owner === id) this.removePuppet(fid); if (e) this.msg(e.name + ' left the arena'); }
@@ -197,7 +207,16 @@ export class NetGame {
     for (const e of m.f) {
       const fid = e[0]; if (this.byId.get(fid) && !this.byId.get(fid).remote) continue; // never our own
       if (!fid.startsWith(from + ':')) continue; // a player only sends their own fighters
-      const old = this.snaps.get(fid); if (old && old.st > m.t) continue; // late, out-of-order packet
+      const old = this.snaps.get(fid);
+      if (old && old.st > m.t) { if (this.netDebug) this.remoteNetStats.outOfOrder++; continue; } // late, out-of-order packet
+      if (this.netDebug) {
+        const last = this.remoteArrival.get(fid), gap = last == null ? 0 : t - last;
+        this.remoteArrival.set(fid, t);
+        this.remoteNetStats.received++;
+        this.remoteNetStats.lastGapMs = Math.round(gap);
+        this.remoteNetStats.maxGapMs = Math.max(this.remoteNetStats.maxGapMs, Math.round(gap));
+        if (gap > 120) this.remoteNetStats.longGaps++;
+      }
       if (!this.byId.has(fid)) { if (!this.session.roster.has(from)) continue; this.makePuppet(fid, from, e[SN.side] ? 'dark' : 'light', e[SN.name], !!e[SN.dj]); }
       this.snaps.set(fid, { e, st: m.t, at: t, from });
     }
@@ -214,8 +233,23 @@ export class NetGame {
     const status = STATUS[e[SN.status]] || 'normal', air = status === 'flung' || Math.abs(e[SN.vy]) > 0.01;
     const tgt = [e[SN.x] + e[SN.vx] * age, e[SN.y] + (air ? e[SN.vy] * age - 10 * age * age : 0), e[SN.z] + e[SN.vz] * age];
     if (air) { const fl = g.world.floorAt(tgt[0], tgt[2], tgt[1] + 0.5); if (fl != null && tgt[1] < fl) tgt[1] = fl; }
-    const err = v3.dist(tgt, f.pos), k = err > 1.5 ? 1 : Math.min(1, dt * 22);
-    for (let i = 0; i < 3; i++) f.pos[i] += (tgt[i] - f.pos[i]) * k;
+    const err = v3.dist(tgt, f.pos);
+    if (this.netDebug) {
+      this.remoteNetStats.lastRttMs = rtt == null ? null : Math.round(rtt);
+      if (err > 1.5) this.remoteNetStats.largeCorrections++;
+      this.remoteNetStats.worstCorrection = Math.max(this.remoteNetStats.worstCorrection, Math.round(err * 100) / 100);
+    }
+    if (this.smoothRemote) {
+      // Avoid visible warps on late packets; preserve legitimate death-to-respawn teleports.
+      const fix = reconcileRemotePosition(f.pos, tgt, dt, { forceSnap: f.status === 'dead' && status !== 'dead' });
+      for (let i = 0; i < 3; i++) f.pos[i] = fix.pos[i];
+      if (this.netDebug && fix.hardSnap) this.remoteNetStats.hardSnaps++;
+    } else {
+      // Original correction path remains the default and provides an A/B baseline.
+      const k = err > 1.5 ? 1 : Math.min(1, dt * 22);
+      for (let i = 0; i < 3; i++) f.pos[i] += (tgt[i] - f.pos[i]) * k;
+      if (this.netDebug && err > 1.5) this.remoteNetStats.hardSnaps++;
+    }
     f.vel = [e[SN.vx], e[SN.vy], e[SN.vz]]; f.yaw = f.yaw + wrapPi(e[SN.yaw] - f.yaw) * Math.min(1, dt * 25); f.targetYaw = f.yaw;
     const was = f.status; f.status = status; f.hp = e[SN.hp]; f.maxHp = e[SN.maxHp]; f.ducked = !!e[SN.duck]; f.glow = e[SN.glow]; f.glowCol = e[SN.glow] > 0.3 ? [0.55, 0.8, 1] : [1, 0.12, 0.08]; f.dmgFlash = Math.max(f.dmgFlash || 0, e[SN.flash]); f.netPitch = e[SN.pitch]; f.kind = e[SN.dj] ? 'darkjedi' : 'remote'; f.onGround = !air;
     if (status === 'dead' && was !== 'dead') { f.deadAt = g.t; g.humStop(f); }

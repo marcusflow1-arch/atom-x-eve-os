@@ -1167,6 +1167,18 @@ function LayoutContent({ children, currentPageName }) {
                             Game 3
                           </button>
 
+                          {/* First-login character creator test — never overwrites a saved character. */}
+                          <button
+                            type="button"
+                            onClick={() => navigate('/CharacterCreationTest')}
+                            className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-violet-500/15 border-violet-300/35 text-violet-100 hover:bg-violet-500/30 hover:text-white items-center gap-2"
+                            title="Test first-time character creation"
+                            aria-label="Test character creation"
+                          >
+                            <Sparkles className="w-4 h-4" />
+                            Test
+                          </button>
+
                           <button
                             type="button"
                             onClick={() => navigate(createPageUrl('Game2'))}
@@ -1175,6 +1187,17 @@ function LayoutContent({ children, currentPageName }) {
                           >
                             <Gamepad2 className="w-4 h-4" />
                             Game 2
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => navigate(createPageUrl('Game5'))}
+                            className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-cyan-500/15 border-cyan-300/35 text-cyan-100 hover:bg-cyan-500/30 hover:text-white items-center gap-2"
+                            title="Open Game 5 — Wuxia MMORPG development dashboard"
+                            aria-label="Open Game 5 development dashboard"
+                          >
+                            <Gamepad2 className="w-4 h-4" />
+                            Game 5
                           </button>
                         </div>
                       </>

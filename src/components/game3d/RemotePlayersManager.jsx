@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils';
+import { reconcileNetworkPosition } from '../network/remote/positionCorrection';
 
 /**
  * RemotePlayersManager — renders other players in the shared game world.
@@ -34,7 +35,10 @@ const loadOnce = (url, isAnim = false) =>
 
 export function createRemotePlayersManager(scene) {
   const remotes = new Map(); // playerId -> { group, mixer, idleAction, runAction, current, targetPos, targetYaw, lastUpdate, name }
-  const clock = new THREE.Clock();
+  // Network presentation can be temporarily reverted per browser without touching combat.
+  const smoothingEnabled = typeof window === 'undefined' || new URLSearchParams(window.location.search).get('g3netsmooth') !== '0';
+  const yawAxis = new THREE.Vector3(0, 1, 0);
+  const yawQuat = new THREE.Quaternion();
 
   let assetsReady = false;
   const pending = [];
@@ -147,17 +151,23 @@ export function createRemotePlayersManager(scene) {
     }
   };
 
-  // Update positions/animations every frame; called from GameWorld3D animate loop
-  // Higher lerp factors = remote player snaps to network position faster,
-  // reducing visual lag at the cost of a tiny bit of smoothing.
+  // Render-only smoothing: network targets, local movement and combat are unchanged.
+  // With g3netsmooth=0, restore the legacy frame-rate-dependent lerp instantly.
   const update = (delta) => {
     remotes.forEach((r) => {
       r.mixer.update(delta);
-      // Aggressive lerp toward target position (~100ms catch-up at 60fps)
-      r.group.position.lerp(r.targetPos, 0.5);
-      // Faster yaw rotation
-      const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), r.targetYaw);
-      r.group.quaternion.slerp(targetQ, 0.4);
+      if (smoothingEnabled) {
+        const source = [r.group.position.x, r.group.position.y, r.group.position.z];
+        const target = [r.targetPos.x, r.targetPos.y, r.targetPos.z];
+        const correction = reconcileNetworkPosition(source, target, delta);
+        r.group.position.set(...correction.pos);
+      } else {
+        r.group.position.lerp(r.targetPos, 0.5);
+      }
+      yawQuat.setFromAxisAngle(yawAxis, r.targetYaw);
+      r.group.quaternion.slerp(yawQuat, smoothingEnabled
+        ? 1 - Math.exp(-20 * Math.max(0, Math.min(Number(delta) || 0, 0.1)))
+        : 0.4);
     });
   };
 

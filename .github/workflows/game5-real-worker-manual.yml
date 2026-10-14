@@ -1,0 +1,32 @@
+name: Game 5 worker manual test
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tools/game5/worker.test.mjs
+      - name: Execute one real scoped worker call
+        env:
+          OPENAI_API_KEY: ${{ secrets.GAME5_OPENAI_API_KEY }}
+          GAME5_REPORT_PATH: game5-worker-report.json
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "GAME5_OPENAI_API_KEY is not configured; refusing live execution."
+            exit 1
+          fi
+          node tools/game5/worker.mjs docs/game5/examples/lost-card-task.json
+      - name: Upload report for human inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: game5-worker-report
+          path: game5-worker-report.json
+          if-no-files-found: ignore

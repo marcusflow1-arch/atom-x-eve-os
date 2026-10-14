@@ -1,0 +1,23 @@
+name: Game 5 handoff dry run
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tools/game5/**'
+      - 'docs/game5/examples/**'
+      - '.github/workflows/game5-dispatch-dry-run.yml'
+permissions:
+  contents: read
+jobs:
+  handoff-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify dispatcher guardrails
+        run: node --test tools/game5/dispatcher.test.mjs
+      - name: Simulate project manager specialist QA handoff
+        run: node tools/game5/dispatcher.mjs docs/game5/examples/lost-card-task.json
