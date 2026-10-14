@@ -10,27 +10,51 @@ import { bolt, drawBolt } from './fx.js';
 import { GRIP_MAX_DIST, gripBlocker, gripPhase, gripEffectiveLevel, gripBroken, lightningMul } from './forcerules.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
+// Balance (Atom X Eve tuning on top of the retail costs): Push / Pull cost 22 and share a 0.55 s recovery so they cannot be
+// spammed back to back; Heal costs HEAL_FP_PER_HP Force per point healed (0 -> 100 % = 6 + 130 = 136 Force, more than a full
+// tank) and Force does not regenerate while healing.
+export const THROW_COST = 22, THROW_RECOVERY = 0.55, HEAL_FP_PER_HP = 1.3;
+// Charged Force Push: hold the Push key; the push goes on release (or at PUSH_CHARGE_MAX s). A tap (under PUSH_TAP s) is a
+// normal push. Charge 0..1 adds range, knock-back and damage, up to PUSH_CHARGE_COST more Force, and from 0.75 one level.
+export const PUSH_CHARGE_MAX = 1.1, PUSH_TAP = 0.15, PUSH_CHARGE_COST = 14;
+export const pushCharge = held => clamp((held - PUSH_TAP) / (PUSH_CHARGE_MAX - PUSH_TAP), 0, 1);
 export const POWERS = [
-  { id: 'push', name: 'Force Push', cost: 20 }, { id: 'pull', name: 'Force Pull', cost: 20 },
+  { id: 'push', name: 'Force Push', cost: THROW_COST }, { id: 'pull', name: 'Force Pull', cost: THROW_COST },
   { id: 'grip', name: 'Force Grip', cost: 12, hold: true }, { id: 'lightning', name: 'Force Lightning', cost: 8, hold: true },
-  { id: 'heal', name: 'Force Heal', cost: 10, hold: true }, { id: 'speed', name: 'Force Speed', cost: 50 },
+  { id: 'heal', name: 'Force Heal', cost: 6, rate: 30, hold: true }, { id: 'speed', name: 'Force Speed', cost: 50 },
   { id: 'mind', name: 'Mind Trick', cost: 20 }, { id: 'rage', name: 'Force Rage', cost: 50 },
   { id: 'protect', name: 'Force Protect', cost: 25 }, { id: 'absorb', name: 'Force Absorb', cost: 25 },
   { id: 'drain', name: 'Force Drain', cost: 10, hold: true }, { id: 'see', name: 'Force Sight', cost: 20 },
   { id: 'teamheal', name: 'Team Heal', cost: 25 }, { id: 'teamforce', name: 'Team Energize', cost: 25 },
+  { id: 'levitate', name: 'Force Levitate', cost: 26 },
 ];
+// Force Levitate (Atom X Eve): lifts the target, helpless, for LEVITATE_S s. Any hit on them, or any attack by the caster,
+// drops them; Absorb breaks it. Push them while they float and they are launched (Game.launchLevitated).
+export const LEVITATE_S = 3.5;
+// Combos (Atom X Eve)
+//  Push + Speed: Force Speed within INTERCEPT_WINDOW s of a push that sent someone flying dashes you to where they will land,
+//  facing them; your saber hits on them while they are down or flying are worth INTERCEPT_BONUS x for a moment.
+//  Saber throw + Lightning: lightning aimed at your thrown saber charges it; while it flows, arcs jump from the spinning
+//  blade to every foe within SABER_ARC_R m of it (SABER_ARC_DPS each) and the Force drains twice as fast.
+export const INTERCEPT_WINDOW = 1.6, INTERCEPT_BONUS = 1.5, SABER_ARC_R = 4, SABER_ARC_DPS = 30;
+// Force Pulse (special, X): the PULSE meter fills from damage you deal (PULSE_PER_HP per point) and defeats (PULSE_PER_KILL);
+// when full, a short build-up and a blast that vaporizes every foe within PULSE_RADIUS m.
+export const PULSE_MAX = 100, PULSE_PER_HP = 0.25, PULSE_PER_KILL = 35, PULSE_RADIUS = 7, PULSE_WINDUP = 0.55;
+const OFFENSIVE = new Set(['push', 'pull', 'grip', 'lightning', 'drain']);
 export const POWER_BY_ID = Object.fromEntries(POWERS.map(p => [p.id, p]));
 // Ten direct-cast slots. Remaining powers stay reachable in the mouse-wheel selector.
 export const FORCE_QUICK_SLOTS = Object.freeze([
   ['1', 'push'], ['2', 'pull'], ['3', 'grip'], ['4', 'lightning'], ['5', 'heal'],
   ['6', 'speed'], ['7', 'mind'], ['8', 'rage'], ['9', 'protect'], ['0', 'absorb'],
 ]);
-export const FORCE_QUICK_BINDINGS = Object.freeze(FORCE_QUICK_SLOTS.flatMap(([digit, id]) => [
+// letter keys for powers beyond the ten number slots
+export const FORCE_LETTER_SLOTS = Object.freeze([['G', 'levitate']]);
+export const FORCE_QUICK_BINDINGS = Object.freeze([...FORCE_QUICK_SLOTS.flatMap(([digit, id]) => [
   { code: 'Digit' + digit, id }, { code: 'Numpad' + digit, id },
-]));
-export const FORCE_HOTKEY_LABELS = Object.freeze(Object.fromEntries(FORCE_QUICK_SLOTS.map(([digit, id]) => [id, digit])));
-// Scrollable force menu: all 10 quick-slot abilities plus Drain and Sight.
-export const SELECT_ORDER = [...FORCE_QUICK_SLOTS.map(([, id]) => id), 'drain', 'see'];
+]), ...FORCE_LETTER_SLOTS.map(([key, id]) => ({ code: 'Key' + key, id }))]);
+export const FORCE_HOTKEY_LABELS = Object.freeze(Object.fromEntries([...FORCE_QUICK_SLOTS, ...FORCE_LETTER_SLOTS].map(([key, id]) => [id, key])));
+// Scrollable force menu: all 10 quick-slot abilities plus Drain, Sight and Levitate.
+export const SELECT_ORDER = [...FORCE_QUICK_SLOTS.map(([, id]) => id), 'drain', 'see', 'levitate'];
 export const SELECT_ALL = [...SELECT_ORDER, 'teamheal', 'teamforce'];
 export const FORCE_DUR = { speed: 10, rage: 12, protect: 15, absorb: 12, see: 15 };
 const DUR = FORCE_DUR;
@@ -66,7 +90,7 @@ export class Force {
   hands() { const a = this.p.actor; const l = a.bonePos('lhand'), r = a.bonePos('rhand'); const d = this.aim(); return [v3.addS(l, d, 0.12), v3.addS(r, d, 0.12)]; }
   targets() {
     const g = this.g; if (!this.npc) return g.targets();
-    if (g.online || g.teamMode) return g.foesOf(this.p).map(f => ({ type: 'npc', ref: f, center: () => f.chest() }));
+    if (g.openArena) return g.foesOf(this.p).map(f => ({ type: 'npc', ref: f, center: () => f.chest() }));
     const P = g.player; return P.status === 'dead' ? [] : [{ type: 'npc', ref: P, center: () => P.chest() }];
   }
   cone(range, deg, opts = {}) {
@@ -83,12 +107,17 @@ export class Force {
     const g = this.g, p = this.p, now = g.t; this.gcd -= dt; this.selShow = Math.max(0, this.selShow - dt); this.absorbMsgT -= dt;
     if (p.status === 'dead') { this.releaseAll(true); return; }
     const free = p.status === 'normal' || p.status === 'roll', gripped = p.status === 'gripped';
+    this.updateLevitation();
     if (!this.npc && input) {
-      if (this.gcd <= 0 && !this.holding && (free || gripped || p.status === 'down' || p.status === 'getup')) {
+      if (this.gcd <= 0 && !this.holding && !this.charging && (free || gripped || p.status === 'down' || p.status === 'getup' || p.status === 'levitated')) {
         const shortcut = FORCE_QUICK_BINDINGS.find(({ code, id }) => this.list.includes(id) && input.pressed(code));
-        if (shortcut && (free || gripped || ['push', 'pull'].includes(shortcut.id))) this.tryCast(shortcut.id, shortcut.code);
-        else if (input.pressed('KeyF') && (free || gripped || ['push', 'pull'].includes(this.selId()))) this.tryCast(this.selId(), 'KeyF');
+        const want = shortcut && (free || gripped || ['push', 'pull'].includes(shortcut.id)) ? shortcut : input.pressed('KeyF') && (free || gripped || ['push', 'pull'].includes(this.selId())) ? { id: this.selId(), code: 'KeyF' } : null;
+        // a free fighter charges a push while the key is held; gripped / knocked-down ones push at once to get free
+        if (want && want.id === 'push' && free) this.startCharge(want.code);
+        else if (want) this.tryCast(want.id, want.code);
       }
+      if (this.charging) this.tickCharge(input);
+      if (input.pressed('KeyX') && free) this.startPulse();
       if (input.pressed('KeyJ')) { p.jumpLevel = p.jumpLevel % 3 + 1; g.hud.msg('Force Jump level ' + p.jumpLevel); }
     }
     // held powers
@@ -100,10 +129,12 @@ export class Force {
     }
     // timed powers
     for (const k of Object.keys(this.active)) { if (now >= this.active[k].until) this.endTimed(k); else this.tickTimed(k, dt); }
+    if (this.dash) this.tickDash(dt);
+    if (this.pulsing) this.tickPulse(dt);
     // delayed effects
     for (let i = this.pending.length - 1; i >= 0; i--) if (this.pending[i].t <= now) { const f = this.pending[i].fn; this.pending.splice(i, 1); f(); }
-    // regen
-    const busy = this.holding || Object.keys(this.active).length; this.fp = clamp(this.fp + (busy ? 2.2 : this.regen) * dt, 0, this.max);
+    // regen (none while healing: the heal is paid for in full)
+    const busy = this.holding || Object.keys(this.active).length; this.fp = clamp(this.fp + (this.holding === 'heal' ? 0 : busy ? 2.2 : this.regen) * dt, 0, this.max);
     if (this.fp <= 0 && this.holding) this.release();
     // keep held-anim alive
     if (this.holding && p.forceHold) p.forceUntil = now + 0.25;
@@ -112,22 +143,66 @@ export class Force {
   }
   later(sec, fn) { this.pending.push({ t: this.g.t + sec, fn }); }
   tryCast(id, via) {
+    if (this.p.status === 'levitated' && id !== 'absorb') { this.say('Levitated: only Absorb breaks it'); this.gcd = 0.3; return false; }
     if ((this.p.status === 'down' || this.p.status === 'getup') && id !== 'push' && id !== 'pull') return false;
     if (this.p.status === 'gripped' && !GRIP_ALLOWED.has(id)) { this.say('Gripped: only Push, Pull, Absorb or Protect'); this.gcd = 0.3; return false; }
     return this.activate(id, via);
   }
-  cast(id) { return this.activate(id, 'ai'); }
-  activate(id, via = 'key') {
-    const pw = POW(id); if (!pw) return false;
-    if (!this.use(pw.cost)) { this.gcd = 0.3; return false; }
-    this.gcd = 0.25; this.holdVia = via;
-    const f = this['do_' + id]; if (f) f.call(this); if (this.g.net) this.g.net.onCast(this, id); return true;
+  cast(id, o) { return this.activate(id, 'ai', o); }
+  // ---------------- charged push (player): hold to charge, release to throw
+  startCharge(via) {
+    if ((this.cool.throw || 0) > this.g.t) { this.say('Force Push recovering'); this.gcd = 0.1; return; }
+    if (this.fp < THROW_COST) { this.say('Not enough Force'); this.gcd = 0.3; return; }
+    this.charging = { via, t0: this.g.t };
   }
+  chargeLevel() { return this.charging ? pushCharge(this.g.t - this.charging.t0) : 0; }
+  tickCharge(input) {
+    const g = this.g, p = this.p, C = this.charging, held = g.t - C.t0, c = pushCharge(held);
+    if ((input.held(C.via) && held < PUSH_CHARGE_MAX) && (p.status === 'normal' || p.status === 'roll')) {
+      if (c > 0 && Math.random() < 0.3 + c * 0.6) { const h = this.hands(), k = Math.random() < 0.5 ? 0 : 1, a = Math.random() * 6.28; g.fx.emit({ p: v3.addS(h[k], [Math.cos(a), Math.random() - 0.3, Math.sin(a)], 0.35 * (1 - c * 0.5)), v: v3.scale(v3.sub(h[k], v3.addS(h[k], [Math.cos(a), 0, Math.sin(a)], 0.35)), 3), life: 0.25, size: 0.03 + 0.04 * c, c0: [0.6, 0.85, 1, 0.9], c1: [0.4, 0.6, 1, 0] }); }
+      return;
+    }
+    this.charging = null; if (p.status === 'normal' || p.status === 'roll') this.activate('push', C.via, { charge: c });
+  }
+  activate(id, via = 'key', o = {}) {
+    const pw = POW(id); if (!pw) return false;
+    if ((id === 'push' || id === 'pull') && (this.cool.throw || 0) > this.g.t) { this.say('Force ' + (id === 'push' ? 'Push' : 'Pull') + ' recovering'); this.gcd = 0.1; return false; }
+    const extra = id === 'push' ? Math.round(PUSH_CHARGE_COST * clamp(o.charge || 0, 0, 1)) : 0;
+    if (!this.use(pw.cost + extra)) { this.gcd = 0.3; return false; }
+    if (id === 'push' || id === 'pull') this.cool.throw = this.g.t + THROW_RECOVERY;
+    this.gcd = 0.25; this.holdVia = via;
+    const f = this['do_' + id]; if (f) f.call(this, o); if (this.g.net) this.g.net.onCast(this, id);
+    if (OFFENSIVE.has(id) && id !== 'push') this.dropLevitated('attack'); // attacking anyone ends your own levitation (do_push launches them first)
+    return true;
+  }
+  // ---------------- Force Levitate
+  do_levitate() {
+    const g = this.g, p = this.p, c = this.cone(14, 30)[0];
+    if (!c) { this.fp += POW('levitate').cost; this.say('Force Levitate: no target'); this.gcd = 0.3; return; }
+    this.anim('BOTH_FORCEGRIP1', { durMs: 600 }); g.sfxAt('grip', p.pos, 0.6); g.sfxAt('jump', p.pos, 0.4);
+    const t = c.t, at = t.center(); this.dropLevitated('recast');
+    for (let k = 0; k < 2; k++) g.fx.ring({ p: [at[0], at[1] - 1.1 + k * 0.5, at[2]], n: [0, 1, 0], r0: 0.3, r1: 1.4, life: 0.7, w: 0.08, c: [0.65, 0.85, 1, 0.9], move: [0, 2.5, 0] });
+    if (t.type !== 'npc') { t.ref.lifted = LEVITATE_S; t.ref.vel = [0, 2.2, 0]; t.ref.glow = 1; return; }
+    const v = t.ref, VF = g.forceOf(v), ab = gripEffectiveLevel(this.absorbDef(v), 3, 12);
+    if (ab.level <= 0) { if (VF) VF.addFp(ab.fpGain); g.banner('LEVITATE ABSORBED', [0.78, 0.5, 1]); g.sfxAt('absorbhit', v.pos, 1); return; }
+    if (v.spawnShield > g.t || v.status === 'dead') { this.say('Force Levitate: no effect'); return; }
+    v.levitate(true, { from: p, duration: LEVITATE_S });
+    this.levTarget = v; this.levStart = g.t; this.levUntil = g.t + LEVITATE_S;
+    if (v.isPlayer || p.isPlayer) g.banner(v.isPlayer ? 'LEVITATED' : 'LEVITATE', [0.7, 0.88, 1]);
+  }
+  // the caster's side: forget the target when it is down again; attacking (a swing, a thrown saber, an offensive power) drops it
+  updateLevitation() {
+    const v = this.levTarget; if (!v) return;
+    const g = this.g, grace = v.remote && g.t - this.levStart < 0.6; // another player's fighter shows 'levitated' a moment later
+    if ((v.status !== 'levitated' && !grace) || g.t > this.levUntil + 0.5) { this.levTarget = null; return; }
+    if (this.p.swingActive?.() || this.p.thrown) this.dropLevitated('attack');
+  }
+  dropLevitated(why) { const v = this.levTarget; if (!v) return; this.levTarget = null; if (v.status === 'levitated' || v.remote) v.levitate(false, { why }); }
   onHurt(dmg) { if (this.npc && ((this.holding === 'heal' && dmg >= 4) || (this.holding === 'lightning' && dmg >= 10))) this.release(); } // a heal / lightning can be broken by a solid hit
   interrupt() { this.pending.length = 0; if (this.holding !== 'heal') this.release(); } // a push / pull that lands cancels what the target was casting
   release(silent) { const id = this.holding; if (!id) return; this['end_' + id] && this['end_' + id](silent); this.holding = null; this.beam = null; this.bolts.length = 0; if (this.loops.hold) { this.loops.hold.stop(0.1); this.loops.hold = null; } }
-  releaseAll(silent) { this.release(silent); for (const k of Object.keys(this.active)) this.endTimed(k); }
-  reset() { this.releaseAll(true); this.pending.length = 0; this.want = {}; this.fp = this.max; this.gcd = 0; this.target = null; this.bodyBolts = null; this.absorbMsgT = 0; }
+  releaseAll(silent) { this.release(silent); this.charging = null; this.dropLevitated('down'); for (const k of Object.keys(this.active)) this.endTimed(k); }
+  reset() { this.releaseAll(true); this.dash = null; this.pulsing = null; this.pending.length = 0; this.want = {}; this.fp = this.max; this.gcd = 0; this.target = null; this.bodyBolts = null; this.absorbMsgT = 0; }
   // ---------------- grip bookkeeping
   gripperOf(f) { return this.g.gripperOf(f); }
   // a gripped fighter who pushes / pulls with a level >= the grip level breaks it (the gripper is busy, so he cannot counter)
@@ -139,23 +214,28 @@ export class Force {
     else this.say('Too weak to break the grip');
   }
   // ---------------- instant powers
-  do_push() {
-    const g = this.g, p = this.p; this.freeFromGrip('push');
+  do_push(o = {}) {
+    const g = this.g, p = this.p, ch = clamp(o.charge || 0, 0, 1); this.freeFromGrip('push');
+    for (const f of g.fighters()) if (f !== p && f.thrown && v3.dist(f.thrown.pos, p.chest()) < 0.9) f.unlodgeSaber(); // a push knocks a saber spinning in you loose
     const d = this.aim(); const col = this.npc ? [1, 0.5, 0.45] : [0.7, 0.86, 1];
-    this.anim('BOTH_FORCEPUSH', { durMs: 680 }); g.sfxAt('push', p.pos, 1); this.shake(0.22);
+    this.anim('BOTH_FORCEPUSH', { durMs: 680 }); g.sfxAt('push', p.pos, 1 + 0.3 * ch); this.shake(0.22 + 0.25 * ch);
     this.later(0, () => { // w_force.c ForceThrow: the push lands on the frame it is cast, no wind-up delay
       if (!this.alive()) return;
-      const hands = this.hands(); const mid = v3.lerp(hands[0], hands[1], 0.5); this.pushFx(mid, d, col);
-      for (const h of this.cone(13, 52)) {
-        const t = h.t, fall = clamp(1 - h.L / 15, 0.2, 1); const dir = this.flat(h.v);
-        if (t.type === 'npc') g.applyThrow(this, t.ref, false, { dir, dist: h.L, fall });
-        else { g.world.impulse(t.ref, [dir[0] * (9 + 10 * fall), 3 + 3 * fall, dir[2] * (9 + 10 * fall)]); t.ref.glow = 1; }
+      const hands = this.hands(); const mid = v3.lerp(hands[0], hands[1], 0.5); this.pushFx(mid, d, col, ch);
+      const range = 13 + 5 * ch;
+      this.lastPush = { t: g.t, targets: [] }; // for Push + Speed
+      for (const h of this.cone(range, 52)) {
+        const t = h.t, fall = clamp(1 - h.L / (15 + 5 * ch), 0.2, 1); const dir = this.flat(h.v); if (t.type === 'npc') this.lastPush.targets.push(t.ref);
+        if (t.type === 'npc') g.applyThrow(this, t.ref, false, { dir, dist: h.L, fall, charge: ch });
+        else { g.world.impulse(t.ref, [dir[0] * (9 + 10 * fall) * (1 + ch), 3 + 3 * fall, dir[2] * (9 + 10 * fall) * (1 + ch)]); t.ref.glow = 1; }
       }
+      this.dropLevitated('attack'); // a push is an attack: whoever you levitated (and did not just launch) drops
     });
   }
-  pushFx(mid, d, col) {
+  pushFx(mid, d, col, ch = 0) {
     const g = this.g, p = this.p;
-    g.fx.ring({ p: v3.addS(mid, d, 0.3), n: d, r0: 0.25, r1: 2.8, life: 0.55, w: 0.2, c: [col[0], col[1], col[2], 0.95], move: v3.scale(d, 15) });
+    g.fx.ring({ p: v3.addS(mid, d, 0.3), n: d, r0: 0.25, r1: 2.8 + 2.4 * ch, life: 0.55 + 0.2 * ch, w: 0.2 + 0.15 * ch, c: [col[0], col[1], col[2], 0.95], move: v3.scale(d, 15 + 8 * ch) });
+    if (ch > 0.5) g.fx.ring({ p: v3.addS(mid, d, 0.6), n: d, r0: 0.4, r1: 4.2, life: 0.7, w: 0.14, c: [1, 1, 1, 0.75], move: v3.scale(d, 22) });
     g.fx.ring({ p: v3.addS(mid, d, 0.1), n: d, r0: 0.15, r1: 2.0, life: 0.4, w: 0.12, c: [1, 1, 1, 0.8], move: v3.scale(d, 11) });
     for (let i = 0; i < 46; i++) { const sp = v3.norm([d[0] + rnd(-0.35, 0.35), d[1] + rnd(-0.25, 0.3), d[2] + rnd(-0.35, 0.35)]); g.fx.emit({ p: v3.addS(mid, d, 0.3), v: v3.scale(sp, rnd(8, 20)), life: rnd(0.25, 0.55), size: rnd(0.04, 0.1), c0: [col[0], col[1] + 0.05, col[2] + 0.1, 0.8], c1: [col[0] * 0.7, col[1] * 0.8, 1, 0], drag: 1.8 }); }
     for (let i = 0; i < 26; i++) { const a = rnd(-0.5, 0.5), dd = this.flat(d); const dir = [dd[0] * Math.cos(a) - dd[2] * Math.sin(a), 0, dd[0] * Math.sin(a) + dd[2] * Math.cos(a)]; g.fx.emit({ p: [p.pos[0] + dir[0] * rnd(0.5, 5), 0.1, p.pos[2] + dir[2] * rnd(0.5, 5)], v: [dir[0] * rnd(4, 12), rnd(0.5, 2), dir[2] * rnd(4, 12)], life: rnd(0.5, 1), size: rnd(0.15, 0.35), grow: 0.8, c0: [0.45, 0.42, 0.5, 0.3], c1: [0.4, 0.38, 0.45, 0], drag: 2.5, mode: 0 }); }
@@ -194,10 +274,49 @@ export class Force {
     const g = this.g; if (this.active.see) { this.endTimed('see'); this.fp += 20; return; }
     this.anim('BOTH_MINDTRICK2', { durMs: 700 }); this.startTimed('see'); g.sfxAt('see', this.p.pos, 1);
   }
-  do_speed() { this.anim('BOTH_FORCEHEAL_QUICK', { durMs: 700 }); this.startTimed('speed'); this.g.sfxAt('speed', this.p.pos, 1); }
+  do_speed() {
+    const v = this.interceptTarget(); // Push + Speed: dash to where the fighter you just pushed will land
+    if (v) this.intercept(v); else this.anim('BOTH_FORCEHEAL_QUICK', { durMs: 700 });
+    this.startTimed('speed'); this.g.sfxAt('speed', this.p.pos, 1);
+  }
+  // ---------------- Push + Speed
+  interceptTarget() {
+    const g = this.g; if (!this.lastPush || g.t - this.lastPush.t > INTERCEPT_WINDOW) return null;
+    return this.lastPush.targets.find(v => v.status === 'flung' && v3.dist(v.pos, this.p.pos) < 22) || null;
+  }
+  intercept(v) {
+    const g = this.g, p = this.p, fl = g.world.floorAt(v.pos[0], v.pos[2], v.pos[1] + 0.5) ?? v.pos[1], h = Math.max(0, v.pos[1] - fl);
+    const tl = (v.vel[1] + Math.sqrt(Math.max(0, v.vel[1] * v.vel[1] + 2 * 20 * h))) / 20; // time until they land (G = 20)
+    const land = [v.pos[0] + v.vel[0] * tl, fl, v.pos[2] + v.vel[2] * tl], sp = Math.hypot(v.vel[0], v.vel[2]) || 1, dir = [v.vel[0] / sp, 0, v.vel[2] / sp];
+    const to = [land[0] + dir[0] * 1.4, land[1], land[2] + dir[2] * 1.4]; g.world.collide(to, p.radius);
+    this.dash = { from: p.pos.slice(), to, t: 0, dur: 0.2, face: Math.atan2(-dir[0], -dir[2]) };
+    p.interceptBonusUntil = g.t + 1.6; p.interceptBonus = INTERCEPT_BONUS; this.lastPush = null; p.playForce('BOTH_RUN2', { durMs: 200, whole: true });
+    if (!this.npc) g.banner('INTERCEPT', [0.6, 0.9, 1]);
+  }
+  tickDash(dt) {
+    const D = this.dash, p = this.p, g = this.g; D.t += dt; const k = Math.min(1, D.t / D.dur), e = k * k * (3 - 2 * k);
+    p.pos = v3.lerp(D.from, D.to, e); p.vel = [0, 0, 0]; p.yaw = p.targetYaw = D.face;
+    for (let i = 0; i < 3; i++) g.fx.emit({ p: [p.pos[0] + rnd(-0.3, 0.3), p.pos[1] + rnd(0.1, 1.7), p.pos[2] + rnd(-0.3, 0.3)], v: [0, 0, 0], life: 0.3, size: 0.1, grow: 0.3, c0: [0.5, 0.8, 1, 0.7], c1: [0.3, 0.5, 1, 0] });
+    if (k >= 1) { this.dash = null; if (!this.npc) g.cam.yaw = D.face; }
+  }
+  // ---------------- Force Pulse (special)
+  gainPulse(n) { if (n > 0) this.pulse = Math.min(PULSE_MAX, (this.pulse || 0) + n); }
+  pulseReady() { return (this.pulse || 0) >= PULSE_MAX; }
+  startPulse() {
+    const g = this.g, p = this.p; if (!this.pulseReady() || this.pulsing || this.holding) { if (!this.npc && !this.pulseReady()) this.say('Force Pulse is not charged yet'); return false; }
+    this.pulse = 0; this.pulsing = { t0: g.t }; p.playForce('BOTH_FORCEFOUNTAIN1_START', { durMs: 900, whole: true }); g.sfxAt('jumpbuild', p.pos, 1); g.sfxAt('rage', p.pos, 0.8);
+    if (g.net) g.net.onCast(this, 'pulse'); return true;
+  }
+  tickPulse(dt) {
+    const g = this.g, p = this.p, T = g.t - this.pulsing.t0, c = p.chest();
+    if (p.status === 'dead') { this.pulsing = null; return; }
+    for (let i = 0; i < 4; i++) { const a = rnd(0, 6.28), r = rnd(1.5, 3.5), from = [c[0] + Math.cos(a) * r, c[1] + rnd(-1, 1.2), c[2] + Math.sin(a) * r]; g.fx.emit({ p: from, v: v3.scale(v3.sub(c, from), 1 / 0.35), life: 0.35, size: 0.05, c0: [1, 0.9, 0.6, 0.9], c1: [1, 0.6, 0.2, 0.2] }); }
+    g.lightFlash = Math.max(g.lightFlash, T * 1.2); g.lightFlashPos = c;
+    if (T >= PULSE_WINDUP) { this.pulsing = null; g.forcePulse(p, PULSE_RADIUS); }
+  }
   do_rage() { this.anim('BOTH_FORCEFOUNTAIN1_START', { durMs: 1100 }); this.startTimed('rage'); this.g.sfxAt('rage', this.p.pos, 1); this.shake(0.3); }
   do_protect() { this.anim('BOTH_FORCEHEAL_QUICK', { durMs: 800 }); this.startTimed('protect'); this.g.sfxAt('protect', this.p.pos, 1); }
-  do_absorb() { this.anim('BOTH_FORCEHEAL_QUICK', { durMs: 800 }); this.startTimed('absorb'); this.g.sfxAt('absorb', this.p.pos, 1); }
+  do_absorb() { if (this.p.status === 'levitated') this.p.levitate(false, { absorbed: true }); this.anim('BOTH_FORCEHEAL_QUICK', { durMs: 800 }); this.startTimed('absorb'); this.g.sfxAt('absorb', this.p.pos, 1); }
   do_teamheal() {
     const g = this.g, p = this.p; this.anim('BOTH_FORCEHEAL_QUICK', { durMs: 800 }); g.sfxAt('teamheal', p.pos, 1);
     this.later(0.3, () => { const o = p.pos; g.fx.ring({ p: [o[0], 0.1, o[2]], n: [0, 1, 0], r0: 0.5, r1: 11, life: 1.0, w: 0.2, c: [0.3, 1, 0.5, 0.9] }); g.fx.ring({ p: [o[0], 0.1, o[2]], n: [0, 1, 0], r0: 0.3, r1: 8, life: 0.8, w: 0.1, c: [0.7, 1, 0.8, 0.8] });
@@ -293,8 +412,21 @@ export class Force {
     const g = this.g, p = this.p; this.holding = 'lightning'; this.anim('BOTH_FORCELIGHTNING_START', { durMs: 160, hold: true }); this.lt = 0; this.ltPhase = 'start';
     g.sfxAt('lightning', p.pos, 1); this.loops.hold = g.sfx.loop('lightning2', { vol: this.npc ? 0.18 : 0.35 }); this.regenBolts(); this.hitT = 0;
   }
+  // Saber throw + Lightning: your own thrown saber in front of you takes the lightning
+  chargedSaber() {
+    const T = this.p.thrown; if (!T) return null; const o = this.origin(), v = v3.sub(T.pos, o), L = v3.len(v);
+    return L < 18 && L > 0.3 && v3.dot(v3.scale(v, 1 / L), this.aim()) > Math.cos(65 * Math.PI / 180) ? T : null;
+  }
   regenBolts() {
     const g = this.g, hands = this.hands(); const d = this.aim();
+    const S = this.chargedSaber();
+    if (S) { // hands -> saber, then saber -> every foe in reach of it
+      this.bolts.length = 0; const mk = (a, b, w, j) => this.bolts.push({ pts: bolt(a, b, 9, j), br: [], w });
+      mk(hands[0], S.pos, 1, 0.22); mk(hands[1], S.pos, 0.9, 0.22);
+      for (const f of g.foesOf(this.p)) if (v3.dist(f.chest(), S.pos) < SABER_ARC_R) mk(S.pos, f.chest(), 0.8, 0.3);
+      for (let i = 0; i < 2; i++) mk(S.pos, v3.addS(S.pos, v3.norm([rnd(-1, 1), rnd(-0.6, 1), rnd(-1, 1)]), rnd(0.6, 1.4)), 0.5, 0.15);
+      this.ltTargets = []; return;
+    }
     // Lightning locks onto one hostile target in the player's forward aim cone,
     // rather than indiscriminately damaging everything inside a radius.
     const list = this.cone(14, 65, { npcOnly: true }).filter(h => hostile(this.p, h.t.ref)).slice(0, 1);
@@ -308,6 +440,18 @@ export class Force {
     const g = this.g, p = this.p; this.fp -= 14 * dt; this.lt += dt;
     if (this.ltPhase === 'start' && this.lt > 0.16) { this.ltPhase = 'hold'; this.anim('BOTH_FORCELIGHTNING_HOLD', { durMs: 300, hold: true, loop: true }); }
     this.hitT -= dt; const hands = this.hands();
+    const S = this.chargedSaber();
+    if (S) { // the charged saber: double drain, arcs from the blade to every foe near it
+      this.fp -= 14 * dt; S.chargedUntil = g.t + 0.25;
+      for (const v of g.foesOf(p)) {
+        if (v.status === 'dead' || v3.dist(v.chest(), S.pos) >= SABER_ARC_R) continue;
+        const VF = g.forceOf(v), lm = lightningMul(this.absorbDef(v), this.lv.lightning, 1);
+        if (lm.mul <= 0) { if (VF) VF.addFp(12 * dt); this.absorbFx(v, dt); continue; }
+        v.electrify(0.25); v.hurt(SABER_ARC_DPS * dt * p.damageMul * this.dmgScale * lm.mul, p, { noFlinch: true });
+        if (this.hitT <= 0) g.sfxAt('lhit' + (1 + Math.floor(Math.random() * 3)), v.chest(), 0.7); if (Math.random() < 0.5) g.fx.sparks(v.chest(), [0, 1, 0], 2, [0.6, 0.8, 1, 1]);
+      }
+      if (this.hitT <= 0) this.hitT = 0.28; g.lightFlash = 0.7; g.lightFlashPos = S.pos; return;
+    }
     // Re-evaluate the lock as opponents move or die; the visual bolts use the
     // same target selection on their next refresh.
     this.ltTargets = this.cone(14, 65, { npcOnly: true }).filter(h => hostile(this.p, h.t.ref)).slice(0, 1);
@@ -343,7 +487,10 @@ export class Force {
     const g = this.g, p = this.p; this.holding = 'heal'; p.forceHold = false; this.healT = 0; this.healCompleted = false;
   }
   tick_heal(dt) {
-    const g = this.g, p = this.p; this.healT += dt; this.fp -= 10 * dt; p.hp = Math.min(p.maxHp, p.hp + this.healRate * dt); p.healFlash = 0.6;
+    const g = this.g, p = this.p; this.healT += dt;
+    // pay per point healed: what is left in the tank limits how far this heal goes
+    const gain = Math.min(p.maxHp - p.hp, this.healRate * dt, Math.max(0, this.fp) / HEAL_FP_PER_HP); this.fp -= gain * HEAL_FP_PER_HP; p.hp += gain; p.healFlash = 0.6;
+    if (this.fp <= 0.01 && p.hp < p.maxHp) { this.say('Out of Force'); this.release(); return; }
     p.forceHold = false;
     if (Math.random() < 0.9) { const a = rnd(0, 6.28), r = rnd(0.2, 0.8); g.fx.emit({ p: [p.pos[0] + Math.cos(a) * r, rnd(0.1, 0.6), p.pos[2] + Math.sin(a) * r], v: [0, rnd(0.7, 1.8), 0], life: rnd(0.8, 1.4), size: rnd(0.04, 0.1), c0: [0.4, 1, 0.55, 0.9], c1: [0.2, 0.9, 0.4, 0] }); }
     if (Math.floor(this.healT * 1.4) !== Math.floor((this.healT - dt) * 1.4)) { g.fx.ring({ p: [p.pos[0], 0.05, p.pos[2]], n: [0, 1, 0], r0: 0.2, r1: 1.6, life: 0.9, w: 0.1, c: [0.35, 1, 0.5, 0.8] });  }
@@ -375,6 +522,8 @@ export class Force {
     for (const id of ['protect', 'absorb']) if (this.active[id]) { const col = id === 'protect' ? [0.3, 0.9, 0.7] : [0.7, 0.4, 1]; const pulse = 0.5 + 0.15 * Math.sin(g.t * 5); R.billboard(c, 1.55, [col[0], col[1], col[2], 0.20 * pulse], 0); R.billboard(c, 1.2, [col[0], col[1], col[2], 0.12], 0); }
     if (this.active.rage) R.billboard(c, 1.4, [1, 0.1, 0.05, 0.12 + 0.05 * Math.sin(g.t * 8)], 0);
     if (this.active.speed) R.billboard(c, 1.3, [0.4, 0.7, 1, 0.07], 0);
+    const T = this.p.thrown; if (T && T.chargedUntil > g.t) { R.billboard(T.pos, 0.75 + 0.15 * Math.sin(g.t * 40), [0.55, 0.78, 1, 0.45], 0); R.billboard(T.pos, 0.3, [1, 1, 1, 0.8], 0); } // charged saber
+    if (this.pulsing) R.billboard(c, 0.6 + (g.t - this.pulsing.t0) * 3, [1, 0.8, 0.45, 0.25], 0);
   }
 }
 function POW(id) { return POWER_BY_ID[id]; }

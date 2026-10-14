@@ -14,6 +14,8 @@
 //   props    [{kind: 'crate' | 'barrel', x, z}]        physics props for Force Push / Pull
 //   interactables [{id, p, r, prompt}]                 'E' use points
 //   playerSpawn [x, y, z], playerYaw, navBounds [x0, z0, x1, z1], env {sun / ambient / fog}
+//   bridges  [{id, label, x0, z0, x1, z1, y}]          energy bridges that consoles switch off (LevelSpace.dropBridge)
+//   killY, teamHomes {blue, red}, teamYaw {blue, red}, ffaSpawns [[x, y, z]]   arena settings for the skirmish modes
 
 export const MATERIALS = {
   ground: [0.30, 0.28, 0.27], rock: [0.50, 0.44, 0.39], rockDark: [0.36, 0.32, 0.30], sand: [0.42, 0.37, 0.31],
@@ -64,7 +66,10 @@ export function buildLevel(L) {
   const base = meshBuilder(), glows = new Map();
   const glowMesh = name => { if (!glows.has(name)) glows.set(name, meshBuilder()); return glows.get(name); };
   const floorTri = (a, b, c) => tris.push({ a, b, c, normal: [0, 1, 0] });
-  const floorRect = (x0, z0, x1, z1, y) => { floorTri([x0, y, z0], [x1, y, z0], [x1, y, z1]); floorTri([x0, y, z0], [x1, y, z1], [x0, y, z1]); };
+  // in tiles of at most 4 m: the floor probe's edge tolerance grows with the triangle, and a sheer edge (a chasm) must be exact
+  const floorRect = (x0, z0, x1, z1, y, tile = 4) => {
+    for (let x = x0; x < x1 - 1e-6; x += tile) for (let z = z0; z < z1 - 1e-6; z += tile) { const xa = Math.min(x1, x + tile), za = Math.min(z1, z + tile); floorTri([x, y, z], [xa, y, z], [xa, y, za]); floorTri([x, y, z], [xa, y, za], [x, y, za]); }
+  };
   const wallRect = (p, q, yb, yt, n) => { tris.push({ a: [p[0], yb, p[1]], b: [q[0], yb, q[1]], c: [q[0], yt, q[1]], normal: n }); tris.push({ a: [p[0], yb, p[1]], b: [q[0], yt, q[1]], c: [p[0], yt, p[1]], normal: n }); };
   // collision for a box: walkable top + four wall faces. Low boxes (<= 0.5 m) are steps: no walls, you walk up them.
   // Wall tops sit 0.2 m below the real top so someone standing on the box is not shoved off its edge.
@@ -123,6 +128,15 @@ export function buildLevel(L) {
     return { id: d.id, mesh: m.build(), origin: d.min.slice() };
   });
   for (const l of L.lamps || []) glowMesh(l.glow || 'orange').box([l.p[0] - 0.14, l.p[1] - 0.1, l.p[2] - 0.14], [l.p[0] + 0.14, l.p[1] + 0.1, l.p[2] + 0.14], GLOWS[l.glow || 'orange'], { foot: 1 });
+  // energy bridges: no collision triangles (LevelSpace.floorAt carries you while one is on); a hard-light deck with
+  // bright edges and cross bars, drawn only while it is on
+  const bridgeMeshes = (L.bridges || []).map(b => {
+    const m = meshBuilder(), deck = [0.42, 0.78, 1], edge = [0.85, 0.96, 1], alongX = b.x1 - b.x0 >= b.z1 - b.z0;
+    m.box([b.x0, b.y - 0.1, b.z0], [b.x1, b.y, b.z1], deck, { foot: 0.8 });
+    if (alongX) { m.box([b.x0, b.y, b.z0], [b.x1, b.y + 0.03, b.z0 + 0.1], edge, { foot: 1 }); m.box([b.x0, b.y, b.z1 - 0.1], [b.x1, b.y + 0.03, b.z1], edge, { foot: 1 }); for (let x = b.x0 + 1.5; x < b.x1 - 0.5; x += 2) m.box([x, b.y, b.z0], [x + 0.08, b.y + 0.02, b.z1], edge, { foot: 1 }); }
+    else { m.box([b.x0, b.y, b.z0], [b.x0 + 0.1, b.y + 0.03, b.z1], edge, { foot: 1 }); m.box([b.x1 - 0.1, b.y, b.z0], [b.x1, b.y + 0.03, b.z1], edge, { foot: 1 }); for (let z = b.z0 + 1.5; z < b.z1 - 0.5; z += 2) m.box([b.x0, b.y, z], [b.x1, b.y + 0.02, z + 0.08], edge, { foot: 1 }); }
+    return { id: b.id, mesh: m.build() };
+  });
 
   return {
     name: L.name || 'level', tris, solids, clips,
@@ -131,5 +145,8 @@ export function buildLevel(L) {
     lamps: (L.lamps || []).map(l => ({ p: l.p, c: l.c || GLOWS[l.glow || 'orange'] })),
     playerSpawn: L.playerSpawn || [0, 0, 0], playerYaw: L.playerYaw || 0, navBounds: L.navBounds, env: L.env || null,
     render: { base: base.build(), glows: [...glows].map(([name, m]) => ({ glow: GLOWS[name], mesh: m.build() })) }, doorMeshes,
+    // arenas: switchable bridges, kill height, where each team starts (and faces) and the free-for-all spawn points
+    bridges: (L.bridges || []).map(b => ({ id: b.id, label: b.label || b.id, x0: b.x0, z0: b.z0, x1: b.x1, z1: b.z1, y: b.y ?? 0 })), bridgeMeshes,
+    killY: L.killY ?? null, teamHomes: L.teamHomes || null, teamYaw: L.teamYaw || null, ffaSpawns: L.ffaSpawns || null,
   };
 }

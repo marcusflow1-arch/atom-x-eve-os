@@ -5,11 +5,12 @@
 // rules (forcerules.js via Game.applyThrow), and the player gets the same chances to answer it.
 import { wrapPi } from './math.js';
 import { GRIP_MAX_DIST } from './forcerules.js';
+import { executionFor } from './executions.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const clear = c => { c.fwd = c.right = c.up = 0; c.walk = c.crouch = c.attack = c.alt = c.jump = c.jumpPressed = c.crouchPressed = false; };
 const toward = (f, P) => Math.atan2(P.pos[0] - f.pos[0], P.pos[2] - f.pos[2]);
-const newBrain = () => ({ mode: 'approach', t: 0, think: 1.2, react: 0, strafe: 1, style: 2, atkDir: 0, holdT: 0, gripT: 0, gripPlan: undefined, gripWait: 0, cd: { push: 3, pull: 2, grip: 6, lightning: 5, heal: 0, speed: 8, rage: 0, protect: 10, absorb: 0 } });
+const newBrain = () => ({ mode: 'approach', t: 0, think: 1.2, react: 0, strafe: 1, style: 2, atkDir: 0, holdT: 0, gripT: 0, gripPlan: undefined, gripWait: 0, cd: { push: 3, pull: 2, grip: 6, lightning: 5, heal: 0, speed: 8, rage: 0, protect: 10, absorb: 0, levitate: 8 } });
 
 export function aiDarkJedi(g, f, dt) {
   const P = g.aiTarget ? g.aiTarget(f) : g.player, c = f.cmd, F = f.force; clear(c);
@@ -25,6 +26,8 @@ export function aiDarkJedi(g, f, dt) {
   f.targetYaw = toward(f, P);
   const dx = P.pos[0] - f.pos[0], dz = P.pos[2] - f.pos[2], dist = Math.hypot(dx, dz);
   if (g.round.state !== 'fight' || P.status === 'dead') { F.want = {}; return; } // intro / round over: stand and watch
+  const exec = g.startExecution && executionFor(g, f, P); // finish a foe who is low enough (about a second to decide)
+  if (exec && Math.random() < dt * 1.2) { F.want = {}; g.startExecution(f, P, exec); return; }
   const hpf = f.hp / f.maxHp, facing = Math.abs(wrapPi(f.targetYaw - f.yaw)) < 0.5;
   // ---- channelled powers: keep the pose, stop on a timer / when out of reach
   if (F.holding) {
@@ -41,6 +44,10 @@ export function aiDarkJedi(g, f, dt) {
     a.react = rnd(0.25, 0.7);
     if (Math.random() < 0.7) { F.cast('absorb'); return; }
   }
+  // ---- Force Pulse when it is charged and the foe is close
+  if (F.pulseReady && F.pulseReady() && dist < 5.5 && f.forceUntil <= g.t && Math.random() < dt * 2) { F.startPulse(); return; }
+  // ---- Levitate + Push: push the fighter it lifted a moment ago (they are launched)
+  if (a.comboPushAt && g.t >= a.comboPushAt) { a.comboPushAt = 0; if (P.status === 'levitated' && f.forceUntil <= g.t && F.gcd <= 0) { F.cast('push'); return; } }
   // ---- Force powers (picked by distance, Force left and cooldowns)
   const canForce = f.forceUntil <= g.t && f.saber.weaponTime <= 0 && F.gcd <= 0 && f.onGround;
   if (canForce && a.think <= 0) { a.think = rnd(0.3, 0.6); if (decideForce(f, a, F, P, dist, hpf, facing)) return; }
@@ -67,6 +74,11 @@ export function aiDarkJedi(g, f, dt) {
 function decideForce(f, a, F, P, dist, hpf, facing) {
   const fp = F.fp, r = Math.random(), up = P.status === 'normal'; // push / pull / lightning are wasted on a target that is already down
   if (hpf < 0.4 && dist > 7 && a.cd.heal <= 0 && fp >= 35) { a.cd.heal = 16; a.holdT = 3.4; F.want.heal = true; if (F.cast('heal')) return true; F.want.heal = false; }
+  // Levitate: low on health and pressed -> lift them and back off to heal; otherwise now and then lift them and push (launch)
+  if (up && dist < 9 && a.cd.levitate <= 0 && facing && ((hpf < 0.4 && fp >= 40 && dist < 6) || (fp >= 60 && r < 0.12))) {
+    a.cd.levitate = rnd(14, 20);
+    if (F.cast('levitate')) { if (hpf < 0.4) a.mode = 'flee'; else a.comboPushAt = f.g.t + rnd(0.6, 1.1); return true; }
+  }
   if (hpf < 0.55 && !F.active.rage && a.cd.rage <= 0 && fp >= 70) { a.cd.rage = 30; if (F.cast('rage')) return true; }
   if (dist > 13 && !F.active.speed && a.cd.speed <= 0 && fp >= 85 && r < 0.3) { a.cd.speed = 25; if (F.cast('speed')) return true; }
   if (dist < 6 && !F.active.protect && a.cd.protect <= 0 && fp >= 70 && r < 0.25) { a.cd.protect = 22; if (F.cast('protect')) return true; }

@@ -24,21 +24,26 @@ vec3 lightIt(vec3 base, vec3 n, vec3 wp, float spec){
 const SKIN_VS = `#version 300 es
 precision highp float; precision highp int;
 in vec3 aPos; in vec3 aNrm; in vec4 aCol; in uvec4 aJ; in vec4 aW;
-uniform mat4 uVP; uniform mat4 uModel; uniform highp sampler2D uJT;
-out vec3 vN; out vec4 vC; out vec3 vW;
+uniform mat4 uVP; uniform mat4 uModel; uniform mat4 uPost; uniform highp sampler2D uJT;
+out vec3 vN; out vec4 vC; out vec3 vW; out vec3 vPre;
 mat4 jm(uint j){ int b = int(j) * 4; return mat4(texelFetch(uJT, ivec2(b, 0), 0), texelFetch(uJT, ivec2(b + 1, 0), 0), texelFetch(uJT, ivec2(b + 2, 0), 0), texelFetch(uJT, ivec2(b + 3, 0), 0)); }
 void main(){
   mat4 s = jm(aJ.x) * aW.x + jm(aJ.y) * aW.y + jm(aJ.z) * aW.z + jm(aJ.w) * aW.w;
-  vec4 p = s * vec4(aPos, 1.0); vec4 wp = uModel * p;
-  vN = mat3(uModel) * (mat3(s) * aNrm); vC = aCol; vW = wp.xyz;
+  vec4 p = s * vec4(aPos, 1.0); vec4 wp = uModel * p; vPre = wp.xyz; wp = uPost * wp; // uPost: moves a cut-off part (executions)
+  vN = mat3(uPost) * mat3(uModel) * (mat3(s) * aNrm); vC = aCol; vW = wp.xyz;
   gl_Position = uVP * wp;
 }`;
 const SKIN_FS = `#version 300 es
 precision highp float;
-in vec3 vN; in vec4 vC; in vec3 vW; out vec4 o;
-uniform vec3 uTint; uniform float uTintAmt; uniform float uAlpha; uniform float uGlow;
+in vec3 vN; in vec4 vC; in vec3 vW; in vec3 vPre; out vec4 o;
+uniform vec3 uTint; uniform float uTintAmt; uniform float uAlpha; uniform float uGlow; uniform vec4 uClip;
 ${LIGHTING}
 void main(){
+  // uClip (a plane in world space before uPost; 0 = off): only the side the plane faces is drawn; the inside of the cut
+  // shows as a cauterized wound
+  bool clipped = uClip.x != 0.0 || uClip.y != 0.0 || uClip.z != 0.0;
+  if (clipped && dot(vec4(vPre, 1.0), uClip) < 0.0) discard;
+  if (clipped && !gl_FrontFacing) { o = vec4(0.45, 0.08, 0.03, uAlpha); return; }
   vec3 base = vC.rgb; base = mix(base, uTint, uTintAmt);
   vec3 c = lightIt(base, vN, vW, 0.25);
   c += uGlow * uTint;
@@ -123,6 +128,7 @@ function program(gl, vs, fs) {
   return { p, u };
 }
 
+const IDENTITY = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]), NO_CLIP = new Float32Array(4);
 export class Renderer {
   constructor(canvas) {
     const gl = this.gl = canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: true });
@@ -205,7 +211,10 @@ export class Renderer {
     const nb = actor.nBones; const jb = this.jbuf; jb.set(actor.skin.subarray(0, nb * 16));
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.jt); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, nb * 4, 1, gl.RGBA, gl.FLOAT, jb.subarray(0, nb * 16)); gl.uniform1i(P.u.uJT, 0);
     gl.uniform3fv(P.u.uTint, o.tint || actor.tint); gl.uniform1f(P.u.uTintAmt, o.tintAmt ?? actor.tintAmt); gl.uniform1f(P.u.uAlpha, o.alpha ?? 1); gl.uniform1f(P.u.uGlow, o.glow || 0);
+    // o.clip: draw only one side of a plane [nx, ny, nz, d] (both faces, so the cut shows); o.post: a matrix applied after the model
+    gl.uniformMatrix4fv(P.u.uPost, false, o.post || IDENTITY); gl.uniform4fv(P.u.uClip, o.clip || NO_CLIP); if (o.clip) gl.disable(gl.CULL_FACE);
     gl.bindVertexArray(mesh.vao); gl.drawElements(gl.TRIANGLES, mesh.count, gl.UNSIGNED_INT, 0);
+    if (o.clip) gl.enable(gl.CULL_FACE);
   }
   uploadTexture(image) {
     const gl = this.gl, tex = gl.createTexture();

@@ -37,6 +37,11 @@ test('1 through 0 directly activate ten distinct Force powers; numpad mirrors th
       assert.ok(FORCE_QUICK_BINDINGS.some(binding => binding.id === id && binding.code === key));
       const h = harness();
       h.force.update(1 / 60, h.input(key, key));
+      if (id === 'push') { // Push charges while the key is held and goes on release (a tap is a normal push)
+        assert.deepEqual(h.casts, [], 'held: charging');
+        assert.equal(h.force.charging.via, key);
+        h.force.update(1 / 60, h.input('', ''));
+      }
       assert.deepEqual(h.casts, [[id, key]]);
     }
   }
@@ -47,7 +52,7 @@ test('scroll selection remains independent of number-key hotkey assignments', ()
   assert.equal(h.force.selId(), 'push');
   h.force.select(1);
   assert.equal(h.force.selId(), 'pull');
-  h.force.select(11);
+  h.force.select(12); // 13 powers in the selector (Levitate joined Drain and Sight): wraps back to Push
   assert.equal(h.force.selId(), 'push');
   h.force.selectId('see');
   assert.equal(h.force.selId(), 'see');

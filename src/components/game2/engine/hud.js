@@ -2,6 +2,7 @@
 // 2D overlay: health / force bars, power chips, saber style, live animation names, messages, enemy bars, help.
 import { POWERS, POWER_BY_ID, FORCE_DUR, FORCE_HOTKEY_LABELS } from './force.js';
 import { STYLE_NAMES } from './saber.js';
+import { EXECUTION_NAMES } from './executions.js';
 
 const STYLE_COL = ['', '#7fd3ff', '#b6ff8a', '#ff9a6a'];
 const rr = (x, a, b, c, d, r) => { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + c, b, a + c, b + d, r); x.arcTo(a + c, b + d, a, b + d, r); x.arcTo(a, b + d, a, b, r); x.arcTo(a, b, a + c, b, r); x.closePath(); };
@@ -13,19 +14,28 @@ export const HELP = [
 ];
 export const HELP_DUEL = [
   ['Move · look', 'W A S D (Shift = walk)  ·  mouse  ·  C crouch / roll'], ['Jump / Force Jump', 'Space  (hold Space = Force Jump)'],
-  ['Saber on / off · stance', 'R toggles saber  ·  Tab cycles Fast / Medium / Strong'], ['Saber attack · throw', 'Left mouse (look up/down to direct slash) · hold right mouse to guide throw'],
+  ['Saber on / off · execute · stance', 'R toggles saber, or executes a foe glowing red  ·  Tab cycles Fast / Medium / Strong'], ['Saber attack · throw', 'Left mouse (look up/down to direct slash) · hold right mouse: the throw homes in and spins inside whoever it hits'],
   ['Force menu', 'Mouse wheel or [ ] selects highlighted Force power'], ['Cast highlighted Force', 'F to cast  ·  hold F for Grip / Lightning / Heal / Drain'],
-  ['Quick cast 1–5', '1 Push · 2 Pull · 3 Grip · 4 Lightning · 5 Heal'], ['Quick cast 6–0', '6 Speed · 7 Mind Trick · 8 Rage · 9 Protect · 0 Absorb'], ['Other Force powers', 'Drain and Sight available with wheel + F'],
+  ['Quick cast 1–5', '1 Push (hold to charge) · 2 Pull · 3 Grip · 4 Lightning · 5 Heal'], ['Quick cast 6–0', '6 Speed · 7 Mind Trick · 8 Rage · 9 Protect · 0 Absorb'], ['Other Force powers', 'G Levitate · X Force Pulse (meter full) · Drain and Sight with wheel + F'],
   ['Break a Grip', 'press 1 (Push), 2 (Pull), 0 (Absorb) or select one with wheel + F'], ['Block a push / pull', 'stand still on the ground with Force left, not mid-swing; moving = weaker'],
+  ['Combos · taunt', 'Push then 6 Speed: dash to them as they land · Lightning on your thrown saber charges it · T taunts'],
   ['Zoom · rematch · controls · mute', 'Ctrl + wheel or - = · Enter · F1 · M'],
 ];
+const HELP_COMBOS = HELP_DUEL[11];
 export const HELP_ONLINE = [
-  ...HELP_DUEL.slice(0, 11),
+  ...HELP_DUEL.slice(0, 11), HELP_COMBOS,
   ['Online', 'Jedi vs Dark Jedi, rounds: a side wins when the other has nobody standing · top right = ping and players'],
   ['Zoom · controls · mute', 'Ctrl + wheel or - =  ·  F1  ·  M  ·  Main menu leaves the match'],
 ];
+// the offline skirmish modes (engine/teamMatch.js)
+export const HELP_SKIRMISH = [
+  ...HELP_DUEL.slice(0, 11), HELP_COMBOS,
+  ['Bridges', 'E at a console cuts that energy bridge for 10 s: whoever is on it falls · a fall is fatal'],
+  ['Skirmish', 'FFA first to 15 · TDM first to 30 · CTF 3 captures · Sudden Death one life · 3 s immunity after a respawn'],
+  ['Zoom · controls · mute', 'Ctrl + wheel or - =  ·  F1  ·  M  ·  Main menu leaves the match'],
+];
 export const HELP_MISSION = [
-  ...HELP_DUEL.slice(0, 11),
+  ...HELP_DUEL.slice(0, 11), HELP_COMBOS,
   ['Weapons', 'Q switches Bryar pistol / lightsaber · R lights the saber · LMB fire · hold RMB = charged shot'],
   ['Use / interact', 'E  (consoles, terminals)'], ['Objective', 'follow the marker · top right shows the current goal'],
   ['Zoom · checkpoint · controls · mute', 'Ctrl + wheel or - =  ·  Enter (after falling)  ·  F1  ·  M'],
@@ -62,10 +72,14 @@ export class HUD {
       if (F.active.see) { x.strokeStyle = 'rgba(80,220,255,0.9)'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(s[0], s[1] + 4 * sc); x.lineTo(s[0] + 6 * sc, s[1] + 10 * sc); x.lineTo(s[0], s[1] + 16 * sc); x.lineTo(s[0] - 6 * sc, s[1] + 10 * sc); x.closePath(); x.stroke(); }
       x.globalAlpha = 1;
     }
+    // execution prompt over a foe low enough to be finished (R)
+    const EX = g.execCandidate; if (EX && !this.help) { const hh = EX.victim.headPos(), sp = this.project(g.R, [hh[0], hh[1] + 0.6, hh[2]]); if (sp) { const t = '[R]  EXECUTE  ·  ' + EXECUTION_NAMES[EX.kind]; x.font = '800 14px system-ui,sans-serif'; const tw = x.measureText(t).width + 26; x.fillStyle = `rgba(60,0,0,${0.7 + 0.15 * Math.sin(g.t * 8)})`; rr(x, sp[0] - tw / 2, sp[1] - 30, tw, 26, 13); x.fill(); x.strokeStyle = '#ff6a55'; x.lineWidth = 1.5; rr(x, sp[0] - tw / 2 + 0.5, sp[1] - 29.5, tw - 1, 25, 13); x.stroke(); x.fillStyle = '#ffe1d8'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t, sp[0], sp[1] - 17); x.textAlign = 'left'; } }
     // crosshair
     const cx = W / 2, cy = H / 2; const ready = !P.saber.holstered; x.strokeStyle = 'rgba(210,230,255,0.75)'; x.lineWidth = 1.5; x.beginPath(); x.arc(cx, cy, 7, 0, 7); x.stroke(); x.fillStyle = 'rgba(255,255,255,0.9)'; x.fillRect(cx - 1, cy - 1, 2, 2);
+    if (F.charging) { const ch = F.chargeLevel(); x.strokeStyle = ch >= 1 ? '#ffffff' : 'rgba(140,210,255,0.95)'; x.lineWidth = 3; x.beginPath(); x.arc(cx, cy, 15, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.04, ch)); x.stroke(); x.font = '700 10px system-ui,sans-serif'; x.textAlign = 'center'; x.fillStyle = '#cfeaff'; x.fillText(ch >= 1 ? 'FULL PUSH' : 'PUSH', cx, cy + 30); x.textAlign = 'left'; } // charged Force Push
     // bars bottom-left
     const bx = 22, by = H - 62; this.bar(x, bx, by, 250, 18, P.hp / P.maxHp, ['#c01818', '#ff6a4a'], 'HEALTH  ' + Math.ceil(P.hp)); this.bar(x, bx, by + 26, 250, 18, F.fp / F.max, ['#1f5fd6', '#6fd2ff'], 'FORCE  ' + Math.floor(F.fp));
+    { const pr = F.pulseReady && F.pulseReady(), k = (F.pulse || 0) / 100; x.globalAlpha = pr ? 0.75 + 0.25 * Math.sin(g.t * 7) : 1; this.bar(x, bx, by - 20, 250, 13, k, ['#a86a12', '#ffd27a'], pr ? '[X]  FORCE PULSE READY' : 'PULSE  ' + Math.floor(k * 100) + '%'); x.globalAlpha = 1; } // Force Pulse meter
     // power chips bottom-center
     const chips = g.forceMenu ? F.list.map(id => POWER_BY_ID[id]) : POWERS; const chip = 64, gap = 6; const perRow = W < 1280 ? (g.forceMenu ? 6 : 7) : (g.forceMenu ? 12 : 14); const rows = Math.ceil(chips.length / perRow); const totalW = Math.min(perRow, chips.length) * (chip + gap) - gap; const sx = Math.max(300, (W - totalW) / 2 + (W > 1280 ? 120 : 130)); void sx;
     const x0 = Math.min(W - totalW - 16, Math.max(bx + 270, (W - totalW) / 2)); const y0 = H - 18 - rows * (46 + gap) + gap;
@@ -74,7 +88,7 @@ export class HUD {
       const r = Math.floor(i / perRow), c = i % perRow; const X = x0 + c * (chip + gap), Y = y0 + r * (46 + gap); const act = F.active[pw.id], hold = F.holding === pw.id, afford = F.fp >= pw.cost;
       x.fillStyle = hold ? 'rgba(60,110,200,0.85)' : act ? 'rgba(40,120,110,0.8)' : 'rgba(8,10,22,0.62)'; rr(x, X, Y, chip, 46, 7); x.fill(); x.strokeStyle = hold || act ? '#9fe8ff' : afford ? 'rgba(160,190,255,0.38)' : 'rgba(255,90,90,0.4)'; x.lineWidth = hold || act ? 2 : 1; rr(x, X + .5, Y + .5, chip - 1, 45, 7); x.stroke();
       x.fillStyle = afford ? '#fff' : '#ff9b9b'; x.font = '700 15px system-ui,sans-serif'; x.textBaseline = 'top'; x.fillText(FORCE_HOTKEY_LABELS[pw.id] ?? '↕', X + 7, Y + 5);
-      x.font = '10.5px system-ui,sans-serif'; x.fillStyle = afford ? '#cfe0ff' : '#e99'; x.fillText(pw.name.replace('Force ', ''), X + 7, Y + 25); x.textAlign = 'right'; x.fillStyle = '#8fb4ff'; x.font = '10px system-ui,sans-serif'; x.fillText(pw.hold ? pw.cost + '/s' : String(pw.cost), X + chip - 6, Y + 7); x.textAlign = 'left';
+      x.font = '10.5px system-ui,sans-serif'; x.fillStyle = afford ? '#cfe0ff' : '#e99'; x.fillText(pw.name.replace('Force ', ''), X + 7, Y + 25); x.textAlign = 'right'; x.fillStyle = '#8fb4ff'; x.font = '10px system-ui,sans-serif'; x.fillText(pw.hold ? (pw.rate ?? pw.cost) + '/s' : String(pw.cost), X + chip - 6, Y + 7); x.textAlign = 'left';
       if (act) { const t = (F.active[pw.id].until - g.t) / (FORCE_DUR[pw.id] || 10); x.fillStyle = '#9fe8ff'; x.fillRect(X + 5, Y + 41, (chip - 10) * Math.max(0, t), 2); }
       if (pw.id === selId) { x.strokeStyle = '#ffd76a'; x.lineWidth = 2.5; rr(x, X - 1, Y - 1, chip + 2, 48, 8); x.stroke(); x.fillStyle = 'rgba(255,215,106,0.14)'; rr(x, X, Y, chip, 46, 7); x.fill(); }
     });
@@ -110,10 +124,12 @@ export class HUD {
     x.textAlign = 'right'; x.fillStyle = '#9aa6c8'; x.font = '12px system-ui,sans-serif'; x.textBaseline = 'top'; if (!g.net) x.fillText(g.duel ? 'reflected ' + g.combat.reflected + '   ·   F1 = controls' : 'defeated ' + g.combat.kills + ' · reflected ' + g.combat.reflected + '   ·   F1 = controls', W - 18, 16); x.textAlign = 'left';
     // pointer lock hint
     if (!g.input.locked && !this.help && g.started) { x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '600 13px system-ui,sans-serif'; const tw = x.measureText('Click to capture the mouse').width + 28; x.fillStyle = 'rgba(8,10,22,0.72)'; rr(x, W / 2 - tw / 2, H * 0.62 + 20, tw, 26, 13); x.fill(); x.fillStyle = '#dfeaff'; x.fillText('Click to capture the mouse', W / 2, H * 0.62 + 33); x.textAlign = 'left'; }
+    if (!g.net && P.spawnShield > g.t && P.status !== 'dead') { x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '600 13px system-ui,sans-serif'; x.fillStyle = '#bfe3ff'; x.fillText('Respawn immunity  ' + Math.ceil(P.spawnShield - g.t) + ' s', W / 2, H * 0.36); x.textAlign = 'left'; }
     if (g.duel) this.drawDuel(g, x, W, H, dt);
     else if (g.net) g.net.drawHud(this, x, W, H, dt);
     else if (g.director) g.director.drawHud(this, x, W, H, dt);
     else if (P.status === 'dead') { x.fillStyle = 'rgba(30,0,0,0.5)'; x.fillRect(0, 0, W, H); x.fillStyle = '#ffd8d0'; x.textAlign = 'center'; x.font = '700 34px system-ui,sans-serif'; x.fillText('You have fallen', W / 2, H * 0.42); x.font = '16px system-ui,sans-serif'; x.fillText('Press Enter to rise again', W / 2, H * 0.42 + 44); x.textAlign = 'left'; }
+    if (this.showFps) { x.textAlign = 'right'; x.textBaseline = 'bottom'; x.font = '600 11px ui-monospace,Menlo,Consolas,monospace'; x.fillStyle = '#9fd0ff'; x.fillText(Math.round(g.fps) + ' FPS', W - 14, H - 10); x.textAlign = 'left'; }
     if (this.help) this.drawHelp(x, W, H);
   }
   // duel overlay: boss HP / Force bars, banners, grip prompt, round intro / result

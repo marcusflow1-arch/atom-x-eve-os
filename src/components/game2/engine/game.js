@@ -5,13 +5,13 @@ import { World } from './world.js';
 import { FX } from './fx.js';
 import { Sfx } from './audio.js';
 import { Input } from './input.js';
-import { Fighter } from './fighter.js';
-import { Force, SELECT_ORDER, SELECT_ALL, FORCE_QUICK_BINDINGS } from './force.js';
+import { Fighter, WALL_SLAM_SPEED } from './fighter.js';
+import { Force, SELECT_ORDER, SELECT_ALL, FORCE_QUICK_BINDINGS, THROW_COST, PULSE_PER_HP, PULSE_PER_KILL } from './force.js';
 import { STYLE_NAMES } from './saber.js';
-import { resolveThrow } from './forcerules.js';
+import { resolveThrow, KNOCKDOWN_DIST } from './forcerules.js';
 import { Combat, hostile } from './combat.js';
 import { NetGame } from './netgame.js';
-import { HUD, HELP_DUEL, HELP_MISSION, HELP_ONLINE } from './hud.js';
+import { HUD, HELP_DUEL, HELP_MISSION, HELP_ONLINE, HELP_SKIRMISH } from './hud.js';
 import { BRAINS } from './brains/index.js';
 import { ARCHETYPES } from './archetypes.js';
 import { buildLevel } from './level/builder.js';
@@ -19,17 +19,28 @@ import { MissionDirector } from './mission/director.js';
 import { MISSIONS } from './missions/index.js';
 import { bolt, drawBolt } from './fx.js';
 import { geo } from './gl.js';
-import { Game2TeamMatch } from './teamMatch.js';
-// Team arenas use the real Drive BSP selected by the player.
+import { Game2TeamMatch, TEAM_MODES } from './teamMatch.js';
+import { AUTHORED_LEVELS } from './levels/index.js';
+import { Execution, findExecutable, cutTransforms, EXECUTION_NAMES } from './executions.js';
+// Team arenas use the real Drive BSP selected by the player, or an authored arena (levels/) such as Skybridge Citadel.
 
 const STEP = 1 / 60;
+export const RESPAWN_SHIELD = 3; // seconds of immunity after coming back from a defeat (every mode)
+export const CRACK_LIFE = 14;    // seconds a wall crack from a wall slam stays
 const rnd = (a, b) => a + Math.random() * (b - a);
 const SPAWN = [0, 0, -9];
 const clearCmd = c => { c.fwd = c.right = c.up = 0; c.walk = c.crouch = c.attack = c.alt = c.jump = c.jumpPressed = c.crouchPressed = false; };
+// the menu background has no player: nothing is read from (or swallowed on) the keyboard and mouse
+class NullInput {
+  constructor() { this.down = new Set(); this.pressedSet = new Set(); this.releasedSet = new Set(); this.btn = [false, false, false]; this.btnPressed = [false, false, false]; this.dx = this.dy = this.wheel = this.zoom = 0; this.locked = false; this.sens = 0.0022; this.onFirstGesture = null; }
+  held() { return false; } pressed() { return false; } released() { return false; } endFrame() { } dispose() { }
+}
 
 export class Game {
   constructor(R, A, canvas, hudCanvas, opts = {}) {
-    this.opts = opts; this.mode = opts.mode || 'explorer'; this.duel = this.mode === 'duel'; this.online = this.mode === 'online'; this.teamMode = this.mode === 'ctf' || this.mode === 'sudden'; this.boss = null; this.round = { state: 'intro', t: 0 }; this.arcs = []; this.disposed = false;
+    this.opts = opts; this.mode = opts.mode || 'explorer'; this.duel = this.mode === 'duel'; this.online = this.mode === 'online'; this.teamMode = !!TEAM_MODES[this.mode]; this.boss = null; this.round = { state: 'intro', t: 0 }; this.arcs = []; this.disposed = false;
+    this.attract = this.mode === 'attract'; // the main menu's background: two AI fighters duel under a slow cinematic camera
+    this.openArena = this.online || this.teamMode || this.attract; // every fighter fights the fighters hostile to it (not just the player)
     this.missionDef = this.mode === 'mission' ? MISSIONS[opts.mission || 'kejim'] : null;
     if (this.mode === 'mission' && !this.missionDef) throw new Error('Unknown Game 2 mission: ' + opts.mission);
     this.forceMenu = this.duel || this.online || this.teamMode || !!this.missionDef; // wheel / F Force selector and the ten quick-cast powers
@@ -37,23 +48,27 @@ export class Game {
     this.t = 0; this.dtFrame = STEP; this.fps = 60; this.acc = 0; this.started = false; this.flashes = []; this.lightFlash = 0; this.lightFlashPos = [0, 2, 0]; this.shakeAmt = 0; this.frameNo = 0;
     this.bodyMesh = R.uploadSkinned(A.body); this.hiltMesh = R.uploadStatic(A.hilt); this.lodMesh = A.lod ? R.uploadSkinned(A.lod) : this.bodyMesh;
     const gun = geo(); gun.box(0, 0.03, 0, 0.05, 0.13, 0.06, [0.16, 0.16, 0.19, 1]).box(0, -0.12, 0, 0.045, 0.2, 0.05, [0.32, 0.33, 0.38, 1]).box(0, -0.235, 0, 0.03, 0.05, 0.03, [0.9, 0.25, 0.15, 1]); this.gunMesh = R.uploadStatic(gun.build());
-    const level = this.missionDef ? buildLevel(this.missionDef.layout) : null;
-    const arena = this.duel || this.online || this.teamMode;
+    this.arenaDef = this.teamMode ? AUTHORED_LEVELS[opts.mapId] || null : null; // a large authored arena instead of a BSP
+    const level = this.missionDef ? buildLevel(this.missionDef.layout) : this.arenaDef ? buildLevel(this.arenaDef.layout) : null;
+    const arena = (this.duel || this.online || this.teamMode || this.attract) && !this.arenaDef;
     if (arena && !A.duelMap) throw new Error('Game 2 selected map not loaded');
     this.world = new World(R, arena ? A.duelMap : null, level);
     this.playerSpawn = arena ? this.world.spawns.player.slice() : level ? level.playerSpawn.slice() : SPAWN.slice();
-    this.enemySpawn = arena ? this.world.spawns.enemy.slice() : [0, 0, 8];
-    this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
+    this.enemySpawn = arena ? this.world.spawns.enemy.slice() : level?.teamHomes ? level.teamHomes.red.slice() : [0, 0, 8];
+    this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = this.attract ? new NullInput() : new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
     // Reuse Atom XE's configured battle theme from the moment the map loads.
     // Browser autoplay restrictions may require the first player gesture.
     this.battleMusic = null;
     this.battleMusicUnlock = () => this.startMapMusic();
-    this.startMapMusic();
-    if (typeof window !== 'undefined') {
+    if (!this.attract) this.startMapMusic();
+    if (typeof window !== 'undefined' && !this.attract) {
       window.addEventListener('pointerdown', this.battleMusicUnlock, { once: true });
       window.addEventListener('keydown', this.battleMusicUnlock, { once: true });
     }
     this.input.onFirstGesture = () => { this.startAudio(); this.startMapMusic(); };
+    // the main menu's Settings (settings.js), read once when the match starts
+    const S = this.settings = opts.settings || null;
+    if (S) { this.input.sens = 0.0022 * S.sensitivity; this.invertY = !!S.invertY; this.baseFov = S.fov; this.sfx.volume = S.masterVolume; this.hud.showFps = !!S.showFps; }
     if (this.duel) {
       this.input.wheelThrottle = 90;
       const h = this.hud;
@@ -75,10 +90,12 @@ export class Game {
     } else if (this.teamMode) {
       const h = this.hud;
       this.input.wheelThrottle = 90;
-      h.helpList = HELP_ONLINE; h.helpW = 820;
-      h.title = this.mode === 'ctf' ? 'CAPTURE THE FLAG' : 'SUDDEN DEATH 8v8';
-      h.subtitle = 'Local AI team battle · F1 = controls · ' + (opts.mapId || 'training');
+      h.helpList = HELP_SKIRMISH; h.helpW = 820;
+      h.title = TEAM_MODES[this.mode].label.toUpperCase();
+      h.subtitle = 'Local AI battle · F1 = controls · ' + (this.arenaDef ? this.arenaDef.label : opts.mapId || 'training');
       h.debug = false; h.help = false; this.started = true;
+    } else if (this.attract) {
+      this.hud.help = false; this.hud.debug = false; this.started = true; this.sfx.muted = true; this.input.onFirstGesture = null;
     } else if (this.missionDef) {
       const h = this.hud;
       this.input.wheelThrottle = 90;
@@ -88,6 +105,7 @@ export class Game {
     const startYaw = level ? level.playerYaw : 0;
     this.player = new Fighter(this, { name: 'player', isPlayer: true, team: 'player', pos: this.playerSpawn, yaw: startYaw, hp: 100, bladeColor: [0.22, 0.52, 1] }); this.player.label = 'You'; this.player.humId = 0;
     this.force = new Force(this, this.player, { list: this.forceMenu ? SELECT_ORDER : SELECT_ALL }); this.player.force = this.force; this.combat = new Combat(this);
+    this.player.setSaberKit(opts.saber || 'single'); // the lightsaber picked in the menu: single, dual or saberstaff
     this.world.onThud = b => { if (b.vel[1] < -4) this.sfxAt('hit1', b.pos, 0.5); };
     this.populate();
     if (this.online) this.net = new NetGame(this, opts.net || {}); // other players, rounds and the AI Reborn (host)
@@ -106,6 +124,7 @@ export class Game {
   populate() {
     if (this.online) { this.remotes = []; this.readySaber(this.player); return; }
     if (this.teamMode) { this.teamMatch = new Game2TeamMatch(this, this.mode, this.opts.mapId || 'training'); return; }
+    if (this.attract) return this.populateAttract();
     if (this.duel) return this.populateDuel();
     if (this.missionDef) { this.director = new MissionDirector(this, this.missionDef); return; }
     const droidTints = [[0.55, 0.75, 1.0], [0.9, 0.8, 0.5], [0.7, 1.0, 0.75]];
@@ -120,6 +139,15 @@ export class Game {
     b.force = new Force(this, b, { npc: true, fp: 100, regen: 7, dmgScale: 0.75, healRate: 18, speedGain: 1.4, protectMul: 0.4, list: SELECT_ORDER });
     this.boss = b; this.readySaber(this.player);
     this.round = { state: 'intro', t: 0 };
+  }
+  // menu background: a Jedi and a Reborn (the duel's Reborn, same brain and Force) fight on, respawning; nobody is player-controlled
+  populateAttract() {
+    const p = this.player; p.status = 'dead'; p.hp = 0; p.alpha = 0; p.pos = [0, -60, 0]; this.round = { state: 'fight', t: 0 };
+    const sides = [{ at: this.playerSpawn, team: 'blue', label: 'Jedi', blade: [0.22, 0.52, 1], tint: [1, 1, 1], tintAmt: 0, yaw: 0 }, { at: this.enemySpawn, team: 'red', label: 'Reborn', blade: [1, 0.05, 0.04], tint: [0.12, 0.09, 0.17], tintAmt: 0.66, yaw: Math.PI }];
+    this.duelists = sides.map((s, i) => {
+      const f = this.spawnArchetype('reborn', s.at, s.yaw, { name: 'attract' + i, label: s.label });
+      f.team = s.team; f.blade.color = s.blade.slice(); f.actor.tint = s.tint.slice(); f.actor.tintAmt = s.tintAmt; f.hp = f.maxHp = 160; return f;
+    });
   }
   readySaber(f) { f.saber.holstered = true; f.blade.set(false); f.blade.len = 0; f.hilt = 'thigh'; f.igniteNow(); }
   addNpc(kind, x, z, o) {
@@ -159,7 +187,7 @@ export class Game {
     if (!url) return;
     const audio = new Audio(url);
     audio.loop = true;
-    audio.volume = 0.5;
+    audio.volume = this.settings?.musicVolume ?? 0.5;
     this.battleMusic = audio;
     audio.play().catch(() => { /* First player interaction retries playback. */ });
   }
@@ -182,7 +210,12 @@ export class Game {
   onSwing(f, move) { const lv = f.saber.level; this.sfx.play(Math.random() < 0.5 ? 'swing1' : 'swing2', { pos: f.pos, vol: f.isPlayer ? 0.8 : 0.55, rate: (lv === 1 ? 1.12 : lv === 3 ? 0.88 : 1) * (f.saber.rageMul > 1 ? 1.1 : 1), vary: 0.1 }); }
   onThud(f) { this.sfxAt('hit1', f.pos, 0.7); this.dust(f.pos, 0.9, 10); if (f.isPlayer) this.shake(0.18); }
   onLand(f, impact) { if (impact > 8) { this.dust(f.pos, 0.6 + impact * 0.03, 8); } } // no camera shake: Jedi Outcast lands with a short LAND1 only
-  onDeath(f) { this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (this.teamMatch) this.teamMatch.onDeath(f); if (this.net) this.net.onDeath(f); if (f.isPlayer && !this.online) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
+  // a taunt: the voice line (when the optional voices are installed) and, online, everyone else hears it too
+  onTaunt(f, side, n, fromNet = false) {
+    this.sfx.voice?.(side, n, { pos: f.pos, vol: f.isPlayer ? 0.9 : 0.75 });
+    if (this.net && !fromNet && !f.remote && f.fid) this.net.fx('taunt', { fid: f.fid, side, n });
+  }
+  onDeath(f) { if (f.killedBy && f.killedBy !== f && !f.remote) this.creditKill(f.killedBy); const K = f.killedBy; if (K && !K.isPlayer && !K.remote && K.taunt && K !== f && Math.random() < 0.6) K.after(0.9, () => { if (K.status === 'normal') K.taunt(); }); /* the AI gloats now and then */ this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (this.teamMatch) this.teamMatch.onDeath(f); if (this.net) this.net.onDeath(f); if (f.isPlayer && !this.online) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
   endRound(state) { if (this.round.state === 'won' || this.round.state === 'lost') return; this.round = { state, t: 0 }; this.hud.banners.length = 0; } // the result overlay in hud.js replaces any banner
   onForceJump(f) { this.sfxAt('jump', f.pos, 0.9); this.sfxAt('jumpbuild', f.pos, 0.5); this.fx.ring({ p: [f.pos[0], 0.05, f.pos[2]], n: [0, 1, 0], r0: 0.3, r1: 2.2, life: 0.5, w: 0.14, c: [0.6, 0.85, 1, 0.9] }); this.dust(f.pos, 1.0, 14); if (f.isPlayer) this.shake(0.12); }
   dust(p, size = 0.8, n = 8) { for (let i = 0; i < n; i++) { const a = rnd(0, 6.28); this.fx.emit({ p: [p[0] + Math.cos(a) * 0.3, 0.08, p[2] + Math.sin(a) * 0.3], v: [Math.cos(a) * rnd(0.8, 2.6) * size, rnd(0.2, 0.9), Math.sin(a) * rnd(0.8, 2.6) * size], life: rnd(0.4, 0.9), size: rnd(0.12, 0.28), grow: 0.5, c0: [0.5, 0.48, 0.55, 0.22], c1: [0.4, 0.38, 0.45, 0], drag: 2.5 }); } }
@@ -197,13 +230,13 @@ export class Game {
   fighters() { return this.remotes && this.remotes.length ? [this.player, ...this.npcs, ...this.remotes] : [this.player, ...this.npcs]; }
   foesOf(f) { return this.fighters().filter(o => o !== f && o.status !== 'dead' && hostile(f, o)); }
   aiTarget(f) { // who an AI fights: the player offline; online the nearest fighter on the other side (kept unless one is 3 m closer)
-    if (!this.online && !this.teamMode) return this.player;
+    if (!this.openArena) return this.player;
     const foes = this.foesOf(f); if (!foes.length) return null; const d = o => Math.hypot(o.pos[0] - f.pos[0], o.pos[2] - f.pos[2]);
     let best = foes.reduce((a, b) => (d(b) < d(a) ? b : a)); const cur = f.aiFoe && foes.includes(f.aiFoe) ? f.aiFoe : null;
     if (cur && d(cur) < d(best) + 3) best = cur; f.aiFoe = best; return best;
   }
   targets() {
-    if (this.online || this.teamMode) { const out = this.foesOf(this.player).map(n => ({ type: 'npc', ref: n, center: () => n.chest() })); for (const b of this.world.bodies) out.push({ type: 'prop', ref: b, center: () => [b.pos[0], b.pos[1] + 0.5, b.pos[2]] }); return out; }
+    if (this.openArena) { const out = this.foesOf(this.player).map(n => ({ type: 'npc', ref: n, center: () => n.chest() })); for (const b of this.world.bodies) out.push({ type: 'prop', ref: b, center: () => [b.pos[0], b.pos[1] + 0.5, b.pos[2]] }); return out; }
     const out = []; for (const n of this.npcs) if (n.status !== 'dead') out.push({ type: 'npc', ref: n, center: () => n.chest() });
     for (const b of this.world.bodies) out.push({ type: 'prop', ref: b, center: () => [b.pos[0], b.pos[1] + 0.5, b.pos[2]] }); return out;
   }
@@ -220,7 +253,7 @@ export class Game {
     const dx = att.pos[0] - f.pos[0], dz = att.pos[2] - f.pos[2], dl = Math.hypot(dx, dz) || 1;
     return {
       alive: f.status !== 'dead' && f.hp > 0, level: F ? F.lv[kind] : 0, moving: !!(c.fwd || c.right), busy: f.status !== 'normal' || f.forceUntil > now || f.counterUntil > now,
-      swinging: f.saber.weaponTime > 0, onGround: f.onGround && f.pos[1] < 0.06, fp: F ? F.fp : 0, cost: 20,
+      swinging: f.saber.weaponTime > 0, onGround: !!f.onGround, fp: F ? F.fp : 0, cost: THROW_COST,
       absorbActive: !!(F && F.active.absorb), absorbLevel: F ? F.lv.absorb : 0, facing: (Math.sin(f.yaw) * dx + Math.cos(f.yaw) * dz) / dl > 0.15,
       knockedDown: f.status === 'down' || f.status === 'flung', reaction: f.reaction,
     };
@@ -228,10 +261,12 @@ export class Game {
   applyThrow(F, victim, pull, o = {}) {
     const att = F.p, kind = pull ? 'pull' : 'push', vp = victim.isPlayer, ap = att.isPlayer, VF = this.forceOf(victim);
     if (victim.status === 'dead' || !hostile(att, victim) || victim.spawnShield > this.t) return null;
-    if (victim.remote && this.net) { this.net.rpc(victim, 'throw', [{ from: att, pull, lv: F.lv[kind], dmgScale: F.dmgScale ?? 1, dir: o.dir, dist: o.dist ?? 5, fall: o.fall, flatD: o.flatD }]); return null; } // resolved by that player's game
-    const dist = o.dist ?? 5, fall = o.fall ?? clamp(1 - dist / 15, 0.2, 1), dir = o.dir;
+    if (victim.remote && this.net) { this.net.rpc(victim, 'throw', [{ from: att, pull, lv: F.lv[kind], dmgScale: F.dmgScale ?? 1, dir: o.dir, dist: o.dist ?? 5, fall: o.fall, flatD: o.flatD, charge: o.charge || 0 }]); return null; } // resolved by that player's game
+    const dist = o.dist ?? 5, fall = o.fall ?? clamp(1 - dist / 15, 0.2, 1), dir = o.dir, ch = clamp(o.charge || 0, 0, 1);
+    victim.markAttacker?.(att);
+    if (!pull && victim.status === 'levitated') return this.launchLevitated(F, victim, dir, ch); // Levitate + Push: nothing to stand on, nothing to counter with
     const def = this.defSnapshot(victim, att, pull);
-    const res = resolveThrow({ attackerLevel: F.lv[kind], pull, def, dist, forceSpent: 20 });
+    const res = resolveThrow({ attackerLevel: F.lv[kind] + (ch >= 0.75 ? 1 : 0), pull, def, dist, forceSpent: THROW_COST, knockdownDist: KNOCKDOWN_DIST + 4 * ch });
     if (res.fpGain && VF) VF.fp = Math.min(VF.max, VF.fp + res.fpGain);
     const why = { moving: 'moving', 'mid-swing': 'mid-swing', airborne: 'airborne', 'low Force': 'low on Force', recovering: 'recovering', 'caught off guard': 'caught off guard', 'no Force': '' }[res.reason] ?? res.reason;
     const NAME = pull ? 'PULL' : 'PUSH', mid = victim.chest();
@@ -250,25 +285,97 @@ export class Game {
         this.sfxAt('hit2', mid, 0.4); this.fx.sparks(mid, [0, 1, 0], 8, [0.7, 0.85, 1, 1]);
         note(vp ? 'FORCE ' + NAME + ' BLOCKED' : 'COUNTERED', vp ? [0.55, 0.95, 1] : [1, 0.65, 0.35]); break;
       default: {
-        const sc = res.scale, sp = pull ? clamp(((o.flatD ?? dist) - 1.3) / 0.48, 3, 26) : 0;
+        const sc = res.scale;
         if (VF) VF.interrupt();
         if (res.outcome === 'staggered') { // partly stopped: slides, keeps footing
-          victim.shove(pull ? [-dir[0], 0, -dir[2]] : dir, (pull ? 9 : 8) * sc * (0.6 + 0.4 * fall)); this.sfxAt('hit1', victim.pos, 0.5);
+          victim.shove(pull ? [-dir[0], 0, -dir[2]] : dir, (pull ? 9 : 8) * sc * (0.6 + 0.4 * fall) * (1 + 0.5 * ch)); this.sfxAt('hit1', victim.pos, 0.5);
           note(vp ? NAME + ' PARTLY BLOCKED' : 'PARTLY BLOCKED', [0.75, 0.95, 0.8]);
         } else if (pull) {
-          victim.pullTo([-dir[0], 0, -dir[2]], Math.max(3, sp * (0.55 + 0.45 * sc))); this.sfxAt('hit1', victim.pos, 0.6);
+          // Force Pull brings the victim to the space in front of the caster, in 3D: jump and pull, and they come up into the air
+          const fy = Math.sin(att.yaw), fz = Math.cos(att.yaw), up = !att.onGround && att.pos[1] > victim.pos[1] + 0.8;
+          const to = [att.pos[0] + fy * 1.5, up ? att.pos[1] + 0.2 : att.pos[1] + 0.15, att.pos[2] + fz * 1.5];
+          victim.pullTo([-dir[0], 0, -dir[2]], 0, { to, power: 0.55 + 0.45 * sc }); this.sfxAt('hit1', victim.pos, 0.6);
           note(vp ? 'PULLED' + (why ? '  ·  ' + why : '') : (res.outcome === 'knockdown' ? 'KNOCKDOWN' : 'PULL HIT'), vp ? [1, 0.5, 0.4] : [0.7, 1, 0.75]);
           if (vp) { this.shake(0.25); this.hud.hit(3); }
         } else if (res.outcome === 'knockdown') {
-          const k = 0.5 + 0.5 * sc; victim.push(dir, (6 + 7 * fall) * k, (3.6 + 2.4 * fall) * k, { keepYaw: false, quicker: true }); const dmg = 6 * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit2', victim.pos, 0.6); // w_force.c: pushed down -> quicker getup
+          const k = 0.5 + 0.5 * sc; victim.push(dir, (6 + 7 * fall) * k * (1 + 0.7 * ch), (3.6 + 2.4 * fall) * k * (1 + 0.3 * ch), { keepYaw: false, quicker: true }); const dmg = (6 + 10 * ch) * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit2', victim.pos, 0.6); // w_force.c: pushed down -> quicker getup
           note(vp ? 'KNOCKED DOWN' + (why ? '  ·  ' + why : '') : 'KNOCKDOWN', vp ? [1, 0.45, 0.35] : [0.7, 1, 0.75]); if (vp) { this.shake(0.35); this.hud.hit(dmg); }
         } else { // a hit that does not knock down: breaks the swing and slides the target back
-          victim.stagger(dir, (9 + 4 * fall) * sc); const dmg = 3 * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit1', victim.pos, 0.6);
+          victim.stagger(dir, (9 + 4 * fall) * sc * (1 + 0.6 * ch)); const dmg = (3 + 6 * ch) * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit1', victim.pos, 0.6);
           note(vp ? 'PUSHED' + (why ? '  ·  ' + why : '') : 'PUSH HIT' + (why ? '  ·  ' + why : ''), vp ? [1, 0.55, 0.4] : [0.7, 1, 0.75]); if (vp) { this.shake(0.28); this.hud.hit(dmg); }
         }
       }
     }
     return res;
+  }
+  // Levitate + Push: a levitated fighter is thrown hard (no counter: they are in the air) and slams into whatever is behind
+  launchLevitated(F, victim, dir, ch = 0) {
+    const att = F.p; victim.levitate?.(false, { quiet: true });
+    victim.push(dir, 15 + 6 * ch, 3.2, { keepYaw: false }); const dmg = (8 + 6 * ch) * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true });
+    this.sfxAt('hit2', victim.pos, 0.8); this.fx.ring({ p: victim.chest(), n: dir, r0: 0.2, r1: 2.4, life: 0.4, w: 0.16, c: [0.75, 0.9, 1, 0.95], move: v3.scale(dir, 10) });
+    if (victim.isPlayer || att.isPlayer) { this.banner('LAUNCHED', [0.7, 0.95, 1]); this.shake(0.3); }
+    return { outcome: 'knockdown', scale: 1, knockdown: true, launched: true, reason: '', countered: false };
+  }
+  // a fighter thrown into a wall at speed slams into it: damage by impact speed (credited to whoever threw them), a pinned
+  // moment against the wall, sparks, dust and a crack left in the wall
+  onWallSlam(f, speed, n) {
+    const dmg = Math.min(36, 12 + (speed - WALL_SLAM_SPEED) * 2.5), by = f.lastAttacker && this.t - (f.lastAttackerAt ?? -99) < 3 ? f.lastAttacker : null;
+    f.hurt(dmg, by, { noFlinch: true }); f.vel[0] = f.vel[2] = 0; f.vel[1] = Math.min(f.vel[1], 0); f.slamUntil = this.t + 0.28;
+    const p = [f.pos[0] - n[0] * (f.radius + 0.02), f.pos[1] + 1.05, f.pos[2] - n[2] * (f.radius + 0.02)];
+    this.addCrack(p, n, 0.55 + speed * 0.05); this.fx.sparks(p, n, 18, [1, 0.85, 0.6, 1]); this.dust(f.pos, 1.2, 14);
+    this.sfxAt('hit3', p, 0.9); this.sfxAt('wall2', p, 0.8); this.flashLight(p, [1, 0.8, 0.6], 0.2);
+    if (f.isPlayer || (by && by.isPlayer)) { this.banner('WALL SLAM', [1, 0.8, 0.55]); this.shake(0.4); }
+    if (this.net && !f.remote) this.net.fx('crack', { p: p.map(v => Math.round(v * 1000) / 1000), n: n.map(v => Math.round(v * 1000) / 1000), s: 0.55 + speed * 0.05 });
+  }
+  // a crack in the wall: jagged lines spreading from the impact in the wall's plane; fades out after CRACK_LIFE s
+  addCrack(p, n, size = 0.8) {
+    const C = this.cracks ??= [], up = Math.abs(n[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0], u = v3.norm(v3.cross(up, n)), w = v3.cross(n, u), at = v3.addS(p, n, 0.015), lines = [];
+    const arms = 7 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < arms; i++) {
+      let a = (i / arms) * Math.PI * 2 + rnd(-0.25, 0.25), r = 0, pt = at; const pts = [at];
+      const len = size * rnd(0.55, 1.1);
+      for (let k = 0; k < 4; k++) { r += len / 4; a += rnd(-0.45, 0.45); const q = v3.addS(v3.addS(at, u, Math.cos(a) * r), w, Math.sin(a) * r); pts.push(q); pt = q; if (k === 1 && Math.random() < 0.6) { const b = a + rnd(0.5, 1.1) * (Math.random() < 0.5 ? -1 : 1); lines.push([pt, v3.addS(v3.addS(pt, u, Math.cos(b) * len * 0.3), w, Math.sin(b) * len * 0.3)]); } }
+      lines.push(pts);
+    }
+    C.push({ p: at, n, size, t: 0, lines }); if (C.length > 24) C.shift();
+  }
+  drawCracks(R) {
+    for (const c of this.cracks || []) {
+      const a = Math.min(1, (CRACK_LIFE - c.t) / 2); if (a <= 0) continue;
+      for (const L of c.lines) for (let i = 0; i < L.length - 1; i++) R.beam(L[i], L[i + 1], 0.035 * (1 - i * 0.18), [0.03, 0.03, 0.035, 0.85 * a], [0.03, 0.03, 0.035, 0.85 * a], 1);
+      if (c.t < 0.5) R.billboard(c.p, c.size * 0.8, [1, 0.6, 0.3, 0.6 * (1 - c.t / 0.5)], 0);
+    }
+  }
+  // ---------------- Force Pulse (Force.startPulse): vaporize every foe within `radius`
+  forcePulse(att, radius, fromNet = false) {
+    const c = att.chest();
+    for (let k = 0; k < 3; k++) this.fx.ring({ p: [att.pos[0], att.pos[1] + 0.2 + k * 0.7, att.pos[2]], n: [0, 1, 0], r0: 0.4, r1: radius * (1.15 - k * 0.15), life: 0.6 + k * 0.1, w: 0.35, c: [1, 0.85 - k * 0.15, 0.5, 0.95] });
+    this.fx.ring({ p: c, n: [1, 0, 0], r0: 0.3, r1: radius, life: 0.5, w: 0.25, c: [1, 1, 1, 0.8] }); this.fx.ring({ p: c, n: [0, 0, 1], r0: 0.3, r1: radius, life: 0.5, w: 0.25, c: [1, 1, 1, 0.8] });
+    for (let i = 0; i < 90; i++) { const a = rnd(0, 6.28), up = rnd(-0.2, 0.7); this.fx.emit({ p: c, v: [Math.cos(a) * rnd(8, 16), up * 8, Math.sin(a) * rnd(8, 16)], life: rnd(0.35, 0.7), size: rnd(0.06, 0.14), c0: [1, 0.9, 0.6, 1], c1: [1, 0.4, 0.1, 0], drag: 2 }); }
+    this.dust(att.pos, 2.4, 30); this.flashLight(c, [1, 0.85, 0.6], 0.5); this.sfxAt('push', att.pos, 1); this.sfxAt('hit3', att.pos, 1); this.sfxAt('rage', att.pos, 0.6);
+    if (att.isPlayer || v3.dist(this.player.pos, att.pos) < radius + 4) this.shake(0.8);
+    if (att.isPlayer) this.banner('FORCE PULSE', [1, 0.85, 0.5], 1.8);
+    if (this.net && !fromNet && att.fid) this.net.fx('pulse', { fid: att.fid, r: radius });
+    if (fromNet) return; // the blast's victims are vaporized by the caster's game (vaporize RPCs)
+    for (const f of this.foesOf(att)) if (v3.dist(f.pos, att.pos) <= radius && Math.abs(f.pos[1] - att.pos[1]) < 4 && !(f.spawnShield > this.t)) f.vaporize(att);
+    for (const b of this.world.bodies) { const d = v3.sub(b.pos, att.pos), L = Math.hypot(d[0], d[2]); if (L < radius * 1.5 && L > 0.01) this.world.impulse(b, [d[0] / L * 18, 7, d[2] / L * 18]); }
+  }
+  onVaporize(f) { const c = f.chest(); for (let i = 0; i < 50; i++) this.fx.emit({ p: [c[0] + rnd(-0.3, 0.3), c[1] + rnd(-0.9, 0.7), c[2] + rnd(-0.3, 0.3)], v: [rnd(-1.5, 1.5), rnd(0.5, 3), rnd(-1.5, 1.5)], life: rnd(0.6, 1.4), size: rnd(0.03, 0.08), c0: [1, 0.7, 0.3, 1], c1: [0.3, 0.25, 0.25, 0], drag: 1 }); }
+  // the Force Pulse meter: damage dealt and defeats (only the attacker's own game counts them)
+  creditDamage(from, dmg) { const F = from && this.forceOf(from); if (F && !F.remote && F.gainPulse) F.gainPulse(dmg * PULSE_PER_HP); }
+  creditKill(from) { const F = from && this.forceOf(from); if (F && !F.remote && F.gainPulse) F.gainPulse(PULSE_PER_KILL); }
+  // ---------------- executions (executions.js)
+  startExecution(att, vic, kind, o = {}) {
+    if (!att || !vic || vic.status === 'dead' || att.executing) return null;
+    const ex = new Execution(this, att, vic, kind, o); (this.executions ??= []).push(ex);
+    if (vic.remote && !o.fromNet && vic.executedBy) vic.executedBy(att, kind, { fwd: ex.fwd, hold: ex.hold }); // their game runs their side
+    return ex;
+  }
+  updateExecutions(dt) { if (!this.executions) return; for (const ex of this.executions) ex.update(dt); this.executions = this.executions.filter(ex => !ex.done); }
+  // cut a fighter in half (the bisect execution): both halves keep the pose of that moment; shown to everyone online
+  cutFighter(f, c, fromNet = false) {
+    if (f.cut) return; f.cut = { y: c.y, dir: v3.norm([c.dir[0], 0, c.dir[2]]), floor: c.floor, t: this.t }; f.actor.frozen = true;
+    if (this.net && !fromNet && f.fid) this.net.fx('cut', { fid: f.fid, y: Math.round(c.y * 1000) / 1000, dir: c.dir.map(v => Math.round(v * 1000) / 1000), floor: Math.round(c.floor * 1000) / 1000 });
   }
   bodyArc(n) { if (Math.random() < 0.5) return; const names = ['lhand', 'rhand', 'cranium', 'lradius', 'rradius', 'ltibia', 'rtibia', 'thoracic']; const a = n.actor.bonePos(names[Math.floor(Math.random() * names.length)]), b = n.actor.bonePos(names[Math.floor(Math.random() * names.length)]); this.arcs.push({ pts: bolt(a, b, 5, 0.15), t: 0.06 }); }
   drawArcs(R) { for (let i = this.arcs.length - 1; i >= 0; i--) { const b = this.arcs[i]; drawBolt(R, b.pts, [0.6, 0.8, 1], 0.5); b.t -= this.dtFrame; if (b.t <= 0) this.arcs.splice(i, 1); } }
@@ -288,15 +395,15 @@ export class Game {
   dispose() { this.disposed = true; this.stopMapMusic(); try { this.net && this.net.dispose(); } catch (e) { } try { this.input.dispose(); } catch (e) { } try { this.sfx.dispose(); } catch (e) { } }
   aimDir() { const c = this.cam; const cp = Math.cos(c.pitch), d = [Math.sin(c.yaw) * cp, -Math.sin(c.pitch), Math.cos(c.yaw) * cp]; const o = this.player.chest(); const pt = v3.addS(c.eye, d, c.dist + 14); return v3.norm([pt[0] - o[0], pt[1] - o[1], pt[2] - o[2]]); }
   combatContext(f) {
-    const foes = (this.online || this.teamMode) ? this.foesOf(f) : f.team === 'player' ? this.npcs.filter(n => n.team === 'enemy' && n.status !== 'dead') : f.team === 'enemy' && this.player.status !== 'dead' ? [this.player] : [];
+    const foes = this.openArena ? this.foesOf(f) : f.team === 'player' ? this.npcs.filter(n => n.team === 'enemy' && n.status !== 'dead') : f.team === 'enemy' && this.player.status !== 'dead' ? [this.player] : [];
     let front = false, behind = false; const fw = [Math.sin(f.yaw), Math.cos(f.yaw)];
     for (const e of foes) { const dx = e.pos[0] - f.pos[0], dz = e.pos[2] - f.pos[2], d = Math.hypot(dx, dz); if (d > 2.7 || d < 0.01) continue; const dot = (fw[0] * dx + fw[1] * dz) / d; if (dot > 0.5) front = true; else if (dot < -0.45 && d < 2.3) behind = true; }
     return { front, behind };
   }
   separate(f) {
-    if (f.status === 'dead' || f.status === 'gripped' || f.status === 'flung') return;
+    if (f.status === 'dead' || f.status === 'gripped' || f.status === 'flung' || f.status === 'levitated') return;
     for (const o of this.fighters()) {
-      if (o === f || o.status === 'dead' || o.status === 'gripped') continue; if (Math.abs(o.pos[1] - f.pos[1]) > 1.3) continue;
+      if (o === f || o.status === 'dead' || o.status === 'gripped' || o.status === 'levitated') continue; if (Math.abs(o.pos[1] - f.pos[1]) > 1.3) continue;
       const dx = f.pos[0] - o.pos[0], dz = f.pos[2] - o.pos[2], d = Math.hypot(dx, dz), m = f.radius + o.radius; if (d < m && d > 1e-4) { const k = (m - d) * 0.5; f.pos[0] += dx / d * k; f.pos[2] += dz / d * k; o.pos[0] -= dx / d * k; o.pos[2] -= dz / d * k; }
     }
     if (f.pos[1] < 0.8) for (const b of this.world.bodies) { if (b.lifted > 0 || b.pos[1] > 0.9) continue; const dx = f.pos[0] - b.pos[0], dz = f.pos[2] - b.pos[2], d = Math.hypot(dx, dz), m = f.radius + b.r; if (d < m && d > 1e-4) { f.pos[0] = b.pos[0] + dx / d * m; f.pos[2] = b.pos[2] + dz / d * m; } }
@@ -319,7 +426,7 @@ export class Game {
       h.help = false; this.started = true;
     }
     if (!h.help) this.started = true;
-    if (i.dx || i.dy) { c.yaw -= i.dx * i.sens; c.pitch += i.dy * i.sens; if (!h.help) { const pm = this.pendingMouse ??= [0, 0]; pm[0] += i.dx; pm[1] += i.dy; } }
+    if (i.dx || i.dy) { c.yaw -= i.dx * i.sens; c.pitch += i.dy * i.sens * (this.invertY ? -1 : 1); if (!h.help) { const pm = this.pendingMouse ??= [0, 0]; pm[0] += i.dx; pm[1] += i.dy; } }
     const ar = 2.2 * dt; if (i.held('ArrowLeft')) c.yaw += ar; if (i.held('ArrowRight')) c.yaw -= ar; if (i.held('ArrowUp')) c.pitch -= ar * 0.7; if (i.held('ArrowDown')) c.pitch += ar * 0.7;
     c.pitch = clamp(c.pitch, -0.5, 1.3);
     if (this.duel || this.online || this.teamMode || this.missionDef) { // wheel / [ ] cycle Force for arena and mission modes
@@ -330,14 +437,20 @@ export class Game {
     if (this.director) { if (this.director.frameInput(i)) return; if (p.status === 'dead') return; }
     else if (this.duel) { if ((this.round.state === 'won' || this.round.state === 'lost') && this.round.t > 0.8 && i.pressed('Enter')) { this.resetDuel(); return; } if (p.status === 'dead') return; }
     else if (p.status === 'dead') { if (!this.teamMode && (i.pressed('Enter') || this.t - p.deadAt > 12)) this.respawnPlayer(); return; }
-    if (i.pressed('KeyR')) { if (this.playerWeapon === 'bryar') this.switchWeapon('saber'); else p.toggleSaber(); }
+    // R: from the pistol, the saber; otherwise execute the foe that is ready for it (the prompt shows), else draw / holster
+    if (i.pressed('KeyR')) { if (this.playerWeapon === 'bryar') this.switchWeapon('saber'); else { const ex = this.execCandidate && findExecutable(this, p); if (ex) this.startExecution(p, ex.victim, ex.kind); else p.toggleSaber(); } }
     if (i.pressed('KeyQ') && this.playerWeapon) this.switchWeapon();
+    if (i.pressed('KeyT')) p.taunt();
     if (i.pressed('Tab')) { p.setStyle(p.saber.level % 3 + 1); h.msg('Saber style: ' + STYLE_NAMES[p.saber.level]); }
     if (i.btnPressed[2] && !p.saber.holstered && p.status === 'normal') { if (p.throwSaber(this.aimDir())) h.msg('Saber throw'); }
     if (p.status === 'normal' && (i.pressed('KeyF') || FORCE_QUICK_BINDINGS.some(({ code }) => i.pressed(code)))) p.yaw = p.targetYaw = c.yaw; // snap to aim on either cast path
   }
+  // respawn immunity: no damage, Force or grabs for RESPAWN_SHIELD s (a soft blue glow while it lasts)
+  // a Force pool for an AI fighter that has none (team match bots: Force Push, for instance off a bridge)
+  giveForce(f, fp = 100) { if (!f.force) f.force = new Force(this, f, { npc: true, fp, list: SELECT_ORDER }); return f.force; }
+  shield(f, sec = RESPAWN_SHIELD) { f.spawnShield = this.t + sec; f.shieldGlow = true; f.glow = 0.35; f.glowCol = [0.55, 0.8, 1]; }
   respawnPlayer() {
-    const p = this.player; this.force.releaseAll(); this.force.fp = this.force.max; p.revive(this.playerSpawn.slice()); p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1; p.blade.set(false); p.blade.len = 0; p.yaw = p.targetYaw = 0; this.cam.yaw = 0; this.cam.pitch = 0.2; this.hud.msg('You rise again');
+    const p = this.player; this.force.releaseAll(); this.force.fp = this.force.max; p.revive(this.playerSpawn.slice()); this.shield(p); p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1; p.blade.set(false); p.blade.len = 0; p.yaw = p.targetYaw = this.cam.yaw = this.playerSpawnYaw ?? 0; this.cam.pitch = 0.2; this.hud.msg('You rise again');
   }
   // ---------------- weapons (story mode)
   switchWeapon(to) {
@@ -366,12 +479,12 @@ export class Game {
   }
   // NPC torso pitch toward their opponent so attacks track a crouching or jumping target (torso aim, cg_players.c)
   aimPitchToward(n) {
-    const T = (this.online || this.teamMode) ? this.aiTarget(n) : n.team === 'enemy' ? this.player : null; if (!T || T.status === 'dead' || n.status !== 'normal') return 0;
+    const T = this.openArena ? this.aiTarget(n) : n.team === 'enemy' ? this.player : null; if (!T || T.status === 'dead' || n.status !== 'normal') return 0;
     const d = Math.hypot(T.pos[0] - n.pos[0], T.pos[2] - n.pos[2]); if (d > 12) return 0;
     return clamp(-Math.atan2(T.chest()[1] - n.chest()[1], Math.max(d, 0.6)), -0.6, 1.2);
   }
   respawnPlayerAt(pos, yaw = 0) { // mission checkpoints: full health and Force, saber holstered
-    const p = this.player; this.force.reset(); p.revive(pos.slice()); p.status = 'normal'; p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1;
+    const p = this.player; this.force.reset(); p.revive(pos.slice()); p.status = 'normal'; this.shield(p); p.hilt = 'thigh'; p.thrown = null; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.holstered = true; p.saber.rageMul = 1;
     p.blade.set(false); p.blade.len = 0; this.humStop(p); p.actor.animSpeed = 1; p.yaw = p.targetYaw = yaw; this.cam.yaw = yaw; this.cam.pitch = 0.2; this.cam.pos = [pos[0], pos[1] + 1.4, pos[2]];
   }
   respawnNpc(n) {
@@ -382,19 +495,24 @@ export class Game {
   step(dt) {
     this.t += dt; this.dtFrame = dt; const p = this.player;
     if (this.net) this.net.beforeStep(dt);
+    this.updateExecutions(dt); // before the fighters: they show where the execution put them this step
+    this.execCandidate = this.attract || p.status !== 'normal' ? null : findExecutable(this, p);
     this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.inp); if (this.playerWeapon) this.updatePistol(dt);
     for (const n of this.npcs) {
       const brain = BRAINS[n.kind]; n.aimPitch = this.aimPitchToward(n);
       if (this.aiOff || this.teamMatch?.ended) { clearCmd(n.cmd); } else if (this.teamMatch) this.teamMatch.brain(n, dt); else if (brain) brain(this, n, dt);
       n.update(dt); if (n.force) n.force.update(dt); if (n.healFlash > 0) n.healFlash = Math.max(0, n.healFlash - dt);
       if (n.status === 'dead' && this.t - n.deadAt > 8 && this.mode === 'explorer') this.respawnNpc(n);
+      if (n.status === 'dead' && this.attract && this.t - n.deadAt > 3) { this.respawnNpc(n); n.hp = n.maxHp; if (n.force) n.force.reset(); this.shield(n); }
     }
     if (this.duel) this.updateRound(dt);
+    for (const f of this.fighters()) if (f.status === 'levitated' && Math.random() < 0.6) this.fx.emit({ p: [f.pos[0] + rnd(-0.4, 0.4), f.pos[1] + rnd(0, 1.7), f.pos[2] + rnd(-0.4, 0.4)], v: [0, rnd(0.4, 1.3), 0], life: 0.7, size: rnd(0.03, 0.06), c0: [0.6, 0.85, 1, 0.8], c1: [0.4, 0.6, 1, 0] });
     if (!this.teamMatch?.ended) this.combat.step(dt);
     this.world.update(dt); this.fx.update(dt);
     if (this.teamMatch) this.teamMatch.update(dt);
     if (this.director) this.director.update(dt); this.firstSub = false; if (this.stepPresses) this.stepPresses.clear();
-    for (const f of this.flashes) f.t -= dt; this.flashes = this.flashes.filter(f => f.t > 0); if (this.scorches) { for (const m of this.scorches) m.t += dt; this.scorches = this.scorches.filter(m => m.t < 8); } this.lightFlash = Math.max(0, this.lightFlash - dt * 3);
+    for (const f of this.fighters()) if (!f.remote && f.spawnShield && f.spawnShield <= this.t) { f.spawnShield = 0; if (f.shieldGlow) { f.glow = 0; f.shieldGlow = false; } }
+    for (const f of this.flashes) f.t -= dt; this.flashes = this.flashes.filter(f => f.t > 0); if (this.cracks) { for (const c of this.cracks) c.t += dt; this.cracks = this.cracks.filter(c => c.t < CRACK_LIFE); } if (this.scorches) { for (const m of this.scorches) m.t += dt; this.scorches = this.scorches.filter(m => m.t < 8); } this.lightFlash = Math.max(0, this.lightFlash - dt * 3);
     if (p.healFlash > 0 && this.force.holding !== 'heal') p.healFlash = Math.max(0, p.healFlash - dt);
     // brazier fire
     this.fireT -= dt; if (this.fireT <= 0) { this.fireT = 0.03; for (const b of this.world.braziers) this.fx.emit({ p: [b[0] + rnd(-0.15, 0.15), b[1], b[2] + rnd(-0.15, 0.15)], v: [rnd(-0.2, 0.2), rnd(0.8, 1.6), rnd(-0.2, 0.2)], life: rnd(0.4, 0.8), size: rnd(0.08, 0.18), grow: -0.1, c0: [1, 0.55, 0.15, 0.55], c1: [0.8, 0.1, 0.02, 0] }); }
@@ -404,7 +522,8 @@ export class Game {
   }
   update(dt) {
     dt = Math.min(dt, 0.1); this.fps += (1 / Math.max(dt, 1e-3) - this.fps) * 0.08;
-    this.frameNo++; this.frameInput(dt); this.acc += dt; let n = 0; this.firstSub = true;
+    if (this.slowMo) { if (this.t < this.slowMo.until) dt *= this.slowMo.scale; else this.slowMo = null; } // the execution cut, offline
+    this.frameNo++; if (!this.attract) this.frameInput(dt); this.acc += dt; let n = 0; this.firstSub = true;
     if (this.hud.help) this.stepPresses.clear(); else for (const c of this.input.pressedSet) this.stepPresses.add(c); if (!this.hud.help && this.input.btnPressed[0]) this.stepPresses.add('Mouse0');
     if (this.duel && this.hud.help) this.acc = 0; // controls panel open: the duel waits
     while (this.acc >= STEP && n++ < 6) { this.step(STEP); this.acc -= STEP; }
@@ -412,7 +531,24 @@ export class Game {
     if (this.net) this.net.updatePuppets(dt); // other players every rendered frame: a snapshot shows as soon as it arrives, not at our next 60 Hz step
     this.updateCamera(dt); this.input.endFrame();
   }
+  // menu background camera: a slow orbit around the two fighters, pulled back as they part
+  updateAttractCamera(dt) {
+    const c = this.cam, live = (this.duelists || []).filter(f => f.status !== 'dead'), pts = live.length ? live : this.duelists || [];
+    if (!pts.length) return;
+    if (!this.attractCam) { this.attractCam = true; c.yaw = 0.6; c.dist = 5; const e = this.R.env; for (const k of ['ambTop', 'ambBot', 'sunCol']) e[k] = e[k].map(v => v * 1.7); } // a brighter arena for the menu
+    const mid = [0, 0, 0]; for (const f of pts) for (let k = 0; k < 3; k++) mid[k] += f.pos[k] / pts.length;
+    const spread = pts.length > 1 ? v3.dist(pts[0].pos, pts[1].pos) : 2;
+    const calm = !!this.opts.calm; c.yaw += calm ? 0 : dt * 0.11; c.pitch = 0.16 + (calm ? 0 : 0.05 * Math.sin(this.t * 0.21)); c.dist += (clamp(3.4 + spread * 0.6, 3.8, 7) - c.dist) * Math.min(1, dt * 0.8);
+    const k = 1 - Math.exp(-2.2 * dt); c.pos[0] += (mid[0] - c.pos[0]) * k; c.pos[1] += (mid[1] + 1.2 - c.pos[1]) * k; c.pos[2] += (mid[2] - c.pos[2]) * k;
+    const cp = Math.cos(c.pitch), d = [Math.sin(c.yaw) * cp, -Math.sin(c.pitch), Math.cos(c.yaw) * cp];
+    // keep the eye inside the arena: shorten the boom while the wall collision would move it
+    let dist = c.dist; for (let i = 0; i < 8; i++) { const e = v3.addS(c.pos, d, -dist), q = e.slice(); this.world.collide(q, 0.35); if (Math.hypot(q[0] - e[0], q[2] - e[2]) < 0.01 && this.world.floorAt(e[0], e[2], e[1] + 4) !== null) break; dist *= 0.8; }
+    // frame the fighters on the right of the screen (the menu and its panel sit on the left)
+    const right = [-Math.cos(c.yaw), 0, Math.sin(c.yaw)], look = v3.addS(c.pos, right, -0.42 * dist);
+    c.target = look; c.eye = v3.addS(look, d, -dist); c.eye[1] = Math.max(0.6, c.eye[1]); c.fov = 56 * Math.PI / 180; this.sfx.listener = c.eye;
+  }
   updateCamera(dt) {
+    if (this.attract) return this.updateAttractCamera(dt);
     const c = this.cam, P = this.player; const ty = 1.42 + (P.ducked ? -0.42 : 0) + (P.status === 'down' || P.status === 'getup' || P.status === 'dead' ? -0.7 : 0);
     const k = 1 - Math.exp(-16 * dt); c.pos[0] += (P.pos[0] - c.pos[0]) * k; c.pos[1] += (P.pos[1] + ty - c.pos[1]) * k; c.pos[2] += (P.pos[2] - c.pos[2]) * k;
     const cp = Math.cos(c.pitch), d = [Math.sin(c.yaw) * cp, -Math.sin(c.pitch), Math.cos(c.yaw) * cp]; const right = [-Math.cos(c.yaw), 0, Math.sin(c.yaw)];
@@ -420,7 +556,7 @@ export class Game {
     this.shakeAmt *= Math.exp(-5 * dt); const s = this.shakeAmt * 0.12; eye = [eye[0] + rnd(-s, s), eye[1] + rnd(-s, s), eye[2] + rnd(-s, s)];
     const rr = Math.hypot(eye[0], eye[2]); if (!this.world.map && !this.world.level && rr > 24.2) { eye[0] *= 24.2 / rr; eye[2] *= 24.2 / rr; } eye[1] = Math.max(0.25, eye[1]);
     if (this.world.level) eye = this.world.cameraClip(tgt, eye); // walls and ceilings pull the camera in
-    c.eye = eye; c.target = tgt; const wantFov = (62 + (this.force.active.speed ? 8 : 0) + (this.force.active.rage ? 4 : 0)) * Math.PI / 180; c.fov += (wantFov - c.fov) * Math.min(1, dt * 5);
+    c.eye = eye; c.target = tgt; const wantFov = ((this.baseFov ?? 62) + (this.force.active.speed ? 8 : 0) + (this.force.active.rage ? 4 : 0)) * Math.PI / 180; c.fov += (wantFov - c.fov) * Math.min(1, dt * 5);
     this.sfx.listener = eye;
   }
   // ---------------- rendering
@@ -445,24 +581,36 @@ export class Game {
     if (f.dmgFlash > 0) { tint = [1, 0.2, 0.15]; amt = Math.max(amt, f.dmgFlash * 0.55); }
     if (f.flash > 0 && f.status === 'shocked') { tint = [0.6, 0.8, 1]; amt = 0.5; }
     if (f.elecUntil > this.t && Math.sin(this.t * 55 + (f.humId || 0)) > 0) { tint = [0.6, 0.8, 1]; amt = 0.42; }
-    const far = !f.isPlayer && v3.dist(this.cam.eye, f.pos) > 9;
-    R.drawSkinned(far ? this.lodMesh : this.bodyMesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha });
-    if (f.hasSaber && f.hilt !== 'none') R.drawMesh(this.hiltMesh, f.hiltMat, { spec: 0.7 });
+    if (f.vaporized) { const k = (this.t - f.vaporized) / 0.35; if (k >= 1) return; tint = [1, 0.8, 0.5]; amt = 0.85; glow = 0.8; f.alpha = 1 - k; } // Force Pulse: burns away
+    if (this.execCandidate && this.execCandidate.victim === f) { tint = [1, 0.12, 0.08]; amt = Math.max(amt, 0.25 + 0.15 * Math.sin(this.t * 8)); glow = Math.max(glow, 0.12); } // ready to be executed
+    const far = !f.isPlayer && v3.dist(this.cam.eye, f.pos) > 9, mesh = far ? this.lodMesh : this.bodyMesh;
+    if (f.cut) { // cut in half: two halves, each drawn on its side of the cut and moved on its own
+      const T = cutTransforms(f, this.t);
+      R.drawSkinned(mesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha, clip: T.lowerClip, post: T.lower });
+      R.drawSkinned(mesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha, clip: T.upperClip, post: T.upper });
+      if (this.t - f.cut.t < 1.5) for (const M of [T.lower, T.upper]) { const p = m4.transformPoint(M, [f.pos[0], f.cut.y, f.pos[2]]); R.billboard(p, 0.28, [1, 0.45, 0.15, 0.55 * (1 - (this.t - f.cut.t) / 1.5)], 0); }
+    } else R.drawSkinned(mesh, a, { tint, tintAmt: amt, glow, alpha: f.alpha });
+    if (f.hasSaber && f.hilt !== 'none' && !f.cut) { R.drawMesh(this.hiltMesh, f.hiltMat, { spec: 0.7 }); if (f.hilt2Mat) R.drawMesh(this.hiltMesh, f.hilt2Mat, { spec: 0.7 }); }
     if (f.gun && (!f.hasSaber || f.saber.holstered)) { const bm = a.boneMatrix(this.attach.grip.bone); const loc = m4.trs(this.attach.grip.t, this.attach.grip.q, [1, 1, 1]); R.drawMesh(this.gunMesh, m4.mul(bm, loc), { spec: 0.6 }); }
-    const sh = f.status === 'dead' || f.status === 'down' ? 0.8 : 0.55; if (f.pos[1] < 3) this.fx.disc([f.pos[0], 0, f.pos[2]], sh * (1 - Math.min(0.5, f.pos[1] * 0.15)), [0, 0, 0, 0.42], 1);
+    const sh = f.status === 'dead' || f.status === 'down' ? 0.8 : 0.55;
+    if (this.world.level) { const gy = this.world.floorAt(f.pos[0], f.pos[2], f.pos[1] + 0.3), h = gy === null ? 9 : f.pos[1] - gy; if (h < 3) this.fx.disc([f.pos[0], gy + 0.03, f.pos[2]], sh * (1 - Math.min(0.5, h * 0.15)), [0, 0, 0, 0.42], 1); } // the floor under them (none over a chasm)
+    else if (f.pos[1] < 3) this.fx.disc([f.pos[0], 0, f.pos[2]], sh * (1 - Math.min(0.5, f.pos[1] * 0.15)), [0, 0, 0, 0.42], 1);
   }
   render() {
     const R = this.R, c = this.cam; R.resize(); R.time = this.t; this.setLights(); R.setCamera(c.eye, c.target, c.fov); R.begin();
     this.world.draw();
-    const all = this.fighters(); for (const f of all) this.drawFighter(f);
+    const all = this.attract ? this.npcs : this.fighters(); for (const f of all) this.drawFighter(f);
     this.combat.drawRemote(R);
     for (const b of this.world.braziers) R.billboard([b[0], b[1] + 0.35, b[2]], 0.9 + 0.1 * Math.sin(this.t * 13 + b[0]), [1, 0.5, 0.15, 0.22], 0);
     if (this.scorches) for (const m of this.scorches) { const a = Math.min(1, (8 - m.t) / 2); this.fx.disc(m.p, m.r, [0.04, 0.03, 0.03, 0.55 * a], 1); if (m.t < 0.6) this.fx.disc(m.p, m.r * 0.7, [m.c[0], m.c[1], m.c[2], 0.9 * (1 - m.t / 0.6)], 0); }
-    this.fx.draw();
+    this.drawCracks(R); this.fx.draw();
     if (this.teamMatch) this.teamMatch.drawWorld(R);
-    for (const f of all) f.blade.draw(R, 1 + 0.05 * Math.sin(this.t * 41 + (f.humId || 0) * 2));
+    for (const f of all) { const fl = 1 + 0.05 * Math.sin(this.t * 41 + (f.humId || 0) * 2); f.blade.draw(R, fl); if (f.blade2) f.blade2.draw(R, fl); }
+    for (const ex of this.executions || []) ex.draw(R);
     this.force.draw(R); for (const n of this.npcs) if (n.force) n.force.draw(R); if (this.remotes) for (const n of this.remotes) if (n.force) n.force.draw(R); this.drawArcs(R); this.combat.drawBolts(R); if (this.director) this.director.draw(R);
-    R.flushFx(); this.hud.draw(this, this.dtFrame);
+    R.flushFx();
+    if (this.attract) { this.hud.resize(); this.hud.x.setTransform(1, 0, 0, 1, 0, 0); this.hud.x.clearRect(0, 0, this.hud.c.width, this.hud.c.height); return; }
+    this.hud.draw(this, this.dtFrame);
     if (this.teamMatch) this.teamMatch.drawHUD(this.hud.x, this.hud.W, this.hud.H);
   }
   frame(nowMs) { const now = nowMs / 1000; const dt = this.last ? now - this.last : STEP; this.last = now; this.update(dt); this.render(); }

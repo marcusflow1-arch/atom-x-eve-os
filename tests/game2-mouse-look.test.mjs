@@ -41,5 +41,5 @@ test('Game 2 mouse camera accepts canvas movement when an iframe rejects pointer
 });
 test('Game 2 applies captured mouse deltas even without pointer lock', () => {
   const game = readFileSync(new URL('../src/components/game2/engine/game.js', import.meta.url), 'utf8');
-  assert.match(game, /if \(i\.dx \|\| i\.dy\) \{ c\.yaw -= i\.dx \* i\.sens; c\.pitch \+= i\.dy \* i\.sens;/);
+  assert.match(game, /if \(i\.dx \|\| i\.dy\) \{ c\.yaw -= i\.dx \* i\.sens; c\.pitch \+= i\.dy \* i\.sens \* \(this\.invertY \? -1 : 1\);/); // Settings: invert mouse Y
 });

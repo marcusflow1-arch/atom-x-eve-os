@@ -25,14 +25,15 @@ export const SIDES = {
   light: { name: 'Jedi', blade: [0.22, 0.52, 1], tint: [1, 1, 1], tintAmt: 0, css: '#7fc8ff' },
   dark: { name: 'Dark Jedi', blade: [1, 0.06, 0.05], tint: [0.12, 0.09, 0.17], tintAmt: 0.66, css: '#ff7a6a' },
 };
-export const RESPAWN_S = 3, SHIELD_S = 1.5;
-const RPC_METHODS = ['hurt', 'push', 'pullTo', 'shove', 'stagger', 'electrify', 'shock', 'grip'];
-const STATUS = ['normal', 'dead', 'flung', 'down', 'getup', 'gripped', 'shocked', 'roll', 'whole'];
+export const RESPAWN_S = 3, SHIELD_S = 3; // back after 3 s, then 3 s of immunity
+const RPC_METHODS = ['hurt', 'push', 'pullTo', 'shove', 'stagger', 'electrify', 'shock', 'grip', 'unlodgeSaber', 'levitate', 'executedBy', 'vaporize'];
+const STATUS = ['normal', 'dead', 'flung', 'down', 'getup', 'gripped', 'shocked', 'roll', 'whole', 'levitated', 'executed', 'executing'];
 const HILT = ['hand', 'thigh', 'thrown', 'none'];
 const TIMED = ['speed', 'rage', 'protect', 'absorb', 'see'];
 const HOLD = ['', 'grip', 'lightning', 'heal', 'drain'];
 // snapshot layout (NetGame.snap): field -> position
-export const SN = { fid: 0, side: 1, name: 2, x: 3, y: 4, z: 5, vx: 6, vy: 7, vz: 8, yaw: 9, ayaw: 10, syaw: 11, spitch: 12, status: 13, hp: 14, maxHp: 15, legs: 16, torso: 20, move: 24, level: 25, holst: 26, lit: 27, hilt: 28, thrown: 29, fp: 30, fmax: 31, bits: 32, hold: 33, tgt: 34, duck: 35, glow: 36, flash: 37, match: 38, gripBase: 39, pitch: 40, dj: 41, legYaw: 42 };
+export const SN = { fid: 0, side: 1, name: 2, x: 3, y: 4, z: 5, vx: 6, vy: 7, vz: 8, yaw: 9, ayaw: 10, syaw: 11, spitch: 12, status: 13, hp: 14, maxHp: 15, legs: 16, torso: 20, move: 24, level: 25, holst: 26, lit: 27, hilt: 28, thrown: 29, fp: 30, fmax: 31, bits: 32, hold: 33, tgt: 34, duck: 35, glow: 36, flash: 37, match: 38, gripBase: 39, pitch: 40, dj: 41, legYaw: 42, kit: 43 };
+const KITS = ['single', 'dual', 'staff'];
 const pnow = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 const r3 = v => Math.round(v * 1000) / 1000;
 
@@ -199,7 +200,7 @@ export class NetGame {
       Math.max(0, STATUS.indexOf(f.status)), r3(f.hp), f.maxHp, ...this.layerOut(a.legs, a), ...(a.torsoFollow || !a.torso.cur ? [-1, 0, 1, 0] : this.layerOut(a.torso, a)),
       S.move, S.level, S.holstered ? 1 : 0, f.blade.lit ? 1 : 0, Math.max(0, HILT.indexOf(f.hilt)), T ? [r3(T.pos[0]), r3(T.pos[1]), r3(T.pos[2]), r3(T.ang)] : 0,
       F ? Math.round(F.fp) : 0, F ? F.max : 100, bits, F ? Math.max(0, HOLD.indexOf(F.holding || '')) : 0, tgt, f.ducked ? 1 : 0, r3(f.glow || 0), r3(f.dmgFlash || 0), a.matchPelvis ? 1 : 0, F ? F.gripBase || 0 : 0,
-      r3(f.isPlayer ? (f.cmd.aimPitch || 0) : (f.aimPitch || 0)), f.kind === 'darkjedi' ? 1 : 0, r3(a.legYaw || 0)];
+      r3(f.isPlayer ? (f.cmd.aimPitch || 0) : (f.aimPitch || 0)), f.kind === 'darkjedi' ? 1 : 0, r3(a.legYaw || 0), Math.max(0, KITS.indexOf(f.saberKit || 'single'))];
   }
   localFighters() { const g = this.g, out = [g.player]; if (this.isHost) for (const n of g.npcs) if (n.fid) out.push(n); return out; }
   takeSnap(from, m) {
@@ -256,6 +257,7 @@ export class NetGame {
     const S = f.saber, prevMove = S.move; S.move = e[SN.move]; S.level = e[SN.level]; S.holstered = !!e[SN.holst]; S.weaponTime = S.isActiveSwing() ? 1 : 0; S.moveStart = prevMove === S.move ? S.moveStart : g.t;
     if (S.move !== prevMove && S.inAttack(S.move)) g.onSwing(f, S.move);
     const lit = !!e[SN.lit] && status !== 'dead'; if (lit !== f.blade.lit) { f.blade.set(lit); g.sfxAt(lit ? 'saberon' : 'saberoff', f.pos, 0.6); if (lit) g.humStart(f); else g.humStop(f); }
+    const kit = KITS[e[SN.kit]] || 'single'; if ((f.saberKit || 'single') !== kit) f.setSaberKit(kit); // dual sabers / saberstaff
     f.hilt = HILT[e[SN.hilt]] || 'hand'; const T = e[SN.thrown];
     if (T && f.hilt === 'thrown') { if (!f.thrown) f.thrown = { pos: [T[0], T[1], T[2]], prevPos: [T[0], T[1], T[2]], ang: T[3], hit: new Map() }; f.thrown.prevPos = f.thrown.pos; f.thrown.pos = [T[0], T[1], T[2]]; f.thrown.ang = T[3]; } else f.thrown = null;
     const F = f.force; F.fp = e[SN.fp]; F.max = e[SN.fmax]; F.setActive(e[SN.bits]); F.setHolding(HOLD[e[SN.hold]] || ''); F.gripBase = e[SN.gripBase];
@@ -270,6 +272,7 @@ export class NetGame {
   // ---------------- remote calls
   rpc(f, m, args) {
     if (!f || !f.owner) return;
+    if (m === 'hurt' && args[1] && !args[1].remote) this.g.creditDamage(args[1], Math.min(args[0], f.hp || args[0])); // our damage on their fighter fills our Force Pulse meter
     if (m === 'hurt' && args[2] && args[2].noFlinch && !args[2].touch) { // continuous damage (lightning, drain, grip): batched for 100 ms
       const key = f.fid + '|' + (args[1] && args[1].fid || ''); const b = this.batch.get(key) || { f, from: args[1] || null, dmg: 0 }; b.dmg += args[0]; this.batch.set(key, b); return;
     }
@@ -285,6 +288,10 @@ export class NetGame {
     switch (m.m) {
       case 'hurt': { const [dmg, src, o] = a; const opt = o || {}; if (f.status === 'dead' || f.spawnShield > g.t) return; if (f === g.player && g.force.active.protect) g.sfxAt('protecthit', f.pos, 0.8); f.hurt(dmg, src, opt); if (f === g.player) { g.hud.hit(dmg); g.shake(opt.touch ? 0.05 : opt.noFlinch ? 0.06 : 0.2); } return; }
       case 'push': case 'pullTo': case 'shove': case 'stagger': case 'electrify': case 'shock': if (f.spawnShield > g.t) return; f[m.m](...a); return;
+      case 'unlodgeSaber': f.unlodgeSaber(); return;
+      case 'levitate': { const [on, o] = a; if (on && f.spawnShield > g.t) return; f.levitate(!!on, o || {}); return; }
+      case 'vaporize': { const [att] = a; if (att) f.vaporize(att); return; }
+      case 'executedBy': { const [att, kind, o] = a; if (att && (kind === 'crush' || kind === 'bisect') && f.status !== 'dead' && !(f.spawnShield > g.t)) g.startExecution(att, f, kind, { ...(o || {}), fromNet: true }); return; }
       case 'grip': { const [on, lift, o] = a; if (on) { if (f.spawnShield > g.t) return; f.grip(true, lift, { carry: o && o.carry && o.from ? this.carryOf(o.from) : null }); } else f.grip(false, 0, o || {}); return; }
       case 'blocked': if (!f.saber.holstered && f.status === 'normal') f.saber.blocked = a[0]; return;
       case 'fp': { const F = g.forceOf(f); if (F) F.fp = clamp(F.fp + a[0], 0, F.max); return; }
@@ -293,7 +300,7 @@ export class NetGame {
       case 'distract': f.distracted = a[0]; return;
       case 'throw': { // push / pull resolved here with this fighter's exact state (CanCounterThrow + ForceThrow)
         const o = a[0] || {}, att = o.from; if (!att || f.spawnShield > g.t) return;
-        const res = g.applyThrow({ p: att, lv: { push: o.lv, pull: o.lv }, dmgScale: o.dmgScale ?? 1 }, f, !!o.pull, { dir: o.dir, dist: o.dist, fall: o.fall, flatD: o.flatD, local: true });
+        const res = g.applyThrow({ p: att, lv: { push: o.lv, pull: o.lv }, dmgScale: o.dmgScale ?? 1 }, f, !!o.pull, { dir: o.dir, dist: o.dist, fall: o.fall, flatD: o.flatD, charge: o.charge || 0, local: true });
         if (res) this.session.send(from, { k: 'fx', e: 'throwRes', to: att.fid, outcome: res.outcome, reason: res.reason, pull: !!o.pull }, true);
         return;
       }
@@ -305,7 +312,11 @@ export class NetGame {
       case 'hit': g.fx.sparks(m.p, [0, 1, 0], m.touch ? 4 : m.blocked ? 14 : 10, m.blocked ? [1, 0.9, 0.55, 1] : [1, 0.5, 0.2, 1]); g.sfxAt(m.blocked ? 'block' + (1 + Math.floor(Math.random() * 9)) : 'hit' + (1 + Math.floor(Math.random() * 3)), m.p, m.touch ? 0.3 : 0.9); if (m.blocked) g.flashLight(m.p, [1, 0.9, 0.6], 0.15); return;
       case 'cast': { const f = this.byId.get(m.fid); if (f && f.remote && f.force.castFx) f.force.castFx(m.id, m.d || [0, 0, 1]); return; }
       case 'throwRes': { if (m.to !== g.player.fid) return; const T = { knockdown: ['KNOCKDOWN', [0.7, 1, 0.75]], staggered: ['PARTLY BLOCKED', [0.75, 0.95, 0.8]], hit: [(m.pull ? 'PULL' : 'PUSH') + ' HIT', [0.7, 1, 0.75]], countered: ['COUNTERED', [1, 0.65, 0.35]], absorbed: ['ABSORBED', [0.78, 0.5, 1]] }[m.outcome]; if (T) g.banner(T[0], T[1]); return; }
-      case 'died': if (m.fid && String(m.fid).startsWith(from + ':')) this.noteDeath(m.fid, m.by); return;
+      case 'died': if (m.fid && String(m.fid).startsWith(from + ':')) { this.noteDeath(m.fid, m.by); const k = m.by && this.byId.get(m.by); if (k && !k.remote) g.creditKill(k); } return;
+      case 'crack': if (Array.isArray(m.p) && Array.isArray(m.n)) g.addCrack(m.p, m.n, Math.min(2, Number(m.s) || 0.8)); return;
+      case 'taunt': { const f = this.byId.get(m.fid); if (f && f.remote) g.onTaunt(f, m.side === 'dark' ? 'dark' : 'light', Number(m.n) || 0, true); return; }
+      case 'pulse': { const f = this.byId.get(m.fid); if (f && f.remote) g.forcePulse(f, Math.min(10, Number(m.r) || 7), true); return; }
+      case 'cut': { const f = this.byId.get(m.fid); if (f && f.remote && Array.isArray(m.dir)) g.cutFighter(f, { y: Number(m.y), dir: m.dir, floor: Number(m.floor) }, true); return; }
     }
   }
   recv(from, m, rel) {

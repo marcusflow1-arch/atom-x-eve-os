@@ -4,9 +4,23 @@
 import { Actor } from './actor.js';
 import { SaberLogic } from './saber.js';
 import { Blade } from './fx.js';
-import { m4, v3, clamp, wrapPi, DEG, lerp } from './math.js';
+import { m4, v3, q as Q, clamp, wrapPi, DEG, lerp } from './math.js';
 
 const G = 20;                                   // gravity m/s^2 (JO 800 u/s^2)
+// Saber throw (Atom X Eve): spins at 72 rad/s (three times the original), homes in on the nearest foe within
+// THROW_SEEK m of the blade, and on contact lodges in them and keeps spinning there (THROW_LODGE_DPS) while the throw is
+// held, for up to THROW_LODGE_S; releasing the throw, the victim's Force Push or their death sends it home.
+export const THROW_SPIN = 72, THROW_SEEK = 7, THROW_TURN = 4.5, THROW_LODGE_S = 2.6, THROW_LODGE_DPS = 25;
+// thrown into a wall faster than this (m/s, into the wall) slams into it (Game.onWallSlam); slower just bumps
+export const WALL_SLAM_SPEED = 6;
+// Force Levitate: the victim floats LEVITATE_HEIGHT m up, helpless, for the caster's duration; any hit drops them
+export const LEVITATE_HEIGHT = 2.1;
+// Taunts (T): the original Jedi Outcast gesture animations, a set for each side; moving, attacking or jumping cuts one short
+export const TAUNTS = Object.freeze({ light: ['BOTH_ENGAGETAUNT', 'BOTH_SILENCEGESTURE1', 'BOTH_TALKGESTURE2'], dark: ['BOTH_THREATEN1', 'BOTH_ENGAGETAUNT', 'BOTH_TALKGESTURE10'] });
+export const TAUNT_COOLDOWN = 1;
+// Lightsaber kits: one blade, a blade in each hand ('dual'), or a saberstaff with a blade at each end ('staff')
+export const SABER_KITS = Object.freeze(['single', 'dual', 'staff']);
+const FLIP_X = Q.axisAngle([1, 0, 0], Math.PI);
 const FORCE_JUMP_HEIGHT = [0.8, 3.3, 5.7, 10.4]; // JO forceJumpHeight[] in metres
 export const emptyCmd = () => ({ fwd: 0, right: 0, up: 0, walk: false, crouch: false, attack: false, alt: false, jump: false, jumpPressed: false, crouchPressed: false });
 const DEATHS = ['BOTH_DEATH1', 'BOTH_DEATH2', 'BOTH_DEATH3', 'BOTH_DEATH4', 'BOTH_DEATH5', 'BOTH_DEATH6', 'BOTH_DEATH7', 'BOTH_DEATH8', 'BOTH_DEATH9'];
@@ -82,6 +96,15 @@ export class Fighter {
   }
   setStyle(lv) { this.saber.level = lv; if (!this.saber.holstered && this.saber.weaponTime <= 0 && this.saber.move === this.saber.I.LS_READY) this.saber.setMove(this.saber.I.LS_READY, this.now); }
   bladeSeg() { return this.blade.len > 0.3 ? [this.blade.base, this.blade.tip] : null; }
+  // every ignited blade: the second one comes with dual sabers or a saberstaff
+  bladeSegs() { const out = []; if (this.blade.len > 0.3) out.push([this.blade.base, this.blade.tip]); if (this.blade2 && this.blade2.len > 0.3) out.push([this.blade2.base, this.blade2.tip]); return out; }
+  setSaberKit(kit) {
+    this.saberKit = SABER_KITS.includes(kit) ? kit : 'single';
+    if (this.saberKit === 'single') { this.blade2 = null; this.hilt2Mat = null; return; }
+    if (!this.blade2) { this.blade2 = new Blade(this.blade.color); this.hilt2Mat = new Float32Array(16); }
+    this.blade2.color = this.blade.color;
+    if (this.saberKit === 'dual') this.setStyle(1); // the Fast stance is one-handed: the left hand is free for the second saber
+  }
   swingPhase() { const s = this.saber; if (!s.isActiveSwing() || s.moveLen <= 0) return -1; return (this.now - s.moveStart) * 1000 / s.moveLen; }
   swingActive() { return !this.saber.holstered && this.saber.isActiveSwing(); } // start / attack / transition: the blade is moving with intent
   attacking() { const s = this.saber; return !s.holstered && s.inAttack(s.move); } // BG_SaberInAttack: full attack damage (w_saber.c)
@@ -94,15 +117,33 @@ export class Fighter {
     const hp = this.actor.bonePos('rhand'); this.thrown = { pos: hp.slice(), prevPos: hp.slice(), dir: v3.norm(dir), t: 0, phase: 'out', ang: 0, hit: new Map() };
     this.saber.inFlight = true; this.hilt = 'thrown'; this.g.sfxAt('spin', this.pos, 0.8); this.thrownLoop = this.g.sfx.loop && this.g.sfx.loop('spin', { vol: 0.35 }); return true;
   }
+  // the foe a thrown saber homes in on: the closest one within THROW_SEEK m of the blade
+  throwPrey(T) {
+    const foes = this.g.foesOf ? this.g.foesOf(this) : []; let best = null, bd = THROW_SEEK;
+    for (const f of foes) { if (f.spawnShield > this.now) continue; const d = v3.dist(f.chest(), T.pos); if (d < bd) { bd = d; best = f; } }
+    return best;
+  }
+  lodgeSaber(target) { const T = this.thrown; if (!T || T.phase === 'back') return; T.phase = 'lodged'; T.lodged = target; T.lodgeUntil = this.now + THROW_LODGE_S; T.lodgeTick = this.now; }
+  unlodgeSaber() { const T = this.thrown; if (T && T.phase === 'lodged') { T.lodged = null; T.phase = 'back'; } }
   updateThrown(dt) {
     const T = this.thrown; if (!T) return;
-    T.prevPos = T.pos.slice(); T.t += dt; T.ang += 24 * dt;
+    T.prevPos = T.pos.slice(); T.t += dt; T.ang += THROW_SPIN * dt;
     const hand = this.actor.bonePos('rhand'); hand[1] += 0.05;
     const held = !!this.cmd.alt;
-    // A held throw flies out, then tracks the camera direction while spinning at range.
-    // Release sends it home. This also works when either fighter is airborne.
-    if (!held) T.phase = 'back';
-    if (T.phase === 'out') {
+    // A held throw flies out, homes in on the nearest foe (else tracks the camera direction while spinning at range) and
+    // lodges in whoever it hits. Release sends it home. This also works when either fighter is airborne.
+    if (!held) { T.phase = 'back'; T.lodged = null; }
+    if (T.phase === 'lodged') {
+      const L = T.lodged;
+      if (!L || L.status === 'dead' || this.now > T.lodgeUntil || L.spawnShield > this.now) { T.lodged = null; T.phase = 'back'; }
+      else { const c = L.chest(); T.pos = [c[0], c[1] - 0.05, c[2]]; return; } // spins inside them (Combat.step deals the damage)
+    }
+    const prey = (T.phase === 'out' || T.phase === 'hover') && v3.dist(T.pos, hand) < 16 ? this.throwPrey(T) : null;
+    if (prey) { // home in gradually: the blade turns toward them at THROW_TURN rad/s-ish and keeps flying
+      const want = v3.norm(v3.sub(prey.chest(), T.pos)); T.dir = v3.norm(v3.lerp(T.dir, want, Math.min(1, dt * THROW_TURN)));
+      T.pos = v3.addS(T.pos, T.dir, 17 * dt); T.phase = 'out'; T.prey = prey;
+    } else if (T.phase === 'out') {
+      T.prey = null;
       const aim = this.isPlayer ? this.g.aimDir() : T.dir;
       T.dir = v3.norm(v3.lerp(T.dir, aim, Math.min(1, dt * 6)));
       T.pos = v3.addS(T.pos, T.dir, 19 * dt);
@@ -118,7 +159,8 @@ export class Fighter {
       T.pos = v3.addS(T.pos, v3.scale(d, 1 / (L || 1)), Math.min(L, 26 * dt));
       if (L < 0.6) { this.catchSaber(); return; }
     }
-    T.pos[1] = Math.max(0.35, T.pos[1]);
+    const fl = this.g.world && this.g.world.floorAt ? this.g.world.floorAt(T.pos[0], T.pos[2], T.pos[1] + 0.5) : 0;
+    T.pos[1] = Math.max((fl ?? -Infinity) + 0.35, T.pos[1]);
     // Reset per-target hit cooldowns only after they expire, not every return frame.
     for (const [target, next] of T.hit) if (next < this.now - 1) T.hit.delete(target);
   }
@@ -145,9 +187,31 @@ export class Fighter {
     this.status = 'getup'; this.statusT = 0; this.quickerGetup = false; this.playWhole(anim, { blend: 0.06 }); this.getupLen = this.isPlayer ? Math.min(len, 0.25) : len; // the player: Space rises at once (or after 0.5 s) with a quick 250 ms getup
     if (jump && anim === 'BOTH_FORCE_GETUP_B1') this.g.sfxAt && this.g.sfxAt('jump', this.pos, 0.6);
   }
-  pullTo(dirXZ, speed) { // dragged toward caster
-    if (this.spawnShield > this.now) return; this.endForce(); this.cancelAttackState(); this.status = 'flung'; this.statusT = 0; this.vel = [dirXZ[0] * speed, 3.2, dirXZ[2] * speed]; this.onGround = false; this.ducked = false; this.knockAt = this.now; this.quickerGetup = false;
+  // dragged toward the caster. o.to: fly (ballistic, gravity G) to that point; o.power < 1 falls short (a partly answered pull)
+  pullTo(dirXZ, speed, o = {}) {
+    if (this.spawnShield > this.now) return; if (this.status === 'levitated') this.levitate(false, { quiet: true });
+    this.endForce(); this.cancelAttackState(); this.status = 'flung'; this.statusT = 0; this.onGround = false; this.ducked = false; this.knockAt = this.now; this.quickerGetup = false;
+    if (o.to) {
+      const d = [o.to[0] - this.pos[0], o.to[1] - this.pos[1], o.to[2] - this.pos[2]], L = Math.hypot(d[0], d[2]) || 0.01, tau = clamp(Math.hypot(...d) / 15, 0.28, 0.65), k = clamp(o.power ?? 1, 0.2, 1);
+      this.vel = [d[0] / tau * k, d[1] / tau + 0.5 * G * tau, d[2] / tau * k]; dirXZ = [d[0] / L, 0, d[2] / L]; this.pullLand = true; // stop where they land
+    } else this.vel = [dirXZ[0] * speed, 3.2, dirXZ[2] * speed];
     this.yaw = Math.atan2(-dirXZ[0], -dirXZ[2]); this.statusAnim = 'BOTH_KNOCKDOWN3'; this.playWhole('BOTH_KNOCKDOWN3', { blend: 0.06 });
+  }
+  // Force Levitate (the victim's side): float up and turn slowly, unable to act, until `until` or any hit (hurt) drops them
+  levitate(on, o = {}) {
+    if (on) {
+      if (this.status === 'dead' || this.spawnShield > this.now) return;
+      this.endForce(); this.cancelAttackState(); if (this.force && this.force.interrupt) this.force.interrupt();
+      this.status = 'levitated'; this.statusT = 0; this.onGround = false; this.ducked = false; this.shoveV = [0, 0, 0]; this.vel = [0, 0, 0];
+      this.levFrom = o.from || null; this.levUntil = this.now + (o.duration ?? 3.5); this.levBase = this.g.world.floorAt(this.pos[0], this.pos[2], this.pos[1] + 0.6) ?? this.pos[1];
+      if (o.from) this.markAttacker(o.from);
+      this.playWhole('BOTH_FORCEINAIR1', { loop: true, blend: 0.15 });
+      return;
+    }
+    if (this.status !== 'levitated') return;
+    this.status = 'flung'; this.statusT = 0; this.vel = [0, -0.5, 0]; this.knockAt = this.now; this.quickerGetup = true; this.levFrom = null; // drop: fall, land, get up
+    this.statusAnim = 'BOTH_KNOCKDOWN1'; this.playWhole('BOTH_KNOCKDOWN1', { blend: 0.1 });
+    if (!o.quiet && this.g.onLevitateEnd) this.g.onLevitateEnd(this, o);
   }
   shove(dirXZ, speed) { // weak push: slide along the ground, keep control (separate from the knock-down fling)
     if (this.status === 'dead') return; const k = Math.min(9, speed); this.shoveV[0] += dirXZ[0] * k; this.shoveV[2] += dirXZ[2] * k;
@@ -172,8 +236,16 @@ export class Fighter {
     if (on) { if (this.status === 'dead' || this.status === 'flung') return; if (this.status !== 'shocked') { this.endForce(); this.cancelAttackState(); this.status = 'shocked'; this.statusT = 0; this.nextPain = 0; this.onGround = true; } this.shockKeep = this.now + 0.15; }
   }
   cancelAttackState() { this.saber.weaponTime = 0; this.saber.torsoTimer = 0; this.saber.blocked = null; if (this.thrown) this.catchSaber(); }
+  // who gets the credit if this fighter falls to their death: whoever last hurt, pushed, pulled or lifted them (10 s)
+  markAttacker(from) { if (from && from !== this) { this.lastAttacker = from; this.lastAttackerAt = this.now; } }
+  // below the map's kill height (a chasm, off a bridge, out of bounds): dead, credited to the last attacker
+  fallDeath() {
+    if (this.status === 'dead') return; const by = this.lastAttacker && this.now - (this.lastAttackerAt ?? -99) < 10 ? this.lastAttacker : null;
+    this.spawnShield = 0; this.fellOut = true; this.hp = 0; this.die(by, { deathAnim: 'BOTH_FALLDEATH1INAIR' }); this.vel = [0, 0, 0];
+  }
+  // no damage while dead, shielded after a respawn, or being executed (the execution itself finishes the victim)
   hurt(dmg, from, opts = {}) {
-    if (this.status === 'dead' || this.hp <= 0 || this.spawnShield > this.now) return false; dmg *= this.takeMul; this.hp -= dmg; this.lastHurt = this.now; this.dmgFlash = 1; this.flash = 0.25; if (this.force && this.force.onHurt) this.force.onHurt(dmg); // spawnShield: online respawn protection
+    if (this.status === 'dead' || this.hp <= 0 || this.spawnShield > this.now || this.status === 'executed') return false; this.markAttacker(from); if (this.status === 'levitated' && dmg > 0) this.levitate(false, { hit: true }); dmg *= this.takeMul; if (from && from !== this && this.g.creditDamage) this.g.creditDamage(from, Math.min(dmg, this.hp)); this.hp -= dmg; this.lastHurt = this.now; this.dmgFlash = 1; this.flash = 0.25; if (this.force && this.force.onHurt) this.force.onHurt(dmg); // spawnShield: respawn protection
     if (this.hp <= 0) { this.die(from, opts); return true; }
     if (!opts.noFlinch && this.status === 'normal' && this.now - (this.lastFlinch || -9) > 0.5 && !this.forceUntil && !(this.saber.isActiveSwing() && !this.isPlayer)) {
       this.lastFlinch = this.now; const a = PAINS[Math.floor(Math.random() * PAINS.length)];
@@ -187,7 +259,24 @@ export class Fighter {
     if (!wasFlung) this.playWhole(opts.deathAnim || DEATHS[Math.floor(Math.random() * DEATHS.length)], { blend: 0.08 }); else this.playWhole('BOTH_KNOCKDOWN1', { blend: 0.05 });
     this.g.onDeath && this.g.onDeath(this);
   }
-  revive(at) { this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
+  tauntSide() { return this.side === 'dark' || this.team === 'enemy' || this.team === 'red' ? 'dark' : 'light'; }
+  taunt() {
+    if (this.status !== 'normal' || !this.onGround || this.thrown || this.saber.isActiveSwing() || this.forceUntil > this.now || this.now < (this.tauntUntil ?? -9) + TAUNT_COOLDOWN) return false;
+    const side = this.tauntSide(), list = TAUNTS[side], n = this.tauntN = ((this.tauntN ?? -1) + 1) % list.length;
+    const len = Math.min(2.4, this.playWhole(list[n], { blend: 0.12 })); this.legsLockUntil = this.tauntUntil = this.now + len; this.vel[0] = this.vel[2] = 0;
+    if (this.g.onTaunt) this.g.onTaunt(this, side, n);
+    return true;
+  }
+  endTaunt() { this.tauntUntil = 0; this.legsLockUntil = 0; this.actor.followLegs(); this.actor.torso.cur = null; }
+  // Force Pulse: burned away (a defeat credited to the caster; the body fades out in Game.drawFighter)
+  vaporize(from) {
+    if (this.status === 'dead' || this.spawnShield > this.now) return;
+    this.markAttacker(from); this.vaporized = this.now; this.hp = 0; if (this.status !== 'normal') this.status = 'normal';
+    this.die(from, { deathAnim: 'BOTH_DEATH1' }); if (this.g.onVaporize) this.g.onVaporize(this);
+  }
+  // another player's game executes this fighter (RPC on their puppet of us): run our side of the same execution
+  executedBy(att, kind, o = {}) { if (this.g.startExecution) this.g.startExecution(att, this, kind, { ...o, fromNet: true }); }
+  revive(at) { this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
   chest() { const y = this.status === 'down' || this.status === 'dead' ? 0.3 : this.ducked ? 0.75 : 1.15; return [this.pos[0], this.pos[1] + y, this.pos[2]]; }
   headPos() { return this.actor.bonePos('cranium', [0, 0, 0]); }
   // ---------- per-frame update
@@ -195,11 +284,23 @@ export class Fighter {
     const now = this.now; const a = this.actor;
     for (let i = this.timers.length - 1; i >= 0; i--) if (this.timers[i].t <= now) { const f = this.timers[i].fn; this.timers.splice(i, 1); f(); }
     this.statusT += dt; this.flash = Math.max(0, this.flash - dt); this.dmgFlash = Math.max(0, this.dmgFlash - dt * 2.5); this.distracted = Math.max(0, this.distracted - dt);
+    if (!this.remote && this.status !== 'dead' && this.pos[1] < (this.g.world?.killY ?? -Infinity)) this.fallDeath();
     switch (this.status) {
-      case 'dead': this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
+      case 'dead': { // a body killed in the air falls to the floor
+        const fl = this.g.world.floorAt(this.pos[0], this.pos[2], this.pos[1] + 0.3);
+        if (fl !== null && this.pos[1] > fl + 0.01) { this.vel[1] -= G * dt; this.pos[1] = Math.max(fl, this.pos[1] + this.vel[1] * dt); } else if (fl !== null) { this.pos[1] = fl; this.vel[1] = 0; }
+        else if (this.pos[1] > (this.g.world.killY ?? -20) - 40) { this.vel[1] -= G * dt; this.pos[1] += this.vel[1] * dt; } // nothing below (a chasm): keep falling out of sight
+        if (this.landAnim && fl !== null && this.pos[1] <= fl + 0.01) { this.playWhole(this.landAnim, { blend: 0.08 }); this.landAnim = null; } // e.g. a body dropped from a grip lands
+        this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
+      }
+      case 'executing': case 'executed': return this.finish(dt); // an execution moves and animates both (executions.js)
       case 'flung': this.physicsFlung(dt); return this.finish(dt);
       case 'down': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= (this.isPlayer ? 0.5 : (this.downTime || 1.1))) this.startGetup(); return this.finish(dt);
       case 'getup': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= this.getupLen - 0.05) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; this.actor.setLegs(this.saber.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2', { blend: 0.15 }); } return this.finish(dt);
+      case 'levitated': { // float LEVITATE_HEIGHT above the floor, turning slowly; drop when the time is up
+        const ty = this.levBase + LEVITATE_HEIGHT + Math.sin(now * 2.3) * 0.08; this.pos[1] += (ty - this.pos[1]) * Math.min(1, dt * 2.6); this.vel[0] = this.vel[2] = 0;
+        this.yaw += dt * 0.55; if (now >= this.levUntil) this.levitate(false, { expired: true }); return this.finish(dt);
+      }
       case 'gripped': { const ty = this.gripLift ?? 1.3; this.pos[1] += (ty - this.pos[1]) * Math.min(1, dt * 4); this.vel[0] = this.vel[2] = 0; if (this.gripCarry) { const c = this.gripCarry(); const k = Math.min(1, dt * 3); this.pos[0] += (c[0] - this.pos[0]) * k; this.pos[2] += (c[2] - this.pos[2]) * k; this.g.world.collide(this.pos, this.radius); } this.pos[1] += Math.sin(now * 3.1) * 0.0025; this.yaw += Math.sin(now * 2.2) * 0.004; return this.finish(dt); }
       case 'shocked': {
         this.frictionMove(dt, 10); this.nextPain -= dt; if (this.nextPain <= 0) { this.nextPain = 0.28 + Math.random() * 0.2; const p = PAINS[Math.floor(Math.random() * PAINS.length)]; this.playWhole(p, { blend: 0.04 }); }
@@ -213,10 +314,23 @@ export class Fighter {
   updateAnimOnly(dt) { }
   frictionMove(dt, f) { const k = Math.max(0, 1 - f * dt); this.vel[0] *= k; this.vel[2] *= k; this.pos[0] += this.vel[0] * dt; this.pos[2] += this.vel[2] * dt; this.g.world.collide(this.pos, this.radius); }
   physicsFlung(dt) {
+    if ((this.slamUntil ?? 0) > this.now) return this.finishFlung(dt); // pinned against the wall for a moment after a wall slam
     this.vel[1] -= G * dt; this.pos[0] += this.vel[0] * dt; this.pos[1] += this.vel[1] * dt; this.pos[2] += this.vel[2] * dt;
-    const before = [this.pos[0], this.pos[2]]; this.g.world.collide(this.pos, this.radius); if (before[0] !== this.pos[0] || before[1] !== this.pos[2]) { this.vel[0] *= -0.2; this.vel[2] *= -0.2; if (!this.hitWall) { this.hitWall = true; this.hurt(8, null, { noFlinch: true }); this.g.fx.sparks([this.pos[0], this.pos[1] + 1, this.pos[2]], [0, 1, 0], 6, [0.8, 0.8, 1, 1]); } }
+    const before = [this.pos[0], this.pos[2]]; this.g.world.collide(this.pos, this.radius);
+    if (before[0] !== this.pos[0] || before[1] !== this.pos[2]) {
+      if (!this.hitWall) {
+        this.hitWall = true;
+        const n = v3.norm([this.pos[0] - before[0], 0, this.pos[2] - before[1]]), into = -(this.vel[0] * n[0] + this.vel[2] * n[2]); // speed into the wall
+        if (into > WALL_SLAM_SPEED && this.g.onWallSlam) { this.g.onWallSlam(this, into, n); return this.finishFlung(dt); }
+        this.hurt(8, null, { noFlinch: true }); this.g.fx.sparks([this.pos[0], this.pos[1] + 1, this.pos[2]], [0, 1, 0], 6, [0.8, 0.8, 1, 1]);
+      }
+      this.vel[0] *= -0.2; this.vel[2] *= -0.2;
+    }
+    this.finishFlung(dt);
+  }
+  finishFlung(dt) {
     const floor = this.g.world.floorAt(this.pos[0], this.pos[2], this.pos[1] + 0.3);
-    if (floor !== null && this.pos[1] <= floor) { this.pos[1] = floor; if (this.vel[1] < -1.5 && !this.bounced) { this.bounced = true; this.vel[1] = 0; this.g.onThud && this.g.onThud(this); } this.vel[1] = 0; this.onGround = true; const k = Math.max(0, 1 - 4 * dt); this.vel[0] *= k; this.vel[2] *= k;
+    if (floor !== null && this.pos[1] <= floor) { this.pos[1] = floor; if (this.pullLand && this.vel[1] <= 0) { this.pullLand = false; this.vel[0] *= 0.15; this.vel[2] *= 0.15; } if (this.vel[1] < -1.5 && !this.bounced) { this.bounced = true; this.vel[1] = 0; this.g.onThud && this.g.onThud(this); } this.vel[1] = 0; this.onGround = true; const k = Math.max(0, 1 - 4 * dt); this.vel[0] *= k; this.vel[2] *= k;
       if (this.statusT > 0.25 && Math.hypot(this.vel[0], this.vel[2]) < 1.2) { this.status = this.hp <= 0 ? 'dead' : 'down'; this.statusT = 0; this.bounced = false; this.hitWall = false; this.downTime = Math.max(0.3, 1.1 - (this.now - (this.knockAt ?? this.now))); } } // down until 1.1 s after the knockdown
   }
   integrate(dt, gravity = true) {
@@ -236,6 +350,7 @@ export class Fighter {
     if (c.crouchPressed && this.onGround && (c.fwd || c.right) && !c.walk && !this.ducked && !(S.isActiveSwing() && S.weaponTime > 0 && !this.isPlayer) && this.canRoll()) { this.startRoll(); return; }
     if (wantDuck !== this.ducked && this.onGround) { this.ducked = wantDuck; }
     // jumping
+    if (this.tauntUntil > now && (c.fwd || c.right || c.attack || c.jumpPressed || c.crouchPressed)) this.endTaunt(); // any action cuts a taunt short
     const special = this.specialLocked();
     if (this.trySpecialJumpAttack()) { c.jumpPressed = false; }
     if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) this.startJump();
@@ -244,7 +359,7 @@ export class Fighter {
     const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); const fwd = [sinY, 0, cosY], right = [-cosY, 0, sinY];
     let f = special ? 0 : c.fwd, r = special ? 0 : c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }
     const crouched = this.ducked; const base = crouched ? 2.1 : c.walk ? 2.4 : 5.6; let sp = base * this.speedMul * (f < 0 ? 0.82 : 1);
-    if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY)) sp *= 0.0;
+    if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY) || this.tauntUntil > now) sp *= 0.0;
     if (this.elecUntil > now) sp *= 0.72;                              // lightning slows the victim (they keep control)
     const wish = [(fwd[0] * f + right[0] * r) * sp, (fwd[2] * f + right[2] * r) * sp];
     if (this.onGround) {
@@ -420,6 +535,16 @@ export class Fighter {
     else this.airBend = (this.airBend || 0) * Math.exp(-8 * dt);
     return this.airBend;
   }
+  // the second hilt and blade: a saberstaff continues the hilt end to end with the blade the other way (it spins along when
+  // thrown); dual sabers hold the second one in the left hand (mirrored grip), on the left thigh when holstered
+  updateHilt2(dt, M) {
+    const A = this.g.attach, a = this.actor, L = A.hiltLen * (this.hiltScaleY || 1), M2 = this.hilt2Mat, B2 = this.blade2; let len = L;
+    if (this.saberKit === 'staff') m4.mul(M, m4.trs([0, L, 0], FLIP_X, [1, 1, 1]), M2);
+    else if (this.hilt === 'thigh' || this.hilt === 'none') { m4.mul(a.boneMatrix('lfemurYZ'), m4.trs([-A.holster.t[0], A.holster.t[1], A.holster.t[2]], [A.holster.q[0], -A.holster.q[1], -A.holster.q[2], A.holster.q[3]], [1, 1, 1]), M2); len = A.hiltLen; }
+    else { const g = A.grip; m4.mul(a.boneMatrix('lhand'), m4.trs([-g.t[0], g.t[1], g.t[2]], [g.q[0], -g.q[1], -g.q[2], g.q[3]], g.s), M2); len = A.hiltLen * (g.s?.[1] || 1); }
+    if (B2.lit !== this.blade.lit) B2.set(this.blade.lit); B2.color = this.blade.color;
+    B2.update(dt, M2, len, 1, this.now); B2.trailOn = this.blade.trailOn;
+  }
   updateHilt(dt) {
     const A = this.g.attach, a = this.actor; let M = this.hiltMat;
     if (this.hilt === 'hand') { const bm = a.boneMatrix(A.grip.bone); const loc = m4.trs(A.grip.t, A.grip.q, A.grip.s); m4.mul(bm, loc, M); this.hiltScaleY = A.grip.s[1]; }
@@ -430,6 +555,7 @@ export class Fighter {
     }
     // the torso aim (Actor spineYaw / spinePitch) already turns the arm, so blade and hit test follow the mouse
     this.blade.update(dt, M, this.g.attach.hiltLen * (this.hiltScaleY || 1), 1, this.now);
+    if (this.blade2) this.updateHilt2(dt, M);
     this.blade.trailOn = (this.swingActive() || (this.thrown ? 0 : 0)) ? 1 : Math.max(0, this.blade.trailOn - dt * 6);
     if (this.swingActive()) this.blade.trailOn = 1;
   }

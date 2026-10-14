@@ -11,15 +11,24 @@ const FILES = {
   drain: 'force/drain.mp3', drained: 'force/drained.mp3', see: 'force/see.mp3', seeloop: 'force/seeloop.wav', distract: 'force/distract.wav', distractstop: 'force/distractstop.wav', teamheal: 'force/teamheal.mp3', teamforce: 'force/teamforce.mp3',
 };
 export class Sfx {
-  constructor(base) { this.base = base || 'assets/sfx/'; this.ctx = null; this.buf = {}; this.master = null; this.listener = [0, 0, 0]; this.muted = false; this.loading = null; }
+  constructor(base) { this.base = base || 'assets/sfx/'; this.ctx = null; this.buf = {}; this.master = null; this.listener = [0, 0, 0]; this.muted = false; this.loading = null; this.volume = 0.7; }
   resume() {
     if (this.ctx) { this.ctx.resume(); return; }
-    try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = 0.7; this.master.connect(this.ctx.destination); this.loading = this.loadAll(); } catch (e) { console.warn('audio unavailable', e); }
+    try { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = this.volume; this.master.connect(this.ctx.destination); this.loading = this.loadAll(); } catch (e) { console.warn('audio unavailable', e); }
   }
   dispose() { try { if (this.ctx) this.ctx.close(); } catch (e) { } this.ctx = null; this.buf = {}; }
   async loadAll() {
-    await Promise.all(Object.entries(FILES).map(async ([k, f]) => { try { const r = await fetch(this.base + f); const a = await r.arrayBuffer(); this.buf[k] = await this.ctx.decodeAudioData(a); } catch (e) { console.warn('sfx', k, e.message); } }));
+    await Promise.all([...Object.entries(FILES).map(async ([k, f]) => { try { const r = await fetch(this.base + f); const a = await r.arrayBuffer(); this.buf[k] = await this.ctx.decodeAudioData(a); } catch (e) { console.warn('sfx', k, e.message); } }), this.loadVoices()]);
   }
+  // Optional taunt voice lines: sfx/taunt/manifest.json = { "light": ["a.mp3", ...], "dark": [...] } (no manifest: silent taunts).
+  // They load as taunt_light0, taunt_light1, ... / taunt_dark0, ...
+  async loadVoices() {
+    let m = null; try { const r = await fetch(this.base + 'taunt/manifest.json'); if (r.ok) m = await r.json(); } catch (e) { return; }
+    if (!m) return; this.voices = {};
+    for (const side of ['light', 'dark']) { const list = Array.isArray(m[side]) ? m[side].filter(f => /^[\w.-]+\.(mp3|wav|ogg)$/.test(f)) : []; this.voices[side] = list.length;
+      await Promise.all(list.map(async (f, i) => { try { const r = await fetch(this.base + 'taunt/' + f); this.buf['taunt_' + side + i] = await this.ctx.decodeAudioData(await r.arrayBuffer()); } catch (e) { console.warn('taunt voice', f, e.message); } })); }
+  }
+  voice(side, n, o = {}) { const k = this.voices?.[side]; if (!k) return null; return this.play('taunt_' + side + (n % k), o); }
   _gain(vol, pos) {
     let v = vol; if (pos) { const d = Math.hypot(pos[0] - this.listener[0], pos[1] - this.listener[1], pos[2] - this.listener[2]); v *= 1 / (1 + d * 0.18); }
     const g = this.ctx.createGain(); g.gain.value = v; g.connect(this.master); return g;

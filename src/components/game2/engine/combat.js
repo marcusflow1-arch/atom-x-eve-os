@@ -3,6 +3,7 @@
 // the floating practice remote, and flung props hitting people.
 import { v3, clamp, lerp } from './math.js';
 import { geo } from './gl.js';
+import { THROW_LODGE_DPS } from './fighter.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const BLOCKS = ['block1', 'block2', 'block3', 'block4', 'block5', 'block6', 'block7', 'block8', 'block9'];
@@ -50,6 +51,7 @@ export function sweptBladeContact(fromBlade, toBlade, fromBody, toBody, extraRad
 // player vs enemy; online free-for-all fighters (team 'ffa') are hostile to every other fighter except training allies
 export const hostile = (a, b) => a !== b && ((['blue', 'red'].includes(a.team) && ['blue', 'red'].includes(b.team) && a.team !== b.team) || (a.team === 'player' && b.team === 'enemy') || (a.team === 'enemy' && b.team === 'player') || ((a.team === 'ffa' || b.team === 'ffa') && a.team !== 'ally' && b.team !== 'ally'));
 
+const segsOf = f => (f.bladeSegs ? f.bladeSegs() : f.bladeSeg && f.bladeSeg() ? [f.bladeSeg()] : []); // every ignited blade
 export class Combat {
   constructor(g) {
     this.g = g; this.bolts = []; this.pair = new Map(); this.remote = null; this.kills = 0; this.reflected = 0;
@@ -75,12 +77,13 @@ export class Combat {
   canBlock(T, from) {
     if (!T.hasSaber || T.saber.holstered || T.status !== 'normal' || T.thrown || T.blade.len < 0.8) return false;
     const fwd = [Math.sin(T.yaw), Math.cos(T.yaw)]; const d = v3.norm([from[0] - T.pos[0], 0, from[2] - T.pos[2]]);
-    return fwd[0] * d[0] + fwd[1] * d[2] > 0.25; // parry requires facing the attacking blade
+    return T.saberKit === 'staff' || fwd[0] * d[0] + fwd[1] * d[2] > 0.25; // parry requires facing the attacking blade (a saberstaff guards all the way round)
   }
   blockProb(T) {
     const S = T.saber; let p;
     if (S.inParry(S.move) || S.inReflect(S.move)) p = 0.96; else if (S.isActiveSwing()) p = 0.3; else p = T.isPlayer ? 0.68 : (T.blockSkill ?? 0.5);
     if (T.isPlayer) p += S.level === 1 ? 0.15 : S.level === 3 ? -0.06 : 0;
+    if (T.saberKit === 'dual') p += 0.06; // a second blade to parry with
     // Sprinting or rapidly strafing does not grant a stationary perfect parry.
     if (Math.hypot(T.vel?.[0] || 0, T.vel?.[2] || 0) > 2) p *= 0.45;
     return clamp(p, 0, 0.97);
@@ -97,26 +100,28 @@ export class Combat {
     const wound = this.wound ??= new Map();
     // blade clashes + body hits
     for (const A of F) {
-      const seg = A.bladeSeg(); const prev = A._prev; A._prev = seg ? [seg[0].slice(), seg[1].slice()] : null;
+      // every ignited blade (two with dual sabers or a saberstaff), each swept from where it was last step
+      const segs = segsOf(A), prevs = A._prevSegs || []; A._prevSegs = segs.map(s => [s[0].slice(), s[1].slice()]); A._prev = A._prevSegs[0] || null;
+      const seg = segs[0];
       if (!seg || A.status === 'dead') continue;
       if (A.hitMove !== A.saber.moveStart) { A.hitSet.clear(); A.hitMove = A.saber.moveStart; }
       const swing = A.swingActive() || (A.thrown && false);
       const attacking = A.attacking ? A.attacking() : swing; // BG_SaberInAttack: attack and special moves
-      if (attacking) this.groundStrike(A, prev, seg);
+      if (attacking) segs.forEach((s, k) => this.groundStrike(A, prevs[k], s));
       const own = !A.remote && !g.noDamage; // another player's blade is resolved in their game; no damage between rounds
       for (const B of F) {
         if (B === A || !hostile(A, B) || B.status === 'dead') continue;
-        const bs = B.bladeSeg();
-        if (bs && (swing || B.swingActive()) && A.status === 'normal') { // clash
+        const bss = segsOf(B);
+        if (bss.length && (swing || B.swingActive()) && A.status === 'normal') { // clash: the closest pair of blades
           const key = A.name + '|' + B.name; const key2 = B.name + '|' + A.name;
           if (!this.pair.has(key) && !this.pair.has(key2)) {
-            const r = segSeg(seg[0], seg[1], bs[0], bs[1]);
+            let r = null; for (const s of segs) for (const bs of bss) { const q = segSeg(s[0], s[1], bs[0], bs[1]); if (!r || q.d < r.d) r = q; }
             if (r.d < 0.2) { this.pair.set(key, 0.32); this.clash(A, B, v3.lerp(r.a, r.b, 0.5), swing, B.swingActive()); }
           }
         }
         if (!own) continue;
         const wk = A.name + '>' + B.name; if ((wound.get(wk) ?? -1) > g.t) continue;
-        const hit = sweptBladeContact(prev, seg, B._prevCap, caps.get(B));
+        let hit = null; for (let k = 0; k < segs.length && !hit; k++) hit = sweptBladeContact(prevs[k], segs[k], B._prevCap, caps.get(B));
         if (!hit) continue;
         if (attacking) wound.set(wk, g.t + (this.bladeHit(A, B, hit.a) === 'blocked' ? 0.3 : 0.1));
         else if (this.touchHit) { this.touchHit(A, B, hit.a); wound.set(wk, g.t + 0.2); }
@@ -124,14 +129,20 @@ export class Combat {
       // remote droid
       const rm = this.remote;
       if (attacking && rm && !rm.dead && !A.hitSet.has('remote') && A.team === 'player') { const r = segSeg(seg[0], seg[1], rm.pos, rm.pos); if (r.d < 0.42) { A.hitSet.add('remote'); this.hitRemote(40, rm.pos); } }
-      // thrown saber
+      // thrown saber: the first contact lodges it in the victim, where it keeps spinning and cutting (THROW_LODGE_DPS)
       if (A.thrown && own) {
-        const T = A.thrown; for (const B of F) {
+        const T = A.thrown;
+        if (T.phase === 'lodged' && T.lodged) {
+          const B = T.lodged;
+          if (B.status !== 'dead' && g.t >= (T.lodgeTick || 0)) { T.lodgeTick = g.t + 0.2; this.damage(A, B, B.chest(), THROW_LODGE_DPS * 0.2 * A.damageMul, { spark: true, noFlinch: true }); }
+        } else for (const B of F) {
           if (B === A || !hostile(A, B) || B.status === 'dead' || (T.hit.get(B) || 0) > g.t) continue;
-          const contact = sweptBladeContact([T.prevPos || T.pos, T.prevPos || T.pos], [T.pos, T.pos], B._prevCap, caps.get(B), 0.45);
+          const contact = sweptBladeContact([T.prevPos || T.pos, T.prevPos || T.pos], [T.pos, T.pos], B._prevCap, caps.get(B), A.saberKit === 'staff' ? 0.9 : 0.45); // a spinning saberstaff reaches twice as far
           if (contact) {
-            T.hit.set(B, g.t + 0.4); // spinning near a moving enemy continues to make contact while held
+            T.hit.set(B, g.t + 0.4);
             this.damage(A, B, contact.a, 14 * A.damageMul, { spark: true });
+            if (B.status !== 'dead' && T.phase !== 'back' && A.lodgeSaber) A.lodgeSaber(B);
+            break;
           }
         }
         if (rm && !rm.dead && A.team === 'player' && segSeg(T.prevPos || T.pos, T.pos, rm.pos, rm.pos).d < 0.7) this.hitRemote(40, rm.pos);
@@ -166,7 +177,8 @@ export class Combat {
       const side = B.saber.isActiveSwing() ? 'BOUNCE' : this.sideOf(B, pt); if (B.remote && g.net) g.net.rpc(B, 'blocked', [side]); else B.saber.blocked = side; A.saber.blocked = 'BOUNCE'; if (A.isPlayer || B.isPlayer) g.shake(0.1);
       if (g.net) g.net.onHit(A, B, pt, { blocked: true }); return 'blocked';
     }
-    this.damage(A, B, pt, this.bladeDamage(A) * (B.hasSaber ? 1 : 1.5), { spark: true, saber: true }); // non-Jedi take 1.5x (w_saber.c)
+    const bonus = A.interceptBonusUntil > g.t && (B.status === 'flung' || B.status === 'down' || B.status === 'getup') ? (A.interceptBonus || 1) : 1; // Push + Speed intercept
+    this.damage(A, B, pt, this.bladeDamage(A) * (B.hasSaber ? 1 : 1.5) * bonus, { spark: true, saber: true }); // non-Jedi take 1.5x (w_saber.c)
     return 'hit';
   }
   // the blade resting on / brushing someone outside an attack: small stance-scaled damage, parried like any hit
@@ -178,7 +190,7 @@ export class Combat {
   }
   damage(A, B, pt, dmg, o = {}) {
     const g = this.g; if (B.isPlayer && g.force.active.protect) { g.sfxAt('protecthit', B.pos, 0.8); }
-    const died = B.hurt(dmg, A, o.touch ? { noFlinch: true, touch: true } : {}); g.fx.sparks(pt, [0, 1, 0], o.touch ? 4 : 10, [1, 0.5, 0.2, 1]); if (g.net) g.net.onHit(A, B, pt, o); g.sfxAt(['hit1', 'hit2', 'hit3'][Math.floor(Math.random() * 3)], pt, o.touch ? 0.3 : 0.9);
+    const died = B.hurt(dmg, A, o.touch ? { noFlinch: true, touch: true } : o.noFlinch ? { noFlinch: true } : {}); g.fx.sparks(pt, [0, 1, 0], o.touch ? 4 : 10, [1, 0.5, 0.2, 1]); if (g.net) g.net.onHit(A, B, pt, o); g.sfxAt(['hit1', 'hit2', 'hit3'][Math.floor(Math.random() * 3)], pt, o.touch ? 0.3 : 0.9);
     if (o.saber && A.saber.level === 3 && !died && Math.random() < 0.35 && B.status === 'normal') { const d = v3.norm([B.pos[0] - A.pos[0], 0, B.pos[2] - A.pos[2]]); B.push(d, 4.5, 2.5); }
     if (B.isPlayer) { g.hud.hit(dmg); g.shake(o.touch ? 0.05 : 0.2); }
     if (died && !B.isPlayer && !g.net) { this.kills++; g.hud.msg('Defeated ' + B.label); }

@@ -6,6 +6,7 @@ const SQRT2 = Math.SQRT2;
 const MAX_STEP = 0.6;        // height difference two neighbouring cells may have and still be walkable
 const AGENT_R = 0.42;        // same radius Fighter uses
 const PASS_R = 0.36;         // clearance a straight walk keeps from solid boxes
+const EDGE = 0.6;            // clearance from a sheer drop (a chasm edge, the side of a bridge): no floor at all there
 
 export class NavGrid {
   constructor(space, bounds, step = 1, probe = 3.2) {
@@ -13,9 +14,13 @@ export class NavGrid {
     const [x0, z0, x1, z1] = bounds; this.x0 = x0; this.z0 = z0;
     this.w = Math.max(1, Math.round((x1 - x0) / step)); this.h = Math.max(1, Math.round((z1 - z0) / step));
     const N = this.w * this.h; this.y = new Float32Array(N).fill(NaN); this.door = new Array(N).fill(null);
+    const bridges = [...(space.bridges?.values() || [])], inBridge = (b, x, z) => x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1;
+    // nothing to stand on at (x, z) near height y (an energy bridge counts: its cells follow the bridge state below)
+    const gap = (x, z, y) => space.floorAt(x, z, y + 0.6, false) === null && !bridges.some(b => inBridge(b, x, z));
+    const nearGap = (x, z, y) => gap(x + EDGE, z, y) || gap(x - EDGE, z, y) || gap(x, z + EDGE, y) || gap(x, z - EDGE, y);
     for (let j = 0; j < this.h; j++) for (let i = 0; i < this.w; i++) {
       const x = this.cx(i), z = this.cz(j);
-      const y = space.floorAt(x, z, probe); if (y === null) continue;
+      const y = space.floorAt(x, z, probe, false); if (y === null || nearGap(x, z, y)) continue;
       if (space.insideSolid(x, y + 0.9, z, 0.2)) continue;
       const p = [x, y, z]; space.collision.collide(p, AGENT_R); if (Math.hypot(p[0] - x, p[2] - z) > 0.08) continue;
       this.y[j * this.w + i] = y;
@@ -26,13 +31,21 @@ export class NavGrid {
         if (x > d.min[0] - 0.5 && x < d.max[0] + 0.5 && z > d.min[2] - 0.5 && z < d.max[2] + 0.5) { const k = j * this.w + i; if (Number.isNaN(this.y[k])) this.y[k] = d.min[1]; this.door[k] = d.id; }
       }
     }
+    // cells over a gap that an energy bridge spans: walkable while the bridge is on
+    this.bridge = new Array(N).fill(null);
+    for (const b of bridges) {
+      for (let j = 0; j < this.h; j++) for (let i = 0; i < this.w; i++) {
+        const x = this.cx(i), z = this.cz(j), k = j * this.w + i;
+        if (inBridge(b, x, z) && space.floorAt(x, z, b.y + 0.6, false) === null && !nearGap(x, z, b.y)) { this.y[k] = b.y; this.bridge[k] = b.id; }
+      }
+    }
     this.g = new Float32Array(N); this.f = new Float32Array(N); this.from = new Int32Array(N); this.seen = new Uint32Array(N); this.closed = new Uint32Array(N); this.stamp = 0;
     this.heap = new Int32Array(N + 1);
   }
   cx(i) { return this.x0 + (i + 0.5) * this.step; }
   cz(j) { return this.z0 + (j + 0.5) * this.step; }
   cell(x, z) { const i = Math.floor((x - this.x0) / this.step), j = Math.floor((z - this.z0) / this.step); if (i < 0 || j < 0 || i >= this.w || j >= this.h) return -1; return j * this.w + i; }
-  open(k) { if (k < 0 || Number.isNaN(this.y[k])) return false; const d = this.door[k]; return !d || this.space.doorOpen(d); }
+  open(k) { if (k < 0 || Number.isNaN(this.y[k])) return false; const d = this.door[k]; if (d && !this.space.doorOpen(d)) return false; const b = this.bridge[k]; return !b || this.space.bridgeOpen(b); }
   walkable(x, z) { return this.open(this.cell(x, z)); }
   // nearest open cell to a point, preferring cells at a similar height
   nearest(p, maxR = 4) {

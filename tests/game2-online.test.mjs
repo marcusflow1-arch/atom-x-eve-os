@@ -198,7 +198,7 @@ test('snapshot fields sit where the receiver reads them', () => {
     saber: { move: 10, level: 3, holstered: false }, actor: { now: 10, yaw: 0.25, spineYaw: 0.1, spinePitch: 0.2, legYaw: 0, matchPelvis: true, torsoFollow: false, legs: layer('BOTH_RUN1'), torso: layer('BOTH_A2_T__B_') } };
   const ctx = { g: { forceOf: () => F }, animIdx: { BOTH_RUN1: 5, BOTH_A2_T__B_: 7 }, layerOut: NetGame.prototype.layerOut };
   const e = NetGame.prototype.snap.call(ctx, f);
-  assert.equal(e.length, SN.legYaw + 1);
+  assert.equal(e.length, SN.kit + 1); assert.equal(e[SN.kit], 0, "saber kit: single");
   const at = (k) => e[SN[k]];
   assert.deepEqual([at('fid'), at('side'), at('name'), at('x'), at('y'), at('z'), at('vx'), at('vy'), at('vz'), at('yaw'), at('ayaw'), at('syaw'), at('spitch')], ['p1:p', 1, 'Tavion', 1, 2, 3, 4, 5, 6, 0.5, 0.25, 0.1, 0.2]);
   assert.deepEqual([at('status'), at('hp'), at('maxHp'), e[SN.legs], e[SN.legs + 1], e[SN.torso], at('move'), at('level'), at('holst'), at('lit'), at('hilt')], [5, 77, 100, 5, 1, 7, 10, 3, 0, 1, 2]);
