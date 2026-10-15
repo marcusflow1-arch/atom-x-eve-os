@@ -621,7 +621,7 @@ export class Game {
       const brain = BRAINS[n.kind]; n.aimPitch = this.aimPitchToward(n);
       if (n.critAt && this.t >= n.critAt) { n.critAt = 0; n.startCritStrike(); } // an AI that parried you open strikes on its own
       if (this.aiOff || this.teamMatch?.ended) { clearCmd(n.cmd); } else if (this.teamMatch) this.teamMatch.brain(n, ndt); else if (brain) brain(this, n, ndt);
-      if (this.tutorialMode && n === this.tutorialTrainer) this.tutorial?.demoCmd(n.cmd);
+      if (this.tutorialMode) this.tutorial?.demoCmd(n, n.cmd);
       n.update(ndt); if (n.force) n.force.update(ndt); if (n.healFlash > 0) n.healFlash = Math.max(0, n.healFlash - ndt);
       if (n.status === 'dead' && this.t - n.deadAt > 8 && this.mode === 'explorer') this.respawnNpc(n);
       if (n.status === 'dead' && this.attract && this.t - n.deadAt > 3) { this.respawnNpc(n); n.hp = n.maxHp; if (n.force) n.force.reset(); this.shield(n); }
