@@ -21,6 +21,7 @@ import { bolt, drawBolt } from './fx.js';
 import { geo } from './gl.js';
 import { Game2TeamMatch, TEAM_MODES } from './teamMatch.js';
 import { AUTHORED_LEVELS } from './levels/index.js';
+import { GAME2_ARENA_MAPS } from './arenaMaps.js';
 import { Score, SCORES } from './music.js';
 import { Execution, findExecutable, cutTransforms, EXECUTION_NAMES } from './executions.js';
 // Team arenas use the real Drive BSP selected by the player, or an authored arena (levels/) such as Skybridge Citadel.
@@ -50,7 +51,7 @@ export class Game {
     this.t = 0; this.dtFrame = STEP; this.fps = 60; this.acc = 0; this.started = false; this.flashes = []; this.lightFlash = 0; this.lightFlashPos = [0, 2, 0]; this.shakeAmt = 0; this.frameNo = 0;
     this.bodyMesh = R.uploadSkinned(A.body); this.hiltMesh = R.uploadStatic(A.hilt); this.lodMesh = A.lod ? R.uploadSkinned(A.lod) : this.bodyMesh;
     const gun = geo(); gun.box(0, 0.03, 0, 0.05, 0.13, 0.06, [0.16, 0.16, 0.19, 1]).box(0, -0.12, 0, 0.045, 0.2, 0.05, [0.32, 0.33, 0.38, 1]).box(0, -0.235, 0, 0.03, 0.05, 0.03, [0.9, 0.25, 0.15, 1]); this.gunMesh = R.uploadStatic(gun.build());
-    this.arenaDef = this.teamMode ? AUTHORED_LEVELS[opts.mapId] || null : null; // a large authored arena instead of a BSP
+    this.arenaDef = this.teamMode || this.duel || this.online ? AUTHORED_LEVELS[opts.mapId] || null : null; // a large authored arena instead of a BSP
     const level = this.missionDef ? buildLevel(this.missionDef.layout) : this.arenaDef ? buildLevel(this.arenaDef.layout) : null;
     this.scoreDef = level?.music ? SCORES[level.music] || null : null; // an authored arena's own generated score (music.js)
     const arena = (this.duel || this.online || this.teamMode || this.attract) && !this.arenaDef;
@@ -58,6 +59,7 @@ export class Game {
     this.world = new World(R, arena ? A.duelMap : null, level);
     this.playerSpawn = arena ? this.world.spawns.player.slice() : level ? level.playerSpawn.slice() : SPAWN.slice();
     this.enemySpawn = arena ? this.world.spawns.enemy.slice() : level?.teamHomes ? level.teamHomes.red.slice() : [0, 0, 8];
+    if (this.duel && level?.duelSpawns) { this.playerSpawn = level.duelSpawns.player.slice(); this.enemySpawn = level.duelSpawns.enemy.slice(); this.playerSpawnYaw = level.playerYaw; } // an authored arena's duel ground
     this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = this.attract ? new NullInput() : new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
     // Reuse Atom XE's configured battle theme from the moment the map loads.
     // Browser autoplay restrictions may require the first player gesture.
@@ -77,7 +79,7 @@ export class Game {
       const h = this.hud;
       h.helpList = HELP_DUEL; h.helpW = 820;
       h.title = 'LIGHTSABER TRAINING';
-      h.subtitle = 'Reborn saber duel · original Raven arena · F1 = controls';
+      h.subtitle = 'Reborn saber duel · ' + (this.arenaDef ? this.arenaDef.label : 'original Raven arena') + ' · F1 = controls';
       h.debug = false;
       // The full-screen controls sheet previously paused every simulation step
       // until a mouse click. In the dashboard/embedded browser it could appear
@@ -88,7 +90,7 @@ export class Game {
       h.msg('WASD to move · F1 for controls');
     } else if (this.online) {
       const h = this.hud; this.input.wheelThrottle = 90;
-      h.helpList = HELP_ONLINE; h.helpW = 820; h.title = 'ONLINE · JEDI VS DARK JEDI'; h.subtitle = 'Lightsaber Training arena · up to 10 players · F1 = controls';
+      h.helpList = HELP_ONLINE; h.helpW = 820; h.title = 'ONLINE · JEDI VS DARK JEDI'; h.subtitle = (this.arenaDef ? this.arenaDef.label : GAME2_ARENA_MAPS[opts.mapId]?.label || 'Lightsaber Training') + ' arena · F1 = controls';
       h.debug = false; h.help = false; this.started = true; h.msg('WASD to move · F1 for controls');
     } else if (this.teamMode) {
       const h = this.hud;
@@ -245,9 +247,25 @@ export class Game {
   burstHeal(f) { const p = f.pos; for (let i = 0; i < 30; i++) { const a = rnd(0, 6.28), r = rnd(0.2, 0.7); this.fx.emit({ p: [p[0] + Math.cos(a) * r, rnd(0.1, 1.2), p[2] + Math.sin(a) * r], v: [0, rnd(0.8, 2.2), 0], life: rnd(0.8, 1.4), size: rnd(0.04, 0.1), c0: [0.4, 1, 0.55, 0.9], c1: [0.2, 0.9, 0.4, 0] }); } this.fx.ring({ p: [p[0], 0.05, p[2]], n: [0, 1, 0], r0: 0.2, r1: 1.6, life: 0.9, w: 0.1, c: [0.35, 1, 0.5, 0.8] }); }
   // every fighter in the arena: the player, the AI and (online) the other players' fighters
   fighters() { return this.remotes && this.remotes.length ? [this.player, ...this.npcs, ...this.remotes] : [this.player, ...this.npcs]; }
-  foesOf(f) { return this.fighters().filter(o => o !== f && o.status !== 'dead' && hostile(f, o)); }
+  // the fighters hostile to f that are alive; kept for the step and rebuilt when anyone dies, comes back (Fighter.die /
+  // revive bump foesGen), joins or leaves. Callers only read it.
+  foesOf(f) {
+    const n = this.npcs.length + (this.remotes ? this.remotes.length : 0), gen = this.foesGen | 0;
+    if (f._foesT === this.t && f._foesG === gen && f._foesN === n) return f._foes;
+    f._foes = this.fighters().filter(o => o !== f && o.status !== 'dead' && hostile(f, o)); f._foesT = this.t; f._foesG = gen; f._foesN = n; return f._foes;
+  }
+  // animation level of detail for big matches (more than 16 AI): a bot in normal state over 12 m from the camera and not
+  // mid-attack, or over 20 m away whatever it does, is posed every other step (Fighter.finish; the blade hit test sweeps
+  // across both steps). Duels and missions always pose everyone.
+  animLod(f) {
+    if (f.isPlayer || f.remote || this.npcs.length <= 16 || f.status !== 'normal' || f.kata) return false;
+    const d2 = this.lodDist2(f); return d2 > 400 || (d2 > 144 && !f.saber.isActiveSwing());
+  }
+  lodDist2(f) { const c = this.cam?.target || this.player.pos; return (f.pos[0] - c[0]) ** 2 + (f.pos[2] - c[2]) ** 2; }
   aiTarget(f) { // who an AI fights: the player offline; online the nearest fighter on the other side (kept unless one is 3 m closer)
     if (!this.openArena) return this.player;
+    if (this.npcs.length > 16 && f.aiFoe && f.aiFoe.status !== 'dead' && this.t - (f.aiFoeAt ?? -9) < 0.2) return f.aiFoe; // big matches: look again 5 times a second
+    f.aiFoeAt = this.t;
     const foes = this.foesOf(f); if (!foes.length) return null; const d = o => Math.hypot(o.pos[0] - f.pos[0], o.pos[2] - f.pos[2]);
     let best = foes.reduce((a, b) => (d(b) < d(a) ? b : a)); const cur = f.aiFoe && foes.includes(f.aiFoe) ? f.aiFoe : null;
     if (cur && d(cur) < d(best) + 3) best = cur; f.aiFoe = best; return best;
@@ -414,7 +432,7 @@ export class Game {
   }
   resetDuel() {
     const p = this.player, b = this.boss; this.force.reset(); b.force.reset();
-    p.revive(this.playerSpawn.slice()); p.status = 'normal'; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.rageMul = 1; p.yaw = p.targetYaw = 0; p.actor.animSpeed = 1; this.readySaber(p); this.cam.yaw = 0; this.cam.pitch = 0.2;
+    p.revive(this.playerSpawn.slice()); p.status = 'normal'; p.speedMul = p.damageMul = p.takeMul = 1; p.glow = 0; p.saber.rageMul = 1; p.yaw = p.targetYaw = this.cam.yaw = this.playerSpawnYaw ?? 0; p.actor.animSpeed = 1; this.readySaber(p); this.cam.pitch = 0.2;
     this.respawnNpc(b); b.force.fp = b.force.max; b.reaction = 0.7;
     for (const w of this.world.bodies) { w.pos = w.home.slice(); w.vel = [0, 0, 0]; w.w = [0, 0, 0]; w.grounded = true; w.lifted = 0; w.rot = [0, Math.random() * 6, 0]; w.hp = 100; }
     this.combat.bolts.length = 0; this.arcs.length = 0; this.scorches = []; this.hud.msgs.length = 0; this.hud.dmg = 0; this.round = { state: 'intro', t: 0 }; this.hud.msg('Rematch');
@@ -529,10 +547,14 @@ export class Game {
     this.updateExecutions(dt); // before the fighters: they show where the execution put them this step
     this.execCandidate = this.attract || p.status !== 'normal' ? null : findExecutable(this, p);
     this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.inp); if (this.playerWeapon) this.updatePistol(dt);
+    this.stepNo = (this.stepNo | 0) + 1; const big = this.npcs.length > 16;
     for (const n of this.npcs) {
+      // a big match's bots further from the camera update less often, each covering the steps it skipped: over 12 m at
+      // 30 Hz, over 20 m at 20 Hz (staggered by bot, so every step carries the same share). Close ones run every step.
+      let ndt = dt; if (big) { const d2 = this.lodDist2(n), k = d2 > 400 ? 3 : d2 > 144 ? 2 : 1; if (k > 1) { if ((this.stepNo + (n.humId | 0)) % k) continue; ndt = dt * k; } }
       const brain = BRAINS[n.kind]; n.aimPitch = this.aimPitchToward(n);
-      if (this.aiOff || this.teamMatch?.ended) { clearCmd(n.cmd); } else if (this.teamMatch) this.teamMatch.brain(n, dt); else if (brain) brain(this, n, dt);
-      n.update(dt); if (n.force) n.force.update(dt); if (n.healFlash > 0) n.healFlash = Math.max(0, n.healFlash - dt);
+      if (this.aiOff || this.teamMatch?.ended) { clearCmd(n.cmd); } else if (this.teamMatch) this.teamMatch.brain(n, ndt); else if (brain) brain(this, n, ndt);
+      n.update(ndt); if (n.force) n.force.update(ndt); if (n.healFlash > 0) n.healFlash = Math.max(0, n.healFlash - ndt);
       if (n.status === 'dead' && this.t - n.deadAt > 8 && this.mode === 'explorer') this.respawnNpc(n);
       if (n.status === 'dead' && this.attract && this.t - n.deadAt > 3) { this.respawnNpc(n); n.hp = n.maxHp; if (n.force) n.force.reset(); this.shield(n); }
     }

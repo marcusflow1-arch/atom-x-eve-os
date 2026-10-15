@@ -15,10 +15,10 @@ import { makeMatch, run } from './support/game2Sim.mjs';
 const level = () => buildLevel(SKYBRIDGE.layout);
 const near = (a, b) => Math.hypot(a[0] - b[0], a[2] - b[2]);
 
-test('every authored map in the menu has a level, and the modes are 7v7 CTF, 8v8 Sudden Death, 6v6 TDM to 30 and an 8-fighter FFA to 15', () => {
+test('every authored map in the menu has a level, and the modes are 15v15 CTF, 25v25 Sudden Death, 25v25 TDM to 50 and a 50-fighter FFA to 15', () => {
   for (const id of Object.keys(GAME2_AUTHORED_MAPS)) assert.ok(AUTHORED_LEVELS[id], id);
-  assert.deepEqual([TEAM_MODES.tdm.members, TEAM_MODES.tdm.killTarget, TEAM_MODES.ffa.members, TEAM_MODES.ffa.fragTarget], [6, 30, 8, 15]);
-  assert.equal(TEAM_MODES.ctf.members, 7); assert.equal(TEAM_MODES.sudden.respawn, null);
+  assert.deepEqual([TEAM_MODES.tdm.members, TEAM_MODES.tdm.killTarget, TEAM_MODES.ffa.members, TEAM_MODES.ffa.fragTarget], [25, 50, 50, 15]);
+  assert.equal(TEAM_MODES.ctf.members, 15); assert.equal(TEAM_MODES.sudden.members, 25); assert.equal(TEAM_MODES.sudden.respawn, null);
 });
 
 test('Skybridge: no floor over the chasm; an energy bridge carries you until its console cuts it, flickers, drops, then reforms', () => {
@@ -57,14 +57,15 @@ test('Skybridge navigation: across an energy bridge while it is up, over the sto
   check([-55, 0.3, 0], [55, 0.3, 0]);
 });
 
-test('Free for All on Skybridge: you and seven rivals, all on solid floor and hostile to each other; Team Deathmatch is 6v6 at the team homes', () => {
+test('Free for All on Skybridge: you and 49 rivals, all on solid floor, apart, and hostile to each other; Team Deathmatch is 25v25 at the team homes', () => {
   const g = makeMatch('ffa');
   assert.equal(g.arenaDef.label, 'Skybridge Citadel'); assert.equal(g.world.killY, SKYBRIDGE_KILL_Y);
-  const all = g.fighters(); assert.equal(all.length, 8);
+  const all = g.fighters(); assert.equal(all.length, 50);
   for (const f of all) { assert.equal(f.team, 'ffa'); assert.notEqual(g.world.floorAt(f.pos[0], f.pos[2], f.pos[1] + 0.5), null, f.name + ' on a floor'); assert.ok(f.force, f.name + ' has Force'); }
   for (const a of all) for (const b of all) if (a !== b) assert.ok(hostile(a, b));
+  const stacked = all.filter((a, i) => all.some((b, j) => j > i && near(a.pos, b.pos) < 0.5)).length; assert.ok(stacked <= 2, stacked + ' fighters spawned on top of someone');
   const t = makeMatch('tdm'), M = t.teamMatch;
-  assert.equal(t.fighters().filter(f => f.team === 'blue').length, 6); assert.equal(t.fighters().filter(f => f.team === 'red').length, 6);
+  assert.equal(t.fighters().filter(f => f.team === 'blue').length, 25); assert.equal(t.fighters().filter(f => f.team === 'red').length, 25);
   for (const f of t.fighters()) assert.ok(near(f.pos, M.homes[f.team]) < 7, f.name + ' starts at the ' + f.team + ' home');
   assert.ok(Math.abs(t.player.yaw - Math.PI / 2) < 1e-6, 'Blue faces the enemy across the chasm');
 });

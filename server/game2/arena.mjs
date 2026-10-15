@@ -1,11 +1,14 @@
 import { createServer } from 'node:http';
 import { WebSocket, WebSocketServer } from 'ws';
 
-// All Game 2 viewers connect to this ONE server-side arena. Messages are relayed
-// directly over WebSockets; no Base44 entity polls or WebRTC peer establishment.
+// All Game 2 viewers connect to this server. Every map is its own arena (room): players only see and reach the players
+// in theirs. Messages are relayed directly over WebSockets; no Base44 entity polls or WebRTC peer establishment.
 // Character simulation remains client-owned; authoritative anti-cheat is future work.
 export const GAME2_VERSION = 2;
-export const MAX_PLAYERS = 10;
+// the arenas; a join that names none (clients from before rooms) goes to 'training', the original Lightsaber Training
+export const ARENA_ROOMS = Object.freeze(['training', 'skybridge', 'hangar', 'carbon']);
+// a safety ceiling per arena, not a game rule (the free-for-all has no player limit); GAME2_MAX_PLAYERS overrides it
+export const MAX_PLAYERS = 200;
 const MAX_PACKET_BYTES = 64 * 1024;
 const MAX_TOKEN_LENGTH = 8192;
 const ALLOWED_KINDS = new Set(['s', 'rpc', 'fx']);
@@ -17,22 +20,25 @@ const validPeer = (peer, userId) =>
   typeof peer === 'string' && typeof userId === 'string' &&
   peer.startsWith(userId + '~') && /^[a-z0-9]{4,16}$/.test(peer.slice(userId.length + 1));
 
-export function createGame2ArenaServer({ authenticate, host = '0.0.0.0', port = 0, now = Date.now } = {}) {
+export function createGame2ArenaServer({ authenticate, host = '0.0.0.0', port = 0, now = Date.now, maxPlayers = MAX_PLAYERS } = {}) {
   if (typeof authenticate !== 'function') throw new TypeError('Game 2 requires an account token verifier');
-  const clients = new Map();
-  let hostPeer = null;
-  let aiCount = 0;
-  const entryList = () => [...clients.values()].map(c => ({ ...c.player, host: c.player.id === hostPeer }));
-  const report = () => {
-    const roster = entryList();
+  const clients = new Map(); // every connected player by peer id; each also belongs to one room
+  const rooms = new Map(ARENA_ROOMS.map(id => [id, { id, clients: new Map(), hostPeer: null, aiCount: 0 }]));
+  const entryList = R => [...R.clients.values()].map(c => ({ ...c.player, host: c.player.id === R.hostPeer }));
+  const stats = R => {
+    const roster = entryList(R);
     return {
-      ready: true, protocol: GAME2_VERSION, room: 'lightsaber-training',
-      players: roster.length, max_players: MAX_PLAYERS,
+      players: roster.length,
       light: roster.filter(p => p.side === 'light').length,
       dark: roster.filter(p => p.side === 'dark').length,
-      ai: aiCount, host_name: roster.find(p => p.host)?.name || '',
+      ai: R.aiCount, host_name: roster.find(p => p.host)?.name || '',
     };
   };
+  // the top-level numbers are the training arena's (what clients from before rooms read); `arenas` has every map
+  const report = () => ({
+    ready: true, protocol: GAME2_VERSION, room: 'lightsaber-training', rooms: true, max_players: maxPlayers,
+    ...stats(rooms.get('training')), arenas: Object.fromEntries([...rooms].map(([id, R]) => [id, stats(R)])),
+  });
   const send = (ws, value, reliable = true) => {
     if (ws.readyState !== WebSocket.OPEN) return false;
     if (ws.bufferedAmount > (reliable ? 4 * 1024 * 1024 : 1024 * 1024)) {
@@ -41,20 +47,21 @@ export function createGame2ArenaServer({ authenticate, host = '0.0.0.0', port = 
     }
     try { ws.send(JSON.stringify(value)); return true; } catch { return false; }
   };
-  const broadcast = (payload, skipPeer = null, reliable = true) => {
-    for (const [peer, client] of clients) if (peer !== skipPeer) send(client.ws, payload, reliable);
+  const broadcast = (R, payload, skipPeer = null, reliable = true) => {
+    for (const [peer, client] of R.clients) if (peer !== skipPeer) send(client.ws, payload, reliable);
   };
-  const rosterChanged = () => broadcast({ t: 'roster', roster: entryList(), host: hostPeer, ai: aiCount });
+  const rosterChanged = R => broadcast(R, { t: 'roster', roster: entryList(R), host: R.hostPeer, ai: R.aiCount });
   const disconnect = ws => {
     const client = ws.game2Client;
     if (!client || clients.get(client.player.id) !== client) return;
-    clients.delete(client.player.id);
+    const R = client.room;
+    clients.delete(client.player.id); R.clients.delete(client.player.id);
     ws.game2Client = null;
-    if (hostPeer === client.player.id) {
-      hostPeer = clients.keys().next().value || null;
+    if (R.hostPeer === client.player.id) {
+      R.hostPeer = R.clients.keys().next().value || null;
     }
-    if (!clients.size) aiCount = 0;
-    rosterChanged();
+    if (!R.clients.size) R.aiCount = 0;
+    rosterChanged(R);
   };
   const reject = (ws, reason, closeCode = 1008) => {
     send(ws, { t: 'error', message: reason });
@@ -81,10 +88,10 @@ export function createGame2ArenaServer({ authenticate, host = '0.0.0.0', port = 
     const out = { t: 'packet', from: client.player.id, body, reliable };
     const target = typeof message.to === 'string' ? message.to : null;
     if (target) {
-      const dest = clients.get(target);
+      const dest = client.room.clients.get(target); // only within the same arena
       if (dest) send(dest.ws, out, reliable);
     } else {
-      broadcast(out, client.player.id, reliable);
+      broadcast(client.room, out, client.player.id, reliable);
     }
   };
   const handle = async (ws, raw) => {
@@ -108,22 +115,23 @@ export function createGame2ArenaServer({ authenticate, host = '0.0.0.0', port = 
       const userId = String(user?.id || '');
       if (!userId || !validPeer(data.peer, userId)) { reject(ws, 'Game 2 account authentication failed'); return; }
       if (clients.has(data.peer)) { reject(ws, 'This session is already connected'); return; }
-      if (clients.size >= MAX_PLAYERS) { reject(ws, 'The arena is full'); return; }
+      const R = rooms.get(ARENA_ROOMS.includes(data.room) ? data.room : 'training');
+      if (R.clients.size >= maxPlayers) { reject(ws, 'The arena is full'); return; }
       const player = {
         id: data.peer, name: cleanName(data.name),
         side: data.side === 'dark' ? 'dark' : 'light', at: now(), host: false,
       };
-      const client = { ws, player, windowMs: now(), messages: 0 };
+      const client = { ws, player, room: R, windowMs: now(), messages: 0 };
       ws.game2Client = client;
-      clients.set(data.peer, client);
+      clients.set(data.peer, client); R.clients.set(data.peer, client);
       clearTimeout(ws.helloTimer);
-      if (!hostPeer) {
-        hostPeer = data.peer;
-        aiCount = Number.isInteger(data.ai) ? Math.min(3, Math.max(0, data.ai)) : 0;
+      if (!R.hostPeer) {
+        R.hostPeer = data.peer;
+        R.aiCount = Number.isInteger(data.ai) ? Math.min(3, Math.max(0, data.ai)) : 0;
       }
-      send(ws, { t: 'welcome', you: { ...player, host: hostPeer === data.peer },
-        roster: entryList(), host: hostPeer, ai: aiCount, serverTime: now() });
-      rosterChanged();
+      send(ws, { t: 'welcome', you: { ...player, host: R.hostPeer === data.peer }, room: R.id,
+        roster: entryList(R), host: R.hostPeer, ai: R.aiCount, serverTime: now() });
+      rosterChanged(R);
       return;
     }
     const client = ws.game2Client;

@@ -16,6 +16,7 @@
 //   playerSpawn [x, y, z], playerYaw, navBounds [x0, z0, x1, z1], env {sun / ambient / fog}
 //   bridges  [{id, label, x0, z0, x1, z1, y}]          energy bridges that consoles switch off (LevelSpace.dropBridge)
 //   killY, teamHomes {blue, red}, teamYaw {blue, red}, ffaSpawns [[x, y, z]]   arena settings for the skirmish modes
+//   duelSpawns {player, enemy}                         where Duel Practice puts you and the Reborn
 //   music    'id'                                      a generated score from music.js SCORES
 
 export const MATERIALS = {
@@ -148,6 +149,6 @@ export function buildLevel(L) {
     render: { base: base.build(), glows: [...glows].map(([name, m]) => ({ glow: GLOWS[name], mesh: m.build() })) }, doorMeshes,
     // arenas: switchable bridges, kill height, where each team starts (and faces) and the free-for-all spawn points
     bridges: (L.bridges || []).map(b => ({ id: b.id, label: b.label || b.id, x0: b.x0, z0: b.z0, x1: b.x1, z1: b.z1, y: b.y ?? 0 })), bridgeMeshes,
-    killY: L.killY ?? null, teamHomes: L.teamHomes || null, teamYaw: L.teamYaw || null, ffaSpawns: L.ffaSpawns || null, music: L.music || null,
+    killY: L.killY ?? null, teamHomes: L.teamHomes || null, teamYaw: L.teamYaw || null, ffaSpawns: L.ffaSpawns || null, duelSpawns: L.duelSpawns || null, music: L.music || null,
   };
 }

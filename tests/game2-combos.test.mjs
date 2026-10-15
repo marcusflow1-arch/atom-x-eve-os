@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { makeGame, addFoe, run } from './support/game2Sim.mjs';
-import { PUSH_CHARGE_MAX, PULSE_MAX, PULSE_PER_HP, PULSE_PER_KILL, PULSE_RADIUS, SABER_ARC_R, INTERCEPT_BONUS } from '../src/components/game2/engine/force.js';
+import { PUSH_CHARGE_MAX, PULSE_MAX, PULSE_PER_HP, PULSE_PER_KILL, PULSE_RADIUS, SABER_ARC_R, INTERCEPT_BONUS, REPULSE_COST } from '../src/components/game2/engine/force.js';
 
 // Force combos and the Force Pulse special (real engine, tests/support/game2Sim.mjs).
 const keys = (...k) => new Set(k);
@@ -40,11 +40,11 @@ test('Force Pulse: the meter fills from damage and defeats; X vaporizes every fo
   a.hurt(40, P); assert.equal(F.pulse, 40 * PULSE_PER_HP, 'damage fills it');
   const d = addFoe(g, [9, 0, 9], { name: 'd', hp: 10 }); d.hurt(50, P); assert.equal(F.pulse, 40 * PULSE_PER_HP + 10 * PULSE_PER_HP + PULSE_PER_KILL, 'a defeat adds a chunk (damage counts up to their health)');
   run(g, 1, () => ({ pressed: keys('KeyX') })); assert.ok(!F.pulsing, 'not charged yet: nothing');
-  F.pulse = PULSE_MAX; run(g, 1, () => ({ pressed: keys('KeyX') })); assert.ok(F.pulsing, 'charged: the build-up starts'); assert.equal(F.pulse, 0);
+  F.pulse = PULSE_MAX; run(g, 1, () => ({ pressed: keys('KeyX') })); assert.ok(F.pulsing, 'charged: the build-up starts'); assert.equal(F.pulse, PULSE_MAX - REPULSE_COST, 'Force Repulse takes 80% of the meter');
   run(g, 90); // the Repulse: rise and curl up (0.95 s), burst, and the victims burn away in the air a moment later
   for (const f of [a, b]) { assert.equal(f.status, 'dead', f.name + ' vaporized'); assert.ok(f.vaporized); assert.equal(f.killedBy, P); }
   assert.notEqual(c.status, 'dead', 'out of reach');
-  assert.equal(F.pulse, 2 * PULSE_PER_KILL, 'the two defeats start the next charge');
+  assert.equal(F.pulse, PULSE_MAX - REPULSE_COST + 2 * PULSE_PER_KILL, 'what was left plus the two defeats start the next charge');
 });
 
 test('taunts (T): an original gesture for your side; moving cuts it short; a short cooldown; the AI gloats', async () => {

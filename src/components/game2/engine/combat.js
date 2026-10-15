@@ -3,7 +3,7 @@
 // the floating practice remote, and flung props hitting people.
 import { v3, clamp, lerp } from './math.js';
 import { geo } from './gl.js';
-import { THROW_LODGE_DPS, KATA_DAMAGE } from './fighter.js';
+import { THROW_LODGE_DPS, THROW_HIT, THROW_DAMAGE_MUL, KATA_DAMAGE } from './fighter.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const BLOCKS = ['block1', 'block2', 'block3', 'block4', 'block5', 'block6', 'block7', 'block8', 'block9'];
@@ -111,6 +111,7 @@ export class Combat {
       const own = !A.remote && !g.noDamage; // another player's blade is resolved in their game; no damage between rounds
       for (const B of F) {
         if (B === A || !hostile(A, B) || B.status === 'dead') continue;
+        const ddx = B.pos[0] - A.pos[0], ddz = B.pos[2] - A.pos[2]; if (ddx * ddx + ddz * ddz > 20 || Math.abs(B.pos[1] - A.pos[1]) > 4) continue; // out of any blade's reach (4.5 m)
         const bss = segsOf(B);
         if (bss.length && (swing || B.swingActive()) && A.status === 'normal') { // clash: the closest pair of blades
           const key = A.name + '|' + B.name; const key2 = B.name + '|' + A.name;
@@ -134,13 +135,13 @@ export class Combat {
         const T = A.thrown;
         if (T.phase === 'lodged' && T.lodged) {
           const B = T.lodged;
-          if (B.status !== 'dead' && g.t >= (T.lodgeTick || 0)) { T.lodgeTick = g.t + 0.2; this.damage(A, B, B.chest(), THROW_LODGE_DPS * 0.2 * A.damageMul, { spark: true, noFlinch: true }); }
+          if (B.status !== 'dead' && g.t >= (T.lodgeTick || 0)) { T.lodgeTick = g.t + 0.2; this.damage(A, B, B.chest(), THROW_LODGE_DPS * 0.2 * THROW_DAMAGE_MUL * A.damageMul, { spark: true, noFlinch: true }); }
         } else for (const B of F) {
           if (B === A || !hostile(A, B) || B.status === 'dead' || (T.hit.get(B) || 0) > g.t) continue;
           const contact = sweptBladeContact([T.prevPos || T.pos, T.prevPos || T.pos], [T.pos, T.pos], B._prevCap, caps.get(B), A.saberKit === 'staff' ? 0.9 : 0.45); // a spinning saberstaff reaches twice as far
           if (contact) {
             T.hit.set(B, g.t + 0.4);
-            this.damage(A, B, contact.a, 14 * A.damageMul, { spark: true });
+            this.damage(A, B, contact.a, THROW_HIT * THROW_DAMAGE_MUL * A.damageMul, { spark: true });
             if (B.status !== 'dead' && T.phase !== 'back' && A.lodgeSaber) A.lodgeSaber(B);
             break;
           }

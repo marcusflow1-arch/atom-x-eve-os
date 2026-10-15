@@ -4,9 +4,9 @@ import WebSocket from 'ws';
 import { createGame2ArenaServer } from '../arena.mjs';
 import { RailwayGameSession } from '../../../src/components/game2/net/railway.js';
 
-async function fixture(t) {
+async function fixture(t, o = {}) {
   const arena = createGame2ArenaServer({
-    host: '127.0.0.1',
+    host: '127.0.0.1', ...o,
     authenticate: async token => token.startsWith('user-') ? { id: token.slice(5) } : null,
   });
   const addr = await arena.listen();
@@ -22,10 +22,10 @@ async function eventually(test, message, timeout = 3000) {
   }
   throw new Error(message);
 }
-function player(url, id, side = 'light', ai = 0) {
+function player(url, id, side = 'light', ai = 0, mapId) {
   const peer = id + '~abc123';
   const session = new RailwayGameSession({
-    selfId: peer, name: 'Character ' + id, side, ai,
+    selfId: peer, name: 'Character ' + id, side, ai, mapId,
     token: 'user-' + id, url, WebSocketImpl: WebSocket,
   });
   session.received = [];
@@ -97,6 +97,34 @@ test('host disconnect elects another connected player instead of spawning a seco
   await eventually(() => c.roster.size === 3 && b.roster.size === 3, 'New arrival must join the existing arena');
   assert.equal(d.hostId, b.self);
   b.leave(); c.leave(); d.leave();
+});
+
+test('every map is its own arena: players on another map are never seen or reached; the status counts each', async t => {
+  const { url, arena, http } = await fixture(t);
+  const a = player(url, 'alice', 'light', 0, 'skybridge'), b = player(url, 'bob', 'dark', 0, 'skybridge');
+  const c = player(url, 'carol', 'light', 0, 'hangar'), d = player(url, 'dave', 'dark'); // no map: the original training arena
+  await a.start(); await b.start(); await c.start(); await d.start();
+  await eventually(() => a.roster.size === 2 && b.roster.size === 2, 'Skybridge players see each other');
+  assert.equal(c.roster.size, 1, 'alone on the hangar map'); assert.equal(c.isHost, true, 'and its host');
+  assert.equal(d.roster.size, 1); assert.equal(d.isHost, true);
+  const snap = { k: 's', t: 1, f: [[a.self + ':p', 0, 'Character alice', 1, 0, 2]] };
+  a.broadcast(snap, false); a.send(c.self, { k: 'rpc', fid: c.self + ':p', m: 'hurt', a: [25] }, true);
+  await eventually(() => b.received.some(x => x.body.k === 's'), 'Snapshot within the arena');
+  await tick(); await tick();
+  assert.equal(c.received.length + d.received.length, 0, 'nothing crosses to another map');
+  const status = await (await fetch(http + '/status')).json();
+  assert.equal(status.rooms, true); assert.equal(status.arenas.skybridge.players, 2); assert.equal(status.arenas.hangar.players, 1);
+  assert.equal(status.players, 1, 'top-level numbers are the training arena (for clients from before map arenas)');
+  a.leave(); b.leave(); c.leave(); d.leave();
+});
+
+test('the player ceiling counts per arena', async t => {
+  const { url } = await fixture(t, { maxPlayers: 2 });
+  const a = player(url, 'alice', 'light', 0, 'carbon'), b = player(url, 'bob', 'dark', 0, 'carbon'), c = player(url, 'carol', 'light', 0, 'carbon'), d = player(url, 'dave', 'dark', 0, 'skybridge');
+  await a.start(); await b.start(); await c.start(); await d.start();
+  assert.equal(a.state, 'live'); assert.equal(b.state, 'live');
+  assert.ok(c.ended, 'the third on that map is turned away'); assert.equal(d.state, 'live', 'another map still has room');
+  a.leave(); b.leave(); d.leave();
 });
 
 test('an invalid token cannot create a fake fighter or hijack another account', async t => {

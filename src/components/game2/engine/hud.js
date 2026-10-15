@@ -31,7 +31,7 @@ export const HELP_ONLINE = [
 export const HELP_SKIRMISH = [
   ...HELP_DUEL.slice(0, 11), HELP_COMBOS,
   ['Bridges', 'E at a console cuts that energy bridge for 10 s: whoever is on it falls · a fall is fatal'],
-  ['Skirmish', 'FFA first to 15 · TDM first to 30 · CTF 3 captures · Sudden Death one life · 3 s immunity after a respawn'],
+  ['Skirmish', 'FFA first to 15 · TDM first to 50 · CTF 3 captures · Sudden Death one life · 3 s immunity after a respawn'],
   ['Zoom · controls · mute', 'Ctrl + wheel or - =  ·  F1  ·  M  ·  Main menu leaves the match'],
 ];
 export const HELP_MISSION = [

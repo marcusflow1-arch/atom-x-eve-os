@@ -1,5 +1,5 @@
-// Local Game Two skirmish modes against AI: Capture the Flag (1 human + 6 AI vs 7 AI), Sudden Death (1 + 7 vs 8 AI;
-// no respawns), Team Deathmatch (1 + 5 vs 6 AI; first team to 30 defeats) and Free for All (you and 7 AI, everyone
+// Local Game Two skirmish modes against AI: Capture the Flag (1 human + 14 AI vs 15 AI), Sudden Death (1 + 24 vs 25 AI;
+// no respawns), Team Deathmatch (1 + 24 vs 25 AI; first team to 50 defeats) and Free for All (you and 49 AI, everyone
 // for themselves; first to 15 defeats).
 // Reuses Game Two's actual Fighter, saber, Force, collision and rendering. On an authored arena (levels/skybridge.js)
 // the bots follow the navigation grid, keep off ledges, cut energy bridges from their consoles and Force Push enemies
@@ -23,12 +23,15 @@ const PUSH_RANGE = 6;            // m: a bot Force Pushes an enemy this close wh
 const LEDGE_PROBE = [0.9, 1.6];  // m ahead a bot checks for a floor before it takes the step
 const ERRAND_RANGE = 14;         // m: a bot goes to a console this close when its bridge carries enemies
 
+// members: fighters per team (Free for All: in all). CTF 15 v 15; Sudden Death and Team Deathmatch 50 fighters (25 a
+// side); Free for All 50.
 export const TEAM_MODES = Object.freeze({
-  ctf: { id: 'ctf', label: 'Capture the Flag', members: 7, respawn: 5, captureTarget: 3 },
-  sudden: { id: 'sudden', label: 'Sudden Death 8v8', members: 8, respawn: null },
-  tdm: { id: 'tdm', label: 'Team Deathmatch 6v6', members: 6, respawn: 4, killTarget: 30 },
-  ffa: { id: 'ffa', label: 'Free for All', members: 8, respawn: 3, fragTarget: 15, ffa: true },
+  ctf: { id: 'ctf', label: 'Capture the Flag', members: 15, respawn: 5, captureTarget: 3 },
+  sudden: { id: 'sudden', label: 'Sudden Death', members: 25, respawn: null },
+  tdm: { id: 'tdm', label: 'Team Deathmatch', members: 25, respawn: 4, killTarget: 50 },
+  ffa: { id: 'ffa', label: 'Free for All', members: 50, respawn: 3, fragTarget: 15, ffa: true },
 });
+export const modeTitle = c => c.ffa ? c.label + ' · ' + c.members + ' fighters' : c.label + ' · ' + c.members + 'v' + c.members;
 
 export function chooseTeamHomes(world, fallbackBlue, fallbackRed) {
   // An authored arena names its team homes (the flag stands there; the team spawns around it).
@@ -159,6 +162,8 @@ export class Game2TeamMatch {
     if (!pts?.length) return spawnNearby(g.world, Math.random() < 0.5 ? this.homes.blue : this.homes.red, others.length + 1, this.config.members);
     let best = pts[0], score = -Infinity;
     for (const p of pts) { const d = others.length ? Math.min(...others.map(o => distance(o.pos, p))) : 20; const s = Math.min(d, 30) + Math.random() * 6; if (s > score) { score = s; best = p; } }
+    // big matches have more fighters than spawn points: a free spot around the chosen one, not on top of someone
+    for (let i = 0; i < 12; i++) { const p = i ? spawnNearby(g.world, best, i + Math.floor(Math.random() * 6), this.config.members) : copy(best); if (!others.some(o => distance(o.pos, p) < 1.2)) return p; }
     return copy(best);
   }
   homeFor(f) { return this.homes[f.team] || this.homes.blue; }
@@ -428,7 +433,7 @@ export class Game2TeamMatch {
     ctx.fillRect(x - 195, 14, 390, 56);
     ctx.font = 'bold 17px system-ui, sans-serif';
     ctx.fillStyle = '#8cddff';
-    ctx.fillText({ ctf: 'CAPTURE THE FLAG · 7v7', sudden: 'SUDDEN DEATH · 8v8', tdm: 'TEAM DEATHMATCH · 6v6', ffa: 'FREE FOR ALL · FIRST TO ' + this.config.fragTarget }[this.mode], x, 34);
+    ctx.fillText(this.config.ffa ? 'FREE FOR ALL · FIRST TO ' + this.config.fragTarget : modeTitle(this.config).toUpperCase(), x, 34);
     ctx.font = 'bold 13px system-ui, sans-serif';
     ctx.fillStyle = '#f2f6ff';
     if (this.mode === 'ctf') {

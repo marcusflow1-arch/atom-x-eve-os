@@ -42,6 +42,8 @@ export const INTERCEPT_WINDOW = 1.6, INTERCEPT_BONUS = 1.5, SABER_ARC_R = 4, SAB
 // (PULSE_WINDUP s), then bursts open with the arms flung wide: every foe within PULSE_RADIUS m is blasted outward and
 // disintegrates in the air (Game.forcePulse). The arms stay open REPULSE_HOLD s, then the caster comes down.
 export const PULSE_MAX = 100, PULSE_PER_HP = 0.25, PULSE_PER_KILL = 35, PULSE_RADIUS = 7, PULSE_WINDUP = 0.95;
+// what the specials take from the meter (of PULSE_MAX): Force Repulse 80%, Mind Dominance 55%
+export const REPULSE_COST = 80, DOMINANCE_COST = 55;
 export const REPULSE_RISE = 1.4, REPULSE_HOLD = 0.5, REPULSE_FALL = 0.45;
 // poses held by playing an animation at 2% speed from that moment, measured on the skeleton: the tightest tuck of the
 // backflip (head 0.23 m from the knees) and the widest arms of the Force fountain (hands 1.23 m apart)
@@ -309,11 +311,11 @@ export class Force {
   }
   // ---------------- Force Repulse (special)
   gainPulse(n) { if (n > 0) this.pulse = Math.min(PULSE_MAX, (this.pulse || 0) + n); }
-  pulseReady() { return (this.pulse || 0) >= PULSE_MAX; }
+  pulseReady() { return (this.pulse || 0) >= REPULSE_COST; }
   startPulse() {
     const g = this.g, p = this.p;
     if (!this.pulseReady() || this.pulsing || this.holding || (p.status !== 'normal' && p.status !== 'roll')) { if (!this.npc && !this.pulseReady()) this.say('Force Repulse is not charged yet'); return false; }
-    this.pulse = 0; this.charging = null; p.endForce(); p.cancelAttackState();
+    this.pulse -= REPULSE_COST; this.charging = null; p.endForce(); p.cancelAttackState();
     // the caster is locked into the move like an execution: this tick moves and poses them
     p.status = 'executing'; p.statusT = 0; p.vel = [0, 0, 0]; p.onGround = false; p.ducked = false;
     this.pulsing = { t0: g.t, y0: p.pos[1], burst: 0 }; holdPose(p, REPULSE_BALL, 0.25);
@@ -424,8 +426,8 @@ export class Force {
       if (v.status === 'dead') { this.release(); return; }
       if (ph.end) { this.release(); return; }
     } else { const b = t.ref; b.lifted = 0.2; const ty = 1.7; b.vel[1] += (ty - b.pos[1]) * 6 * dt - b.vel[1] * 4 * dt; b.vel[0] += (p.pos[0] + this.flat(this.aim())[0] * 4.5 - b.pos[0]) * 2 * dt; b.vel[2] += (p.pos[2] + this.flat(this.aim())[2] * 4.5 - b.pos[2]) * 2 * dt; b.glow = 0.7; b.pos[1] += (ty - b.pos[1]) * Math.min(1, dt * 3); }
-    this.beam = { a: h, b: c, col: [1, 0.25, 0.12] };
-    if (Math.random() < 0.9) { const k = Math.random(); g.fx.emit({ p: v3.lerp(h, c, k), v: [rnd(-0.4, 0.4), rnd(-0.2, 0.4), rnd(-0.4, 0.4)], life: 0.4, size: rnd(0.03, 0.07), c0: [1, 0.35, 0.1, 0.9], c1: [0.8, 0.1, 0.05, 0] }); }
+    // no line from the hand to the victim: the grip shows only at their throat (sparks and the closing rings)
+    if (Math.random() < 0.6) g.fx.emit({ p: [c[0] + rnd(-0.25, 0.25), c[1] + rnd(-0.2, 0.3), c[2] + rnd(-0.25, 0.25)], v: [rnd(-0.4, 0.4), rnd(-0.2, 0.4), rnd(-0.4, 0.4)], life: 0.4, size: rnd(0.03, 0.07), c0: [1, 0.35, 0.1, 0.9], c1: [0.8, 0.1, 0.05, 0] });
     if (Math.floor(this.gripT * 6) !== Math.floor((this.gripT - dt) * 6)) g.fx.ring({ p: c, n: v3.norm(v3.sub(h, c)), r0: 0.7, r1: 0.25, life: 0.35, w: 0.05, c: [1, 0.3, 0.15, 0.9], seg: 24 });
     if (t.type === 'npc' && v3.dist(c, p.chest()) > 16) this.release();
   }

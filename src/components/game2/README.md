@@ -62,7 +62,9 @@ through the real director, including a checkpoint restart.
 
 ## Online multiplayer: the free-for-all arena
 
-One Lightsaber Training arena everybody shares: up to 10 players plus the AI Reborn, every fighter for themselves.
+An arena on every map (the lobby picks it; `server/game2/arena.mjs` keeps one room per map), with no player limit (the
+server has a safety ceiling of 200 per arena, `GAME2_MAX_PLAYERS`), plus the optional AI Reborn, every fighter for
+themselves. A server from before map arenas has only Lightsaber Training, and the lobby says so.
 Players come in and leave whenever they like. A defeated fighter is back after 3 s at the spawn point farthest from
 everyone, with 1.5 s of spawn protection. Jedi or Dark Jedi is the look a player picks (blade and robes). The HUD shows
 your kills, the leader, ping, a scoreboard (kills / deaths) and a kill feed.

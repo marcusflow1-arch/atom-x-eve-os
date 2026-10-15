@@ -126,7 +126,8 @@ export class NetGame {
     this.remoteNetStats = { received: 0, outOfOrder: 0, lastGapMs: 0, maxGapMs: 0, longGaps: 0, largeCorrections: 0, hardSnaps: 0, worstCorrection: 0, lastRttMs: null };
     if (this.netDebug && typeof window !== 'undefined') window.__atomxeGame2NetStats = this.remoteNetStats;
     this.animNames = g.skel.rigJson.anims.map(a => a.name); this.animIdx = Object.fromEntries(this.animNames.map((n, i) => [n, i]));
-    this.spawns = arenaSpawns(g.world);
+    const L = g.world.level; // an authored arena brings its own spread of spawn points
+    this.spawns = L?.ffaSpawns ? L.ffaSpawns.map(p => ({ pos: p.slice(), yaw: Math.atan2(-p[0], -p[2]) })) : arenaSpawns(g.world);
     g.net = this; g.remotes = []; g.round = { state: 'fight', t: 0 }; g.noDamage = false; // no rounds: a continuous deathmatch
     const Session = o.transport === 'railway' ? RailwayGameSession : NetSession;
     const S = this.session = new Session({ ...o, selfId: o.selfId, name: o.name, side: this.side, ai: this.ai });

@@ -18,8 +18,8 @@ export default function Game2() {
         </button>
         <div className="h-5 w-px bg-white/10" />
         <div>
-          <div className="text-sm font-semibold">Game 2</div>
-          <div className="text-[10px] text-white/35">Single player missions · Multiplayer Dark Jedi duel · Jedi Outcast saber and Force rules</div>
+          <div className="text-sm font-semibold">Game 2 · Jedi Duels</div>
+          <div className="text-[10px] text-white/35">Story missions · Multiplayer · Skirmish · Duel practice</div>
         </div>
       </header>
       <section className="relative min-h-0 flex-1">

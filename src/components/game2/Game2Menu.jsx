@@ -23,10 +23,10 @@ const MENU_ITEMS = [
 
 // offline matches against AI fighters (engine/teamMatch.js)
 const SKIRMISH_MODES = [
-  { id: 'ffa', title: 'Free-for-all', size: '1 + 7 AI', blurb: 'Eight fighters, every one for themselves. First to 15 defeats wins. Respawn after 3 s with 3 s of immunity.' },
-  { id: 'tdm', title: 'Team Deathmatch', size: '6 v 6', blurb: 'Blue against red. The first team to 30 defeats takes the match. Respawn after 4 s with 3 s of immunity.' },
-  { id: 'ctf', title: 'Capture the Flag', size: '7 v 7', blurb: "Steal the enemy flag, carry it home and defend your own. First to three captures." },
-  { id: 'sudden', title: 'Sudden Death', size: '8 v 8', blurb: 'One life each. Eliminate the entire opposing team.' },
+  { id: 'ffa', title: 'Free-for-all', size: '1 + 49 AI', blurb: 'Fifty fighters, every one for themselves. First to 15 defeats wins. Respawn after 3 s with 3 s of immunity.' },
+  { id: 'tdm', title: 'Team Deathmatch', size: '25 v 25', blurb: 'Blue against red. The first team to 50 defeats takes the match. Respawn after 4 s with 3 s of immunity.' },
+  { id: 'ctf', title: 'Capture the Flag', size: '15 v 15', blurb: "Steal the enemy flag, carry it home and defend your own. First to three captures." },
+  { id: 'sudden', title: 'Sudden Death', size: '25 v 25', blurb: 'One life each, fifty fighters. Eliminate the entire opposing team.' },
 ];
 
 const SABER_KITS = [
@@ -259,7 +259,7 @@ export default function Game2Menu({ onStart }) {
   );
   else if (item === 'multiplayer') panel = (
     <Panel kicker="Multiplayer · online" title="Free-for-all arena">
-      <p className="text-sm leading-relaxed text-white/70">One real-time arena for up to 10 players from anywhere, Jedi or Dark Jedi. Join or leave at any time; defeated fighters are back in 3 s with 3 s of immunity. Needs a signed-in Atom XE account.</p>
+      <p className="text-sm leading-relaxed text-white/70">Real-time free-for-all with players from anywhere, Jedi or Dark Jedi, with no player limit. Pick the map in the lobby: each map is its own arena. Join or leave at any time; defeated fighters are back in 3 s with 3 s of immunity. Needs a signed-in Atom XE account.</p>
       <SaberPicker saber={saber} setSaber={setSaber} />
       <PlayButton onClick={() => start('online')}>Find the arena</PlayButton>
     </Panel>
@@ -279,7 +279,11 @@ export default function Game2Menu({ onStart }) {
   );
   else if (item === 'practice') panel = (
     <Panel kicker="Duel Practice · offline" title="Dark Jedi duel">
-      <p className="text-sm leading-relaxed text-white/70">One on one with a Reborn in the Lightsaber Training arena. He has the same Force powers, costs and rules as you: break his Grip, answer his Push, and finish him when he is low.</p>
+      <p className="text-sm leading-relaxed text-white/70">One on one with a Reborn. He has the same Force powers, costs and rules as you: break his Grip, answer his Push, and finish him when he is low.</p>
+      <div className="mb-2 mt-5 text-xs font-semibold uppercase tracking-widest text-white/50">Map</div>
+      <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Map">
+        {Object.values(GAME2_SKIRMISH_MAPS).map(m => <Choice key={m.id} on={mapId === m.id} onClick={() => setMapId(m.id)} title={m.label} sub={m.size} blurb={m.blurb} />)}
+      </div>
       <SaberPicker saber={saber} setSaber={setSaber} />
       <PlayButton onClick={() => start('multi')}>Start the duel</PlayButton>
     </Panel>
@@ -300,7 +304,7 @@ export default function Game2Menu({ onStart }) {
         <nav ref={navRef} onKeyDown={onNavKey} aria-label="Game 2 main menu" className="flex shrink-0 flex-col justify-center px-6 pb-4 pt-8 md:w-[320px] md:px-10 md:py-0">
           <div className="mb-8">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300/80"><Gamepad2 className="h-4 w-4" />Game 2</div>
-            <div className="mt-1 text-3xl font-black tracking-[0.08em]">JEDI OUTCAST</div>
+            <div className="mt-1 text-3xl font-black tracking-[0.08em]">JEDI DUELS</div>
             <div className="mt-1 h-px w-40 bg-gradient-to-r from-cyan-300/80 to-transparent" />
           </div>
           <ul className="space-y-1">

@@ -11,6 +11,8 @@ const G = 20;                                   // gravity m/s^2 (JO 800 u/s^2)
 // THROW_SEEK m of the blade, and on contact lodges in them and keeps spinning there (THROW_LODGE_DPS) while the throw is
 // held, for up to THROW_LODGE_S; releasing the throw, the victim's Force Push or their death sends it home.
 export const THROW_SPIN = 72, THROW_SEEK = 7, THROW_TURN = 4.5, THROW_LODGE_S = 2.6, THROW_LODGE_DPS = 25;
+// every saber throw hit (the first contact, THROW_HIT, and the lodged spin) deals THROW_DAMAGE_MUL of it: 15% less
+export const THROW_HIT = 14, THROW_DAMAGE_MUL = 0.85;
 // thrown into a wall faster than this (m/s, into the wall) slams into it (Game.onWallSlam); slower just bumps
 export const WALL_SLAM_SPEED = 6;
 // Force Levitate: the victim floats LEVITATE_HEIGHT m up, helpless, for the caster's duration; any hit drops them
@@ -297,7 +299,7 @@ export class Fighter {
   }
   die(from, opts = {}) {
     if (this.force && this.force.releaseAll) this.force.releaseAll(true);
-    this.hp = 0; this.killedBy = from || null; this.endForce(); this.cancelAttackState(); const wasFlung = this.status === 'flung'; this.status = 'dead'; this.statusT = 0; this.deadAt = this.now; if (!this.saber.holstered) { this.saber.holstered = true; this.blade.set(false); this.g.humStop && this.g.humStop(this); }
+    this.hp = 0; this.killedBy = from || null; this.g.foesGen = (this.g.foesGen | 0) + 1; this.endForce(); this.cancelAttackState(); const wasFlung = this.status === 'flung'; this.status = 'dead'; this.statusT = 0; this.deadAt = this.now; if (!this.saber.holstered) { this.saber.holstered = true; this.blade.set(false); this.g.humStop && this.g.humStop(this); }
     if (!wasFlung) this.playWhole(opts.deathAnim || DEATHS[Math.floor(Math.random() * DEATHS.length)], { blend: 0.08 }); else this.playWhole('BOTH_KNOCKDOWN1', { blend: 0.05 });
     this.g.onDeath && this.g.onDeath(this);
   }
@@ -318,7 +320,7 @@ export class Fighter {
   }
   // another player's game executes this fighter (RPC on their puppet of us): run our side of the same execution
   executedBy(att, kind, o = {}) { if (this.g.startExecution) this.g.startExecution(att, this, kind, { ...o, fromNet: true }); }
-  revive(at) { this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.pullHang = null; this.kata = null; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
+  revive(at) { this.g.foesGen = (this.g.foesGen | 0) + 1; this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.pullHang = null; this.kata = null; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
   chest() { const y = this.status === 'down' || this.status === 'dead' ? 0.3 : this.ducked ? 0.75 : 1.15; return [this.pos[0], this.pos[1] + y, this.pos[2]]; }
   headPos() { return this.actor.bonePos('cranium', [0, 0, 0]); }
   // ---------- per-frame update
@@ -551,7 +553,7 @@ export class Fighter {
     const a = this.actor; a.pos[0] = this.pos[0]; a.pos[1] = this.pos[1]; a.pos[2] = this.pos[2];
     const S = this.saber; a.matchPelvis = !S.holstered && S.move !== S.I.LS_READY && !a.torsoFollow; // a saber move on the torso over running / jumping legs keeps its authored hip turn
     this.aimTorso(dt);
-    a.update(this.now);
+    if (this.g.animLod?.(this) && (this.lodTick = !this.lodTick)) a.place(this.now); else a.update(this.now); // far away in a big match: the pose every other step
     this.updateHilt(dt);
   }
   // model faces the legs; the spine turns the torso to the view and pitches it by 75% of the view pitch (cg_players.c).

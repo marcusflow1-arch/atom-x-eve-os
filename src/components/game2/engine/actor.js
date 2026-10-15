@@ -94,15 +94,28 @@ export class Actor {
   _evalPose(lSt, tSt, now, outQ, outPel) {
     const rig = this.rig, N = this.nBones;
     const l = this._sample(lSt, now), t = this._sample(tSt, now);
-    const mp = this.matchPelvis && lSt !== tSt; rig.evaluate(l[0], t[0], mp); this._grab(rig, this.poseA, this.pelA);
+    const mp = this.matchPelvis && lSt !== tSt; this._pose(rig, l[0], t[0], mp, this.poseA, this.pelA);
     if (l[2] > 1e-4 || t[2] > 1e-4) {
-      rig.evaluate(l[1], t[1], mp); this._grab(rig, this.poseB, this.pelB);
+      this._pose(rig, l[1], t[1], mp, this.poseB, this.pelB);
       for (let i = 1; i < N; i++) { const f = this.skel.isTorso[i] ? t[2] : l[2]; if (f > 1e-4) Q.slerp(this.poseA[i], this.poseB[i], f, outQ[i]); else { const a = this.poseA[i], o = outQ[i]; o[0] = a[0]; o[1] = a[1]; o[2] = a[2]; o[3] = a[3]; } }
       for (let k = 0; k < 3; k++) outPel[k] = this.pelA[k] + (this.pelB[k] - this.pelA[k]) * l[2];
     } else {
       for (let i = 1; i < N; i++) { const a = this.poseA[i], o = outQ[i]; o[0] = a[0]; o[1] = a[1]; o[2] = a[2]; o[3] = a[3]; }
       outPel[0] = this.pelA[0]; outPel[1] = this.pelA[1]; outPel[2] = this.pelA[2];
     }
+  }
+  // an evaluated pose depends only on its two frames (and the hip match), so everyone shares them: in a big match many
+  // fighters play the same frames of the same animations. Bounded cache (cleared when full).
+  _pose(rig, fl, ft, mp, outQ, outPel) {
+    const C = rig.poseCache ??= new Map(), key = (fl * 131072 + ft) * 2 + (mp ? 1 : 0); let e = C.get(key);
+    if (!e) {
+      rig.evaluate(fl, ft, mp); const n = rig.localQ.length; e = new Float64Array(n * 4 + 3);
+      for (let i = 0; i < n; i++) e.set(rig.localQ[i], i * 4); e[n * 4] = rig.pelvisPos[0]; e[n * 4 + 1] = rig.pelvisPos[1]; e[n * 4 + 2] = rig.pelvisPos[2];
+      if (C.size >= 4096) C.clear(); C.set(key, e);
+    }
+    const n = (e.length - 3) >> 2;
+    for (let i = 0; i < n; i++) { const o = outQ[i + 1], k = i * 4; o[0] = e[k]; o[1] = e[k + 1]; o[2] = e[k + 2]; o[3] = e[k + 3]; }
+    outPel[0] = e[n * 4]; outPel[1] = e[n * 4 + 1]; outPel[2] = e[n * 4 + 2];
   }
   _grab(rig, outQ, outPel) { // rig.localQ is in nest order (= skeleton index-1)
     for (let i = 0; i < rig.localQ.length; i++) { const s = rig.localQ[i], o = outQ[i + 1]; o[0] = s[0]; o[1] = s[1]; o[2] = s[2]; o[3] = s[3]; }
@@ -177,6 +190,8 @@ export class Actor {
     }
     m4.fromYaw(this.yaw, this.pos, this.model);
   }
+  // only move the model (position / facing) and keep the last pose: distant fighters in big matches skip every other pose
+  place(now) { this.now = now; m4.fromYaw(this.yaw, this.pos, this.model); }
   pelvisLocal() { return this.pelvis; }
   // bone world matrix (rotation+position, no scale) in world space
   boneMatrix(name, out = new Float32Array(16)) {

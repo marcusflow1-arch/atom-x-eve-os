@@ -26,20 +26,20 @@ const MODES = {
     blurb: 'One real-time Railway arena for up to 10 human-controlled Jedi or Dark Jedi. Fight other players from different browsers and countries. Optional AI Reborn opponents; offline practice remains available.',
   },
   ffa: {
-    tag: 'Skirmish', title: 'Free-for-all · 8 fighters', loading: 'Free-for-all', icon: Swords,
-    blurb: 'You and seven AI fighters, every one for themselves. First to 15 defeats.',
+    tag: 'Skirmish', title: 'Free-for-all · 50 fighters', loading: 'Free-for-all', icon: Swords,
+    blurb: 'You and 49 AI fighters, every one for themselves. First to 15 defeats.',
   },
   tdm: {
-    tag: 'Skirmish', title: 'Team Deathmatch · 6v6', loading: 'Team Deathmatch', icon: Users,
-    blurb: 'Blue: you and five AI teammates. Red: six enemy bots. First team to 30 defeats.',
+    tag: 'Skirmish', title: 'Team Deathmatch · 25v25', loading: 'Team Deathmatch', icon: Users,
+    blurb: 'Blue: you and 24 AI teammates. Red: 25 enemy bots. First team to 50 defeats.',
   },
   ctf: {
-    tag: 'AI team battle', title: 'Capture the Flag · 7v7', loading: 'Capture the Flag', icon: Users,
-    blurb: 'Blue: you and six AI teammates. Red: seven enemy bots. Steal their flag, bring it home and defend your own. First to three captures.',
+    tag: 'AI team battle', title: 'Capture the Flag · 15v15', loading: 'Capture the Flag', icon: Users,
+    blurb: 'Blue: you and 14 AI teammates. Red: 15 enemy bots. Steal their flag, bring it home and defend your own. First to three captures.',
   },
   sudden: {
-    tag: 'AI elimination', title: 'Sudden Death · 8v8', loading: 'Sudden Death', icon: Swords,
-    blurb: 'Blue: you and seven AI teammates. Red: eight enemies. One life per fighter; eliminate the entire opposing team to win.',
+    tag: 'AI elimination', title: 'Sudden Death · 25v25', loading: 'Sudden Death', icon: Swords,
+    blurb: 'Blue: you and 24 AI teammates. Red: 25 enemies. One life per fighter; eliminate the entire opposing team to win.',
   },
 };
 const PRACTICE = { tag: 'Practice', title: 'Dark Jedi Duel', loading: 'Dark Jedi duel', icon: Swords };
@@ -86,10 +86,11 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
     host.append(canvas, hud);
     const duel = choice === 'multi', teamMode = TEAM_CHOICES.includes(choice);
     const arena = choice !== 'single';
-    const authored = teamMode && !!GAME2_AUTHORED_MAPS[mapId]; // a large authored level instead of a BSP
-    const common = { sfxBase: `${ASSET_BASE}sfx/`, settings: loadSettings(), saber };
+    const map = choice === 'online' ? online?.mapId || 'training' : mapId; // online: the arena picked in the lobby
+    const authored = arena && !!GAME2_AUTHORED_MAPS[map]; // a large authored level instead of a BSP
+    const common = { sfxBase: `${ASSET_BASE}sfx/`, settings: loadSettings(), saber, mapId: map };
     let engineOptions = teamMode
-      ? { mode: choice, mapId, ...common }
+      ? { mode: choice, ...common }
       : duel
         ? { mode: 'duel', ...common }
         : { mode: 'mission', mission: 'kejim', ...common };
@@ -106,7 +107,7 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
         renderer.maxDpr = { performance: 1, balanced: 1.5, sharp: 2 }[common.settings.quality] ?? 1.5;
         const assets = await loadAll(ASSET_BASE, (what) => {
           if (!cancelled) setStatus({ phase: 'loading', text: `Loading ${what}` });
-        }, { map: arena && !authored, mapId: teamMode ? mapId : 'training' });
+        }, { map: arena && !authored, mapId: GAME2_AUTHORED_MAPS[map] ? 'training' : map });
         if (cancelled) return;
         if (choice === 'online') {
           if (online.local) { // isolated localhost developer test; never on editor/live
