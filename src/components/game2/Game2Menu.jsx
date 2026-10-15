@@ -53,6 +53,7 @@ const CONTROLS = [
   ['Mind Dominance (special)', 'V at 55% of the meter: the foe in front of you (up to 15 m) turns their own lightsaber around and ignites it through themselves; Force Absorb resists it'],
   ['Combos', 'Push, then Speed: dash in front of them before they land · throw the saber, then Lightning: charge it'],
   ['Counter', 'Blocking a strike can parry the blade away (the attacker\'s arms fly up): click at once for a critical vertical strike, double damage; a killing one splits them in half'],
+  ['Force Dodge', 'Automatic: with 15 Force, a strike that gets past your guard may be flash-stepped aside (about 1 in 3), leaving afterimages; then 1.5 s before the next'],
   ['Force clash', 'Push (or Lightning) right back at someone pushing (or zapping) you: click as fast as you can for 3 s; more clicks wins'],
   ['Taunt', 'T'],
   ['Force selector', 'Mouse wheel or [ ] · F casts the highlighted power'],

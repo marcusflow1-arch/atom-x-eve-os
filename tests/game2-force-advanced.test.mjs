@@ -126,3 +126,21 @@ test('Force Absorb resists Mind Dominance (nothing spent); Force Repulse needs 8
   F.pulse = 79; assert.equal(F.startPulse(), false, 'Repulse not at 79%');
   F.pulse = 80; assert.equal(F.startPulse(), true, 'Repulse at 80%'); assert.equal(F.pulse, 0);
 });
+
+test('Force Dodge: a strike past the guard may be flash-stepped aside for 15 Force, leaving afterimages', async () => {
+  const { DODGE_COST, DODGE_DIST } = await import('../src/components/game2/engine/combat.js');
+  const g = makeGame(), P = g.player, F = g.force, foe = addFoe(g, [0, 0, 1.5], { hp: 300 }); foe.igniteNow(); run(g, 20); ready(F);
+  g.combat.dodgeChance = () => 1; g.combat.canBlock = () => false; // every strike gets past the guard; every dodge roll succeeds
+  const hp = P.hp, from = P.pos.slice();
+  assert.equal(g.combat.bladeHit(foe, P, P.chest()), 'dodged'); assert.equal(P.hp, hp, 'not hurt');
+  assert.equal(F.fp, 100 - DODGE_COST); assert.ok(P.dodge, 'flash stepping');
+  assert.ok(['BOTH_DODGE_L', 'BOTH_DODGE_R'].includes(P.actor.legs.name), 'the sidestep (' + P.actor.legs.name + ')');
+  assert.equal(g.combat.bladeHit(foe, P, P.chest()), 'dodged', 'untouchable mid-step');
+  run(g, 12);
+  const moved = Math.hypot(P.pos[0] - from[0], P.pos[2] - from[2]), toFoe = [foe.pos[0] - from[0], foe.pos[2] - from[2]], side = Math.abs((P.pos[0] - from[0]) * toFoe[1] - (P.pos[2] - from[2]) * toFoe[0]) / Math.hypot(...toFoe);
+  assert.ok(Math.abs(moved - DODGE_DIST) < 0.15, `${DODGE_DIST} m in a flash (${moved.toFixed(2)})`); assert.ok(side > 2, 'to the side');
+  assert.equal(P.dodge, null); assert.equal(P.status, 'normal'); assert.ok(P.ghosts.length >= 3, 'afterimages left behind');
+  assert.equal(g.combat.bladeHit(foe, P, P.chest()), 'hit', 'then a cooldown'); assert.ok(P.hp < hp);
+  P.dodgeReadyAt = 0; F.fp = DODGE_COST - 1; assert.equal(g.combat.bladeHit(foe, P, P.chest()), 'hit', 'not without the Force for it');
+  P.dodgeReadyAt = 0; F.fp = 100; foe.critStrike = { until: g.t + 1 }; assert.equal(g.combat.bladeHit(foe, P, P.chest()), 'hit', 'the Counter\'s critical strike cannot be dodged');
+});

@@ -38,6 +38,7 @@ export const KATA_ANIMS = Object.freeze({ 1: 'BOTH_A1_SPECIAL', 2: 'BOTH_A2_SPEC
 // The Counter (Atom X Eve): a block may parry the attacking blade away (COUNTER_CHANCE for the player, by skill for the AI),
 // leaving the attacker open for COUNTER_OPEN s; the defender's next swing is a critical vertical strike (CRIT_MUL damage)
 export const COUNTER_OPEN = 0.9, COUNTER_CHANCE = 0.25, CRIT_MUL = 2;
+export const DODGE_DASH = 0.13, GHOST_LIFE = 0.4; // Force Dodge: the flash step's length (s) and how long its afterimages last
 // Force Pull from above lifts the victim to the caster; they hang there this long (helpless: a Push now blows them away)
 export const PULL_HANG = 0.45;
 const FLIP_X = Q.axisAngle([1, 0, 0], Math.PI);
@@ -160,6 +161,22 @@ export class Fighter {
     const K = this.kicking; if (!K) return;
     if (this.status !== 'normal' || this.now >= K.until) { this.kicking = null; return; }
     if (!K.done && this.now >= K.hitAt) { K.done = true; this.g.kickHit?.(this, K.dir); }
+  }
+  // Force Dodge (Combat.tryDodge): a flash step to the side - DODGE_DASH seconds from here to `to`, untouchable, leaving
+  // afterimages of the body behind; Jedi Outcast's sidestep (BOTH_DODGE_L / _R) carries on from its lean as they land
+  startDodge(side, to) {
+    const len = this.playWhole(side < 0 ? 'BOTH_DODGE_L' : 'BOTH_DODGE_R', { blend: 0.04, speed: 1.3 }); this.legsLockUntil = this.forceUntil = this.now + Math.min(len, 0.42); this.forceHold = false;
+    this.dodge = { from: this.pos.slice(), to, t0: this.now, ghostAt: 0 }; this.ghost();
+  }
+  tickDodge() {
+    const D = this.dodge, t = this.now - D.t0; if (this.status !== 'normal' || t > DODGE_DASH + 0.1) { this.dodge = null; return; } // knocked out of it: no late teleport
+    const k = clamp(t / DODGE_DASH, 0, 1), e = 1 - (1 - k) * (1 - k) * (1 - k); // all speed at once, settling at the end
+    this.pos[0] = D.from[0] + (D.to[0] - D.from[0]) * e; this.pos[1] = D.from[1] + (D.to[1] - D.from[1]) * e; this.pos[2] = D.from[2] + (D.to[2] - D.from[2]) * e; this.vel[0] = this.vel[2] = 0;
+    if (this.now >= D.ghostAt) { D.ghostAt = this.now + 0.035; this.ghost(); }
+    if (k >= 1) this.dodge = null;
+  }
+  ghost() { // the pose of this moment, left behind (drawn by Game.drawGhosts)
+    const a = this.actor; (this.ghosts ??= []).push({ model: Float32Array.from(a.model), skin: a.skin.slice(0, a.nBones * 16), nBones: a.nBones, tint: a.tint, tintAmt: 0, t: this.g.t });
   }
   // with the saber out, a Jedi Academy kit stands, runs and walks with its own cycles
   kitAnim(an) {
@@ -348,7 +365,7 @@ export class Fighter {
   }
   die(from, opts = {}) {
     if (this.force && this.force.releaseAll) this.force.releaseAll(true);
-    this.hp = 0; this.killedBy = from || null; this.hiltPose = null; this.g.foesGen = (this.g.foesGen | 0) + 1; this.endForce(); this.cancelAttackState(); const wasFlung = this.status === 'flung'; this.status = 'dead'; this.statusT = 0; this.deadAt = this.now; if (!this.saber.holstered) { this.saber.holstered = true; this.blade.set(false); this.g.humStop && this.g.humStop(this); }
+    this.hp = 0; this.killedBy = from || null; this.hiltPose = null; this.dodge = null; this.g.foesGen = (this.g.foesGen | 0) + 1; this.endForce(); this.cancelAttackState(); const wasFlung = this.status === 'flung'; this.status = 'dead'; this.statusT = 0; this.deadAt = this.now; if (!this.saber.holstered) { this.saber.holstered = true; this.blade.set(false); this.g.humStop && this.g.humStop(this); }
     if (!wasFlung) this.playWhole(opts.deathAnim || DEATHS[Math.floor(Math.random() * DEATHS.length)], { blend: 0.08 }); else this.playWhole('BOTH_KNOCKDOWN1', { blend: 0.05 });
     this.g.onDeath && this.g.onDeath(this);
   }
@@ -369,7 +386,7 @@ export class Fighter {
   }
   // another player's game executes this fighter (RPC on their puppet of us): run our side of the same execution
   executedBy(att, kind, o = {}) { if (this.g.startExecution) this.g.startExecution(att, this, kind, { ...o, fromNet: true }); }
-  revive(at) { this.g.foesGen = (this.g.foesGen | 0) + 1; this.hiltPose = null; this.kicking = null; this.critUntil = 0; this.critAt = 0; this.critStrike = null; this.openUntil = 0; this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.pullHang = null; this.kata = null; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
+  revive(at) { this.g.foesGen = (this.g.foesGen | 0) + 1; this.hiltPose = null; this.dodge = null; this.ghosts = []; this.kicking = null; this.critUntil = 0; this.critAt = 0; this.critStrike = null; this.openUntil = 0; this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.pullHang = null; this.kata = null; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
   chest() { const y = this.status === 'down' || this.status === 'dead' ? 0.3 : this.ducked ? 0.75 : 1.15; return [this.pos[0], this.pos[1] + y, this.pos[2]]; }
   headPos() { return this.actor.bonePos('cranium', [0, 0, 0]); }
   // ---------- per-frame update
@@ -439,6 +456,7 @@ export class Fighter {
   normalUpdate(dt) {
     const c = this.cmd, a = this.actor, now = this.now, S = this.saber;
     if (this.kicking) this.tickKick();
+    if (this.dodge) this.tickDodge();
     // facing
     const diff = wrapPi(this.targetYaw - this.yaw); const rate = this.isPlayer ? 60 : (this.forceUntil > now || S.weaponTime > 0 || !S.holstered || Math.hypot(this.vel[0], this.vel[2]) > 0.5) ? 14 : 5; this.yaw += clamp(diff, -rate * dt, rate * dt);
     const frozen = this.status === 'whole';
@@ -459,7 +477,7 @@ export class Fighter {
     const crouched = this.ducked; const base = crouched ? 2.1 : c.walk ? 2.4 : 5.6; let sp = base * this.speedMul * (f < 0 ? 0.82 : 1);
     if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY) || this.tauntUntil > now) sp *= 0.0;
     if (this.kata) { f = 1; r = 0; sp = KATA_ADVANCE; } // a kata presses forward at its own pace, whatever the keys say
-    if (this.kicking) sp = 0;
+    if (this.kicking || this.dodge) sp = 0;
     if (this.elecUntil > now) sp *= 0.72;                              // lightning slows the victim (they keep control)
     const wish = [(fwd[0] * f + right[0] * r) * sp, (fwd[2] * f + right[2] * r) * sp];
     if (this.onGround) {

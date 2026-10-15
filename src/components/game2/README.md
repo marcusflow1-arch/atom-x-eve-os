@@ -131,6 +131,12 @@ with a heartbeat of slow motion; the defender's next click is a critical strike 
 stepping in, unblockable, twice the damage - and a killing one splits the victim down the middle (a vertical cut:
 the halves fall away to either side). The AI strikes on its own when it parries you. Offline modes only.
 
+**Force Dodge (`Combat.tryDodge`, `Fighter.startDodge`):** a saber strike that gets past the guard of someone with 15
+Force to spare may be sidestepped instead (30% for the player, the AI by skill; then 1.5 s before the next; the Counter's
+critical strike cannot be). It is a flash step: 2.6 m to whichever side has floor and no wall, a little away from the
+attacker, in 0.13 s - untouchable meanwhile - leaving glowing afterimages of the body behind (`Game.drawGhosts`, drawn
+additively) and landing in Jedi Outcast's sidestep (`BOTH_DODGE_L` / `_R`). Offline modes only.
+
 **Force clash (`engine/clash.js`):** two pushes meeting (you push someone who pushed, or answered a push of, you in the
 last 0.5 s), or two lightning streams meeting, lock both fighters in a clash for 3 s. Click as fast as you can: the
 energy between your hands drifts toward whoever is losing, and the one with more clicks wins; the loser is blasted away

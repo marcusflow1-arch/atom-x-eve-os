@@ -5,7 +5,7 @@ import { World } from './world.js';
 import { FX } from './fx.js';
 import { Sfx } from './audio.js';
 import { Input } from './input.js';
-import { Fighter, WALL_SLAM_SPEED } from './fighter.js';
+import { Fighter, WALL_SLAM_SPEED, GHOST_LIFE } from './fighter.js';
 import { Force, SELECT_ORDER, SELECT_ALL, FORCE_QUICK_BINDINGS, THROW_COST, PULSE_PER_HP, PULSE_PER_KILL } from './force.js';
 import { STYLE_NAMES } from './saber.js';
 import { resolveThrow, KNOCKDOWN_DIST } from './forcerules.js';
@@ -682,10 +682,19 @@ export class Game {
     if (this.world.level) { const gy = this.world.floorAt(f.pos[0], f.pos[2], f.pos[1] + 0.3), h = gy === null ? 9 : f.pos[1] - gy; if (h < 3) this.fx.disc([f.pos[0], gy + 0.03, f.pos[2]], sh * (1 - Math.min(0.5, h * 0.15)), [0, 0, 0, 0.42], 1); } // the floor under them (none over a chasm)
     else if (f.pos[1] < 3) this.fx.disc([f.pos[0], 0, f.pos[2]], sh * (1 - Math.min(0.5, f.pos[1] * 0.15)), [0, 0, 0, 0.42], 1);
   }
+  // Force Dodge afterimages: the poses a flash step left behind, glowing and fading (additive, after the solid bodies)
+  drawGhosts(f) {
+    const R = this.R, gl = R.gl, mesh = !f.isPlayer && v3.dist(this.cam.eye, f.pos) > 9 ? this.lodMesh : this.bodyMesh;
+    f.ghosts = f.ghosts.filter(gh => this.t - gh.t < GHOST_LIFE); if (!f.ghosts.length) return;
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
+    for (const gh of f.ghosts) R.drawSkinned(mesh, gh, { tint: [0.5, 0.75, 1], tintAmt: 0.85, glow: 0.4, alpha: 0.42 * (1 - (this.t - gh.t) / GHOST_LIFE) });
+    gl.depthMask(true); gl.disable(gl.BLEND);
+  }
   render() {
     const R = this.R, c = this.cam; R.resize(); R.time = this.t; this.setLights(); R.setCamera(c.eye, c.target, c.fov); R.begin();
     this.world.draw();
     const all = this.attract ? this.npcs : this.fighters(); for (const f of all) this.drawFighter(f);
+    for (const f of all) if (f.ghosts && f.ghosts.length) this.drawGhosts(f);
     this.combat.drawRemote(R);
     for (const b of this.world.braziers) R.billboard([b[0], b[1] + 0.35, b[2]], 0.9 + 0.1 * Math.sin(this.t * 13 + b[0]), [1, 0.5, 0.15, 0.22], 0);
     if (this.scorches) for (const m of this.scorches) { const a = Math.min(1, (8 - m.t) / 2); this.fx.disc(m.p, m.r, [0.04, 0.03, 0.03, 0.55 * a], 1); if (m.t < 0.6) this.fx.disc(m.p, m.r * 0.7, [m.c[0], m.c[1], m.c[2], 0.9 * (1 - m.t / 0.6)], 0); }

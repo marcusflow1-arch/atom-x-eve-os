@@ -4,6 +4,8 @@
 import { v3, clamp, lerp } from './math.js';
 import { geo } from './gl.js';
 import { THROW_LODGE_DPS, THROW_HIT, THROW_DAMAGE_MUL, KATA_DAMAGE, COUNTER_OPEN, COUNTER_CHANCE, CRIT_MUL } from './fighter.js';
+// Force Dodge: a strike that gets past the guard of someone with the Force for it may be sidestepped (a flash step)
+export const DODGE_CHANCE = 0.3, DODGE_COST = 15, DODGE_CD = 1.5, DODGE_DIST = 2.6;
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const BLOCKS = ['block1', 'block2', 'block3', 'block4', 'block5', 'block6', 'block7', 'block8', 'block9'];
@@ -124,7 +126,7 @@ export class Combat {
         const wk = A.name + '>' + B.name; if ((wound.get(wk) ?? -1) > g.t) continue;
         let hit = null; for (let k = 0; k < segs.length && !hit; k++) hit = sweptBladeContact(prevs[k], segs[k], B._prevCap, caps.get(B));
         if (!hit) continue;
-        if (attacking) { const r = this.bladeHit(A, B, hit.a); wound.set(wk, A.kata ? (A.kata.anim ? g.t + 0.45 : Math.max(g.t + 0.1, A.saber.moveStart + A.saber.moveLen / 1000)) : g.t + (r === 'blocked' ? 0.3 : 0.1)); } // a kata swing wounds each target once (a Jedi Academy kata: at most every 0.45 s)
+        if (attacking) { const r = this.bladeHit(A, B, hit.a); wound.set(wk, A.kata ? (A.kata.anim ? g.t + 0.45 : Math.max(g.t + 0.1, A.saber.moveStart + A.saber.moveLen / 1000)) : g.t + (r === 'blocked' || r === 'dodged' ? 0.3 : 0.1)); } // a kata swing wounds each target once (a Jedi Academy kata: at most every 0.45 s)
         else if (this.touchHit) { this.touchHit(A, B, hit.a); wound.set(wk, g.t + 0.2); }
       }
       // remote droid
@@ -172,6 +174,7 @@ export class Combat {
   }
   bladeHit(A, B, pt) {
     const g = this.g, I = A.saber.I, m = A.saber.move, crit = A.critStrike && A.critStrike.until > g.t;
+    if (B.dodge) return 'dodged'; // mid flash step: not there to be hit
     const unblockable = crit || (!!I && (m === I.LS_A_BACK || m === I.LS_A_BACK_CR || m === I.LS_A_BACKSTAB || m === I.LS_A_JUMP_T__B_)); // w_saber.c; the Counter's strike
     if (!unblockable && this.canBlock(B, A.pos) && Math.random() < this.blockProb(B) - (A.kata ? 0.25 : 0)) { // blocked (a kata is harder to parry)
       g.fx.sparks(pt, [0, 1, 0], 14, [1, 0.9, 0.55, 1]); g.sfxAt(BLOCKS[Math.floor(Math.random() * BLOCKS.length)], pt, 1); g.flashLight(pt, A.blade.color, 0.2);
@@ -180,9 +183,31 @@ export class Combat {
       else if (!A.remote && !B.remote && !A.kata && A.status === 'normal' && B.status === 'normal' && Math.random() < this.counterChance(B)) this.counterParry(A, B, pt); // the Counter
       return 'blocked';
     }
+    if (!crit && this.tryDodge(A, B)) return 'dodged'; // the Counter's strike cannot be dodged
     const bonus = A.interceptBonusUntil > g.t && (B.status === 'flung' || B.status === 'down' || B.status === 'getup') ? (A.interceptBonus || 1) : 1; // Push + Speed intercept
     this.damage(A, B, pt, this.bladeDamage(A) * (B.hasSaber ? 1 : 1.5) * bonus, { spark: true, saber: true, crit }); // non-Jedi take 1.5x (w_saber.c)
     return 'hit';
+  }
+  // Force Dodge: the player DODGE_CHANCE, the AI by skill; DODGE_COST Force, then DODGE_CD before the next one. Offline.
+  dodgeChance(B) { return B.isPlayer ? DODGE_CHANCE : 0.06 + 0.2 * (B.blockSkill ?? 0.5); }
+  tryDodge(A, B) {
+    const g = this.g, F = g.forceOf && g.forceOf(B);
+    if (g.net || A.remote || B.remote || !F || F.fp < DODGE_COST || F.holding || B.status !== 'normal' || !B.onGround || B.kata || B.kicking || B.dodge || B.executing) return false;
+    if ((B.dodgeReadyAt ?? 0) > g.t || B.saber.isActiveSwing() || Math.random() >= this.dodgeChance(B)) return false;
+    const away = v3.norm([B.pos[0] - A.pos[0], 0, B.pos[2] - A.pos[2]]), lat = [away[2], 0, -away[0]], right = [-Math.cos(B.yaw), 0, Math.sin(B.yaw)];
+    for (const s of Math.random() < 0.5 ? [1, -1] : [-1, 1]) { // whichever side has floor and no wall
+      const d = v3.norm([lat[0] * s + away[0] * 0.3, 0, lat[2] * s + away[2] * 0.3]), to = v3.addS(B.pos, d, DODGE_DIST), mid = v3.addS(B.pos, d, DODGE_DIST / 2);
+      const fl = g.world.floorAt(to[0], to[2], B.pos[1] + 1), fm = g.world.floorAt(mid[0], mid[2], B.pos[1] + 1);
+      if (fl === null || fm === null || Math.abs(fl - B.pos[1]) > 0.5 || Math.abs(fm - B.pos[1]) > 0.5) continue;
+      const c = [to[0], fl, to[2]]; g.world.collide(c, B.radius); if (Math.hypot(c[0] - to[0], c[2] - to[2]) > 0.05) continue;
+      F.fp -= DODGE_COST; B.dodgeReadyAt = g.t + DODGE_CD;
+      B.startDodge(v3.dot(d, right) >= 0 ? 1 : -1, [to[0], fl, to[2]]);
+      g.sfxAt('swing2', B.pos, 0.9); g.sfxAt('swing1', to, 0.5);
+      g.fx.ring({ p: [B.pos[0], B.pos[1] + 0.05, B.pos[2]], n: [0, 1, 0], r0: 0.25, r1: 1.1, life: 0.3, w: 0.06, c: [0.7, 0.85, 1, 0.7] });
+      if (B.isPlayer) g.hud.msg('Force Dodge'); else if (A.isPlayer) g.hud.msg(B.label + ' dodged');
+      return true;
+    }
+    return false;
   }
   // the Counter: a block that parries the blade away. The player COUNTER_CHANCE (more mid-parry), the AI by skill
   counterChance(B) { const S = B.saber; return (B.isPlayer ? COUNTER_CHANCE : 0.08 + 0.17 * (B.blockSkill ?? 0.5)) + (S.inParry(S.move) || S.inReflect(S.move) ? 0.1 : 0); }
