@@ -32,6 +32,8 @@ import { subscribeAXESockets } from './axe/equipment/AXESocketGemStore';
 import { subscribeAXEAura } from './axe/equipment/AXEEquipmentAuraStore';
 import { getActiveAXEAdvancedClassRuntime, applyAXEAdvancedClassDerivedMultipliers } from './talents/AXEAdvancedClassRuntime';
 import { subscribeAdvancedClass } from './talents/advancedClassStore';
+import { getAXEWeaponAffinityProfile, subscribeAXEWeaponAffinity } from './axe/weapons/AXEWeaponAffinityStore';
+import { applyAXEWeaponAffinityToDerived } from './axe/weapons/AXEWeaponArchetypes';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -131,6 +133,7 @@ const getBonuses = () => {
     equipmentMultipliers: equipment.multipliers,
     advancedClassMultipliers: advancedClass.multipliers,
     advancedClassCombat: advancedClass.combat,
+    weaponAffinity: getAXEWeaponAffinityProfile(),
     equipmentDebug: equipment,
     advancedClassDebug: advancedClass,
   };
@@ -152,7 +155,8 @@ const computeDerivedWithVanity = (baseStats, bonuses) => {
     : preliminary;
   const withVanity = applyAXEVanityActivationToDerived(withSpirit, bonuses.vanityActivation);
   const withEquipment = applyAXEEquipmentFinalMultipliers(withVanity, bonuses.equipmentMultipliers);
-  return applyAXEAdvancedClassDerivedMultipliers(withEquipment, bonuses.advancedClassMultipliers);
+  const withClass = applyAXEAdvancedClassDerivedMultipliers(withEquipment, bonuses.advancedClassMultipliers);
+  return applyAXEWeaponAffinityToDerived(withClass, bonuses.weaponAffinity); // the weapon in hand's archetype passive, doubled when specialized
 };
 
 const buildDefault = () => {
@@ -430,6 +434,7 @@ subscribeAXEItemAdvancement(recomputeFromBonuses);
 subscribeAXESockets(recomputeFromBonuses);
 subscribeAXEAura(recomputeFromBonuses);
 subscribeAdvancedClass(recomputeFromBonuses);
+subscribeAXEWeaponAffinity(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {

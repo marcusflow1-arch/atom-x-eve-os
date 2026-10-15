@@ -93,9 +93,33 @@ without touching existing saves or balance. "Migration" changes existing progres
 |---|---|---|
 | Sumi-e ink look | No ink or paper shading found in Game 3D. Game 5's systems UI uses a sumi-e palette | **Missing** (rendering work, D7) |
 
+## 11. v3 additions (owner's expanded blueprint, 2026-10-15)
+
+The owner's third version adds the following. v1 governs where versions conflict (owner: 200% over-enchant, Stage 20).
+
+| Blueprint v3 | Game 3D today | Status |
+|---|---|---|
+| Central buff/state container recalculating on Weapon Switch / Mount Fusion / Ascension / Imbuement events | `playerHUDStore.jsx` already aggregates ~15 bonus providers and recomputes on each one's change event | **Present** (new systems plug in as providers) |
+| Weapon Affinity: specialize in one archetype, its passive doubles (2×) | Delivered in slice A (below) | **Done** |
+| Taurus Chosen Ascension: Destroyer (1.5× skill damage, shockwaves) / Balanced (0 s swap GCD, +20% stats) / Defensive (30% damage as party shield, 1.5× defense); levitation; Angel Cloak | `AXE_POWER_TIERS` lists an Ascension tier (label only) | **Missing** |
+| 5-piece sets: Rare +100%, Elite +110%, Taurus Chosen Word +150% (+25% crit / crit defense, +10 skill points, +50% skill damage) | `AXESetBonusSystem.js` grades rare / elite / heroic | Partial / different |
+| Mount energy imbuement 0–120 on armor, weapons and rings; energy flowing in the gaps; feather drops and aura pulse at the maximum | Nothing | **Missing** (needs the gear visual layers) |
+| Companion armor over-enchant: 20% passive + 20% in fusion = 40% stat transfer | Companion gear and fusion exist (`equipment/Companion*`, `companionFusionStore.jsx`) | Not compared yet |
+| Soul skill transformations: 1 → 2-hit spectral strike, 3 → 5-hit flurry, AoE → double AoE (the second rolls crit independently) | Nothing | **Missing** |
+| Outfits with static stats and a show/hide hotkey | `AXECostumeStore.js`: costume bonuses and `setAXECostumeHidden` | Present (hotkey not checked) |
+
+## Delivered
+
+- **Slice A, weapons (2026-10-15):** five archetypes beside the existing three roles (`axe/weapons/AXEWeaponArchetypes.js`);
+  Weapon Affinity 2× as the final derived-stat stage (`AXEWeaponAffinityStore.js` → `playerHUDStore.jsx`) and in
+  movement (`weaponClassCombatHelpers.jsx`); two quick-switch slots on Shift+1 / Shift+2
+  (`AXEWeaponQuickSwitchMount.jsx`, mounted in `GameView.jsx`); a Character Hub view, Weapon Mastery →
+  Affinity & Quick-Switch (`progression/hub/WeaponAffinityPanel.jsx`). Report:
+  [reports/WUXIA-A-weapons.md](reports/WUXIA-A-weapons.md).
+
 ## Decisions the owner must make
 
-- **D1:** which version governs where they disagree: v1 (200% enchant, Stage 20, halo +96) or v2 (120% cap, Stage 25)? Game 3D today: 120% enchant, Stage V/refine 15, halo 0–200. Changing a cap is a migration.
+- **D1 (answered 2026-10-15): v1 governs** (200% over-enchant, Stage 20). Game 3D today: 120% enchant, Stage V/refine 15, halo 0–200, so adopting v1 caps is a save migration and needs a backup and rollback plan first.
 - **D2:** move items from 5 rarities to the blueprint's 7? This changes existing item data.
 - **D3:** replace "Faction 1–3" with Celestial Order / Shadow Syndicate / Elemental Dominion, with their stat bias?
 - **D4:** reclassify dual blades from *defensive* to the *multi-hit combo* archetype, and add close-combat and single-hit burst families? This changes current combat roles.
