@@ -6,26 +6,47 @@ import { m4, q as Q, clamp } from './math.js';
 
 const gx = v => [v[0], v[2], -v[1]]; // G2 (X left, Y back, Z up) -> glTF (X left, Y up, Z front)
 
-// Animations derived from the bank at load (appended after it, before any optional local bank, so indices match for
-// every player). G2_FORCEPUSH_2H: Jedi Outcast's Force Push is one-handed (the left hand; the right holds the saber);
-// the fully charged push gives the right arm the mirror image of the left one. Every arm bone's rotation is relative to
-// the thoracic bone and the rest pose is symmetric, so the mirror across the body's left / right plane (G2 axes: X left)
-// is per bone: (w, x, y, z) -> (w, x, -y, -z).
+// Animations derived from the bank at load: no extra data is shipped, and every player builds the same ones in the same
+// order (appended after the bank, before any optional local bank), so indices match online. Every arm bone's rotation is
+// relative to the thoracic bone and the rest pose is symmetric, so the mirror across the body's left / right plane (G2
+// axes: X left) is per bone: (w, x, y, z) -> (w, x, -y, -z).
+//   G2D_<anim>       dual sabers without Jedi Academy's set: each Fast-style move (and its stance) with the left arm
+//                    mirroring the right one DUAL_LAG frames behind, so the second saber strikes the mirrored arc a beat
+//                    later, and swung out from the shoulder (DUAL_SPREAD) so the two hands work apart, as in Jedi Academy's
+//                    dual style (about a third of a metre to each side) instead of meeting in the middle
+//   G2_FORCEPUSH_2H  Jedi Outcast's Force Push is one-handed (the left hand; the right holds the saber); the fully charged
+//                    push gives the right arm the mirror image of the left one (appended last)
 const MIRROR_ARM = /^(r(clavical|humerus|humerusX|radius|radiusX|hand)|r_d\d_j\d)$/;
+export const DUAL_FAMILY = /^BOTH_([ATSRPBDKVH])1_|^BOTH_SABERFAST_STANCE$/, DUAL_LAG = 2;
+const qmulW = (a, b) => [a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3], a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2], a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1], a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0]]; // (w, x, y, z)
+const axisW = (i, deg) => { const h = deg * Math.PI / 360, r = [Math.cos(h), 0, 0, 0]; r[1 + i] = Math.sin(h); return r; };
+export const DUAL_SPREAD = qmulW(axisW(2, 65), qmulW(axisW(1, -55), axisW(0, 55))); // thoracic space (G2: X left, Y back, Z up), below the shoulder: one saber high across the body, the other out low (tuned against the real hilt grip)
 export function withDerivedAnims(rigJson, bank) {
-  const R = rigJson.rig, NB = R.nBones, names = R.g2Bones, src = rigJson.anims.find(a => a.name === 'BOTH_FORCEPUSH');
-  if (!src || rigJson.anims.some(a => a.name === 'G2_FORCEPUSH_2H')) return { rigJson, bank };
-  const idx = Object.fromEntries(names.map((n, i) => [n, i]));
-  const pairs = names.map((n, i) => MIRROR_ARM.test(n) ? [i, idx['l' + n.slice(1)]] : null).filter(p => p && p[1] != null);
-  const F0 = bank.q.length / (NB * 4), n = src.n, q = new Int16Array(bank.q.length + n * NB * 4), pel = new Float32Array(bank.pel.length + n * 3);
+  if (rigJson.anims.some(a => a.name === 'G2_FORCEPUSH_2H')) return { rigJson, bank };
+  const R = rigJson.rig, NB = R.nBones, names = R.g2Bones, idx = Object.fromEntries(names.map((n, i) => [n, i]));
+  const arm = names.map((n, i) => MIRROR_ARM.test(n) ? [i, idx['l' + n.slice(1)]] : null).filter(p => p && p[1] != null); // [right, left]
+  const spread = new Set(arm.filter(([r]) => names[r] !== 'rclavical').map(([, l]) => l)); // the left arm from the shoulder down
+  const jobs = rigJson.anims.filter(a => DUAL_FAMILY.test(a.name) && !a.ja).map(src => ({ src, name: 'G2D_' + src.name, toLeft: true, lag: DUAL_LAG, loop: src.loop, turn: DUAL_SPREAD }));
+  const push = rigJson.anims.find(a => a.name === 'BOTH_FORCEPUSH'); if (push) jobs.push({ src: push, name: 'G2_FORCEPUSH_2H', toLeft: false, lag: 0, loop: -1 });
+  if (!jobs.length) return { rigJson, bank };
+  const F0 = bank.q.length / (NB * 4), total = jobs.reduce((s, j) => s + j.src.n, 0);
+  const q = new Int16Array(bank.q.length + total * NB * 4), pel = new Float32Array(bank.pel.length + total * 3), anims = [...rigJson.anims];
   q.set(bank.q); pel.set(bank.pel);
-  for (let k = 0; k < n; k++) {
-    const s = (src.first + k) * NB * 4, d = (F0 + k) * NB * 4;
-    q.set(bank.q.subarray(s, s + NB * 4), d);
-    for (const [r, l] of pairs) { const o = s + l * 4, t = d + r * 4; q[t] = bank.q[o]; q[t + 1] = bank.q[o + 1]; q[t + 2] = -bank.q[o + 2]; q[t + 3] = -bank.q[o + 3]; }
-    pel.set(bank.pel.subarray((src.first + k) * 3, (src.first + k) * 3 + 3), (F0 + k) * 3);
+  let F = F0;
+  for (const { src, name, toLeft, lag, loop, turn } of jobs) {
+    for (let k = 0; k < src.n; k++) {
+      const s = (src.first + k) * NB * 4, m = (src.first + Math.max(0, k - lag)) * NB * 4, d = (F + k) * NB * 4;
+      q.set(bank.q.subarray(s, s + NB * 4), d);
+      for (const [r, l] of arm) {
+        const o = m + (toLeft ? r : l) * 4, t = d + (toLeft ? l : r) * 4; let v = [bank.q[o], bank.q[o + 1], -bank.q[o + 2], -bank.q[o + 3]]; // mirrored across the body: (w, x, -y, -z)
+        if (turn && spread.has(l)) { v = qmulW(turn, v.map(x => x / 32767)).map(x => Math.max(-32767, Math.min(32767, Math.round(x * 32767)))); }
+        q.set(v, t);
+      }
+      pel.set(bank.pel.subarray((src.first + k) * 3, (src.first + k) * 3 + 3), (F + k) * 3);
+    }
+    anims.push({ name, first: F, n: src.n, loop, fps: src.fps }); F += src.n;
   }
-  return { rigJson: { ...rigJson, rig: { ...R, nFrames: F0 + n }, anims: [...rigJson.anims, { name: 'G2_FORCEPUSH_2H', first: F0, n, loop: -1, fps: src.fps }] }, bank: { q, pel } };
+  return { rigJson: { ...rigJson, rig: { ...R, nFrames: F }, anims }, bank: { q, pel } };
 }
 
 export class Skeleton {            // shared, immutable data

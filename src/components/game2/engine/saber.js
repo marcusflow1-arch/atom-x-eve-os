@@ -24,6 +24,7 @@ export class SaberLogic {
     this.attackStartedAt = -1; this.moveAnim = null; this.moveStart = 0; this.moveLen = 0;
     this.rageMul = 1;
     this.animLevel = 0; // 6 dual sabers, 7 saberstaff (Jedi Academy sets), 0 the stance's own animations
+    this.derivedKit = null; // 'dual': no Jedi Academy set, so the Fast style's moves with the left arm mirroring (actor.js G2D_)
   }
   // --- predicates (bg_panimate.c)
   inAttack(m) { const I = this.I; return (m >= I.LS_A_TL2BR && m <= I.LS_A_T2B) || this.inSpecial(m); }
@@ -37,7 +38,11 @@ export class SaberLogic {
   inReturn(m) { const I = this.I; return m >= I.LS_R_TL2BR && m <= I.LS_R_T2B; }
   isActiveSwing() { return this.inAttack(this.move) || this.inStart(this.move) || this.inTransition(this.move); }
   isDownSlash(m) { const I = this.I; return m === I.LS_A_T2B || m === I.LS_A_TL2BR || m === I.LS_A_TR2BL; }
-  stanceAnim() { const k = KIT_STANCES[this.animLevel]; if (k && this.host.hasAnim(k)) return k; return this.level === 2 ? 'BOTH_STAND2' : this.level === 3 ? 'BOTH_SABERSLOW_STANCE' : 'BOTH_SABERFAST_STANCE'; }
+  stanceAnim() {
+    const k = KIT_STANCES[this.animLevel]; if (k && this.host.hasAnim(k)) return k;
+    const a = this.level === 2 ? 'BOTH_STAND2' : this.level === 3 ? 'BOTH_SABERSLOW_STANCE' : 'BOTH_SABERFAST_STANCE';
+    return this.derivedKit === 'dual' && this.host.hasAnim('G2D_' + a) ? 'G2D_' + a : a;
+  }
   kataDone() { const r = (a, b) => a + Math.floor(Math.random() * (b - a + 1)); return (this.level >= 3 && this.chain > r(0, 1)) || (this.level === 2 && this.chain > r(2, 5)); }
   // anim name for a move at the current style level
   animFor(move) {
@@ -50,6 +55,7 @@ export class SaberLogic {
       const cand = a.replace(/^BOTH_([ABDSR])1_/, (s, g) => 'BOTH_' + g + lv + '_');
       if (cand !== a && this.host.hasAnim(cand)) a = cand;
     }
+    if (this.derivedKit === 'dual' && H.hasAnim('G2D_' + a)) return 'G2D_' + a; // both sabers: the left arm mirrors the right
     return a;
   }
   // PM_SetSaberMove

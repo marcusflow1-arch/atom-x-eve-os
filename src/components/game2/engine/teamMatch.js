@@ -155,9 +155,9 @@ export class Game2TeamMatch {
     }
     g.hud.msg('Free for All · ' + n + ' fighters · first to ' + this.config.fragTarget + ' · ' + this.mapLabel());
   }
-  // with the local Jedi Academy animations (their own dual and staff sets), a quarter of the bots fight with dual sabers and
-  // a quarter with a saberstaff; without them every bot keeps a single saber
-  botKit(f, i) { if (this.g.skel?.rigJson?.jaAnims && f.setSaberKit) f.setSaberKit(['single', 'dual', 'single', 'staff'][i % 4]); }
+  // a quarter of the bots fight with dual sabers and a quarter with a saberstaff: Jedi Academy's own sets with the local
+  // animations, else the ones derived from Jedi Outcast's (actor.js G2D_, Fighter.twirlStaff)
+  botKit(f, i) { const sk = this.g.skel; if ((sk?.rigJson?.jaAnims || sk?.anims?.G2D_BOTH_A1_T__B_) && f.setSaberKit) f.setSaberKit(['single', 'dual', 'single', 'staff'][i % 4]); }
   // a Free for All (re)spawn point: the arena's spawn point furthest from everyone alive (a little random), or near a home
   pickSpawn(f) {
     const g = this.g, pts = g.world.level?.ffaSpawns;

@@ -38,7 +38,8 @@ export const KATA_ANIMS = Object.freeze({ 1: 'BOTH_A1_SPECIAL', 2: 'BOTH_A2_SPEC
 // The Counter (Atom X Eve): a block may parry the attacking blade away (COUNTER_CHANCE for the player, by skill for the AI),
 // leaving the attacker open for COUNTER_OPEN s; the defender's next swing is a critical vertical strike (CRIT_MUL damage)
 export const COUNTER_OPEN = 0.9, COUNTER_CHANCE = 0.25, CRIT_MUL = 2;
-export const DODGE_DASH = 0.13, GHOST_LIFE = 0.4; // Force Dodge: the flash step's length (s) and how long its afterimages last
+export const DODGE_DASH = 0.13, GHOST_LIFE = 0.4;
+export const STAFF_TWIRL = 15; // rad/s: the saberstaff without Jedi Academy's set spins about a turn through each attack // Force Dodge: the flash step's length (s) and how long its afterimages last
 // Force Pull from above lifts the victim to the caster; they hang there this long (helpless: a Push now blows them away)
 export const PULL_HANG = 0.45;
 const FLIP_X = Q.axisAngle([1, 0, 0], Math.PI);
@@ -115,7 +116,11 @@ export class Fighter {
     if (s.holstered) { s.holstered = false; s.setMove(I.LS_DRAW, this.now); s.weaponTime = s.torsoTimer; this.after(0.32, () => { this.hilt = 'hand'; this.blade.set(true); this.g.sfxAt('saberon', this.pos, 0.8); this.g.humStart(this); }); }
     else { s.setMove(I.LS_PUTAWAY, this.now); s.weaponTime = s.torsoTimer; this.after(0.42, () => { this.blade.set(false); this.g.sfxAt('saberoff', this.pos, 0.8); this.g.humStop(this); this.hilt = 'hand'; }); this.after(0.62, () => { this.hilt = 'thigh'; s.holstered = true; s.move = I.LS_READY; s.weaponTime = 0; if (!this.forceUntil) { this.actor.followLegs(); this.actor.torso.cur = null; } }); }
   }
-  setStyle(lv) { this.saber.level = lv; if (!this.saber.holstered && this.saber.weaponTime <= 0 && this.saber.move === this.saber.I.LS_READY) this.saber.setMove(this.saber.I.LS_READY, this.now); }
+  // a saber kit fights in its own style: Jedi Academy's dual / staff sets at medium weight; without them both use Jedi
+  // Outcast's one-handed Fast style - dual sabers with the derived left arm (actor.js G2D_), the staff held at the middle
+  // and spun through each attack (twirlStaff)
+  kitStyle() { return this.saberKit === 'single' ? 0 : this.saber.animLevel ? 2 : 1; }
+  setStyle(lv) { this.saber.level = this.kitStyle() || lv; if (!this.saber.holstered && this.saber.weaponTime <= 0 && this.saber.move === this.saber.I.LS_READY) this.saber.setMove(this.saber.I.LS_READY, this.now); }
   bladeSeg() { return this.blade.len > 0.3 ? [this.blade.base, this.blade.tip] : null; }
   // every ignited blade: the second one comes with dual sabers or a saberstaff
   bladeSegs() { const out = []; if (this.blade.len > 0.3) out.push([this.blade.base, this.blade.tip]); if (this.blade2 && this.blade2.len > 0.3) out.push([this.blade2.base, this.blade2.tip]); return out; }
@@ -123,11 +128,11 @@ export class Fighter {
     this.saberKit = SABER_KITS.includes(kit) ? kit : 'single';
     // Jedi Academy's own dual (6) / staff (7) set when the local bank has it (its first attack is there); else Jedi Outcast's
     const S = this.saber, al = { dual: 6, staff: 7 }[this.saberKit] || 0; S.animLevel = al && this.actor.skel.anims['BOTH_A' + al + '_T__B_'] ? al : 0;
+    S.derivedKit = S.animLevel ? null : this.saberKit === 'dual' && this.actor.skel.anims.G2D_BOTH_A1_T__B_ ? 'dual' : this.saberKit === 'staff' ? 'staff' : null; // without Jedi Academy's sets
     if (this.saberKit === 'single') { this.blade2 = null; this.hilt2Mat = null; return; }
     if (!this.blade2) { this.blade2 = new Blade(this.blade.color); this.hilt2Mat = new Float32Array(16); }
     this.blade2.color = this.blade.color;
-    if (S.animLevel) this.setStyle(2); // the kit is its own style (medium weight)
-    else if (this.saberKit === 'dual') this.setStyle(1); // the Fast stance is one-handed: the left hand is free for the second saber
+    this.setStyle(this.kitStyle());
   }
   // the Counter (combat.js counterParry): parried away, the saber thrown up over the head (the strong style's broken top
   // parry, held), unable to guard or act for `sec` s
@@ -665,6 +670,14 @@ export class Fighter {
     const lit2 = this.blade.lit && !this.hiltPose; if (B2.lit !== lit2) B2.set(lit2); B2.color = this.blade.color; // turned on its owner: only the one blade
     B2.update(dt, M2, len, 1, this.now); B2.trailOn = this.blade.trailOn;
   }
+  // the saberstaff without Jedi Academy's set, held one-handed at the middle (Darth Maul's way): it spins in the hand through
+  // every attack and, between them, finishes on the next half turn (half a turn round, a staff looks the same)
+  twirlStaff(dt, M) {
+    let a = this.twirl || 0;
+    if (this.swingActive()) a += STAFF_TWIRL * dt;
+    else if (a) { const stop = Math.ceil(a / Math.PI - 1e-6) * Math.PI; a += STAFF_TWIRL * dt; if (a >= stop) a = 0; }
+    this.twirl = a % (2 * Math.PI); if (this.twirl) m4.mul(M, m4.trs([0, 0, 0], Q.axisAngle([0, 0, 1], this.twirl), [1, 1, 1]), M);
+  }
   updateHilt(dt) {
     const A = this.g.attach, a = this.actor; let M = this.hiltMat;
     if (this.hiltPose) { M.set(this.hiltPose); this.hiltScaleY = 1; } // posed by someone else (Mind Dominance turns it on its owner)
@@ -674,6 +687,7 @@ export class Fighter {
       const T = this.thrown, d = [Math.cos(T.ang), 0, Math.sin(T.ang)]; const Y = v3.scale(d, -1), X = v3.norm(v3.cross([0, 1, 0], Y)), Z = v3.cross(X, Y);
       M.fill(0); M[0] = X[0]; M[1] = X[1]; M[2] = X[2]; M[4] = Y[0]; M[5] = Y[1]; M[6] = Y[2]; M[8] = Z[0]; M[9] = Z[1]; M[10] = Z[2]; M[12] = T.pos[0]; M[13] = T.pos[1]; M[14] = T.pos[2]; M[15] = 1; this.hiltScaleY = 1;
     }
+    if (this.hilt === 'hand' && !this.hiltPose && this.saber.derivedKit === 'staff') this.twirlStaff(dt, M);
     // the torso aim (Actor spineYaw / spinePitch) already turns the arm, so blade and hit test follow the mouse
     this.blade.update(dt, M, this.g.attach.hiltLen * (this.hiltScaleY || 1), 1, this.now);
     if (this.blade2) this.updateHilt2(dt, M);
