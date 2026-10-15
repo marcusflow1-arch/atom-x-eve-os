@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Loader2, Menu, Swords, Users } from 'lucide-react';
 import { getAccessToken } from '@base44/sdk';
+import { base44 } from '@/api/base44Client';
+import { selectGame1CombatTrack } from './engine/combatTrack.js';
 import { appParams } from '@/lib/app-params';
 import { game2RailwayUrl } from './net/railway.js';
 import Game2Lobby from './Game2Lobby';
@@ -88,6 +90,13 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
     const arena = choice !== 'single';
     const authored = teamMode && !!GAME2_AUTHORED_MAPS[mapId]; // a large authored level instead of a BSP
     const common = { sfxBase: `${ASSET_BASE}sfx/`, settings: loadSettings(), saber };
+    // Game 1's combat music is stored as HeroBackground "Combat 2" (then
+    // "Combat"). Resolve it without delaying Game 2's gameplay or asset load.
+    // The engine gets only the URL: music controllers do not share instances.
+    const combatTrackRequest = Promise.resolve()
+      .then(() => base44.entities.HeroBackground.list())
+      .then(selectGame1CombatTrack)
+      .catch(() => null);
     let engineOptions = teamMode
       ? { mode: choice, mapId, ...common }
       : duel
@@ -125,6 +134,9 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
           }
         }
         game = new Game(renderer, assets, canvas, hud, engineOptions);
+        combatTrackRequest.then((url) => {
+          if (!cancelled && game && url) game.setCombatTrackUrl(url);
+        });
         if (import.meta.env?.DEV) window.__game2 = game; // development builds only: lets local tests stage scenes
         if (choice !== 'online') setStatus({ phase: 'ready', text: '' });
         // Online play must not look connected until the shared arena welcomes this player.
