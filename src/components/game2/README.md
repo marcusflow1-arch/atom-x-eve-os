@@ -116,6 +116,12 @@ them; a Force Push launches them). X unleashes Force Repulse once its meter (fil
 way Starkiller does it: you rise, curl into a ball while the Force gathers, then burst open with your arms flung wide;
 everyone within 7 m is blasted outward and disintegrates in the air, and you float back down.
 
+**Force clash (`engine/clash.js`):** two pushes meeting (you push someone who pushed, or answered a push of, you in the
+last 0.5 s), or two lightning streams meeting, lock both fighters in a clash for 3 s. Click as fast as you can: the
+energy between your hands drifts toward whoever is losing, and the one with more clicks wins; the loser is blasted away
+(or electrocuted and thrown down), a tie throws both back, and anyone else's hit breaks it. AI fighters who keep their
+feet often push back, and click at their own pace. Offline modes only.
+
 **Combos:** Jump and Pull a foe below you: they are lifted up in front of you and hang there for a moment; Push them then
 and they are blown away with the Force Push knockdown (any foe flying helplessly is). Push then Speed (6) dashes you in front of the pushed foe as they hit the ground, with a bonus hit. Lightning
 while your saber is thrown charges it: the lightning spreads around it as it flies (and drains Force much faster).

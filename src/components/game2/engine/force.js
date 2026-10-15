@@ -487,6 +487,7 @@ export class Force {
     // Re-evaluate the lock as opponents move or die; the visual bolts use the
     // same target selection on their next refresh.
     this.ltTargets = this.cone(14, 65, { npcOnly: true }).filter(h => hostile(this.p, h.t.ref)).slice(0, 1);
+    const lv = this.ltTargets[0]?.t.ref; if (lv && g.tryClash?.(p, lv, 'lightning')) return; // their lightning meets yours: a Force clash
     for (const h of (this.ltTargets || [])) {
       const t = h.t;
       if (t.type === 'npc') {

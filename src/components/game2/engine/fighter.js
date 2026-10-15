@@ -365,6 +365,7 @@ export class Fighter {
         this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
       }
       case 'executing': case 'executed': return this.finish(dt); // an execution moves and animates both (executions.js)
+      case 'clash': this.vel[0] = this.vel[2] = 0; return this.finish(dt); // locked in a Force clash (clash.js)
       case 'flung': this.physicsFlung(dt); return this.finish(dt);
       case 'down': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= (this.isPlayer ? 0.5 : (this.downTime || 1.1))) this.startGetup(); return this.finish(dt);
       case 'getup': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= this.getupLen - 0.05) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; this.actor.setLegs(this.saber.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2', { blend: 0.15 }); } return this.finish(dt);

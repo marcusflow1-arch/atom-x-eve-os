@@ -23,6 +23,7 @@ import { Game2TeamMatch, TEAM_MODES } from './teamMatch.js';
 import { AUTHORED_LEVELS } from './levels/index.js';
 import { GAME2_ARENA_MAPS } from './arenaMaps.js';
 import { Score, SCORES } from './music.js';
+import { ForceClash, canClash, CLASH_WINDOW } from './clash.js';
 import { Execution, findExecutable, cutTransforms, EXECUTION_NAMES } from './executions.js';
 // Team arenas use the real Drive BSP selected by the player, or an authored arena (levels/) such as Skybridge Citadel.
 
@@ -298,6 +299,7 @@ export class Game {
     if (victim.status === 'dead' || !hostile(att, victim) || victim.spawnShield > this.t) return null;
     if (victim.remote && this.net) { this.net.rpc(victim, 'throw', [{ from: att, pull, lv: F.lv[kind], dmgScale: F.dmgScale ?? 1, dir: o.dir, dist: o.dist ?? 5, fall: o.fall, flatD: o.flatD, charge: o.charge || 0 }]); return null; } // resolved by that player's game
     const dist = o.dist ?? 5, fall = o.fall ?? clamp(1 - dist / 15, 0.2, 1), dir = o.dir, ch = clamp(o.charge || 0, 0, 1);
+    if (!pull && this.tryClash(att, victim, 'push')) return { outcome: 'clash', scale: 0, reason: '', countered: false }; // two pushes meet
     victim.markAttacker?.(att);
     // Levitate + Push, or a Push on someone already flying (pulled up from above, knocked into the air): nothing to stand
     // on, nothing to counter with
@@ -309,7 +311,7 @@ export class Game {
     const NAME = pull ? 'PULL' : 'PUSH', mid = victim.chest();
     const note = (txt, col, life) => { if (vp || ap) this.banner(txt, col, life); };
     if (res.countered) { // the defender answers with a push / pull of his own (no Force cost, short lockout)
-      victim.counterUntil = this.t + (pull ? 0.6 : 1.0);
+      victim.counterUntil = this.t + (pull ? 0.6 : 1.0); if (VF && !pull) VF.lastPush = { t: this.t, targets: [att] }; // their answering push: push again now and the two meet (a clash)
       if (victim.status === 'normal') victim.playForce(pull ? 'BOTH_FORCEPULL' : 'BOTH_FORCEPUSH', { durMs: pull ? 450 : 700 });
       this.sfxAt(pull ? 'pull' : 'push', victim.pos, 0.9);
       const back = [-dir[0], 0, -dir[2]]; this.fx.ring({ p: v3.addS(mid, back, 0.5), n: back, r0: 0.25, r1: 2.2, life: 0.45, w: 0.16, c: [0.75, 0.9, 1, 0.95], move: v3.scale(back, 12) });
@@ -343,7 +345,19 @@ export class Game {
         }
       }
     }
+    // an AI that kept its feet pushes back now and then: two pushes meeting are a Force clash
+    if (!pull && VF && !VF.remote && !victim.isPlayer && !victim.remote && victim.status === 'normal' && Math.random() < 0.55) victim.after(0.12 + Math.random() * 0.2, () => {
+      if (victim.status !== 'normal' || att.status === 'dead' || VF.fp < THROW_COST || (VF.cool.throw || 0) > this.t) return;
+      victim.aiFoe = att; victim.aiFoeAt = this.t; victim.yaw = victim.targetYaw = Math.atan2(att.pos[0] - victim.pos[0], att.pos[2] - victim.pos[2]); VF.cast('push');
+    });
     return res;
+  }
+  // a Force clash (clash.js): a's push meets b's push of a moment ago aimed at a, or their lightning streams meet
+  tryClash(a, b, kind) {
+    if (this.online || this.attract || this.clash || !canClash(a, b)) return false;
+    const B = b.force, met = kind === 'push' ? !!B.lastPush && this.t - B.lastPush.t <= CLASH_WINDOW && B.lastPush.targets.includes(a) : B.holding === 'lightning' && (B.ltTargets || []).some(h => h.t.ref === a);
+    if (!met) return false;
+    this.clash = new ForceClash(this, a, b, kind); return true;
   }
   // a Push on someone helpless in the air (levitated, pulled up, flying): thrown hard with the Force Push knockdown
   // (BOTH_KNOCKDOWN1, blown backward), no counter, and they slam into whatever is behind
@@ -491,6 +505,7 @@ export class Game {
       c.dist = clamp(c.dist + (i.zoom + (i.held('Equal') ? -dt * 4 : 0) + (i.held('Minus') ? dt * 4 : 0)) * 0.35, 1.9, 8.5);
     } else c.dist = clamp(c.dist + (i.wheel + i.zoom) * 0.35, 1.9, 8.5);
     if (h.help) return;
+    if (this.clash && i.btnPressed[0]) this.clash.click(p); // a Force clash: every click pushes harder
     if (this.director) { if (this.director.frameInput(i)) return; if (p.status === 'dead') return; }
     else if (this.duel) { if ((this.round.state === 'won' || this.round.state === 'lost') && this.round.t > 0.8 && i.pressed('Enter')) { this.resetDuel(); return; } if (p.status === 'dead') return; }
     else if (p.status === 'dead') { if (!this.teamMode && (i.pressed('Enter') || this.t - p.deadAt > 12)) this.respawnPlayer(); return; }
@@ -560,6 +575,7 @@ export class Game {
     this.t += dt; this.dtFrame = dt; const p = this.player;
     if (this.net) this.net.beforeStep(dt);
     this.updateExecutions(dt); // before the fighters: they show where the execution put them this step
+    if (this.clash) this.clash.update(dt);
     this.execCandidate = this.attract || p.status !== 'normal' ? null : findExecutable(this, p);
     this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.inp); if (this.playerWeapon) this.updatePistol(dt);
     this.stepNo = (this.stepNo | 0) + 1; const big = this.npcs.length > 16;
@@ -675,11 +691,13 @@ export class Game {
     if (this.teamMatch) this.teamMatch.drawWorld(R);
     for (const f of all) { const fl = 1 + 0.05 * Math.sin(this.t * 41 + (f.humId || 0) * 2); f.blade.draw(R, fl); if (f.blade2) f.blade2.draw(R, fl); }
     for (const ex of this.executions || []) ex.draw(R);
+    if (this.clash) this.clash.draw(R);
     this.force.draw(R); for (const n of this.npcs) if (n.force) n.force.draw(R); if (this.remotes) for (const n of this.remotes) if (n.force) n.force.draw(R); this.drawArcs(R); this.combat.drawBolts(R); if (this.director) this.director.draw(R);
     R.flushFx();
     if (this.attract) { this.hud.resize(); this.hud.x.setTransform(1, 0, 0, 1, 0, 0); this.hud.x.clearRect(0, 0, this.hud.c.width, this.hud.c.height); return; }
     this.hud.draw(this, this.dtFrame);
     if (this.teamMatch) this.teamMatch.drawHUD(this.hud.x, this.hud.W, this.hud.H);
+    if (this.clash) this.clash.drawHUD(this.hud.x, this.hud.W, this.hud.H);
   }
   frame(nowMs) { const now = nowMs / 1000; const dt = this.last ? now - this.last : STEP; this.last = now; this.update(dt); this.render(); }
 }
