@@ -134,7 +134,7 @@ export class Game2TeamMatch {
         f.pos[1] = p[1]; f.spawn = copy(p);
         f.matchRole = roles[i % roles.length];
         f.reaction = 0.46;
-        g.giveForce?.(f);
+        g.giveForce?.(f); this.botKit(f, i);
       }
     }
     g.hud.msg(this.config.label + ' · ' + count + ' vs ' + count + ' · ' + this.mapLabel());
@@ -151,10 +151,13 @@ export class Game2TeamMatch {
       const R = RIVALS[(i - 1) % RIVALS.length], p = this.pickSpawn(null);
       const f = g.addNpc('duelist', p[0], p[2], { name: 'ffa_bot_' + i, label: R.label, team: 'ffa', hp: 100, tint: R.tint, tintAmt: 0.45, saber: true, blade: R.blade, yaw: faceCentre(p), dmgScale: 0.6, blockSkill: 0.38 });
       f.pos[1] = p[1]; f.spawn = copy(p); f.reaction = 0.46;
-      g.giveForce?.(f);
+      g.giveForce?.(f); this.botKit(f, i);
     }
     g.hud.msg('Free for All · ' + n + ' fighters · first to ' + this.config.fragTarget + ' · ' + this.mapLabel());
   }
+  // with the local Jedi Academy animations (their own dual and staff sets), a quarter of the bots fight with dual sabers and
+  // a quarter with a saberstaff; without them every bot keeps a single saber
+  botKit(f, i) { if (this.g.skel?.rigJson?.jaAnims && f.setSaberKit) f.setSaberKit(['single', 'dual', 'single', 'staff'][i % 4]); }
   // a Free for All (re)spawn point: the arena's spawn point furthest from everyone alive (a little random), or near a home
   pickSpawn(f) {
     const g = this.g, pts = g.world.level?.ffaSpawns;
@@ -328,7 +331,7 @@ export class Game2TeamMatch {
     }
   }
 
-  brain(f) {
+  brain(f, dt = 1 / 60) {
     const g = this.g, c = f.cmd;
     c.fwd = c.right = c.up = 0;
     c.walk = c.crouch = c.attack = c.alt = c.jump = c.jumpPressed = c.crouchPressed = false;
@@ -379,6 +382,7 @@ export class Game2TeamMatch {
     f.targetYaw = Math.atan2(dx, dz);
     if (target && distance(f.pos, target.pos) < 2.7) {
       c.attack = (g.t + f.humId * 0.29) % 1.15 < 0.75;
+      if (f.saber?.animLevel === 7 && distance(f.pos, target.pos) < 1.7 && Math.random() < dt * 0.6) f.startKick?.('F'); // a saberstaff bot kicks now and then
       c.right = Math.sin(g.t * 1.2 + f.humId) > 0 ? 0.35 : -0.35;
     }
     if (d > (waypoint === destination ? (target ? 1.8 : 1.3) : 0.2)) c.fwd = 1;

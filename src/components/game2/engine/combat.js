@@ -124,7 +124,7 @@ export class Combat {
         const wk = A.name + '>' + B.name; if ((wound.get(wk) ?? -1) > g.t) continue;
         let hit = null; for (let k = 0; k < segs.length && !hit; k++) hit = sweptBladeContact(prevs[k], segs[k], B._prevCap, caps.get(B));
         if (!hit) continue;
-        if (attacking) { const r = this.bladeHit(A, B, hit.a); wound.set(wk, A.kata ? Math.max(g.t + 0.1, A.saber.moveStart + A.saber.moveLen / 1000) : g.t + (r === 'blocked' ? 0.3 : 0.1)); } // a kata swing wounds each target once
+        if (attacking) { const r = this.bladeHit(A, B, hit.a); wound.set(wk, A.kata ? (A.kata.anim ? g.t + 0.45 : Math.max(g.t + 0.1, A.saber.moveStart + A.saber.moveLen / 1000)) : g.t + (r === 'blocked' ? 0.3 : 0.1)); } // a kata swing wounds each target once (a Jedi Academy kata: at most every 0.45 s)
         else if (this.touchHit) { this.touchHit(A, B, hit.a); wound.set(wk, g.t + 0.2); }
       }
       // remote droid

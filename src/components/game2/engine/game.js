@@ -354,6 +354,18 @@ export class Game {
     if (victim.isPlayer || att.isPlayer) { this.banner('LAUNCHED', [0.7, 0.95, 1]); this.shake(0.3); }
     return { outcome: 'knockdown', scale: 1, knockdown: true, launched: true, reason: '', countered: false };
   }
+  // a saberstaff kick lands (Fighter.startKick): whoever stands within 1.9 m in the kick's direction is knocked down that way
+  kickHit(f, dir) {
+    const s = Math.sin(f.yaw), c = Math.cos(f.yaw), d = { F: [s, c], B: [-s, -c], L: [c, -s], R: [-c, s] }[dir] || [s, c], kd = [d[0], 0, d[1]];
+    for (const v of this.foesOf(f)) {
+      const dx = v.pos[0] - f.pos[0], dz = v.pos[2] - f.pos[2], L = Math.hypot(dx, dz);
+      if (L > 1.9 || L < 0.05 || Math.abs(v.pos[1] - f.pos[1]) > 1.5 || (dx * d[0] + dz * d[1]) / L < 0.45 || v.spawnShield > this.t || v.status === 'executed') continue;
+      v.markAttacker?.(f); if (v.status === 'levitated') v.levitate?.(false, { quiet: true });
+      v.push(kd, 7.5, 3.2, { keepYaw: false, anim: 'BOTH_KNOCKDOWN2' }); v.hurt(10 * (f.damageMul ?? 1), f, { noFlinch: true });
+      const p = v.chest(); this.fx.sparks(p, [-kd[0], 0.3, -kd[2]], 8, [1, 0.9, 0.7, 1]); this.sfxAt('hit2', p, 0.8);
+      if (v.isPlayer || f.isPlayer) { this.shake(0.25); if (f.isPlayer) this.banner('KICK', [1, 0.85, 0.55], 0.8); }
+    }
+  }
   // a fighter thrown into a wall at speed slams into it: damage by impact speed (credited to whoever threw them), a pinned
   // moment against the wall, sparks, dust and a crack left in the wall
   onWallSlam(f, speed, n) {
@@ -486,11 +498,14 @@ export class Game {
     if (i.pressed('KeyR')) { if (this.playerWeapon === 'bryar') this.switchWeapon('saber'); else { const ex = this.execCandidate && findExecutable(this, p); if (ex) this.startExecution(p, ex.victim, ex.kind); else p.toggleSaber(); } }
     if (i.pressed('KeyQ') && this.playerWeapon) this.switchWeapon();
     if (i.pressed('KeyT')) p.taunt();
-    if (i.pressed('Tab')) { p.setStyle(p.saber.level % 3 + 1); h.msg('Saber style: ' + STYLE_NAMES[p.saber.level]); }
+    if (i.pressed('Tab')) { if (p.saber.animLevel) h.msg((p.saberKit === 'dual' ? 'Dual sabers' : 'Saberstaff') + ' fight in a style of their own'); else { p.setStyle(p.saber.level % 3 + 1); h.msg('Saber style: ' + STYLE_NAMES[p.saber.level]); } }
     // both mouse buttons: a saber kata (Jedi Academy: attack + alt attack, 50 Force). The right button alone throws the
     // saber once it has been held KATA_CHORD s, so pressing both together never throws first
     if ((i.btnPressed[0] || i.btnPressed[2]) && i.btn[0] && i.btn[2] && !p.saber.holstered && !p.thrown && p.status === 'normal') { this.throwAt = null; if (p.startKata()) h.msg('Saber kata'); }
-    else if (i.btnPressed[2]) this.throwAt = this.t + KATA_CHORD;
+    else if (i.btnPressed[2]) { // the saberstaff kicks with a direction held (Jedi Academy alt attack); otherwise the throw
+      const kd = i.held('KeyW') ? 'F' : i.held('KeyS') ? 'B' : i.held('KeyA') ? 'L' : i.held('KeyD') ? 'R' : null;
+      if (!(kd && p.startKick(kd))) this.throwAt = this.t + KATA_CHORD;
+    }
     if (this.throwAt != null && this.t >= this.throwAt) { this.throwAt = null; if (i.btn[2] && !i.btn[0] && !p.saber.holstered && p.status === 'normal' && !p.kata) { if (p.throwSaber(this.aimDir())) h.msg('Saber throw'); } }
     if (p.status === 'normal' && (i.pressed('KeyF') || FORCE_QUICK_BINDINGS.some(({ code }) => i.pressed(code)))) p.yaw = p.targetYaw = c.yaw; // snap to aim on either cast path
   }

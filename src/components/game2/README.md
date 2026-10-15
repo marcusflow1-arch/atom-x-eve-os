@@ -129,6 +129,27 @@ they are beyond the ten direct-cast slots.
 F1 shows/hides the controls; Enter rematches; Ctrl + mouse wheel or - / = zooms.
 Mouse movement looks around, including a fallback when the browser rejects pointer lock.
 
+## Jedi Academy dual sabers and saberstaff (local install)
+
+Jedi Outcast has no dual-saber or saberstaff animations, so on their own those kits reuse single-saber moves. Jedi
+Academy fights with them in styles of their own (6 dual, 7 staff), and with a Jedi Academy install the game uses them:
+
+```bash
+node tools/game2/ja-anim-bank.mjs   # reads ../local-retail/jka/_humanoid.gla + animation.cfg
+```
+
+Extract `models/players/_humanoid/_humanoid.gla` and `animation.cfg` from `GameData/base/assets1.pk3` into
+`../local-retail/jka` (next to the repo) first. The tool writes `public/game2/local/ja/` (ignored by git: retail data
+stays on that PC and is never committed or deployed). `engine/assets.js` appends those 609 animations after the Jedi
+Outcast bank when they are there, so nothing existing moves; without them (the live site) everything is as before.
+
+With them: dual sabers and the saberstaff stand, run, walk, swing, chain, parry, deflect and recover with Jedi
+Academy's own sets (`BOTH_A6_*`, `BOTH_P7_S7_*`…, `saber.js` `animFor`), have their own specials (dual front-back and
+left-right attacks, spin and jump attacks), the real katas on both mouse buttons (`BOTH_A1/A2/A3_SPECIAL`,
+`BOTH_A6_SABERPROTECT`, `BOTH_A7_SOULCAL`), and the saberstaff kicks on right mouse + a direction. The staff is held in
+the middle with a blade out of each end, as in Jedi Academy. A quarter of the skirmish bots then fight with dual sabers
+and a quarter with a staff. Jedi Academy's skeleton lacks 22 of Game 2's 72 bones (finger joints, toes): those keep a two-handed grip.
+
 ## Push, pull, grip and lightning rules
 
 All outcomes are decided in `engine/forcerules.js` and applied by `Game.applyThrow()`:

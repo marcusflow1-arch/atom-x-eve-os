@@ -41,6 +41,7 @@ const CONTROLS = [
   ['Saber attack · stance', 'Left mouse (flick to aim the swing) · Tab'],
   ['Saber throw', 'Hold right mouse: it homes in on the nearest foe and spins inside them'],
   ['Saber kata', 'Left + right mouse together: a chain of your stance\'s attacks, pressing forward (50 Force)'],
+  ['Saberstaff kicks', 'Right mouse + W / A / S / D with the saberstaff (Jedi Academy moves installed): a kick that way knocks them down'],
   ['Draw saber · Execute', 'R (when a foe glows red and the prompt shows, R executes)'],
   ['Force Push (charge)', 'Hold 1, release to throw: the longer the hold, the harder the push'],
   ['Force Pull', '2 · jump first to yank them up in front of you; Push them while they hang there to blow them away'],

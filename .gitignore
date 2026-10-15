@@ -32,3 +32,6 @@ base44/.app.jsonc
 
 /public/vendor/face-landmarker/
 
+
+# Game 2: optional banks built from the user's own retail game installs (tools/game2/ja-anim-bank.mjs) - never committed
+public/game2/local/
