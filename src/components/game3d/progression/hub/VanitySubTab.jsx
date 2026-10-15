@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { subscribeCharacterChange } from '../../characterStorage';
+import ProgressionReview from './ProgressionReview';
 import {
   activateAXEVanityPiece,
   equipAXEVanityPiece,
@@ -23,8 +25,10 @@ export default function VanitySubTab() {
   const [state, setState] = useState(getAXEVanityState());
   const [cardChoice, setCardChoice] = useState('silver');
   const [lastResult, setLastResult] = useState(null);
+  const [review, setReview] = useState(null);
 
   useEffect(() => subscribeAXEVanity(setState), []);
+  useEffect(() => subscribeCharacterChange(() => { setReview(null); setLastResult(null); }), []);
 
   const ownedBySlot = useMemo(() => {
     const map = Object.fromEntries(Object.keys(AXE_VANITY_SLOTS).map((slot) => [slot, []]));
@@ -36,12 +40,14 @@ export default function VanitySubTab() {
   }, [state.ownedPieceIds]);
 
   const doActivate = (pieceId) => {
-    const result = activateAXEVanityPiece(pieceId, cardChoice);
-    setLastResult(result);
+    const piece = AXE_VANITY_PIECES[pieceId];
+    setReview({ title: `Empower ${piece.name}`, pieceId, cardType: cardChoice,
+      description: `Permanently activate +10% ${AXE_VANITY_SLOTS[piece.slot].mappedStatLabel} while this piece is equipped. Both card types grant the same bonus.`,
+      cost: { [AXE_VANITY_CARD_TYPES[cardChoice].label]: 1 } });
   };
 
   return (
-    <div className="h-full overflow-y-auto px-8 py-6 text-white">
+    <div className="h-full overflow-y-auto px-4 py-6 sm:px-8 text-white">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-4 border-b border-white/10 pb-4 md:flex-row md:items-end md:justify-between">
           <div>
@@ -78,11 +84,15 @@ export default function VanitySubTab() {
           </div>
         </div>
 
+        <ProgressionReview review={review} onCancel={() => setReview(null)} onConfirm={(pending) => {
+          setLastResult(activateAXEVanityPiece(pending.pieceId, pending.cardType));
+          setReview(null);
+        }} />
         {lastResult && (
-          <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-white/65">
+          <div role="status" className="mt-4 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/80">
             {lastResult.ok
-              ? `Vanity activated: +${lastResult.percent}% ${AXE_VANITY_SLOTS[lastResult.slotId]?.mappedStatLabel || 'stat'}.`
-              : lastResult.reason}
+              ? lastResult.message || `Vanity activated: +${lastResult.percent}% ${AXE_VANITY_SLOTS[lastResult.slotId]?.mappedStatLabel || 'stat'}.`
+              : lastResult.reason?.replaceAll('_', ' ')}
           </div>
         )}
 

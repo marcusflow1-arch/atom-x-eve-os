@@ -154,9 +154,9 @@ export function collectAXEVanityActivationProfile(equippedBySlot = {}, activatio
     const piece = getAXEVanityPiece(pieceId);
     const activation = activationByPieceId?.[pieceId];
     const slot = getAXEVanitySlot(slotId);
-    if (!piece || !slot || !activation?.active) continue;
+    if (!piece || piece.slot !== slotId || !slot || !activation?.active) continue;
 
-    const pct = Math.max(0, Number(activation.percent || AXE_VANITY_ACTIVATION_PERCENT));
+    const pct = AXE_VANITY_ACTIVATION_PERCENT;
     if (slot.mappedStat === 'spirit') profile.spiritPct += pct;
     if (slot.mappedStat === 'hp') profile.hpPct += pct;
     if (slot.mappedStat === 'defense') profile.defensePct += pct;
@@ -214,7 +214,7 @@ export function getAXEVanityAppearanceLayers(equippedBySlot = {}) {
   return Object.entries(equippedBySlot || {})
     .map(([slotId, pieceId]) => {
       const piece = getAXEVanityPiece(pieceId);
-      if (!piece) return null;
+      if (!piece || piece.slot !== slotId) return null;
       return {
         slotId,
         pieceId,

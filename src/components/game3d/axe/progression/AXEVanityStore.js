@@ -41,14 +41,22 @@ const load = () => {
     const raw = storage.get();
     if (!raw) return starter();
     const parsed = JSON.parse(raw);
+    const ownedPieceIds = Array.isArray(parsed.ownedPieceIds)
+      ? [...new Set(parsed.ownedPieceIds.filter((id) => !!AXE_VANITY_PIECES[id]))]
+      : starter().ownedPieceIds;
+    // An explicitly empty slot map means the player unequipped every piece.
+    // Only old saves with no slot map inherit the starter equipment.
+    const equippedBySlot = Object.fromEntries(Object.entries(parsed.equippedBySlot ?? starter().equippedBySlot)
+      .filter(([slot, id]) => ownedPieceIds.includes(id) && getAXEVanityPiece(id)?.slot === slot));
+    const activationByPieceId = Object.fromEntries(Object.entries(parsed.activationByPieceId || {})
+      .filter(([id, activation]) => ownedPieceIds.includes(id) && activation?.active && getAXEVanityCard(activation.cardType))
+      .map(([id, activation]) => [id, { ...activation, percent: AXE_VANITY_ACTIVATION_PERCENT }]));
     return {
       ...starter(),
       ...parsed,
-      ownedPieceIds: Array.isArray(parsed.ownedPieceIds)
-        ? parsed.ownedPieceIds.filter((id) => !!AXE_VANITY_PIECES[id])
-        : starter().ownedPieceIds,
-      equippedBySlot: { ...starter().equippedBySlot, ...(parsed.equippedBySlot || {}) },
-      activationByPieceId: { ...(parsed.activationByPieceId || {}) },
+      ownedPieceIds,
+      equippedBySlot,
+      activationByPieceId,
       cards: { ...starter().cards, ...(parsed.cards || {}) },
       hidden: !!parsed.hidden,
     };
@@ -93,7 +101,7 @@ export function getAXEVanityState() {
     ...state,
     ownedPieceIds: [...state.ownedPieceIds],
     equippedBySlot: { ...state.equippedBySlot },
-    activationByPieceId: { ...state.activationByPieceId },
+    activationByPieceId: structuredClone(state.activationByPieceId),
     cards: { ...state.cards },
     baseBonuses,
     activationProfile,
@@ -132,7 +140,7 @@ export function equipAXEVanityPiece(pieceId) {
     },
   };
   emit();
-  return { ok: true, pieceId, slotId: piece.slot };
+  return { ok: true, pieceId, slotId: piece.slot, message: `${piece.name} equipped.` };
 }
 
 export function unequipAXEVanitySlot(slotId) {
@@ -141,7 +149,7 @@ export function unequipAXEVanitySlot(slotId) {
   delete next[slotId];
   state = { ...state, equippedBySlot: next };
   emit();
-  return { ok: true };
+  return { ok: true, message: `${AXE_VANITY_SLOTS[slotId].label} removed.` };
 }
 
 export function activateAXEVanityPiece(pieceId, cardType = 'silver') {
