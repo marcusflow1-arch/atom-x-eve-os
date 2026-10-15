@@ -67,6 +67,9 @@ const load = () => {
 };
 
 let state = load();
+let committedState = structuredClone(state);
+const saveFailure = () => ({ ok: false, reason: 'SAVE_FAILED',
+  message: 'Could not save your changes. Nothing was spent. Check browser storage and try again.' });
 const listeners = new Set();
 let rideActivity = { seconds: 0, distanceMeters: 0 };
 
@@ -97,8 +100,7 @@ const persistedState = () => ({
   mounts: state.mounts.map((mount) => ({ ...mount, riding: false })),
 });
 
-const emit = () => {
-  storage.set(JSON.stringify(persistedState()));
+const publish = () => {
   const snapshot = getAXEMountState();
   listeners.forEach((fn) => fn(snapshot));
   if (typeof window !== 'undefined') {
@@ -106,8 +108,21 @@ const emit = () => {
   }
 };
 
+const emit = () => {
+  let saved = false;
+  try { saved = storage.setChecked(JSON.stringify(persistedState())); } catch { /* retain the last committed state */ }
+  if (!saved) {
+    state = structuredClone(committedState);
+    return false;
+  }
+  committedState = structuredClone(state);
+  publish();
+  return true;
+};
+
 subscribeCharacterChange(() => {
   state = load();
+  committedState = structuredClone(state);
   rideActivity = { seconds: 0, distanceMeters: 0 };
   listeners.forEach((fn) => fn(getAXEMountState()));
 });
@@ -148,7 +163,7 @@ export function getRegisteredAXEMountBonuses() {
 }
 
 export function getActiveAXEMountSpeedMultiplier() {
-  const mount = getActiveAXEMount();
+  const mount = state.mounts.find((entry) => entry.instanceId === state.activeMountId);
   return mount ? getAXEMountSpeedMultiplier(mount) : null;
 }
 
@@ -160,7 +175,7 @@ export function registerAXEMount(instanceId) {
     registeredMountId: instanceId,
     mounts: state.mounts.map((entry) => ({ ...entry, registered: entry.instanceId === instanceId })),
   };
-  emit();
+  if (!emit()) return saveFailure();
   return { ok: true };
 }
 
@@ -178,9 +193,9 @@ export function activateAXEMount(instanceId) {
       riding: false,
     })),
   };
+  if (!emit()) return saveFailure();
   setMounted(false);
   if (def?.modelRef) setActiveCompanion(def.modelRef);
-  emit();
   return { ok: true };
 }
 
@@ -201,9 +216,12 @@ export function setAXEMountRiding(riding, context = {}) {
       riding: riding && entry.instanceId === mount.instanceId,
     })),
   };
+  // Riding is transient, not a purchase. A full disk must never trap a rider
+  // or prevent dismounting; no persistent field changed in this operation.
+  committedState = structuredClone(state);
+  publish();
   setMounted(!!riding);
   if (!riding) rideActivity = { seconds: 0, distanceMeters: 0 };
-  emit();
   return { ok: true };
 }
 
@@ -232,7 +250,7 @@ export function awardAXEMountXP(instanceId, amount, source = 'pve', context = {}
     ...state,
     mounts: state.mounts.map((mount, i) => i === index ? result.mount : mount),
   };
-  emit();
+  if (!emit()) return saveFailure();
   return structuredClone(result);
 }
 
@@ -243,7 +261,7 @@ export function setAXEMountSpiritualMode(instanceId, mode) {
   const profile = getMountSpiritualProfile(mount);
   state = { ...state, mounts: state.mounts.map((entry) => entry.instanceId === instanceId
     ? { ...entry, spiritualWeapon: { rank: profile.rank, mode } } : entry) };
-  emit();
+  if (!emit()) return saveFailure();
   return { ok: true, message: `Spiritual weapon set to ${mode}.` };
 }
 
@@ -255,7 +273,7 @@ export function strengthenAXEMountSpiritualWeapon(instanceId, { confirmed = fals
   if (!result.ok) return result;
   state = { ...state, mounts: state.mounts.map((entry) => entry.instanceId === instanceId ? result.mount : entry) };
   appendAudit('strengthen_spiritual_weapon', instanceId, { xpSpent: result.xpSpent, rank: result.mount.spiritualWeapon.rank });
-  emit();
+  if (!emit()) return saveFailure();
   return { ok: true, message: `Spiritual weapon strengthened to rank ${result.mount.spiritualWeapon.rank}.`, xpSpent: result.xpSpent };
 }
 
@@ -301,7 +319,7 @@ export function tickAXEMountRideActivity(deltaSeconds, {
     'riding',
     { activeSeconds: rideActivity.seconds, distanceMeters: rideActivity.distanceMeters },
   );
-  rideActivity = { seconds: 0, distanceMeters: 0 };
+  if (result.ok) rideActivity = { seconds: 0, distanceMeters: 0 };
   return result;
 }
 
@@ -309,8 +327,8 @@ export function grantAXEMount(definitionId) {
   if (!AXE_MOUNT_DEFINITIONS[definitionId]) return { ok: false, reason: 'MOUNT_DEFINITION_MISSING' };
   const mount = createAXEMountInstance(definitionId);
   state = { ...state, mounts: [...state.mounts, mount] };
-  emit();
-  return { ok: true, mount };
+  if (!emit()) return saveFailure();
+  return { ok: true, mount: structuredClone(mount) };
 }
 
 
@@ -353,8 +371,8 @@ export function craftLegendaryAXEMount(instanceId, {
     abilities: result.legendary.abilities,
     passiveId: result.legendary.passiveId,
   });
-  emit();
-  return { ok: true, mount: state.mounts[index], legendary: result.legendary, cost: preview.cost };
+  if (!emit()) return saveFailure();
+  return structuredClone({ ok: true, mount: state.mounts[index], legendary: result.legendary, cost: preview.cost });
 }
 
 export function addLegendaryAXEMountAbility(instanceId, {
@@ -381,8 +399,8 @@ export function addLegendaryAXEMountAbility(instanceId, {
     ),
   };
   appendAudit('add_legendary_ability', instanceId, { cost, ability: result.ability });
-  emit();
-  return { ok: true, ability: result.ability, cost };
+  if (!emit()) return saveFailure();
+  return structuredClone({ ok: true, ability: result.ability, cost });
 }
 
 export function rerollLegendaryAXEMountAbility(instanceId, abilityIndex, {
@@ -409,8 +427,8 @@ export function rerollLegendaryAXEMountAbility(instanceId, abilityIndex, {
     ),
   };
   appendAudit('reroll_legendary_ability', instanceId, { abilityIndex, cost, ability: result.ability });
-  emit();
-  return { ok: true, ability: result.ability, cost };
+  if (!emit()) return saveFailure();
+  return structuredClone({ ok: true, ability: result.ability, cost });
 }
 
 export function grantAXEMountMaterials(delta = {}) {
@@ -424,7 +442,7 @@ export function grantAXEMountMaterials(delta = {}) {
       gold: Number(current.gold || 0) + Math.max(0, Number(delta.gold || 0)),
     },
   };
-  emit();
+  if (!emit()) return saveFailure();
   return { ...state.materials };
 }
 
@@ -447,6 +465,6 @@ export function releaseAXEMount(instanceId, { confirmed = false } = {}) {
     growthPercent: mount.growthPercent,
   });
   state = { ...state, mounts: state.mounts.filter((entry) => entry.instanceId !== instanceId) };
-  emit();
+  if (!emit()) return saveFailure();
   return { ok: true };
 }

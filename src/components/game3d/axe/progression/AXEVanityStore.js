@@ -66,10 +66,19 @@ const load = () => {
 };
 
 let state = load();
+let committedState = structuredClone(state);
+const saveFailure = () => ({ ok: false, reason: 'SAVE_FAILED',
+  message: 'Could not save your changes. Nothing was spent. Check browser storage and try again.' });
 const listeners = new Set();
 
 const emit = () => {
-  storage.set(JSON.stringify(state));
+  let saved = false;
+  try { saved = storage.setChecked(JSON.stringify(state)); } catch { /* retain the last committed state */ }
+  if (!saved) {
+    state = structuredClone(committedState);
+    return false;
+  }
+  committedState = structuredClone(state);
   const snapshot = getAXEVanityState();
   listeners.forEach((fn) => fn(snapshot));
   if (typeof window !== 'undefined') {
@@ -84,10 +93,12 @@ const emit = () => {
       },
     }));
   }
+  return true;
 };
 
 subscribeCharacterChange(() => {
   state = load();
+  committedState = structuredClone(state);
   listeners.forEach((fn) => fn(getAXEVanityState()));
 });
 
@@ -139,7 +150,7 @@ export function equipAXEVanityPiece(pieceId) {
       [piece.slot]: pieceId,
     },
   };
-  emit();
+  if (!emit()) return saveFailure();
   return { ok: true, pieceId, slotId: piece.slot, message: `${piece.name} equipped.` };
 }
 
@@ -148,7 +159,7 @@ export function unequipAXEVanitySlot(slotId) {
   const next = { ...state.equippedBySlot };
   delete next[slotId];
   state = { ...state, equippedBySlot: next };
-  emit();
+  if (!emit()) return saveFailure();
   return { ok: true, message: `${AXE_VANITY_SLOTS[slotId].label} removed.` };
 }
 
@@ -182,7 +193,7 @@ export function activateAXEVanityPiece(pieceId, cardType = 'silver') {
       },
     },
   };
-  emit();
+  if (!emit()) return saveFailure();
   return {
     ok: true,
     pieceId,
@@ -202,7 +213,7 @@ export function grantAXEVanityCard(cardType, count = 1) {
       [cardType]: Number(state.cards[cardType] || 0) + n,
     },
   };
-  emit();
+  if (!emit()) return saveFailure();
   return { ok: true, cardType, count: n };
 }
 
@@ -212,11 +223,12 @@ export function grantAXEVanityPiece(pieceId) {
     ...state,
     ownedPieceIds: [...new Set([...state.ownedPieceIds, pieceId])],
   };
-  emit();
+  if (!emit()) return saveFailure();
   return { ok: true };
 }
 
 export function setAXEVanityHidden(hidden) {
   state = { ...state, hidden: !!hidden };
-  emit();
+  if (!emit()) return saveFailure();
+  return { ok: true, message: hidden ? 'Vanity hidden.' : 'Vanity shown.' };
 }

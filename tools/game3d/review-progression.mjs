@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const root = process.cwd();
 const temp = await mkdtemp(path.join(tmpdir(), 'axe-ui-'));
-const output = path.join(root, 'docs/game3d/review');
+const output = process.env.REVIEW_OUTPUT_DIR || path.join(root, 'docs/game3d/review');
 await mkdir(output, { recursive: true });
 const entry = `
 import React, { useState } from 'react';
@@ -65,9 +65,26 @@ try {
  await page.goto(`http://127.0.0.1:${server.address().port}`);
  await page.getByRole('heading',{name:'Mounts',exact:true}).waitFor();
  const rank = () => page.evaluate(()=>qa.mounts.getAXEMountState().mounts[0].spiritualProfile.rank);
+ const rejectSave = (prefix) => page.evaluate(prefix => {
+  const proto = Storage.prototype; const original = proto.setItem;
+  window.restoreReviewStorage = () => { proto.setItem = original; };
+  proto.setItem = function(key,value) {
+   if (String(key).startsWith(prefix)) throw new DOMException('QA storage failure','QuotaExceededError');
+   return original.call(this,key,value);
+  };
+ },prefix);
+ const restoreSave = () => page.evaluate(()=>window.restoreReviewStorage());
  await page.getByRole('button',{name:/Strengthen ·/}).click();
  await page.getByRole('button',{name:'Cancel',exact:true}).click();
  assert.equal(await rank(),0);
+ await rejectSave('axe_mount_progression_v1');
+ await page.getByRole('button',{name:/Strengthen ·/}).click();
+ await page.getByRole('button',{name:'Confirm upgrade',exact:true}).click();
+ assert.match(await page.getByRole('status').innerText(),/Could not save your changes/);
+ assert.equal(await rank(),0);
+ assert.equal(await page.evaluate(()=>qa.mounts.getAXEMountState().mounts[0].spiritualProfile.availableXp),10000);
+ await page.screenshot({path:path.join(output,'mount-save-failure-desktop.png')});
+ await restoreSave();
  await page.getByRole('button',{name:/Strengthen ·/}).click();
  await page.getByRole('button',{name:'Confirm upgrade',exact:true}).click();
  assert.equal(await rank(),1);
@@ -85,6 +102,12 @@ try {
  await page.getByRole('button',{name:'Activate with Silver Card'}).first().click();
  await page.getByRole('button',{name:'Cancel',exact:true}).click();
  assert.equal(await page.evaluate(()=>qa.vanity.getAXEVanityState().cards.silver),4);
+ await rejectSave('axe_vanity_custom_pieces_v1');
+ await page.getByRole('button',{name:'Activate with Silver Card'}).first().click();
+ await page.getByRole('button',{name:'Confirm upgrade',exact:true}).click();
+ assert.match(await page.getByRole('status').innerText(),/Could not save your changes/);
+ assert.equal(await page.evaluate(()=>qa.vanity.getAXEVanityState().cards.silver),4);
+ await restoreSave();
  await page.getByRole('button',{name:'Activate with Silver Card'}).first().click();
  await page.getByRole('button',{name:'Confirm upgrade',exact:true}).click();
  assert.equal(await page.evaluate(()=>qa.vanity.getAXEVanityState().cards.silver),3);
@@ -113,7 +136,7 @@ try {
  await page.evaluate(()=>qa.storage.setStorageUser('another-review-character'));
  await page.getByRole('button',{name:'Confirm upgrade',exact:true}).waitFor({state:'detached'});
  assert.deepEqual(errors,[]);
- console.log('PASS: mount upgrade/cancel/reload/mode/craft, vanity spending/removal/reload, halo batch/cancel, mobile layout for all 3 panels, pending-review reset; no page errors.');
+ console.log('PASS: mount/vanity save-failure rollback and retry; mount upgrade/cancel/reload/mode/craft, vanity spending/removal/reload, halo batch/cancel, mobile layout for all 3 panels, pending-review reset; no page errors.');
 } finally {
  await browser?.close(); await new Promise(resolve=>server.close(resolve));
  await rm(temp,{recursive:true,force:true});

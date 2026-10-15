@@ -94,7 +94,7 @@ export default function MountSubTab() {
               ? (lastResult.message || (lastResult.legendary ? 'Legendary Mount crafting completed.'
                 : lastResult.ability ? `Ability acquired: ${lastResult.ability.label}`
                 : 'Mount action completed.'))
-              : lastResult.reason?.replaceAll('_', ' ')}
+              : lastResult.message || lastResult.reason?.replaceAll('_', ' ')}
           </div>
         )}
 
