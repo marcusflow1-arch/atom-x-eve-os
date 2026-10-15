@@ -189,7 +189,7 @@ export class Force {
     if (!this.use(pw.cost + extra)) { this.gcd = 0.3; return false; }
     if (id === 'push' || id === 'pull') this.cool.throw = this.g.t + THROW_RECOVERY;
     this.gcd = 0.25; this.holdVia = via;
-    const f = this['do_' + id]; if (f) f.call(this, o); if (this.g.net) this.g.net.onCast(this, id);
+    const f = this['do_' + id]; if (f) f.call(this, o); this.g.tutorial?.onCast(this.p, id, o); if (this.g.net) this.g.net.onCast(this, id);
     if (OFFENSIVE.has(id) && id !== 'push') this.dropLevitated('attack'); // attacking anyone ends your own levitation (do_push launches them first)
     return true;
   }
