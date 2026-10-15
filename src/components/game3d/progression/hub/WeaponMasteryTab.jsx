@@ -5,6 +5,7 @@ import { subscribeMastery } from '../weaponMasteryStore';
 import WeaponMasteryTreePanel from '../weaponMastery/WeaponMasteryTreePanel';
 import { resolveWeaponType, MILESTONE_LEVELS, MILESTONE_PASSIVES } from '../weaponMastery/weaponMasteryConfig';
 import AdvancedClassPanel from '../../talents/AdvancedClassPanel';
+import WeaponAffinityPanel from './WeaponAffinityPanel';
 import {
   getActiveEquippedAXEWeapon,
   subscribeAXEEquipmentInventory,
@@ -261,6 +262,7 @@ export default function WeaponMasteryTab({ onOpenInventory }) {
           {[
             { id: 'mastery', label: 'Weapon Mastery' },
             { id: 'advanced', label: 'Advanced Classes' },
+            { id: 'affinity', label: 'Affinity & Quick-Switch' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -284,6 +286,10 @@ export default function WeaponMasteryTab({ onOpenInventory }) {
       {topView === 'advanced' ? (
         <div className="min-h-0 flex-1 overflow-hidden">
           <AdvancedClassPanel />
+        </div>
+      ) : topView === 'affinity' ? (
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+          <WeaponAffinityPanel />
         </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto p-6">

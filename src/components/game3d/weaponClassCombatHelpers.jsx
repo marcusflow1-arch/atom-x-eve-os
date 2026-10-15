@@ -2,10 +2,11 @@
 // the multipliers / chances the combat code in GameWorld3D needs. Kept tiny so
 // GameWorld3D can stay under its line cap.
 import { getActiveBuffValues } from './weaponClassBuffStore';
+import { getAXEAffinityMoveSpeedMult } from './axe/weapons/AXEWeaponAffinityStore';
 
 // Movement-speed multiplier from Swift Marksman (Ranged).
 export function getWeaponMoveSpeedMult() {
-  return 1 + (getActiveBuffValues().moveSpeedBonusPct || 0);
+  return (1 + (getActiveBuffValues().moveSpeedBonusPct || 0)) * getAXEAffinityMoveSpeedMult(); // + the ranged archetype passive (Weapon Affinity)
 }
 
 // Outgoing damage multiplier — all three paths add some % damage.
