@@ -50,6 +50,7 @@ const CONTROLS = [
   ['Force Levitate', 'G · lifts a foe helplessly; any hit on them, or an attack by you, drops them'],
   ['Force Repulse (special)', 'X when the REPULSE meter is full: rise, curl up, burst open; foes around you are blasted away and disintegrate'],
   ['Combos', 'Push, then Speed: dash in front of them before they land · throw the saber, then Lightning: charge it'],
+  ['Counter', 'Blocking a strike can parry the blade away (the attacker\'s arms fly up): click at once for a critical vertical strike, double damage; a killing one splits them in half'],
   ['Force clash', 'Push (or Lightning) right back at someone pushing (or zapping) you: click as fast as you can for 3 s; more clicks wins'],
   ['Taunt', 'T'],
   ['Force selector', 'Mouse wheel or [ ] · F casts the highlighted power'],

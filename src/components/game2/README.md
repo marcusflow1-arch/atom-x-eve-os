@@ -116,6 +116,12 @@ them; a Force Push launches them). X unleashes Force Repulse once its meter (fil
 way Starkiller does it: you rise, curl into a ball while the Force gathers, then burst open with your arms flung wide;
 everyone within 7 m is blasted outward and disintegrates in the air, and you float back down.
 
+**Counter:** a block can parry the attacking blade away (25% for the player, more mid-parry; the AI by skill). The
+attacker is thrown open, arms over the head (the strong style's broken top parry, held), unable to guard for 0.9 s,
+with a heartbeat of slow motion; the defender's next click is a critical strike - the strong top-to-bottom cut,
+stepping in, unblockable, twice the damage - and a killing one splits the victim down the middle (a vertical cut:
+the halves fall away to either side). The AI strikes on its own when it parries you. Offline modes only.
+
 **Force clash (`engine/clash.js`):** two pushes meeting (you push someone who pushed, or answered a push of, you in the
 last 0.5 s), or two lightning streams meeting, lock both fighters in a clash for 3 s. Click as fast as you can: the
 energy between your hands drifts toward whoever is losing, and the one with more clicks wins; the loser is blasted away

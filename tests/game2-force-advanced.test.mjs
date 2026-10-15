@@ -63,3 +63,21 @@ test('a push from anyone else breaks a clash', () => {
   foe.push([1, 0, 0], 6, 3); run(g, 2);
   assert.equal(g.clash, null); assert.equal(g.player.status, 'normal', 'the other side is free again');
 });
+
+test('the Counter: a parry throws the attacker open; the critical vertical strike does twice the damage', () => {
+  const g = makeGame(), P = g.player, foe = addFoe(g, [0, 0, 1.3], { hp: 400 }); P.igniteNow(); foe.igniteNow?.(); run(g, 40);
+  g.combat.counterParry(foe, P, foe.chest());
+  assert.equal(foe.status, 'open', 'parried open'); assert.ok(P.critUntil > g.t, 'a moment to strike');
+  assert.equal(g.combat.canBlock(foe, P.pos), false, 'they cannot guard');
+  const hp = foe.hp; assert.ok(P.startCritStrike()); assert.ok(P.critStrike);
+  let n = 0; while (foe.hp === hp && n++ < 90) run(g, 1);
+  assert.ok(hp - foe.hp >= 18 * 2 - 0.01, 'twice a medium hit (' + (hp - foe.hp).toFixed(1) + ')');
+  run(g, 60); assert.equal(foe.status, 'normal', 'back on guard after it');
+});
+
+test('a killing critical strike splits them down the middle', () => {
+  const g = makeGame(), P = g.player, foe = addFoe(g, [0, 0, 1.3], { hp: 20 }); P.igniteNow(); run(g, 40);
+  g.combat.counterParry(foe, P, foe.chest()); assert.ok(P.startCritStrike());
+  let n = 0; while (foe.status !== 'dead' && n++ < 90) run(g, 1);
+  assert.equal(foe.status, 'dead'); assert.ok(foe.cut && foe.cut.vertical, 'cut vertically');
+});

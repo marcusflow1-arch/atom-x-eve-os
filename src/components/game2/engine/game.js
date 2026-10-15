@@ -445,8 +445,8 @@ export class Game {
   updateExecutions(dt) { if (!this.executions) return; for (const ex of this.executions) ex.update(dt); this.executions = this.executions.filter(ex => !ex.done); }
   // cut a fighter in half (the bisect execution): both halves keep the pose of that moment; shown to everyone online
   cutFighter(f, c, fromNet = false) {
-    if (f.cut) return; f.cut = { y: c.y, dir: v3.norm([c.dir[0], 0, c.dir[2]]), floor: c.floor, t: this.t }; f.actor.frozen = true;
-    if (this.net && !fromNet && f.fid) this.net.fx('cut', { fid: f.fid, y: Math.round(c.y * 1000) / 1000, dir: c.dir.map(v => Math.round(v * 1000) / 1000), floor: Math.round(c.floor * 1000) / 1000 });
+    if (f.cut) return; f.cut = { y: c.y, dir: v3.norm([c.dir[0], 0, c.dir[2]]), floor: c.floor, t: this.t, vertical: !!c.vertical }; f.actor.frozen = true; // vertical: down the middle (the Counter)
+    if (this.net && !fromNet && f.fid) this.net.fx('cut', { fid: f.fid, y: Math.round(c.y * 1000) / 1000, dir: c.dir.map(v => Math.round(v * 1000) / 1000), floor: Math.round(c.floor * 1000) / 1000, v: c.vertical ? 1 : 0 });
   }
   bodyArc(n) { if (Math.random() < 0.5) return; const names = ['lhand', 'rhand', 'cranium', 'lradius', 'rradius', 'ltibia', 'rtibia', 'thoracic']; const a = n.actor.bonePos(names[Math.floor(Math.random() * names.length)]), b = n.actor.bonePos(names[Math.floor(Math.random() * names.length)]); this.arcs.push({ pts: bolt(a, b, 5, 0.15), t: 0.06 }); }
   drawArcs(R) { for (let i = this.arcs.length - 1; i >= 0; i--) { const b = this.arcs[i]; drawBolt(R, b.pts, [0.6, 0.8, 1], 0.5); b.t -= this.dtFrame; if (b.t <= 0) this.arcs.splice(i, 1); } }
@@ -506,6 +506,7 @@ export class Game {
     } else c.dist = clamp(c.dist + (i.wheel + i.zoom) * 0.35, 1.9, 8.5);
     if (h.help) return;
     if (this.clash && i.btnPressed[0]) this.clash.click(p); // a Force clash: every click pushes harder
+    if (i.btnPressed[0] && p.critUntil > this.t) p.startCritStrike(); // the Counter: the critical strike at the foe you parried open
     if (this.director) { if (this.director.frameInput(i)) return; if (p.status === 'dead') return; }
     else if (this.duel) { if ((this.round.state === 'won' || this.round.state === 'lost') && this.round.t > 0.8 && i.pressed('Enter')) { this.resetDuel(); return; } if (p.status === 'dead') return; }
     else if (p.status === 'dead') { if (!this.teamMode && (i.pressed('Enter') || this.t - p.deadAt > 12)) this.respawnPlayer(); return; }
@@ -584,6 +585,7 @@ export class Game {
       // 30 Hz, over 20 m at 20 Hz (staggered by bot, so every step carries the same share). Close ones run every step.
       let ndt = dt; if (big) { const d2 = this.lodDist2(n), k = d2 > 400 ? 3 : d2 > 144 ? 2 : 1; if (k > 1) { if ((this.stepNo + (n.humId | 0)) % k) continue; ndt = dt * k; } }
       const brain = BRAINS[n.kind]; n.aimPitch = this.aimPitchToward(n);
+      if (n.critAt && this.t >= n.critAt) { n.critAt = 0; n.startCritStrike(); } // an AI that parried you open strikes on its own
       if (this.aiOff || this.teamMatch?.ended) { clearCmd(n.cmd); } else if (this.teamMatch) this.teamMatch.brain(n, ndt); else if (brain) brain(this, n, ndt);
       n.update(ndt); if (n.force) n.force.update(ndt); if (n.healFlash > 0) n.healFlash = Math.max(0, n.healFlash - ndt);
       if (n.status === 'dead' && this.t - n.deadAt > 8 && this.mode === 'explorer') this.respawnNpc(n);

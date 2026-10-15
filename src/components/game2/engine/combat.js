@@ -3,7 +3,7 @@
 // the floating practice remote, and flung props hitting people.
 import { v3, clamp, lerp } from './math.js';
 import { geo } from './gl.js';
-import { THROW_LODGE_DPS, THROW_HIT, THROW_DAMAGE_MUL, KATA_DAMAGE } from './fighter.js';
+import { THROW_LODGE_DPS, THROW_HIT, THROW_DAMAGE_MUL, KATA_DAMAGE, COUNTER_OPEN, COUNTER_CHANCE, CRIT_MUL } from './fighter.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const BLOCKS = ['block1', 'block2', 'block3', 'block4', 'block5', 'block6', 'block7', 'block8', 'block9'];
@@ -88,7 +88,7 @@ export class Combat {
     if (Math.hypot(T.vel?.[0] || 0, T.vel?.[2] || 0) > 2) p *= 0.45;
     return clamp(p, 0, 0.97);
   }
-  bladeDamage(A) { const S = A.saber; let d = [0, 12, 18, 28][S.level]; if (S.inSpecial(S.move)) d *= 1.6; if (A.kata) d *= KATA_DAMAGE; return d * A.damageMul * (A.isPlayer ? 1 : (A.dmgScale ?? 0.55)); }
+  bladeDamage(A) { const S = A.saber; let d = [0, 12, 18, 28][S.level]; if (S.inSpecial(S.move)) d *= 1.6; if (A.kata) d *= KATA_DAMAGE; if (A.critStrike && A.critStrike.until > this.g.t) d *= CRIT_MUL; return d * A.damageMul * (A.isPlayer ? 1 : (A.dmgScale ?? 0.55)); }
   // ---------- per-step update
   step(dt) {
     const g = this.g; const F = g.fighters ? g.fighters() : [g.player, ...g.npcs];
@@ -171,16 +171,27 @@ export class Combat {
     if (aSwing && this.wound) { const k = A.name + '>' + B.name; this.wound.set(k, Math.max(this.wound.get(k) ?? 0, g.t + 0.3)); } // a clash spends the swing on the other blade
   }
   bladeHit(A, B, pt) {
-    const g = this.g, I = A.saber.I, m = A.saber.move;
-    const unblockable = !!I && (m === I.LS_A_BACK || m === I.LS_A_BACK_CR || m === I.LS_A_BACKSTAB || m === I.LS_A_JUMP_T__B_); // w_saber.c
+    const g = this.g, I = A.saber.I, m = A.saber.move, crit = A.critStrike && A.critStrike.until > g.t;
+    const unblockable = crit || (!!I && (m === I.LS_A_BACK || m === I.LS_A_BACK_CR || m === I.LS_A_BACKSTAB || m === I.LS_A_JUMP_T__B_)); // w_saber.c; the Counter's strike
     if (!unblockable && this.canBlock(B, A.pos) && Math.random() < this.blockProb(B) - (A.kata ? 0.25 : 0)) { // blocked (a kata is harder to parry)
       g.fx.sparks(pt, [0, 1, 0], 14, [1, 0.9, 0.55, 1]); g.sfxAt(BLOCKS[Math.floor(Math.random() * BLOCKS.length)], pt, 1); g.flashLight(pt, A.blade.color, 0.2);
       const side = B.saber.isActiveSwing() ? 'BOUNCE' : this.sideOf(B, pt); if (B.remote && g.net) g.net.rpc(B, 'blocked', [side]); else B.saber.blocked = side; A.saber.blocked = 'BOUNCE'; if (A.isPlayer || B.isPlayer) g.shake(0.1);
-      if (g.net) g.net.onHit(A, B, pt, { blocked: true }); return 'blocked';
+      if (g.net) g.net.onHit(A, B, pt, { blocked: true });
+      else if (!A.remote && !B.remote && !A.kata && A.status === 'normal' && B.status === 'normal' && Math.random() < this.counterChance(B)) this.counterParry(A, B, pt); // the Counter
+      return 'blocked';
     }
     const bonus = A.interceptBonusUntil > g.t && (B.status === 'flung' || B.status === 'down' || B.status === 'getup') ? (A.interceptBonus || 1) : 1; // Push + Speed intercept
-    this.damage(A, B, pt, this.bladeDamage(A) * (B.hasSaber ? 1 : 1.5) * bonus, { spark: true, saber: true }); // non-Jedi take 1.5x (w_saber.c)
+    this.damage(A, B, pt, this.bladeDamage(A) * (B.hasSaber ? 1 : 1.5) * bonus, { spark: true, saber: true, crit }); // non-Jedi take 1.5x (w_saber.c)
     return 'hit';
+  }
+  // the Counter: a block that parries the blade away. The player COUNTER_CHANCE (more mid-parry), the AI by skill
+  counterChance(B) { const S = B.saber; return (B.isPlayer ? COUNTER_CHANCE : 0.08 + 0.17 * (B.blockSkill ?? 0.5)) + (S.inParry(S.move) || S.inReflect(S.move) ? 0.1 : 0); }
+  counterParry(A, B, pt) {
+    const g = this.g; if (!A.knockOpen?.(COUNTER_OPEN)) return;
+    B.critUntil = g.t + COUNTER_OPEN; B.critTarget = A; B.critAt = B.isPlayer ? 0 : g.t + 0.15 + Math.random() * 0.25; // the AI strikes on its own
+    g.fx.sparks(pt, [0, 1, 0], 30, [1, 0.95, 0.7, 1]); g.sfxAt('hit3', pt, 0.7); g.flashLight(pt, [1, 1, 1], 0.35);
+    if (B.isPlayer) g.banner('COUNTER!  STRIKE NOW', [1, 0.85, 0.4], 1.0); else if (A.isPlayer) g.banner('PARRIED', [1, 0.5, 0.4], 0.9);
+    if ((A.isPlayer || B.isPlayer) && !g.net) g.slowMo = { until: g.t + 0.3, scale: 0.4 }; // a heartbeat of slow motion
   }
   // the blade resting on / brushing someone outside an attack: small stance-scaled damage, parried like any hit
   touchDamage(A) { return [0, 2, 3, 4.5][A.saber.level || 2] * (A.damageMul ?? 1) * (A.isPlayer ? 1 : (A.dmgScale ?? 0.55)); }
@@ -195,6 +206,10 @@ export class Combat {
     if (o.saber && A.saber.level === 3 && !died && Math.random() < 0.35 && B.status === 'normal') { const d = v3.norm([B.pos[0] - A.pos[0], 0, B.pos[2] - A.pos[2]]); B.push(d, 4.5, 2.5); }
     if (B.isPlayer) { g.hud.hit(dmg); g.shake(o.touch ? 0.05 : 0.2); }
     if (died && !B.isPlayer && !g.net) { this.kills++; g.hud.msg('Defeated ' + B.label); }
+    if (o.crit) { // the Counter's critical strike; a killing one splits them down the middle
+      g.fx.sparks(pt, [0, 1, 0], 24, [1, 0.6, 0.25, 1]); if (A.isPlayer || B.isPlayer) { g.banner('CRITICAL', [1, 0.75, 0.35], 0.9); g.shake(0.35); } A.critStrike = null;
+      if (died && g.cutFighter) g.cutFighter(B, { y: B.chest()[1], dir: v3.norm([B.pos[0] - A.pos[0], 0, B.pos[2] - A.pos[2]]), floor: g.world.floorAt(B.pos[0], B.pos[2], B.pos[1] + 0.5) ?? B.pos[1], vertical: true });
+    }
   }
   // ---------- flung props hurt people
   props(dt) {

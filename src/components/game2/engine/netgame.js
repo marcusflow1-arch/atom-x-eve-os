@@ -27,7 +27,7 @@ export const SIDES = {
 };
 export const RESPAWN_S = 3, SHIELD_S = 3; // back after 3 s, then 3 s of immunity
 const RPC_METHODS = ['hurt', 'push', 'pullTo', 'shove', 'stagger', 'electrify', 'shock', 'grip', 'unlodgeSaber', 'levitate', 'executedBy', 'vaporize'];
-const STATUS = ['normal', 'dead', 'flung', 'down', 'getup', 'gripped', 'shocked', 'roll', 'whole', 'levitated', 'executed', 'executing', 'clash'];
+const STATUS = ['normal', 'dead', 'flung', 'down', 'getup', 'gripped', 'shocked', 'roll', 'whole', 'levitated', 'executed', 'executing', 'clash', 'open'];
 const HILT = ['hand', 'thigh', 'thrown', 'none'];
 const TIMED = ['speed', 'rage', 'protect', 'absorb', 'see'];
 const HOLD = ['', 'grip', 'lightning', 'heal', 'drain'];
@@ -317,7 +317,7 @@ export class NetGame {
       case 'crack': if (Array.isArray(m.p) && Array.isArray(m.n)) g.addCrack(m.p, m.n, Math.min(2, Number(m.s) || 0.8)); return;
       case 'taunt': { const f = this.byId.get(m.fid); if (f && f.remote) g.onTaunt(f, m.side === 'dark' ? 'dark' : 'light', Number(m.n) || 0, true); return; }
       case 'pulse': { const f = this.byId.get(m.fid); if (f && f.remote) g.forcePulse(f, Math.min(10, Number(m.r) || 7), true); return; }
-      case 'cut': { const f = this.byId.get(m.fid); if (f && f.remote && Array.isArray(m.dir)) g.cutFighter(f, { y: Number(m.y), dir: m.dir, floor: Number(m.floor) }, true); return; }
+      case 'cut': { const f = this.byId.get(m.fid); if (f && f.remote && Array.isArray(m.dir)) g.cutFighter(f, { y: Number(m.y), dir: m.dir, floor: Number(m.floor), vertical: m.v === 1 }, true); return; }
     }
   }
   recv(from, m, rel) {

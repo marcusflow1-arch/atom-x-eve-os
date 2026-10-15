@@ -148,6 +148,14 @@ export class Execution {
 // upper half slides off along the cut and falls, both with a cauterized cut face
 export function cutTransforms(f, now) {
   const c = f.cut, t = Math.max(0, now - c.t), lat = v3.norm(v3.cross([0, 1, 0], c.dir)); // axis the halves tip over
+  if (c.vertical) { // split down the middle (the Counter's strike): the halves part and fall away to either side
+    const feet = [f.pos[0], c.floor, f.pos[2]], d = lat[0] * feet[0] + lat[1] * feet[1] + lat[2] * feet[2], ang = Math.min(1.5, 3.6 * Math.max(0, t - 0.12) ** 2 * 3);
+    const half = s => { // s = +1 the side lat points to, -1 the other; rotating about the cut direction by -s tips it toward s
+      const r = m4.trs([0, 0, 0], Q.axisAngle(c.dir, -s * ang), [1, 1, 1]), sl = Math.min(0.22, t * 0.7) * s;
+      return m4.mul(m4.trs([feet[0] + lat[0] * sl, feet[1], feet[2] + lat[2] * sl], [0, 0, 0, 1], [1, 1, 1]), m4.mul(r, m4.trs([-feet[0], -feet[1], -feet[2]], [0, 0, 0, 1], [1, 1, 1])));
+    };
+    return { lower: half(1), upper: half(-1), lowerClip: new Float32Array([lat[0], lat[1], lat[2], -d]), upperClip: new Float32Array([-lat[0], -lat[1], -lat[2], d]) };
+  }
   const fall = (pivot, ang, dy, slide) => {
     const r = m4.trs([0, 0, 0], Q.axisAngle(lat, ang), [1, 1, 1]), T1 = m4.trs([pivot[0] + slide[0], pivot[1] + dy, pivot[2] + slide[2]], [0, 0, 0, 1], [1, 1, 1]), T0 = m4.trs([-pivot[0], -pivot[1], -pivot[2]], [0, 0, 0, 1], [1, 1, 1]);
     return m4.mul(T1, m4.mul(r, T0));
