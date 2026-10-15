@@ -6,7 +6,7 @@ import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
 import GameWorldEditorGate from '@/components/GameWorldEditorGate'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { AuthProvider as AppAuthProvider } from '@/components/auth/AuthContext';
@@ -78,7 +78,13 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/" element={<LayoutWrapper currentPageName={mainPageKey}><MainPage /></LayoutWrapper>} />
         {livePages.map(([path, Page]) => (
-          <Route key={path} path={`/${path}`} element={<LayoutWrapper currentPageName={path}><Page /></LayoutWrapper>} />
+          <Route
+            key={path}
+            path={`/${path}`}
+            element={path === 'GameView'
+              ? <Navigate to="/Game2" replace />
+              : <LayoutWrapper currentPageName={path}><Page /></LayoutWrapper>}
+          />
         ))}
         <Route path="/DepsArt" element={<LayoutWrapper currentPageName="DepsArt"><DepsArt /></LayoutWrapper>} />
         <Route path="/game/:gameId" element={<LayoutWrapper currentPageName="GameHub"><GameHub /></LayoutWrapper>} />
