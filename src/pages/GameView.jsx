@@ -342,8 +342,7 @@ export default function GameView() {
       <GameStateProvider showDebugHUD={false}>
       <GameWorld3D />
       <GameHUD />
-      <RogueBossHPTank />
-      <BossWaypoint />
+      {/* World boss UI removed in the systems/animation test scene. */}
       <MultiplayerSystem envUrl="game_world_lowpoly" surface="game-world" />
       <GameWorldServerManager />
       {/* Equipped weapon is the canonical source for mastery/class/role identity. */}
@@ -354,22 +353,22 @@ export default function GameView() {
           broadcasts world snapshots, and applies them on non-hosts. */}
       <WorldSyncMount />
       {/* AXE Prompt 003 — logical region/POI/travel streaming follows the live player position. */}
-      <AXEWorldStreamingMount />
+      {/* AXEWorldStreamingMount is paused while Game 3D uses its flat systems test plane. */}
       {/* AXE Prompt 004 — first 2.4 km macro-region blockout. */}
-      <AXEFirstRegionMount />
+      {/* AXEFirstRegionMount is paused while Game 3D uses its flat systems test plane. */}
       {/* AXE Prompt 005 — character first-spawn entry and tutorial handoff. */}
-      <AXEFirstSpawnMount />
+      {/* AXEFirstSpawnMount is paused while Game 3D uses its flat systems test plane. */}
       {/* AXE Prompt 007 — fall safety, landing severity and world trigger volumes. */}
-      <AXETraversalSafetyMount />
+      {/* AXETraversalSafetyMount is paused while Game 3D uses its flat systems test plane. */}
       {/* AXE Prompt 008 — reusable NPC/door/gate/teleport/service interactions. */}
-      <AXEInteractionMount />
+      {/* AXEInteractionMount is paused while Game 3D uses its flat systems test plane. */}
       {/* AXE Prompt 009 — defended faction capital blockout and districts. */}
-      <AXECapitalBlockoutMount />
+      {/* AXECapitalBlockoutMount is paused while Game 3D uses its flat systems test plane. */}
       {/* AXE Prompt 037 — cave/dungeon/SOS-access prototype entrances and session state. */}
-      <AXEDungeonMount />
-      <AXEDungeonRuntime />
+      {/* AXEDungeonMount is paused while Game 3D uses its flat systems test plane. */}
+      {/* AXEDungeonRuntime is paused while Game 3D uses its flat systems test plane. */}
       {/* AXE Prompt 039 — recurring faction-war objectives and invasion defenses. */}
-      <AXEFactionWarRuntime />
+      {/* AXEFactionWarRuntime is paused while Game 3D uses its flat systems test plane. */}
       <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
       <CharacterProgressionMenu
         isOpen={progressionOpen}
