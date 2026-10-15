@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { subscribeHalo, attemptEnhancement, attemptEnhancementBatch, setHaloHidden, setHaloLevel, setHaloLowEffects } from '../haloStore';
 import { MAX_HALO_LEVEL } from '../haloData';
 import MaxOutButton from './devMaxOut';
+import { subscribeCharacterChange } from '../../characterStorage';
+import ProgressionReview from './ProgressionReview';
 
 const BATCH_PRESETS = [10, 15, 25, 35];
 
@@ -9,8 +11,10 @@ export default function HaloSubTab() {
   const [halo, setHalo] = useState(null);
   const [lastResult, setLastResult] = useState(null);
   const [customAttempts, setCustomAttempts] = useState('');
+  const [review, setReview] = useState(null);
 
   useEffect(() => subscribeHalo(setHalo), []);
+  useEffect(() => subscribeCharacterChange(() => { setReview(null); setLastResult(null); }), []);
   if (!halo) return null;
 
   // Max attempts the player can afford right now
@@ -21,18 +25,16 @@ export default function HaloSubTab() {
   const handleAttempt = () => {
     const r = attemptEnhancement();
     setLastResult(r);
-    if (r.ok) {
-      window.setTimeout(() => setLastResult(null), 2500);
-    }
+
   };
 
   const handleBatch = (count) => {
     if (!halo.canAttempt || halo.isMaxLevel) return;
     const safe = Math.min(count, maxAttempts);
     if (safe < 1) return;
-    const summary = attemptEnhancementBatch(safe);
-    setLastResult({ ok: true, success: summary.successes > 0, batch: summary });
-    window.setTimeout(() => setLastResult(null), 3000);
+    setReview({ title: `Review ${safe} halo attempts`, count: safe,
+      description: 'Each attempt spends kills, including failed attempts. The batch stops if you reach the level cap or run out of kills. Success is not guaranteed.',
+      cost: { 'maximum kills spent': safe * halo.attemptCost } });
   };
 
   const handleCustomBatch = () => {
@@ -58,9 +60,9 @@ export default function HaloSubTab() {
   const chancePct = Math.round((halo.successChance || 0) * 100);
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full flex-col overflow-y-auto md:flex-row">
       {/* LEFT — tier display */}
-      <div className="w-72 border-r border-white/5 px-6 pt-10 flex flex-col items-center">
+      <div className="w-full shrink-0 border-b border-white/10 px-4 py-6 flex flex-col items-center md:w-64 md:border-b-0 md:border-r">
         <div
           className="w-44 h-44 rounded-full flex items-center justify-center"
           style={{
@@ -104,8 +106,16 @@ export default function HaloSubTab() {
       </div>
 
       {/* RIGHT — attempt + bonuses */}
-      <div className="flex-1 min-w-0 px-10 pt-8 overflow-y-auto">
-        <div className="grid grid-cols-2 gap-6 mb-8">
+      <div className="flex-1 min-w-0 px-4 py-6 md:px-8 md:overflow-y-auto">
+        <h2 className="mb-4 text-2xl font-semibold text-white">Halo progression</h2>
+        <ProgressionReview review={review} onCancel={() => setReview(null)} onConfirm={(pending) => {
+          const summary = attemptEnhancementBatch(pending.count);
+          setLastResult(summary.attempts > 0
+            ? { ok: true, success: summary.successes > 0, batch: summary }
+            : { ok: false, reason: 'No attempts available. Check your kills and halo level.' });
+          setReview(null);
+        }} />
+        <div className="grid grid-cols-2 gap-3 mb-6">
           <Stat label="Banked Kills"     value={halo.kills} />
           <Stat label="Attempt Cost"     value={halo.attemptCost} />
           <Stat label="Success Chance"   value={`${chancePct}%`} accent={chancePct >= 35 ? '#a3e635' : chancePct >= 15 ? '#ffd86b' : '#fb7185'} />
@@ -173,6 +183,7 @@ export default function HaloSubTab() {
               inputMode="numeric"
               value={customAttempts}
               onChange={onCustomChange}
+              aria-label="Number of halo attempts"
               placeholder={`Max ${maxAttempts}`}
               disabled={halo.isMaxLevel || maxAttempts < 1}
               className="py-2 px-2 rounded-sm text-[11px] tabular-nums text-white tracking-wider bg-white/[0.04] border border-white/10 focus:border-amber-400/50 outline-none w-24"
@@ -203,8 +214,10 @@ export default function HaloSubTab() {
           {halo.attemptCost} kills per attempt
         </div>
 
+        {lastResult && !lastResult.ok && <p role="status" className="mt-4 text-sm text-amber-100">{lastResult.reason?.replaceAll('_', ' ')}</p>}
         {lastResult?.ok && (
           <div
+            role="status"
             className="mt-4 text-center py-2 rounded-sm text-xs tracking-[0.3em] uppercase"
             style={{
               background: lastResult.success ? 'rgba(163,230,53,0.10)' : 'rgba(251,113,133,0.10)',

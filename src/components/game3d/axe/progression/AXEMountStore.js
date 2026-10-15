@@ -2,6 +2,7 @@
 
 import { characterScopedStorage, subscribeCharacterChange } from '../../characterStorage';
 import { setActiveCompanion, setMounted } from '../../companionStore';
+import { advanceMountSpiritualWeapon, getMountSpiritualProfile } from './AXEMountSpiritualSystem';
 import {
   AXE_MOUNT_CONFIG,
   AXE_MOUNT_DEFINITIONS,
@@ -112,18 +113,19 @@ subscribeCharacterChange(() => {
 });
 
 export function getAXEMountState() {
-  return {
+  return structuredClone({
     ...state,
     mounts: state.mounts.map((mount) => ({
       ...mount,
       definition: getAXEMountDefinition(mount.definitionId),
       bonuses: getAXEMountBonuses(mount),
       speedMultiplier: getAXEMountSpeedMultiplier(mount),
+      spiritualProfile: getMountSpiritualProfile(mount),
     })),
     pvpVictimCooldowns: { ...state.pvpVictimCooldowns },
     materials: { ...(state.materials || {}) },
     audit: [...(state.audit || [])],
-  };
+  });
 }
 
 export function subscribeAXEMounts(fn) {
@@ -133,11 +135,11 @@ export function subscribeAXEMounts(fn) {
 }
 
 export function getActiveAXEMount() {
-  return state.mounts.find((mount) => mount.instanceId === state.activeMountId) || null;
+  return structuredClone(state.mounts.find((mount) => mount.instanceId === state.activeMountId) || null);
 }
 
 export function getRegisteredAXEMount() {
-  return state.mounts.find((mount) => mount.instanceId === state.registeredMountId) || null;
+  return structuredClone(state.mounts.find((mount) => mount.instanceId === state.registeredMountId) || null);
 }
 
 export function getRegisteredAXEMountBonuses() {
@@ -208,13 +210,16 @@ export function setAXEMountRiding(riding, context = {}) {
 export function awardAXEMountXP(instanceId, amount, source = 'pve', context = {}) {
   const index = state.mounts.findIndex((mount) => mount.instanceId === instanceId);
   if (index < 0) return { ok: false, reason: 'MOUNT_MISSING' };
+  const result = addAXEMountXP(state.mounts[index], amount, source);
+  if (!result.ok) return result;
 
   if (source === 'pvp') {
     const opponentId = String(context.opponentId || '');
     if (!opponentId) return { ok: false, reason: 'PVP_TARGET_REQUIRED' };
-    const now = Number(context.now || Date.now());
-    const last = Number(state.pvpVictimCooldowns[opponentId] || 0);
-    if (now - last < AXE_MOUNT_CONFIG.pvpRepeatTargetCooldownMs) {
+    const now = Number(context.now ?? Date.now());
+    if (!Number.isFinite(now) || now < 0) return { ok: false, reason: 'INVALID_TIME' };
+    const last = state.pvpVictimCooldowns[opponentId];
+    if (last != null && now - last < AXE_MOUNT_CONFIG.pvpRepeatTargetCooldownMs) {
       return { ok: false, reason: 'PVP_REPEAT_TARGET_COOLDOWN' };
     }
     state = {
@@ -223,14 +228,35 @@ export function awardAXEMountXP(instanceId, amount, source = 'pve', context = {}
     };
   }
 
-  const result = addAXEMountXP(state.mounts[index], amount, source);
-  if (!result.ok) return result;
   state = {
     ...state,
     mounts: state.mounts.map((mount, i) => i === index ? result.mount : mount),
   };
   emit();
-  return result;
+  return structuredClone(result);
+}
+
+export function setAXEMountSpiritualMode(instanceId, mode) {
+  if (!['offensive', 'utility'].includes(mode)) return { ok: false, reason: 'INVALID_SPIRITUAL_MODE' };
+  const mount = state.mounts.find((entry) => entry.instanceId === instanceId);
+  if (!mount) return { ok: false, reason: 'MOUNT_MISSING' };
+  const profile = getMountSpiritualProfile(mount);
+  state = { ...state, mounts: state.mounts.map((entry) => entry.instanceId === instanceId
+    ? { ...entry, spiritualWeapon: { rank: profile.rank, mode } } : entry) };
+  emit();
+  return { ok: true, message: `Spiritual weapon set to ${mode}.` };
+}
+
+export function strengthenAXEMountSpiritualWeapon(instanceId, { confirmed = false, expectedRank } = {}) {
+  const mount = state.mounts.find((entry) => entry.instanceId === instanceId);
+  if (!mount) return { ok: false, reason: 'MOUNT_MISSING' };
+  if (!confirmed) return { ok: false, reason: 'CONFIRMATION_REQUIRED' };
+  const result = advanceMountSpiritualWeapon(mount, expectedRank);
+  if (!result.ok) return result;
+  state = { ...state, mounts: state.mounts.map((entry) => entry.instanceId === instanceId ? result.mount : entry) };
+  appendAudit('strengthen_spiritual_weapon', instanceId, { xpSpent: result.xpSpent, rank: result.mount.spiritualWeapon.rank });
+  emit();
+  return { ok: true, message: `Spiritual weapon strengthened to rank ${result.mount.spiritualWeapon.rank}.`, xpSpent: result.xpSpent };
 }
 
 export function awardActiveAXEMountPvPXP({ opponentId, opponentLevel = 1 } = {}) {
