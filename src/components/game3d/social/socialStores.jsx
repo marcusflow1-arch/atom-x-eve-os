@@ -94,8 +94,10 @@ export const tradeStore = {
   subscribe: (fn) => { tradeListeners.add(fn); fn(tradeState); return () => tradeListeners.delete(fn); },
 };
 
-// Trade request — delegates to tradeRequest.js
-export const sendTradeRequest = _sendTradeRequest;
+// Trade request — delegates to tradeRequest.js. Re-exported as a live binding:
+// tradeRequest imports openTrade from here, so copying the value would hit the TDZ
+// whenever tradeRequest is the first of the two modules to load.
+export { _sendTradeRequest as sendTradeRequest };
 
 // Duel challenge — delegates to duelChallenge.js
 export const sendDuelRequest = _sendDuelChallenge;
