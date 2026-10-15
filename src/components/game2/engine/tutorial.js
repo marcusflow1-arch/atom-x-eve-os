@@ -50,7 +50,7 @@ export class Game2TutorialDirector {
     this.events = []; this.scheduled = [];
     this.demoAttackUntil = this.demoJumpUntil = 0;
     g.force.reset(); g.force.pulse = 0; g.respawnPlayer();
-    g.player.spawnShield = 0; g.player.hp = g.player.maxHp;
+    g.player.spawnShield = 0; g.player.shieldGlow = false; g.player.glow = 0; g.player.hp = g.player.maxHp;
     for (const npc of [this.trainer, this.target]) {
       if (!npc) continue;
       npc.force?.reset();
