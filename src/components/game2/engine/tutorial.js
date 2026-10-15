@@ -3,7 +3,6 @@
 import { buildGame2TutorialLessons } from './tutorialCatalog.js';
 
 const STORAGE_KEY = 'atomxe.game2.tutorial.completed.v1';
-const distance = (a, b) => Math.hypot(a.pos[0] - b.pos[0], a.pos[2] - b.pos[2]);
 
 export class Game2TutorialDirector {
   constructor(game) {
@@ -95,7 +94,7 @@ export class Game2TutorialDirector {
       add(duration, () => { F.want[id] = false; F.release(); });
     };
     switch (lesson.demo) {
-      case 'draw': add(0.4, () => f.igniteNow()); break;
+      case 'draw': f.saber.holstered = true; f.blade.set(false); f.blade.len = 0; f.hilt = 'thigh'; add(0.4, () => f.igniteNow()); break;
       case 'attack': add(0.45, () => { this.demoAttackUntil = g.t + 0.85; }); break;
       case 'jump': add(0.45, () => { this.demoJumpStart = g.t; this.demoJumpUntil = g.t + 0.6; }); break;
       case 'style': add(0.45, () => f.setStyle(3)); break;
@@ -135,8 +134,11 @@ export class Game2TutorialDirector {
         break;
       default: break;
     }
-    const last = Math.max(0.5, ...this.scheduled.map(x => x.at - this.demoStarted));
-    this.demoEnds = this.demoStarted + last + (lesson.demo === 'repulse' ? 2.6 : 1.4);
+    // Held casts have release events scheduled *during* their first action. Do not
+    // end the demonstration before the channel duration/second combo action.
+    const duration = { storm: 3.6, 'throw-lightning': 3.8, 'pull-push': 3.1,
+      'push-speed': 2.7, repulse: 3.5, power: 3.1, dominance: 3.2 }[lesson.demo] || 2.8;
+    this.demoEnds = this.demoStarted + duration;
   }
   practice() {
     if (this.selected()?.automatic) return false;
