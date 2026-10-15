@@ -27,7 +27,7 @@ export const SIDES = {
 };
 export const RESPAWN_S = 3, SHIELD_S = 3; // back after 3 s, then 3 s of immunity
 const RPC_METHODS = ['hurt', 'push', 'pullTo', 'shove', 'stagger', 'electrify', 'shock', 'grip', 'unlodgeSaber', 'levitate', 'executedBy', 'vaporize'];
-const STATUS = ['normal', 'dead', 'flung', 'down', 'getup', 'gripped', 'shocked', 'roll', 'whole', 'levitated', 'executed', 'executing'];
+const STATUS = ['normal', 'dead', 'flung', 'down', 'getup', 'gripped', 'shocked', 'roll', 'whole', 'levitated', 'executed', 'executing', 'clash', 'open'];
 const HILT = ['hand', 'thigh', 'thrown', 'none'];
 const TIMED = ['speed', 'rage', 'protect', 'absorb', 'see'];
 const HOLD = ['', 'grip', 'lightning', 'heal', 'drain'];
@@ -126,7 +126,8 @@ export class NetGame {
     this.remoteNetStats = { received: 0, outOfOrder: 0, lastGapMs: 0, maxGapMs: 0, longGaps: 0, largeCorrections: 0, hardSnaps: 0, worstCorrection: 0, lastRttMs: null };
     if (this.netDebug && typeof window !== 'undefined') window.__atomxeGame2NetStats = this.remoteNetStats;
     this.animNames = g.skel.rigJson.anims.map(a => a.name); this.animIdx = Object.fromEntries(this.animNames.map((n, i) => [n, i]));
-    this.spawns = arenaSpawns(g.world);
+    const L = g.world.level; // an authored arena brings its own spread of spawn points
+    this.spawns = L?.ffaSpawns ? L.ffaSpawns.map(p => ({ pos: p.slice(), yaw: Math.atan2(-p[0], -p[2]) })) : arenaSpawns(g.world);
     g.net = this; g.remotes = []; g.round = { state: 'fight', t: 0 }; g.noDamage = false; // no rounds: a continuous deathmatch
     const Session = o.transport === 'railway' ? RailwayGameSession : NetSession;
     const S = this.session = new Session({ ...o, selfId: o.selfId, name: o.name, side: this.side, ai: this.ai });
@@ -291,7 +292,7 @@ export class NetGame {
       case 'unlodgeSaber': f.unlodgeSaber(); return;
       case 'levitate': { const [on, o] = a; if (on && f.spawnShield > g.t) return; f.levitate(!!on, o || {}); return; }
       case 'vaporize': { const [att] = a; if (att) f.vaporize(att); return; }
-      case 'executedBy': { const [att, kind, o] = a; if (att && (kind === 'crush' || kind === 'bisect') && f.status !== 'dead' && !(f.spawnShield > g.t)) g.startExecution(att, f, kind, { ...(o || {}), fromNet: true }); return; }
+      case 'executedBy': { const [att, kind, o] = a; if (att && (kind === 'crush' || kind === 'bisect' || kind === 'dominance') && f.status !== 'dead' && !(f.spawnShield > g.t)) g.startExecution(att, f, kind, { ...(o || {}), fromNet: true }); return; }
       case 'grip': { const [on, lift, o] = a; if (on) { if (f.spawnShield > g.t) return; f.grip(true, lift, { carry: o && o.carry && o.from ? this.carryOf(o.from) : null }); } else f.grip(false, 0, o || {}); return; }
       case 'blocked': if (!f.saber.holstered && f.status === 'normal') f.saber.blocked = a[0]; return;
       case 'fp': { const F = g.forceOf(f); if (F) F.fp = clamp(F.fp + a[0], 0, F.max); return; }
@@ -316,7 +317,7 @@ export class NetGame {
       case 'crack': if (Array.isArray(m.p) && Array.isArray(m.n)) g.addCrack(m.p, m.n, Math.min(2, Number(m.s) || 0.8)); return;
       case 'taunt': { const f = this.byId.get(m.fid); if (f && f.remote) g.onTaunt(f, m.side === 'dark' ? 'dark' : 'light', Number(m.n) || 0, true); return; }
       case 'pulse': { const f = this.byId.get(m.fid); if (f && f.remote) g.forcePulse(f, Math.min(10, Number(m.r) || 7), true); return; }
-      case 'cut': { const f = this.byId.get(m.fid); if (f && f.remote && Array.isArray(m.dir)) g.cutFighter(f, { y: Number(m.y), dir: m.dir, floor: Number(m.floor) }, true); return; }
+      case 'cut': { const f = this.byId.get(m.fid); if (f && f.remote && Array.isArray(m.dir)) g.cutFighter(f, { y: Number(m.y), dir: m.dir, floor: Number(m.floor), vertical: m.v === 1 }, true); return; }
     }
   }
   recv(from, m, rel) {

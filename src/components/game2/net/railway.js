@@ -2,7 +2,7 @@
 // This replaces Base44 database signaling + per-peer WebRTC for live multiplayer.
 // Human player movements, saber and Force updates stay on this one relay.
 export const GAME2_RAILWAY_PROTOCOL = 2;
-export const GAME2_RAILWAY_MAX = 10;
+export const GAME2_RAILWAY_MAX = 200; // per arena, the server's safety ceiling (server/game2/arena.mjs MAX_PLAYERS)
 
 // Set by build-time configuration, or use the tested Railway service domain.
 // This is a PUBLIC service URL, not an authorization secret.
@@ -152,7 +152,7 @@ export class RailwayGameSession {
         this.status('Authenticating with Game 2 Railway server');
         if (!this._write({ t: 'join', version: GAME2_RAILWAY_PROTOCOL,
           token: this.o.token, peer: this.self, name: this.o.name,
-          side: this.o.side, ai: this.o.ai ?? 0 })) {
+          side: this.o.side, ai: this.o.ai ?? 0, room: this.o.mapId || 'training' })) { // each map is its own arena
           this.end('Unable to join the Railway arena');
         }
         // The login token is used only for admission; never store it in logs.

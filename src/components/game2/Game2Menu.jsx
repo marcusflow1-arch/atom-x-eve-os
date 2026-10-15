@@ -23,10 +23,10 @@ const MENU_ITEMS = [
 
 // offline matches against AI fighters (engine/teamMatch.js)
 const SKIRMISH_MODES = [
-  { id: 'ffa', title: 'Free-for-all', size: '1 + 7 AI', blurb: 'Eight fighters, every one for themselves. First to 15 defeats wins. Respawn after 3 s with 3 s of immunity.' },
-  { id: 'tdm', title: 'Team Deathmatch', size: '6 v 6', blurb: 'Blue against red. The first team to 30 defeats takes the match. Respawn after 4 s with 3 s of immunity.' },
-  { id: 'ctf', title: 'Capture the Flag', size: '7 v 7', blurb: "Steal the enemy flag, carry it home and defend your own. First to three captures." },
-  { id: 'sudden', title: 'Sudden Death', size: '8 v 8', blurb: 'One life each. Eliminate the entire opposing team.' },
+  { id: 'ffa', title: 'Free-for-all', size: '1 + 49 AI', blurb: 'Fifty fighters, every one for themselves. First to 15 defeats wins. Respawn after 3 s with 3 s of immunity.' },
+  { id: 'tdm', title: 'Team Deathmatch', size: '25 v 25', blurb: 'Blue against red. The first team to 50 defeats takes the match. Respawn after 4 s with 3 s of immunity.' },
+  { id: 'ctf', title: 'Capture the Flag', size: '15 v 15', blurb: "Steal the enemy flag, carry it home and defend your own. First to three captures." },
+  { id: 'sudden', title: 'Sudden Death', size: '25 v 25', blurb: 'One life each, fifty fighters. Eliminate the entire opposing team.' },
 ];
 
 const SABER_KITS = [
@@ -41,14 +41,20 @@ const CONTROLS = [
   ['Saber attack · stance', 'Left mouse (flick to aim the swing) · Tab'],
   ['Saber throw', 'Hold right mouse: it homes in on the nearest foe and spins inside them'],
   ['Saber kata', 'Left + right mouse together: a chain of your stance\'s attacks, pressing forward (50 Force)'],
+  ['Saberstaff kicks', 'Right mouse + W / A / S / D with the saberstaff (Jedi Academy moves installed): a kick that way knocks them down'],
   ['Draw saber · Execute', 'R (when a foe glows red and the prompt shows, R executes)'],
-  ['Force Push (charge)', 'Hold 1, release to throw: the longer the hold, the harder the push'],
+  ['Force Push (charge)', 'Hold 1, release to throw: the longer the hold, the harder the push; the full 3 s pushes with both hands, twice as far'],
   ['Force Pull', '2 · jump first to yank them up in front of you; Push them while they hang there to blow them away'],
   ['Grip · Lightning · Heal', '3 · 4 · 5 (hold to channel)'],
+  ['Lightning storm', 'Keep holding 4 for 1.5 s: raise your open hand and the lightning arcs up into the sky and strikes down on every foe within 45 m (drains Force fast)'],
   ['Speed · Mind Trick · Rage · Protect · Absorb', '6 · 7 · 8 · 9 · 0'],
   ['Force Levitate', 'G · lifts a foe helplessly; any hit on them, or an attack by you, drops them'],
-  ['Force Repulse (special)', 'X when the REPULSE meter is full: rise, curl up, burst open; foes around you are blasted away and disintegrate'],
+  ['Force Repulse (special)', 'X at 80% of the special meter (filled by damage and defeats): rise, curl up, burst open; foes around you are blasted away and disintegrate'],
+  ['Mind Dominance (special)', 'V at 55% of the meter: the foe in front of you (up to 15 m) turns their own lightsaber around and ignites it through themselves; Force Absorb resists it'],
   ['Combos', 'Push, then Speed: dash in front of them before they land · throw the saber, then Lightning: charge it'],
+  ['Counter', 'Blocking a strike can parry the blade away (the attacker\'s arms fly up): click at once for a critical vertical strike, double damage; a killing one splits them in half'],
+  ['Force Dodge', 'Automatic: with 15 Force, a strike that gets past your guard may be flash-stepped aside (about 1 in 3), leaving afterimages; then 1.5 s before the next'],
+  ['Force clash', 'Push (or Lightning) right back at someone pushing (or zapping) you: click as fast as you can for 3 s; more clicks wins'],
   ['Taunt', 'T'],
   ['Force selector', 'Mouse wheel or [ ] · F casts the highlighted power'],
   ['Controls · mute · zoom', 'F1 · M · Ctrl + wheel'],
@@ -259,7 +265,7 @@ export default function Game2Menu({ onStart }) {
   );
   else if (item === 'multiplayer') panel = (
     <Panel kicker="Multiplayer · online" title="Free-for-all arena">
-      <p className="text-sm leading-relaxed text-white/70">One real-time arena for up to 10 players from anywhere, Jedi or Dark Jedi. Join or leave at any time; defeated fighters are back in 3 s with 3 s of immunity. Needs a signed-in Atom XE account.</p>
+      <p className="text-sm leading-relaxed text-white/70">Real-time free-for-all with players from anywhere, Jedi or Dark Jedi, with no player limit. Pick the map in the lobby: each map is its own arena. Join or leave at any time; defeated fighters are back in 3 s with 3 s of immunity. Needs a signed-in Atom XE account.</p>
       <SaberPicker saber={saber} setSaber={setSaber} />
       <PlayButton onClick={() => start('online')}>Find the arena</PlayButton>
     </Panel>
@@ -279,7 +285,11 @@ export default function Game2Menu({ onStart }) {
   );
   else if (item === 'practice') panel = (
     <Panel kicker="Duel Practice · offline" title="Dark Jedi duel">
-      <p className="text-sm leading-relaxed text-white/70">One on one with a Reborn in the Lightsaber Training arena. He has the same Force powers, costs and rules as you: break his Grip, answer his Push, and finish him when he is low.</p>
+      <p className="text-sm leading-relaxed text-white/70">One on one with a Reborn. He has the same Force powers, costs and rules as you: break his Grip, answer his Push, and finish him when he is low.</p>
+      <div className="mb-2 mt-5 text-xs font-semibold uppercase tracking-widest text-white/50">Map</div>
+      <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Map">
+        {Object.values(GAME2_SKIRMISH_MAPS).map(m => <Choice key={m.id} on={mapId === m.id} onClick={() => setMapId(m.id)} title={m.label} sub={m.size} blurb={m.blurb} />)}
+      </div>
       <SaberPicker saber={saber} setSaber={setSaber} />
       <PlayButton onClick={() => start('multi')}>Start the duel</PlayButton>
     </Panel>
@@ -300,7 +310,7 @@ export default function Game2Menu({ onStart }) {
         <nav ref={navRef} onKeyDown={onNavKey} aria-label="Game 2 main menu" className="flex shrink-0 flex-col justify-center px-6 pb-4 pt-8 md:w-[320px] md:px-10 md:py-0">
           <div className="mb-8">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300/80"><Gamepad2 className="h-4 w-4" />Game 2</div>
-            <div className="mt-1 text-3xl font-black tracking-[0.08em]">JEDI OUTCAST</div>
+            <div className="mt-1 text-3xl font-black tracking-[0.08em]">JEDI DUELS</div>
             <div className="mt-1 h-px w-40 bg-gradient-to-r from-cyan-300/80 to-transparent" />
           </div>
           <ul className="space-y-1">

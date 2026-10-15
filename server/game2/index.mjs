@@ -1,5 +1,5 @@
 import { createClient } from '@base44/sdk';
-import { createGame2ArenaServer } from './arena.mjs';
+import { createGame2ArenaServer, ARENA_ROOMS, MAX_PLAYERS } from './arena.mjs';
 
 // Every connection is authenticated once through Base44; real-time player data
 // stays on Railway after admission. No Base44 entity polling during combat.
@@ -14,9 +14,10 @@ async function authenticate(token) {
   return user?.id ? { id: String(user.id) } : null;
 }
 
-const arena = createGame2ArenaServer({ authenticate, port });
+const maxPlayers = Number(process.env.GAME2_MAX_PLAYERS) || MAX_PLAYERS; // per arena: a safety ceiling only
+const arena = createGame2ArenaServer({ authenticate, port, maxPlayers });
 const address = await arena.listen();
-console.log('[Game 2 Railway] Arena WebSocket ready on port', address.port, '| protocol 2 | max 10 players');
+console.log('[Game 2 Railway] Arena WebSocket ready on port', address.port, '| protocol 2 | arenas', ARENA_ROOMS.join(', '), '| up to', maxPlayers, 'players each');
 for (const signal of ['SIGTERM', 'SIGINT']) {
   process.once(signal, async () => {
     console.log('[Game 2 Railway] Shutting down arena');

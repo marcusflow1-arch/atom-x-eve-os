@@ -1,9 +1,9 @@
 // Headless Game 2 for behaviour tests: the real Game, Fighter, Force, Combat and saber code on the real Jedi Outcast
 // skeleton and animation bank, with WebGL, audio and the DOM stubbed out. The procedural explorer arena (flat floor at
 // y = 0, radius 23.5 m, kill height -20 m) unless `world` overrides floorAt / collide / killY.
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
-import { Skeleton } from '../../src/components/game2/engine/actor.js';
+import { Skeleton, withDerivedAnims } from '../../src/components/game2/engine/actor.js';
 import { Game } from '../../src/components/game2/engine/game.js';
 import { Force, SELECT_ORDER } from '../../src/components/game2/engine/force.js';
 
@@ -12,13 +12,31 @@ const read = p => readFileSync(new URL(p, root));
 let skel = null, saberData = null;
 function assets() {
   if (!skel) {
-    const rig = JSON.parse(read('public/game2/rig.json'));
+    const rig0 = JSON.parse(read('public/game2/rig.json'));
     const gz = Buffer.concat([0, 1, 2, 3, 4].map(i => read(`public/game2/parts/bank_q.bin.gz.00${i}`)));
-    const q = new Int16Array(new Uint8Array(gunzipSync(gz)).buffer), pel = new Float32Array(new Uint8Array(read('public/game2/bank_pel.bin')).buffer);
-    skel = new Skeleton(rig, q, pel, null); saberData = JSON.parse(read('public/game2/sabermoves.json'));
+    const q0 = new Int16Array(new Uint8Array(gunzipSync(gz)).buffer), pel0 = new Float32Array(new Uint8Array(read('public/game2/bank_pel.bin')).buffer);
+    const { rigJson: rig, bank } = withDerivedAnims(rig0, { q: q0, pel: pel0 }); // as engine/assets.js loadAll does
+    skel = new Skeleton(rig, bank.q, bank.pel, null); saberData = JSON.parse(read('public/game2/sabermoves.json'));
   }
   const ident = { t: [0, 0, 0], q: [0, 0, 0, 1], s: [1, 1, 1] };
   return { skel, saberData, body: {}, hilt: {}, lod: null, duelMap: null, attach: { holster: { ...ident, bone: 'rfemurYZ' }, grip: { ...ident, bone: 'rhand' }, hiltLen: 0.27 } };
+}
+
+// the optional Jedi Academy bank built on this PC (tools/game2/ja-anim-bank.mjs; never committed, so never in CI):
+// tests that need it skip without it. Merged the way engine/assets.js loadLocalBank does it.
+export const JA_BANK = existsSync(new URL('public/game2/local/ja/ja_anims.json', root));
+let jaSkel = null;
+function jaAssets() {
+  const base = assets();
+  if (!jaSkel) {
+    const own = b => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
+    const rig = base.skel.rigJson, meta = JSON.parse(read('public/game2/local/ja/ja_anims.json')), F0 = base.skel.qBank.length / (rig.rig.nBones * 4);
+    const q1 = new Int16Array(own(gunzipSync(read('public/game2/local/ja/ja_q.bin.gz')))), p1 = new Float32Array(own(read('public/game2/local/ja/ja_pel.bin')));
+    const q = new Int16Array(base.skel.qBank.length + q1.length); q.set(base.skel.qBank); q.set(q1, base.skel.qBank.length);
+    const pel = new Float32Array(base.skel.pelBank.length + p1.length); pel.set(base.skel.pelBank); pel.set(p1, base.skel.pelBank.length);
+    jaSkel = new Skeleton({ ...rig, rig: { ...rig.rig, nFrames: F0 + meta.frames }, anims: [...rig.anims, ...meta.anims.map(a => ({ ...a, first: a.first + F0, ja: true }))], jaAnims: meta.anims.length }, q, pel, null);
+  }
+  return { ...base, skel: jaSkel };
 }
 
 function stubDom() {
@@ -29,10 +47,11 @@ const ctx2d = new Proxy({}, { get: (t, k) => (k in t ? t[k] : () => ({ addColorS
 const canvas = () => Object.assign(new EventTarget(), { focus() {}, requestPointerLock() {}, getContext: () => ctx2d, clientWidth: 1280, clientHeight: 720, width: 1280, height: 720, style: {} });
 const renderer = () => ({ uploadSkinned: () => ({}), uploadStatic: () => ({}), lights: [0, 1, 2, 3].map(() => ({ p: [0, 0, 0], r: 0, c: [0, 0, 0] })), env: { sunDir: [0, 1, 0], sunCol: [1, 1, 1], ambTop: [1, 1, 1], ambBot: [1, 1, 1], fogCol: [0, 0, 0], fogD: 0 } });
 
-// make a game; o.world: { floorAt, collide, killY } overrides; the explorer's own NPCs and practice remote are removed
+// make a game; o.world: { floorAt, collide, killY } overrides; the explorer's own NPCs and practice remote are removed;
+// o.ja: with the local Jedi Academy animations (check JA_BANK first)
 export function makeGame(o = {}) {
   stubDom();
-  const g = new Game(renderer(), assets(), canvas(), canvas(), { mode: 'explorer', ...(o.opts || {}) });
+  const g = new Game(renderer(), o.ja ? jaAssets() : assets(), canvas(), canvas(), { mode: 'explorer', ...(o.opts || {}) });
   for (const n of g.npcs.slice()) g.removeNpc(n);
   g.combat.remote = null; g.world.bodies.length = 0; g.hud.help = false; g.started = true; // no practice remote or crates
   if (o.world) Object.assign(g.world, o.world);
@@ -43,7 +62,7 @@ export function makeGame(o = {}) {
 // a skirmish match (engine/teamMatch.js: 'ffa' | 'tdm' | 'ctf' | 'sudden') on an authored arena, bots and level included
 export function makeMatch(mode, mapId = 'skybridge', o = {}) {
   stubDom();
-  const g = new Game(renderer(), assets(), canvas(), canvas(), { mode, mapId, ...(o.opts || {}) });
+  const g = new Game(renderer(), o.ja ? jaAssets() : assets(), canvas(), canvas(), { mode, mapId, ...(o.opts || {}) });
   g.hud.help = false; g.started = true;
   return g;
 }

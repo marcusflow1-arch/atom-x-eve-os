@@ -46,10 +46,10 @@ test('three map choices reference distinct real BSP files in Drive', () => {
   assert.equal(new Set(Object.values(GAME2_ARENA_MAPS).map(m => m.driveFileId)).size, 3);
 });
 
-test('team sizes are 7v7 Capture the Flag and 8v8 Sudden Death', () => {
-  assert.equal(TEAM_MODES.ctf.members, 7);
-  assert.equal(TEAM_MODES.sudden.members, 8);
-  for (const [mode, n] of [['ctf', 7], ['sudden', 8]]) {
+test('team sizes are 15v15 Capture the Flag and 25v25 (50 fighters) Sudden Death', () => {
+  assert.equal(TEAM_MODES.ctf.members, 15);
+  assert.equal(TEAM_MODES.sudden.members, 25);
+  for (const [mode, n] of [['ctf', 15], ['sudden', 25]]) {
     const game = fakeGame();
     new Game2TeamMatch(game, mode);
     assert.equal(game.fighters().length, n * 2);

@@ -13,11 +13,28 @@ import { bolt, drawBolt } from './fx.js';
 import { hostile } from './combat.js';
 
 export const EXECUTE_HP = 0.25, EXECUTE_RANGE = 10, CRUSH_RANGE = 3.6, EXECUTE_COS = 0.57; // in front: within ~55 degrees
-export const EXECUTION_NAMES = { crush: 'Grip · crush', bisect: 'Pull · Lightning · Speed cut' };
+export const DOMINANCE_RANGE = 15;
+export const EXECUTION_NAMES = { crush: 'Grip · crush', bisect: 'Pull · Lightning · Speed cut', dominance: 'Mind Dominance' };
 const BISECT = { pull: 0.45, zap: 1.3, cut: 1.42, dashEnd: 1.55, end: 2.05 }, CRUSH = { lift: 0.5, crush: 1.25, end: 1.95 };
-const ok = new Set(['normal', 'down', 'getup', 'shocked', 'levitated', 'roll']);
+// Mind Dominance: the hilt comes into both hands and turns around (turn..held), they tremble, then ignite it through
+// themselves (stab), and fall (die); the caster holds a hand out at them (Jedi Outcast's mind trick at its peak)
+const DOMINATE = { turn: 0.2, held: 0.75, stab: 1.4, die: 1.95, end: 2.5 }, DOM_CASTER = ['BOTH_MINDTRICK1', 0.27], DOM_VICTIM = ['BOTH_WALK9', 0.02]; // WALK9's first frame: feet together, hands together in front of the solar plexus
+const ok = new Set(['normal', 'down', 'getup', 'shocked', 'levitated', 'roll']), domOk = new Set(['normal', 'shocked', 'roll', 'open']);
 const PAINS = ['BOTH_PAIN1', 'BOTH_PAIN2', 'BOTH_PAIN3', 'BOTH_PAIN4', 'BOTH_PAIN5', 'BOTH_PAIN6'];
 const ease = x => { const t = clamp(x, 0, 1); return t * t * (3 - 2 * t); };
+const holdPose = (a, [anim, at], blend) => a.setBoth(anim, { blend, restart: true, loop: false, speed: 0.02, startAt: at / 0.02 });
+// turn unit vector a toward unit vector b by the fraction k of the angle between them
+function slerpDir(a, b, k) {
+  const d = clamp(v3.dot(a, b), -1, 1), ang = Math.acos(d); if (ang < 1e-3) return b.slice();
+  let ax = v3.cross(a, b); const l = v3.len(ax); ax = l < 1e-4 ? [0, 1, 0] : v3.scale(ax, 1 / l);
+  const t = ang * k, c = Math.cos(t), s = Math.sin(t), kv = v3.cross(ax, a), kd = v3.dot(ax, a);
+  return v3.norm([a[0] * c + kv[0] * s + ax[0] * kd * (1 - c), a[1] * c + kv[1] * s + ax[1] * kd * (1 - c), a[2] * c + kv[2] * s + ax[2] * kd * (1 - c)]);
+}
+// a hilt matrix (Blade: local -Y is the blade) centred at c with the blade along dir
+function hiltMatrix(M, c, dir) {
+  const Y = v3.scale(dir, -1); let X = v3.cross([0, 1, 0], Y); X = v3.len(X) < 1e-3 ? [1, 0, 0] : v3.norm(X); const Z = v3.cross(X, Y);
+  M.fill(0); M[0] = X[0]; M[1] = X[1]; M[2] = X[2]; M[4] = Y[0]; M[5] = Y[1]; M[6] = Y[2]; M[8] = Z[0]; M[9] = Z[1]; M[10] = Z[2]; M[12] = c[0]; M[13] = c[1]; M[14] = c[2]; M[15] = 1; return M;
+}
 
 // which execution `att` could do on `vic` right now (null = none)
 export function executionFor(g, att, vic) {
@@ -39,6 +56,25 @@ export function findExecutable(g, att) {
   }
   return best;
 }
+// whether `att` could turn `vic`'s own lightsaber on them (Mind Dominance): any foe on their feet with a saber in hand or
+// on the belt, in front of `att` and within DOMINANCE_RANGE, at any health
+export function dominanceFor(g, att, vic) {
+  if (!att || !vic || att === vic || vic.status === 'dead' || !hostile(att, vic) || !domOk.has(vic.status)) return false;
+  if (!vic.hasSaber || vic.thrown || vic.spawnShield > g.t || vic.executor || vic.cut) return false;
+  if (att.status !== 'normal' || !att.onGround || att.executing) return false;
+  const dx = vic.pos[0] - att.pos[0], dz = vic.pos[2] - att.pos[2], d = Math.hypot(dx, dz);
+  if (d > DOMINANCE_RANGE || d < 0.05 || Math.abs(vic.pos[1] - att.pos[1]) > 4) return false;
+  return (Math.sin(att.yaw) * dx + Math.cos(att.yaw) * dz) / d >= EXECUTE_COS;
+}
+export function findDominated(g, att) {
+  let best = null, score = -Infinity;
+  for (const f of g.foesOf(att)) {
+    if (!dominanceFor(g, att, f)) continue;
+    const dx = f.pos[0] - att.pos[0], dz = f.pos[2] - att.pos[2], d = Math.hypot(dx, dz), s = (Math.sin(att.yaw) * dx + Math.cos(att.yaw) * dz) / d * 4 - d * 0.1;
+    if (s > score) { score = s; best = f; }
+  }
+  return best;
+}
 
 export class Execution {
   // o.fwd / o.hold: given when another player's game started it (both games use the same points)
@@ -47,7 +83,8 @@ export class Execution {
     const dx = vic.pos[0] - att.pos[0], dz = vic.pos[2] - att.pos[2], d = Math.hypot(dx, dz) || 1;
     this.fwd = o.fwd ? v3.norm([o.fwd[0], 0, o.fwd[2]]) : [dx / d, 0, dz / d];
     const fl = g.world.floorAt(att.pos[0], att.pos[2], att.pos[1] + 0.6) ?? att.pos[1];
-    this.hold = o.hold || [att.pos[0] + this.fwd[0] * (kind === 'crush' ? 2.0 : 2.5), fl + (kind === 'crush' ? 0.9 : 1.05), att.pos[2] + this.fwd[2] * (kind === 'crush' ? 2.0 : 2.5)];
+    this.hold = o.hold || (kind === 'dominance' ? vic.pos.slice() : [att.pos[0] + this.fwd[0] * (kind === 'crush' ? 2.0 : 2.5), fl + (kind === 'crush' ? 0.9 : 1.05), att.pos[2] + this.fwd[2] * (kind === 'crush' ? 2.0 : 2.5)]); // dominated: they stay where they stand
+    if (kind === 'dominance') this.hm = new Float32Array(16);
     this.start = { att: att.pos.slice(), vic: vic.pos.slice() };
     this.dashEnd = v3.addS([this.hold[0], fl, this.hold[2]], this.fwd, 3.2);
     this.driveAtt = !att.remote; this.driveVic = !vic.remote;
@@ -59,19 +96,23 @@ export class Execution {
     }
     if (this.driveVic) {
       const F = g.forceOf(vic); if (F) { F.releaseAll?.(true); }
-      vic.endForce(); vic.cancelAttackState(); if (vic.hasSaber && !vic.saber.holstered) vic.extinguish(); // helpless: the blade goes out
-      vic.status = 'executed'; vic.statusT = 0; vic.vel = [0, 0, 0]; vic.shoveV = [0, 0, 0]; vic.onGround = false; vic.yaw = vic.targetYaw = yaw + Math.PI;
+      vic.endForce(); vic.cancelAttackState();
+      if (kind === 'dominance') { if (vic.blade.lit) { vic.blade.set(false); g.sfxAt('saberoff', vic.pos, 0.8); g.humStop && g.humStop(vic); } } // the blade goes out; the hilt stays to be turned on them
+      else if (vic.hasSaber && !vic.saber.holstered) vic.extinguish(); // helpless: the blade goes out
+      vic.status = 'executed'; vic.statusT = 0; vic.vel = [0, 0, 0]; vic.shoveV = [0, 0, 0]; vic.onGround = kind === 'dominance'; vic.yaw = vic.targetYaw = yaw + Math.PI;
     }
     vic.executor = att; vic.markAttacker?.(att);
-    if (att.isPlayer || vic.isPlayer) g.banner(vic.isPlayer ? 'EXECUTED' : 'EXECUTION', vic.isPlayer ? [1, 0.4, 0.35] : [1, 0.85, 0.55], 1.6);
+    if (kind === 'dominance') { if (att.isPlayer || vic.isPlayer) g.banner(vic.isPlayer ? 'DOMINATED' : 'MIND DOMINANCE', vic.isPlayer ? [1, 0.4, 0.35] : [0.85, 0.6, 1], 1.6); }
+    else if (att.isPlayer || vic.isPlayer) g.banner(vic.isPlayer ? 'EXECUTED' : 'EXECUTION', vic.isPlayer ? [1, 0.4, 0.35] : [1, 0.85, 0.55], 1.6);
   }
   step(k, fn) { if (!this.once.has(k)) { this.once.add(k); fn(); } }
   hands() { const a = this.att.actor; return [a.bonePos('lhand'), a.bonePos('rhand')]; }
   update(dt) {
     if (this.done) return;
     const g = this.g, att = this.att, vic = this.vic; this.t += dt;
-    if (att.status === 'dead' || (this.driveAtt && att.status !== 'executing') || (!this.driveAtt && !g.fighters().includes(att))) return this.cancel();
-    if (this.kind === 'bisect') this.bisect(dt); else this.crush(dt);
+    const gone = att.status === 'dead' || (this.driveAtt && att.status !== 'executing') || (!this.driveAtt && !g.fighters().includes(att));
+    if (gone && !(this.kind === 'dominance' && this.once.has('stab'))) return this.cancel(); // once their own blade is through them it is too late
+    if (this.kind === 'bisect') this.bisect(dt); else if (this.kind === 'dominance') this.dominance(dt); else this.crush(dt);
   }
   // ---------------- Pull, Lightning, Speed cut
   bisect(dt) {
@@ -128,17 +169,67 @@ export class Execution {
     });
     if (T >= C.end) this.finish();
   }
+  // ---------------- Mind Dominance: they turn their own lightsaber on themselves
+  // the hilt held in both hands at the solar plexus, the blade pointing through the spine (it comes out of the back)
+  selfStab(push = 0) {
+    const vic = this.vic, a = vic.actor, L = a.bonePos('lhand'), R = a.bonePos('rhand'), c = [(L[0] + R[0]) / 2, (L[1] + R[1]) / 2, (L[2] + R[2]) / 2];
+    // between the wrists, aimed at the spine and straight back out of them (the two agree on an upright body; the second
+    // keeps it level whatever the grip offsets put the palms), a little upward
+    const spine = v3.norm(v3.sub(v3.addS(a.bonePos('upper_lumbar'), [0, 1, 0], 0.05), c)), back = [-Math.sin(vic.yaw), 0.1, -Math.cos(vic.yaw)];
+    const dir = v3.norm(v3.add(spine, v3.norm(back)));
+    return { c: v3.addS(c, dir, push - 0.05), dir };
+  }
+  dominance(dt) {
+    const g = this.g, att = this.att, vic = this.vic, T = this.t, D = DOMINATE;
+    this.step('seize', () => {
+      if (this.driveAtt) holdPose(att.actor, DOM_CASTER, 0.12);
+      g.sfxAt('distract', att.pos, 1); g.sfxAt('see', vic.pos, 0.8);
+      if (this.driveVic) holdPose(vic.actor, DOM_VICTIM, 0.45);
+    });
+    if (this.driveAtt && att.status === 'executing') att.yaw = att.targetYaw = Math.atan2(vic.pos[0] - att.pos[0], vic.pos[2] - att.pos[2]);
+    // the hilt: from the hand (or the belt) into both hands, turned around on them
+    if (T >= D.turn && T < D.die + 0.3) {
+      if (!this.hilt0) { const M = vic.hiltMat; this.hilt0 = { c: [M[12], M[13], M[14]], dir: v3.norm([-M[4], -M[5], -M[6]]) }; }
+      const tgt = this.selfStab(T >= D.stab ? 0.04 : 0), k = ease((T - D.turn) / (D.held - D.turn));
+      let c = v3.lerp(this.hilt0.c, tgt.c, k); const dir = slerpDir(this.hilt0.dir, tgt.dir, k);
+      if (T >= D.held && T < D.stab) c = v3.addS(c, [Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5], 0.012 * (T - D.held) / (D.stab - D.held)); // fighting it, shaking more and more
+      vic.hiltPose = hiltMatrix(this.hm, c, dir);
+    } else if (vic.hiltPose === this.hm) vic.hiltPose = null;
+    if (this.driveVic && vic.status === 'executed') vic.pos = T < D.stab ? [this.hold[0] + (Math.random() - 0.5) * 0.012 * ease(T / D.stab), this.hold[1], this.hold[2] + (Math.random() - 0.5) * 0.012 * ease(T / D.stab)] : this.hold.slice();
+    if (T >= D.stab) this.step('stab', () => { // ignited through themselves
+      if (this.driveVic) { vic.blade.set(true); g.humStart && g.humStart(vic); }
+      const p = this.selfStab(), out = v3.addS(p.c, p.dir, 0.42), front = v3.addS(p.c, p.dir, 0.1);
+      g.sfxAt('saberon', vic.pos, 1); g.sfxAt('hit3', front, 1); g.sfxAt('hit2', out, 0.7);
+      g.fx.sparks(out, p.dir, 22, [1, 0.75, 0.4, 1]); g.fx.sparks(front, v3.scale(p.dir, -1), 8, [1, 0.6, 0.3, 1]); g.flashLight(out, vic.blade.color, 0.4);
+      vic.dmgFlash = 1; this.exit = out;
+      if (att.isPlayer || vic.isPlayer) { g.shake(0.4); if (!g.net) g.slowMo = { until: g.t + 0.5, scale: 0.35 }; }
+    });
+    if (this.exit && T < D.die + 0.3 && Math.random() < 0.5) g.fx.emit({ p: v3.addS(this.exit, [Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5], 0.08), v: [0, 0.6, 0], life: 0.7, size: 0.05, grow: 0.25, c0: [0.35, 0.33, 0.32, 0.45], c1: [0.2, 0.2, 0.2, 0] }); // cauterized
+    if (T >= D.die) this.step('die', () => {
+      if (this.driveAtt && att.status === 'executing') { att.actor.followLegs(); att.actor.torso.cur = null; }
+      if (!this.driveVic || vic.status === 'dead') return;
+      vic.blade.set(false); g.sfxAt('saberoff', vic.pos, 0.8); g.humStop && g.humStop(vic); vic.saber.holstered = true;
+      vic.hp = 0; vic.status = 'normal'; vic.die(att, { deathAnim: 'BOTH_DEATH18' }); // sinks to the knees, then forward onto the face vic.executor = null;
+    });
+    if (T >= D.end) this.finish();
+  }
   finish() {
     if (this.done) return; this.done = true; this.bolts = []; this.beam = null; if (this.loop) { this.loop.stop(0.1); this.loop = null; }
+    if (this.hm && this.vic.hiltPose === this.hm) this.vic.hiltPose = null;
     const att = this.att; att.executing = null;
     if (this.driveAtt && att.status === 'executing') { att.status = 'normal'; att.endForce(); att.actor.followLegs(); att.actor.torso.cur = null; att.vel = [0, 0, 0]; }
     if (this.vic.executor === att) this.vic.executor = null;
   }
   cancel() { // the executor died (or left): the victim drops, alive
     const vic = this.vic; this.finish();
-    if (this.driveVic && vic.status === 'executed') { vic.status = 'flung'; vic.statusT = 0; vic.vel = [0, -0.5, 0]; vic.playWhole('BOTH_KNOCKDOWN1', { blend: 0.08 }); }
+    if (this.driveVic && vic.status === 'executed' && this.kind === 'dominance') { vic.status = 'normal'; vic.statusT = 0; vic.actor.followLegs(); vic.actor.torso.cur = null; if (!vic.saber.holstered) vic.extinguish(); } // the hold on their mind is broken
+    else if (this.driveVic && vic.status === 'executed') { vic.status = 'flung'; vic.statusT = 0; vic.vel = [0, -0.5, 0]; vic.playWhole('BOTH_KNOCKDOWN1', { blend: 0.08 }); }
   }
   draw(R) {
+    if (this.kind === 'dominance' && !this.done && this.t < DOMINATE.die) { // a haze over the mind they no longer own
+      const h = this.vic.actor.bonePos('cranium'), w = 0.75 + 0.25 * Math.sin(this.t * 9); R.billboard(h, 0.62, [0.7, 0.4, 1, 0.22 * w], 0); R.billboard(h, 0.36, [0.85, 0.6, 1, 0.25 * w], 0);
+      const hand = this.att.actor.bonePos('lhand'); R.billboard(hand, 0.3, [0.75, 0.5, 1, 0.3 * w], 0);
+    }
     for (const b of this.bolts) drawBolt(R, b, [0.55, 0.75, 1], 1);
     if (this.beam) { const pts = bolt(this.beam.a, this.beam.b, 12, 0.05); for (let i = 0; i < pts.length - 1; i++) { R.beam(pts[i], pts[i + 1], 0.06, [1, 0.25, 0.12, 0.3]); R.beam(pts[i], pts[i + 1], 0.018, [1, 0.85, 0.8, 0.9]); } }
   }
@@ -148,6 +239,14 @@ export class Execution {
 // upper half slides off along the cut and falls, both with a cauterized cut face
 export function cutTransforms(f, now) {
   const c = f.cut, t = Math.max(0, now - c.t), lat = v3.norm(v3.cross([0, 1, 0], c.dir)); // axis the halves tip over
+  if (c.vertical) { // split down the middle (the Counter's strike): the halves part and fall away to either side
+    const feet = [f.pos[0], c.floor, f.pos[2]], d = lat[0] * feet[0] + lat[1] * feet[1] + lat[2] * feet[2], ang = Math.min(1.5, 3.6 * Math.max(0, t - 0.12) ** 2 * 3);
+    const half = s => { // s = +1 the side lat points to, -1 the other; rotating about the cut direction by -s tips it toward s
+      const r = m4.trs([0, 0, 0], Q.axisAngle(c.dir, -s * ang), [1, 1, 1]), sl = Math.min(0.22, t * 0.7) * s;
+      return m4.mul(m4.trs([feet[0] + lat[0] * sl, feet[1], feet[2] + lat[2] * sl], [0, 0, 0, 1], [1, 1, 1]), m4.mul(r, m4.trs([-feet[0], -feet[1], -feet[2]], [0, 0, 0, 1], [1, 1, 1])));
+    };
+    return { lower: half(1), upper: half(-1), lowerClip: new Float32Array([lat[0], lat[1], lat[2], -d]), upperClip: new Float32Array([-lat[0], -lat[1], -lat[2], d]) };
+  }
   const fall = (pivot, ang, dy, slide) => {
     const r = m4.trs([0, 0, 0], Q.axisAngle(lat, ang), [1, 1, 1]), T1 = m4.trs([pivot[0] + slide[0], pivot[1] + dy, pivot[2] + slide[2]], [0, 0, 0, 1], [1, 1, 1]), T0 = m4.trs([-pivot[0], -pivot[1], -pivot[2]], [0, 0, 0, 1], [1, 1, 1]);
     return m4.mul(T1, m4.mul(r, T0));

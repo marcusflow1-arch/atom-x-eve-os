@@ -32,6 +32,7 @@ function layout() {
   L.teamHomes = { blue: [-55, 0.3, 0], red: [55, 0.3, 0] };
   L.teamYaw = { blue: Math.PI / 2, red: -Math.PI / 2 };
   L.music = 'skybridge'; // its own generated battle score (music.js)
+  L.duelSpawns = { player: [-6.5, 0, 2], enemy: [6.5, 0, -2] }; // Duel Practice: face to face on the centre island
 
   // ---------- the two fortresses (mirror images: s = -1 Blue in the west, s = +1 Red in the east)
   for (const s of [-1, 1]) {

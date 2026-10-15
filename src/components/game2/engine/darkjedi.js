@@ -46,6 +46,8 @@ export function aiDarkJedi(g, f, dt) {
   }
   // ---- Force Repulse when it is charged and the foe is close
   if (F.pulseReady && F.pulseReady() && dist < 5.5 && f.forceUntil <= g.t && Math.random() < dt * 2) { F.startPulse(); return; }
+  // ---- Mind Dominance (short of a Repulse): saved for a foe who is already hurt, from a few steps away
+  if (F.dominanceReady && F.dominanceReady() && !F.pulseReady() && dist > 2.5 && dist < 10 && facing && P.hp <= 0.6 * P.maxHp && f.forceUntil <= g.t && Math.random() < dt * 0.3) { if (F.startDominance(P)) { F.want = {}; return; } }
   // ---- Levitate + Push: push the fighter it lifted a moment ago (they are launched)
   if (a.comboPushAt && g.t >= a.comboPushAt) { a.comboPushAt = 0; if (P.status === 'levitated' && f.forceUntil <= g.t && F.gcd <= 0) { F.cast('push'); return; } }
   // ---- Force powers (picked by distance, Force left and cooldowns)

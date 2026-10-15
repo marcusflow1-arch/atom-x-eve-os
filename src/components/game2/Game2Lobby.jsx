@@ -3,10 +3,13 @@ import { ArrowLeft, Loader2, LogIn, Swords, Users, Wifi } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { LocalSignaling, makePeerId, pickArena, MAX_PLAYERS } from './net/signaling.js';
-import { game2RailwayStatus } from './net/railway.js';
+import { game2RailwayStatus, GAME2_RAILWAY_MAX } from './net/railway.js';
+import { GAME2_SKIRMISH_MAPS } from './engine/arenaMaps.js';
 
-// Game 2 multiplayer: one free-for-all arena everybody shares. Pick a callsign and a look (Jedi or Dark Jedi) and enter;
-// the first player in opens the arena, everyone after joins it, and anyone can leave at any time.
+// Game 2 multiplayer: a free-for-all arena on every map. Pick the map, a callsign and a look (Jedi or Dark Jedi) and enter;
+// the first player in opens that map's arena, everyone after joins it, and anyone can leave at any time. A Railway
+// server from before map arenas (no `rooms` in its status) has only Lightsaber Training: then that is the one choice.
+const MAP_KEY = 'atomxe.game2.onlineMap';
 // Live / editor sessions query the same Railway server; gameplay is relayed by
 // persistent WebSocket, with Base44 only verifying login at admission.
 // ?g2net=local is reserved for localhost automated/test development.
@@ -38,8 +41,12 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
   const [side, setSide] = useState(() => (store.get(SIDE_KEY, 'light') === 'dark' ? 'dark' : 'light'));
   const [includeAi, setIncludeAi] = useState(false); // Multiplayer is human-first; host may opt into a bot.
   const [arena, setArena] = useState(undefined); // undefined = loading, null = nobody in yet
+  const [arenas, setArenas] = useState(null); // players in each map's arena (a server with map arenas)
+  const [rooms, setRooms] = useState(local); // does the server keep an arena per map?
+  const [mapId, setMapId] = useState(() => (GAME2_SKIRMISH_MAPS[store.get(MAP_KEY, 'skybridge')] ? store.get(MAP_KEY, 'skybridge') : 'skybridge'));
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const map = rooms ? mapId : 'training';
 
   useEffect(() => { // signed-in account (the arena and its signals are tied to it); local test mode needs none
     let off = false;
@@ -59,12 +66,12 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
     let off = false;
     const load = async () => {
       try {
-        // Railway owns the single arena and exposes the actual HUMAN player count.
+        // Railway owns the arenas and exposes the actual HUMAN player count of each.
         // No Base44 Game2Room/Game2Signal reads or polling during multiplayer.
-        const room = local
-          ? pickArena(await sig.listRooms())
-          : await game2RailwayStatus().then(status => status.players > 0 ? status : null);
-        if (!off) { setArena(room); setError(''); }
+        if (local) { const room = pickArena(await sig.listRooms()); if (!off) { setArena(room); setError(''); } return; }
+        const status = await game2RailwayStatus(), byMap = status.rooms ? status.arenas || {} : { training: status };
+        const here = byMap[status.rooms ? mapId : 'training'];
+        if (!off) { setRooms(!!status.rooms); setArenas(byMap); setArena(here && here.players > 0 ? here : null); setError(''); }
       } catch (e) {
         if (off) return;
         setError('Could not reach the Railway multiplayer server: ' + String(e?.message || e));
@@ -73,11 +80,13 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
     load();
     const t = setInterval(load, 3000);
     return () => { off = true; clearInterval(t); };
-  }, [user, sig, local]);
+  }, [user, sig, local, mapId]);
 
   const callsign = (name || 'Jedi').trim().slice(0, 20) || 'Jedi';
-  const players = arena ? arena.players || 1 : 0, full = players >= MAX_PLAYERS;
-  const enter = () => { if (error || arena === undefined || !user || busy || full) return; store.set(NAME_KEY, callsign); store.set(SIDE_KEY, side); setBusy(true); onStart({ name: callsign, side, ai: includeAi ? 1 : 0, selfId: makePeerId(user.id), local }); };
+  const cap = local ? MAX_PLAYERS : GAME2_RAILWAY_MAX; // local tests: the browser mesh; Railway: a safety ceiling only
+  const players = arena ? arena.players || 1 : 0, full = players >= cap;
+  const choose = id => { setMapId(id); store.set(MAP_KEY, id); setArena(undefined); };
+  const enter = () => { if (error || arena === undefined || !user || busy || full) return; store.set(NAME_KEY, callsign); store.set(SIDE_KEY, side); setBusy(true); onStart({ name: callsign, side, ai: includeAi ? 1 : 0, selfId: makePeerId(user.id), local, mapId: map }); };
 
   return (
     <div className="absolute inset-0 overflow-y-auto bg-[radial-gradient(ellipse_at_top,#1a1530_0%,#070812_55%,#05060c_100%)] text-white">
@@ -88,7 +97,7 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
         <div className="mb-6">
           <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-300/80">Game 2 · Multiplayer</div>
           <h1 className="mt-1 text-2xl font-extrabold tracking-wide sm:text-3xl">Free-for-all arena</h1>
-          <p className="mt-1 max-w-2xl text-sm text-white/55">One shared Lightsaber Training arena for up to {MAX_PLAYERS} human-controlled Jedi or Dark Jedi. Players from other browsers and countries join the same fight. An AI Reborn opponent is optional; a bot does not count as a human player.</p>
+          <p className="mt-1 max-w-2xl text-sm text-white/55">Pick a map: each one is its own arena, with no player limit. Human-controlled Jedi and Dark Jedi from other browsers and countries join the same fight. An AI Reborn opponent is optional; a bot does not count as a human player.</p>
         </div>
 
         {auth === 'checking' && <div className="flex items-center gap-2 text-sm text-white/60"><Loader2 className="h-4 w-4 animate-spin" /> Checking your account…</div>}
@@ -105,13 +114,29 @@ export default function Game2Lobby({ onBack, onStart, onPractice }) {
 
         {auth === 'in' && (
           <>
+            <div className="mb-4">
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Map</div>
+              <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Map">
+                {Object.values(GAME2_SKIRMISH_MAPS).map(m => {
+                  const on = map === m.id, usable = rooms || m.id === 'training', n = arenas?.[m.id]?.players || 0;
+                  return (
+                    <button key={m.id} type="button" disabled={!usable} onClick={() => choose(m.id)} aria-pressed={on}
+                      className={`rounded-xl border px-3 py-2.5 text-left transition ${on ? 'border-cyan-300/70 bg-cyan-400/10' : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06]'} disabled:cursor-not-allowed disabled:opacity-40`}>
+                      <div className="flex items-center justify-between gap-2 text-sm font-bold">{m.label}<span className="text-[11px] font-semibold text-white/50">{usable && arenas ? (n ? n + ' in' : 'empty') : m.size}</span></div>
+                      <div className="mt-0.5 text-[11px] text-white/50">{m.blurb}</div>
+                    </button>
+                  );
+                })}
+              </div>
+              {!rooms && !local && arenas && <div className="mt-2 text-[11px] text-amber-100/80">The multiplayer server has not been updated for map arenas yet, so everyone plays in Lightsaber Training. Redeploy the Railway server (server/game2) to open the other maps.</div>}
+            </div>
             <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Lightsaber Training</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">{GAME2_SKIRMISH_MAPS[map]?.label || 'Lightsaber Training'}</div>
                   <div className="mt-1 flex items-center gap-2 text-lg font-bold">
                     <Users className="h-5 w-5 text-cyan-200" />
-                    {arena === undefined ? 'Checking the arena…' : players === 0 ? 'Nobody in yet: you open it' : `${players}/${MAX_PLAYERS} players in`}
+                    {arena === undefined ? 'Checking the arena…' : players === 0 ? 'Nobody in yet: you open it' : `${players} player${players === 1 ? '' : 's'} in`}
                   </div>
                   {arena && <div className="mt-0.5 text-xs text-white/50"><span className="text-sky-300">{arena.light || 0} Jedi</span> · <span className="text-rose-300">{arena.dark || 0} Dark Jedi</span>{arena.ai ? ` · ${arena.ai} AI Reborn` : ''}</div>}
                 </div>

@@ -1,15 +1,17 @@
-# Game Two — skirmish: Skybridge Citadel and the Drive arenas; FFA, TDM, 7v7 CTF, 8v8 Sudden Death
+# Game Two — skirmish: Skybridge Citadel and the Drive arenas; 50-fighter FFA, 25v25 TDM, 15v15 CTF, 25v25 Sudden Death
 
 This applies to **Atom XE → Luna → Game Two**, not the separate Unreal project.
 
 ## Team modes
 
-- **Capture the Flag**: Blue = player + 6 bots; Red = 7 bots. Take the enemy flag back to your own base while your flag is home. Flag drop on death, 20-second auto-return, 5-second respawn, first to three captures wins.
-- **Sudden Death**: Blue = player + 7 bots; Red = 8 bots. No respawns. Eliminate the entire opposing team.
-- **Team Deathmatch**: Blue = player + 5 bots; Red = 6 bots. 4-second respawns; the first team to 30 defeats wins.
-- **Free for All**: the player and 7 bots, each with their own blade colour, everyone hostile to everyone. 3-second respawns at the spawn point furthest from everyone; the first to 15 defeats wins.
+- **Capture the Flag**: Blue = player + 14 bots; Red = 15 bots. Take the enemy flag back to your own base while your flag is home. Flag drop on death, 20-second auto-return, 5-second respawn, first to three captures wins.
+- **Sudden Death**: Blue = player + 24 bots; Red = 25 bots (50 fighters). No respawns. Eliminate the entire opposing team.
+- **Team Deathmatch**: Blue = player + 24 bots; Red = 25 bots. 4-second respawns; the first team to 50 defeats wins.
+- **Free for All**: the player and 49 bots, each with their own blade colour, everyone hostile to everyone. 3-second respawns at the spawn point furthest from everyone; the first to 15 defeats wins.
 
-Every respawn comes with 3 seconds of immunity. These are **local player vs AI matches**, not 16-player live networking. The existing 10-human Railway arena and the Jedi Outcast campaign remain separate. Code: `src/components/game2/engine/teamMatch.js`.
+Every respawn comes with 3 seconds of immunity. Every map can host every mode, and Duel Practice too (on Skybridge the duel is on the centre island).
+
+Big matches stay at 60 fps: past 16 bots, the bots far from the camera update less often (over 12 m at 30 Hz, over 20 m at 20 Hz, each update covering the steps it skipped) and are posed every other update; evaluated poses are shared between fighters; saber contact is only tested within 4.5 m. A 50-fighter Free for All measured 5.5 ms per simulation step and 4.4 ms per frame drawn in the browser. These are **local player vs AI matches**, not 16-player live networking. The existing 10-human Railway arena and the Jedi Outcast campaign remain separate. Code: `src/components/game2/engine/teamMatch.js`.
 
 ## Skybridge Citadel (authored, the default skirmish map)
 

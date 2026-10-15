@@ -6,6 +6,28 @@ import { m4, q as Q, clamp } from './math.js';
 
 const gx = v => [v[0], v[2], -v[1]]; // G2 (X left, Y back, Z up) -> glTF (X left, Y up, Z front)
 
+// Animations derived from the bank at load (appended after it, before any optional local bank, so indices match for
+// every player). G2_FORCEPUSH_2H: Jedi Outcast's Force Push is one-handed (the left hand; the right holds the saber);
+// the fully charged push gives the right arm the mirror image of the left one. Every arm bone's rotation is relative to
+// the thoracic bone and the rest pose is symmetric, so the mirror across the body's left / right plane (G2 axes: X left)
+// is per bone: (w, x, y, z) -> (w, x, -y, -z).
+const MIRROR_ARM = /^(r(clavical|humerus|humerusX|radius|radiusX|hand)|r_d\d_j\d)$/;
+export function withDerivedAnims(rigJson, bank) {
+  const R = rigJson.rig, NB = R.nBones, names = R.g2Bones, src = rigJson.anims.find(a => a.name === 'BOTH_FORCEPUSH');
+  if (!src || rigJson.anims.some(a => a.name === 'G2_FORCEPUSH_2H')) return { rigJson, bank };
+  const idx = Object.fromEntries(names.map((n, i) => [n, i]));
+  const pairs = names.map((n, i) => MIRROR_ARM.test(n) ? [i, idx['l' + n.slice(1)]] : null).filter(p => p && p[1] != null);
+  const F0 = bank.q.length / (NB * 4), n = src.n, q = new Int16Array(bank.q.length + n * NB * 4), pel = new Float32Array(bank.pel.length + n * 3);
+  q.set(bank.q); pel.set(bank.pel);
+  for (let k = 0; k < n; k++) {
+    const s = (src.first + k) * NB * 4, d = (F0 + k) * NB * 4;
+    q.set(bank.q.subarray(s, s + NB * 4), d);
+    for (const [r, l] of pairs) { const o = s + l * 4, t = d + r * 4; q[t] = bank.q[o]; q[t + 1] = bank.q[o + 1]; q[t + 2] = -bank.q[o + 2]; q[t + 3] = -bank.q[o + 3]; }
+    pel.set(bank.pel.subarray((src.first + k) * 3, (src.first + k) * 3 + 3), (F0 + k) * 3);
+  }
+  return { rigJson: { ...rigJson, rig: { ...R, nFrames: F0 + n }, anims: [...rigJson.anims, { name: 'G2_FORCEPUSH_2H', first: F0, n, loop: -1, fps: src.fps }] }, bank: { q, pel } };
+}
+
 export class Skeleton {            // shared, immutable data
   constructor(rigJson, qBank, pelBank, glb) {
     this.rigJson = rigJson; this.qBank = qBank; this.pelBank = pelBank;
@@ -94,15 +116,28 @@ export class Actor {
   _evalPose(lSt, tSt, now, outQ, outPel) {
     const rig = this.rig, N = this.nBones;
     const l = this._sample(lSt, now), t = this._sample(tSt, now);
-    const mp = this.matchPelvis && lSt !== tSt; rig.evaluate(l[0], t[0], mp); this._grab(rig, this.poseA, this.pelA);
+    const mp = this.matchPelvis && lSt !== tSt; this._pose(rig, l[0], t[0], mp, this.poseA, this.pelA);
     if (l[2] > 1e-4 || t[2] > 1e-4) {
-      rig.evaluate(l[1], t[1], mp); this._grab(rig, this.poseB, this.pelB);
+      this._pose(rig, l[1], t[1], mp, this.poseB, this.pelB);
       for (let i = 1; i < N; i++) { const f = this.skel.isTorso[i] ? t[2] : l[2]; if (f > 1e-4) Q.slerp(this.poseA[i], this.poseB[i], f, outQ[i]); else { const a = this.poseA[i], o = outQ[i]; o[0] = a[0]; o[1] = a[1]; o[2] = a[2]; o[3] = a[3]; } }
       for (let k = 0; k < 3; k++) outPel[k] = this.pelA[k] + (this.pelB[k] - this.pelA[k]) * l[2];
     } else {
       for (let i = 1; i < N; i++) { const a = this.poseA[i], o = outQ[i]; o[0] = a[0]; o[1] = a[1]; o[2] = a[2]; o[3] = a[3]; }
       outPel[0] = this.pelA[0]; outPel[1] = this.pelA[1]; outPel[2] = this.pelA[2];
     }
+  }
+  // an evaluated pose depends only on its two frames (and the hip match), so everyone shares them: in a big match many
+  // fighters play the same frames of the same animations. Bounded cache (cleared when full).
+  _pose(rig, fl, ft, mp, outQ, outPel) {
+    const C = rig.poseCache ??= new Map(), key = (fl * 131072 + ft) * 2 + (mp ? 1 : 0); let e = C.get(key);
+    if (!e) {
+      rig.evaluate(fl, ft, mp); const n = rig.localQ.length; e = new Float64Array(n * 4 + 3);
+      for (let i = 0; i < n; i++) e.set(rig.localQ[i], i * 4); e[n * 4] = rig.pelvisPos[0]; e[n * 4 + 1] = rig.pelvisPos[1]; e[n * 4 + 2] = rig.pelvisPos[2];
+      if (C.size >= 4096) C.clear(); C.set(key, e);
+    }
+    const n = (e.length - 3) >> 2;
+    for (let i = 0; i < n; i++) { const o = outQ[i + 1], k = i * 4; o[0] = e[k]; o[1] = e[k + 1]; o[2] = e[k + 2]; o[3] = e[k + 3]; }
+    outPel[0] = e[n * 4]; outPel[1] = e[n * 4 + 1]; outPel[2] = e[n * 4 + 2];
   }
   _grab(rig, outQ, outPel) { // rig.localQ is in nest order (= skeleton index-1)
     for (let i = 0; i < rig.localQ.length; i++) { const s = rig.localQ[i], o = outQ[i + 1]; o[0] = s[0]; o[1] = s[1]; o[2] = s[2]; o[3] = s[3]; }
@@ -177,6 +212,8 @@ export class Actor {
     }
     m4.fromYaw(this.yaw, this.pos, this.model);
   }
+  // only move the model (position / facing) and keep the last pose: distant fighters in big matches skip every other pose
+  place(now) { this.now = now; m4.fromYaw(this.yaw, this.pos, this.model); }
   pelvisLocal() { return this.pelvis; }
   // bone world matrix (rotation+position, no scale) in world space
   boneMatrix(name, out = new Float32Array(16)) {

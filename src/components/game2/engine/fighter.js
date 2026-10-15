@@ -2,7 +2,7 @@
 // Fighter: a character with Jedi-Outcast-style locomotion, jump/roll/crouch, saber state machine and reaction states.
 // Used for the player (input driven), the sparring droids / duelist / ally (AI driven).
 import { Actor } from './actor.js';
-import { SaberLogic } from './saber.js';
+import { SaberLogic, KIT_STANCES } from './saber.js';
 import { Blade } from './fx.js';
 import { m4, v3, q as Q, clamp, wrapPi, DEG, lerp } from './math.js';
 
@@ -11,6 +11,8 @@ const G = 20;                                   // gravity m/s^2 (JO 800 u/s^2)
 // THROW_SEEK m of the blade, and on contact lodges in them and keeps spinning there (THROW_LODGE_DPS) while the throw is
 // held, for up to THROW_LODGE_S; releasing the throw, the victim's Force Push or their death sends it home.
 export const THROW_SPIN = 72, THROW_SEEK = 7, THROW_TURN = 4.5, THROW_LODGE_S = 2.6, THROW_LODGE_DPS = 25;
+// every saber throw hit (the first contact, THROW_HIT, and the lodged spin) deals THROW_DAMAGE_MUL of it: 15% less
+export const THROW_HIT = 14, THROW_DAMAGE_MUL = 0.85;
 // thrown into a wall faster than this (m/s, into the wall) slams into it (Game.onWallSlam); slower just bumps
 export const WALL_SLAM_SPEED = 6;
 // Force Levitate: the victim floats LEVITATE_HEIGHT m up, helpless, for the caster's duration; any hit drops them
@@ -31,6 +33,12 @@ export const KATA_STEPS = Object.freeze({
   dual: ['LS_A_L2R', 'LS_A_R2L', 'LS_A_BACK', 'LS_A_BR2TL'],
   staff: ['LS_A_BACK', 'LS_A_L2R', 'LS_A_R2L', 'LS_A_BACK_CR'],
 });
+// with the local Jedi Academy bank, the kata is the real one: one long whole-body move per stance or kit
+export const KATA_ANIMS = Object.freeze({ 1: 'BOTH_A1_SPECIAL', 2: 'BOTH_A2_SPECIAL', 3: 'BOTH_A3_SPECIAL', dual: 'BOTH_A6_SABERPROTECT', staff: 'BOTH_A7_SOULCAL' });
+// The Counter (Atom X Eve): a block may parry the attacking blade away (COUNTER_CHANCE for the player, by skill for the AI),
+// leaving the attacker open for COUNTER_OPEN s; the defender's next swing is a critical vertical strike (CRIT_MUL damage)
+export const COUNTER_OPEN = 0.9, COUNTER_CHANCE = 0.25, CRIT_MUL = 2;
+export const DODGE_DASH = 0.13, GHOST_LIFE = 0.4; // Force Dodge: the flash step's length (s) and how long its afterimages last
 // Force Pull from above lifts the victim to the caster; they hang there this long (helpless: a Push now blows them away)
 export const PULL_HANG = 0.45;
 const FLIP_X = Q.axisAngle([1, 0, 0], Math.PI);
@@ -74,7 +82,7 @@ export class Fighter {
   // ---------- anim helpers
   torsoIdle(stance) {
     const L = this.actor.legs.name || 'BOTH_STAND1';
-    if (this.ducked || /^BOTH_(STAND|SABERFAST|SABERSLOW|CROUCH|GUARD)/.test(L) || /WALKBACK/.test(L)) return stance;
+    if (this.ducked || /^BOTH_(STAND|SABERFAST|SABERSLOW|SABERDUAL|SABERSTAFF|CROUCH|GUARD)/.test(L) || /WALKBACK/.test(L)) return stance;
     return L;
   }
   playTorso(anim, o) {
@@ -113,10 +121,68 @@ export class Fighter {
   bladeSegs() { const out = []; if (this.blade.len > 0.3) out.push([this.blade.base, this.blade.tip]); if (this.blade2 && this.blade2.len > 0.3) out.push([this.blade2.base, this.blade2.tip]); return out; }
   setSaberKit(kit) {
     this.saberKit = SABER_KITS.includes(kit) ? kit : 'single';
+    // Jedi Academy's own dual (6) / staff (7) set when the local bank has it (its first attack is there); else Jedi Outcast's
+    const S = this.saber, al = { dual: 6, staff: 7 }[this.saberKit] || 0; S.animLevel = al && this.actor.skel.anims['BOTH_A' + al + '_T__B_'] ? al : 0;
     if (this.saberKit === 'single') { this.blade2 = null; this.hilt2Mat = null; return; }
     if (!this.blade2) { this.blade2 = new Blade(this.blade.color); this.hilt2Mat = new Float32Array(16); }
     this.blade2.color = this.blade.color;
-    if (this.saberKit === 'dual') this.setStyle(1); // the Fast stance is one-handed: the left hand is free for the second saber
+    if (S.animLevel) this.setStyle(2); // the kit is its own style (medium weight)
+    else if (this.saberKit === 'dual') this.setStyle(1); // the Fast stance is one-handed: the left hand is free for the second saber
+  }
+  // the Counter (combat.js counterParry): parried away, the saber thrown up over the head (the strong style's broken top
+  // parry, held), unable to guard or act for `sec` s
+  knockOpen(sec = COUNTER_OPEN) {
+    if (this.status !== 'normal') return false; this.endForce(); this.cancelAttackState(); if (this.kata) this.endKata(true); this.kicking = null;
+    this.status = 'open'; this.statusT = 0; this.openUntil = this.now + sec; this.vel[0] *= 0.2; this.vel[2] *= 0.2;
+    const an = this.actor.skel.anims.BOTH_B3_T____ ? 'BOTH_B3_T____' : 'BOTH_PAIN1'; this.actor.setBoth(an, { blend: 0.1, restart: true, loop: false, speed: 0.02, startAt: 0.12 / 0.02 });
+    return true;
+  }
+  // the Counter's critical strike: a vertical overhead cut (the strong top-to-bottom) at the parried foe, lunging in;
+  // twice the damage, and a killing blow splits them down the middle (combat.js)
+  startCritStrike() {
+    const T = this.critTarget; if (!(this.critUntil > this.now) || !T || T.status === 'dead' || this.status !== 'normal' || this.saber.holstered || this.thrown) return false;
+    this.critUntil = 0; const dx = T.pos[0] - this.pos[0], dz = T.pos[2] - this.pos[2], L = Math.hypot(dx, dz) || 1; this.yaw = this.targetYaw = Math.atan2(dx, dz);
+    if (L > 1.3) { const v = Math.min(7, (L - 1.1) * 5); this.vel[0] = dx / L * v; this.vel[2] = dz / L * v; } // step in
+    const S = this.saber, an = this.actor.skel.anims.BOTH_A3_T__B_ ? 'BOTH_A3_T__B_' : null;
+    S.setMove(S.I.LS_A_T2B, this.now, { restart: true, anim: an, parts: 'both' }); S.weaponTime = S.torsoTimer; S.state = 'firing'; S.attackStartedAt = this.now;
+    this.critStrike = { target: T, until: this.now + S.moveLen / 1000 + 0.05 }; this.g.sfxAt?.('swing1', this.pos, 1);
+    return true;
+  }
+  // saberstaff kicks (Jedi Academy: alt attack + a direction; F / B / L / R, the _AIR version off the ground). Whole-body,
+  // the legs planted; 40% in, whoever is in front of the kicking foot is knocked down (Game.kickHit)
+  startKick(dir) {
+    const an = 'BOTH_A7_KICK_' + dir + (this.onGround ? '' : '_AIR');
+    if (this.saberKit !== 'staff' || !this.saber.animLevel || !this.actor.skel.anims[an] || this.status !== 'normal' || this.kata || this.kicking || this.saber.holstered || this.forceUntil > this.now) return false;
+    const len = this.playWhole(an, { blend: 0.08 }); this.legsLockUntil = this.forceUntil = this.now + len; this.forceHold = false;
+    this.kicking = { until: this.now + len, hitAt: this.now + len * 0.4, dir, done: false }; this.g.sfxAt?.('swing2', this.pos, 0.6);
+    return true;
+  }
+  tickKick() {
+    const K = this.kicking; if (!K) return;
+    if (this.status !== 'normal' || this.now >= K.until) { this.kicking = null; return; }
+    if (!K.done && this.now >= K.hitAt) { K.done = true; this.g.kickHit?.(this, K.dir); }
+  }
+  // Force Dodge (Combat.tryDodge): a flash step to the side - DODGE_DASH seconds from here to `to`, untouchable, leaving
+  // afterimages of the body behind; Jedi Outcast's sidestep (BOTH_DODGE_L / _R) carries on from its lean as they land
+  startDodge(side, to) {
+    const len = this.playWhole(side < 0 ? 'BOTH_DODGE_L' : 'BOTH_DODGE_R', { blend: 0.04, speed: 1.3 }); this.legsLockUntil = this.forceUntil = this.now + Math.min(len, 0.42); this.forceHold = false;
+    this.dodge = { from: this.pos.slice(), to, t0: this.now, ghostAt: 0 }; this.ghost();
+  }
+  tickDodge() {
+    const D = this.dodge, t = this.now - D.t0; if (this.status !== 'normal' || t > DODGE_DASH + 0.1) { this.dodge = null; return; } // knocked out of it: no late teleport
+    const k = clamp(t / DODGE_DASH, 0, 1), e = 1 - (1 - k) * (1 - k) * (1 - k); // all speed at once, settling at the end
+    this.pos[0] = D.from[0] + (D.to[0] - D.from[0]) * e; this.pos[1] = D.from[1] + (D.to[1] - D.from[1]) * e; this.pos[2] = D.from[2] + (D.to[2] - D.from[2]) * e; this.vel[0] = this.vel[2] = 0;
+    if (this.now >= D.ghostAt) { D.ghostAt = this.now + 0.035; this.ghost(); }
+    if (k >= 1) this.dodge = null;
+  }
+  ghost() { // the pose of this moment, left behind (drawn by Game.drawGhosts)
+    const a = this.actor; (this.ghosts ??= []).push({ model: Float32Array.from(a.model), skin: a.skin.slice(0, a.nBones * 16), nBones: a.nBones, tint: a.tint, tintAmt: 0, t: this.g.t });
+  }
+  // with the saber out, a Jedi Academy kit stands, runs and walks with its own cycles
+  kitAnim(an) {
+    const al = this.saber.animLevel; if (!al || this.saber.holstered) return an;
+    const k = al === 6 ? 'DUAL' : 'STAFF', m = { BOTH_STAND2: KIT_STANCES[al], BOTH_RUN2: 'BOTH_RUN_' + k, BOTH_WALK1: 'BOTH_WALK_' + k, BOTH_RUNBACK1: 'BOTH_RUNBACK_' + k, BOTH_WALKBACK1: 'BOTH_WALKBACK_' + k }[an];
+    return m && this.actor.skel.anims[m] ? m : an;
   }
   swingPhase() { const s = this.saber; if (!s.isActiveSwing() || s.moveLen <= 0) return -1; return (this.now - s.moveStart) * 1000 / s.moveLen; }
   swingActive() { return !this.saber.holstered && this.saber.isActiveSwing(); } // start / attack / transition: the blade is moving with intent
@@ -258,8 +324,10 @@ export class Fighter {
     if (this.kata || this.status !== 'normal' || !this.onGround || !this.hasSaber || S.holstered || this.thrown || this.tauntUntil > this.now || this.executing) return false;
     if (!F || F.fp < KATA_COST) { if (this.isPlayer) F?.say?.('A saber kata needs ' + KATA_COST + ' Force'); return false; }
     F.fp -= KATA_COST; this.endForce();
-    const steps = KATA_STEPS[this.saberKit === 'dual' || this.saberKit === 'staff' ? this.saberKit : S.level] || KATA_STEPS[2];
-    this.kata = { steps: steps.slice(), rage: S.rageMul, hits: 0 }; S.rageMul = Math.max(S.rageMul, KATA_SPEED);
+    const key = this.saberKit === 'dual' || this.saberKit === 'staff' ? this.saberKit : S.level, ka = KATA_ANIMS[key];
+    const real = ka && this.actor.skel.anims[ka] && (key === S.level || S.animLevel); // the Jedi Academy kata, played as authored
+    const steps = real ? [{ move: 'LS_A_T2B', anim: ka }] : (KATA_STEPS[key] || KATA_STEPS[2]);
+    this.kata = { steps: steps.slice(), rage: S.rageMul, hits: 0, anim: !!real }; if (!real) S.rageMul = Math.max(S.rageMul, KATA_SPEED);
     S.weaponTime = 0; S.torsoTimer = 0; S.blocked = null; this.vel[0] = this.vel[2] = 0;
     this.g.sfxAt?.('rage', this.pos, 0.45);
     return true;
@@ -271,8 +339,8 @@ export class Fighter {
     S.weaponTime -= dtMs; if (S.torsoTimer > 0) S.torsoTimer -= dtMs;
     if (S.weaponTime > 0) return;
     if (!K.steps.length) return this.endKata();
-    const mv = S.I[K.steps.shift()]; if (mv == null) return;
-    S.setMove(mv, this.now, { restart: true }); S.weaponTime = S.torsoTimer; S.state = 'firing'; S.attackStartedAt = this.now; S.active = true; K.hits++;
+    const st = K.steps.shift(), mv = S.I[st.move || st]; if (mv == null) return;
+    S.setMove(mv, this.now, st.anim ? { restart: true, anim: st.anim, parts: 'both' } : { restart: true }); S.weaponTime = S.torsoTimer; S.state = 'firing'; S.attackStartedAt = this.now; S.active = true; K.hits++;
   }
   endKata(cut = false) {
     const S = this.saber, K = this.kata; if (!K) return; this.kata = null; S.rageMul = K.rage;
@@ -297,7 +365,7 @@ export class Fighter {
   }
   die(from, opts = {}) {
     if (this.force && this.force.releaseAll) this.force.releaseAll(true);
-    this.hp = 0; this.killedBy = from || null; this.endForce(); this.cancelAttackState(); const wasFlung = this.status === 'flung'; this.status = 'dead'; this.statusT = 0; this.deadAt = this.now; if (!this.saber.holstered) { this.saber.holstered = true; this.blade.set(false); this.g.humStop && this.g.humStop(this); }
+    this.hp = 0; this.killedBy = from || null; this.hiltPose = null; this.dodge = null; this.g.foesGen = (this.g.foesGen | 0) + 1; this.endForce(); this.cancelAttackState(); const wasFlung = this.status === 'flung'; this.status = 'dead'; this.statusT = 0; this.deadAt = this.now; if (!this.saber.holstered) { this.saber.holstered = true; this.blade.set(false); this.g.humStop && this.g.humStop(this); }
     if (!wasFlung) this.playWhole(opts.deathAnim || DEATHS[Math.floor(Math.random() * DEATHS.length)], { blend: 0.08 }); else this.playWhole('BOTH_KNOCKDOWN1', { blend: 0.05 });
     this.g.onDeath && this.g.onDeath(this);
   }
@@ -318,7 +386,7 @@ export class Fighter {
   }
   // another player's game executes this fighter (RPC on their puppet of us): run our side of the same execution
   executedBy(att, kind, o = {}) { if (this.g.startExecution) this.g.startExecution(att, this, kind, { ...o, fromNet: true }); }
-  revive(at) { this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.pullHang = null; this.kata = null; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
+  revive(at) { this.g.foesGen = (this.g.foesGen | 0) + 1; this.hiltPose = null; this.dodge = null; this.ghosts = []; this.kicking = null; this.critUntil = 0; this.critAt = 0; this.critStrike = null; this.openUntil = 0; this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.pullHang = null; this.kata = null; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
   chest() { const y = this.status === 'down' || this.status === 'dead' ? 0.3 : this.ducked ? 0.75 : 1.15; return [this.pos[0], this.pos[1] + y, this.pos[2]]; }
   headPos() { return this.actor.bonePos('cranium', [0, 0, 0]); }
   // ---------- per-frame update
@@ -336,6 +404,8 @@ export class Fighter {
         this.frictionMove(dt, 6); this.updateAnimOnly(dt); return this.finish(dt);
       }
       case 'executing': case 'executed': return this.finish(dt); // an execution moves and animates both (executions.js)
+      case 'clash': this.vel[0] = this.vel[2] = 0; return this.finish(dt); // locked in a Force clash (clash.js)
+      case 'open': this.frictionMove(dt, 8); if (this.now >= this.openUntil) { this.status = 'normal'; this.statusT = 0; this.actor.followLegs(); this.actor.torso.cur = null; } return this.finish(dt); // parried open (the Counter)
       case 'flung': this.physicsFlung(dt); return this.finish(dt);
       case 'down': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= (this.isPlayer ? 0.5 : (this.downTime || 1.1))) this.startGetup(); return this.finish(dt);
       case 'getup': this.frictionMove(dt, 8); if ((this.isPlayer && this.cmd.jumpPressed) || this.statusT >= this.getupLen - 0.05) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; this.actor.setLegs(this.saber.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2', { blend: 0.15 }); } return this.finish(dt);
@@ -385,6 +455,8 @@ export class Fighter {
   // ---------- normal locomotion
   normalUpdate(dt) {
     const c = this.cmd, a = this.actor, now = this.now, S = this.saber;
+    if (this.kicking) this.tickKick();
+    if (this.dodge) this.tickDodge();
     // facing
     const diff = wrapPi(this.targetYaw - this.yaw); const rate = this.isPlayer ? 60 : (this.forceUntil > now || S.weaponTime > 0 || !S.holstered || Math.hypot(this.vel[0], this.vel[2]) > 0.5) ? 14 : 5; this.yaw += clamp(diff, -rate * dt, rate * dt);
     const frozen = this.status === 'whole';
@@ -405,6 +477,7 @@ export class Fighter {
     const crouched = this.ducked; const base = crouched ? 2.1 : c.walk ? 2.4 : 5.6; let sp = base * this.speedMul * (f < 0 ? 0.82 : 1);
     if (frozen || (this.forceUntil > now && this.forceHold === 'freeze') || (this.status === 'normal' && S.move === S.I.LS_PUTAWAY) || this.tauntUntil > now) sp *= 0.0;
     if (this.kata) { f = 1; r = 0; sp = KATA_ADVANCE; } // a kata presses forward at its own pace, whatever the keys say
+    if (this.kicking || this.dodge) sp = 0;
     if (this.elecUntil > now) sp *= 0.72;                              // lightning slows the victim (they keep control)
     const wish = [(fwd[0] * f + right[0] * r) * sp, (fwd[2] * f + right[2] * r) * sp];
     if (this.onGround) {
@@ -477,6 +550,7 @@ export class Fighter {
     if (this.ducked) an = !moving ? 'BOTH_CROUCH1IDLE' : (back ? 'BOTH_CROUCH1WALKBACK' : 'BOTH_CROUCH1WALK');
     else if (!moving) { an = out ? 'BOTH_STAND2' : 'BOTH_STAND1'; }
     else { const run = !this.cmd.walk; an = back ? (run ? 'BOTH_RUNBACK1' : 'BOTH_WALKBACK1') : run ? (out ? 'BOTH_RUN2' : 'BOTH_RUN1') : 'BOTH_WALK1'; }
+    if (out && !this.ducked) an = this.kitAnim(an); // dual sabers / saberstaff (Jedi Academy cycles)
     // Jedi Outcast has no strafe cycles: sideways and diagonal movement play run / walk with the legs turned toward the
     // direction of travel while the torso keeps facing the view (cg_players.c CG_G2PlayerAngles).
     const turning = this.swingLegs(dt, moving, an);
@@ -496,7 +570,7 @@ export class Fighter {
     const view = this.yaw; let dest = view;
     if (moving && this.onGround) { let d = wrapPi(Math.atan2(this.vel[0], this.vel[2]) - view); if (Math.abs(d) > Math.PI / 2) d = wrapPi(d + Math.PI); dest = view + clamp(d, -LEG_TURN_MAX, LEG_TURN_MAX); }
     if (this.legsYaw == null) this.legsYaw = view;
-    const S = this.saber, settled = !moving && an === (S.holstered ? 'BOTH_STAND1' : 'BOTH_STAND2') && S.move === S.I.LS_READY && S.weaponTime <= 0 && this.forceUntil <= this.now;
+    const S = this.saber, settled = !moving && an === (S.holstered ? 'BOTH_STAND1' : this.kitAnim('BOTH_STAND2')) && S.move === S.I.LS_READY && S.weaponTime <= 0 && this.forceUntil <= this.now;
     const sw = wrapPi(dest - this.legsYaw);
     if (!this.legsSwinging && (!settled || Math.abs(sw) > LEG_SWING_TOL)) this.legsSwinging = true;
     if (this.legsSwinging) { const nl = swingTo(0, sw, LEG_SWING_TOL, LEG_CLAMP, LEG_SWING_SPEED, dt); this.legsYaw = wrapPi(this.legsYaw + nl); if (Math.abs(nl - sw) < 1e-4) this.legsSwinging = false; }
@@ -551,7 +625,7 @@ export class Fighter {
     const a = this.actor; a.pos[0] = this.pos[0]; a.pos[1] = this.pos[1]; a.pos[2] = this.pos[2];
     const S = this.saber; a.matchPelvis = !S.holstered && S.move !== S.I.LS_READY && !a.torsoFollow; // a saber move on the torso over running / jumping legs keeps its authored hip turn
     this.aimTorso(dt);
-    a.update(this.now);
+    if (this.g.animLod?.(this) && (this.lodTick = !this.lodTick)) a.place(this.now); else a.update(this.now); // far away in a big match: the pose every other step
     this.updateHilt(dt);
   }
   // model faces the legs; the spine turns the torso to the view and pitches it by 75% of the view pitch (cg_players.c).
@@ -584,15 +658,17 @@ export class Fighter {
   // thrown); dual sabers hold the second one in the left hand (mirrored grip), on the left thigh when holstered
   updateHilt2(dt, M) {
     const A = this.g.attach, a = this.actor, L = A.hiltLen * (this.hiltScaleY || 1), M2 = this.hilt2Mat, B2 = this.blade2; let len = L;
-    if (this.saberKit === 'staff') m4.mul(M, m4.trs([0, L, 0], FLIP_X, [1, 1, 1]), M2);
+    if (this.hiltPose && this.saberKit !== 'staff') { M2.set(M); M2[12] += M[0] * 0.05; M2[13] += M[1] * 0.05; M2[14] += M[2] * 0.05; } // both hilts together
+    else if (this.saberKit === 'staff') m4.mul(M, m4.trs([0, 0, 0], FLIP_X, [1, 1, 1]), M2); // the second half of the staff runs from the hand the other way: held in the middle (Jedi Academy twoHanded staff)
     else if (this.hilt === 'thigh' || this.hilt === 'none') { m4.mul(a.boneMatrix('lfemurYZ'), m4.trs([-A.holster.t[0], A.holster.t[1], A.holster.t[2]], [A.holster.q[0], -A.holster.q[1], -A.holster.q[2], A.holster.q[3]], [1, 1, 1]), M2); len = A.hiltLen; }
     else { const g = A.grip; m4.mul(a.boneMatrix('lhand'), m4.trs([-g.t[0], g.t[1], g.t[2]], [g.q[0], -g.q[1], -g.q[2], g.q[3]], g.s), M2); len = A.hiltLen * (g.s?.[1] || 1); }
-    if (B2.lit !== this.blade.lit) B2.set(this.blade.lit); B2.color = this.blade.color;
+    const lit2 = this.blade.lit && !this.hiltPose; if (B2.lit !== lit2) B2.set(lit2); B2.color = this.blade.color; // turned on its owner: only the one blade
     B2.update(dt, M2, len, 1, this.now); B2.trailOn = this.blade.trailOn;
   }
   updateHilt(dt) {
     const A = this.g.attach, a = this.actor; let M = this.hiltMat;
-    if (this.hilt === 'hand') { const bm = a.boneMatrix(A.grip.bone); const loc = m4.trs(A.grip.t, A.grip.q, A.grip.s); m4.mul(bm, loc, M); this.hiltScaleY = A.grip.s[1]; }
+    if (this.hiltPose) { M.set(this.hiltPose); this.hiltScaleY = 1; } // posed by someone else (Mind Dominance turns it on its owner)
+    else if (this.hilt === 'hand') { const bm = a.boneMatrix(A.grip.bone); const loc = m4.trs(A.grip.t, A.grip.q, A.grip.s); m4.mul(bm, loc, M); this.hiltScaleY = A.grip.s[1]; }
     else if (this.hilt === 'thigh') { const bm = a.boneMatrix(A.holster.bone); const loc = m4.trs(A.holster.t, A.holster.q, [1, 1, 1]); m4.mul(bm, loc, M); this.hiltScaleY = 1; }
     else if (this.hilt === 'thrown' && this.thrown) {
       const T = this.thrown, d = [Math.cos(T.ang), 0, Math.sin(T.ang)]; const Y = v3.scale(d, -1), X = v3.norm(v3.cross([0, 1, 0], Y)), Z = v3.cross(X, Y);

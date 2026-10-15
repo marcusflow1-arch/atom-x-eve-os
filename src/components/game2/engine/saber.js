@@ -6,6 +6,14 @@ export const STYLE_NAMES = ['', 'FAST', 'MEDIUM', 'STRONG'];
 export const GESTURE_MIN = 60; // mouse travel (px) during a swing's wind-up that re-aims it (a deliberate flick, not aim tracking)
 // mouse flick (screen dx, dy; +dy = down) -> attack direction, 45 degree sectors starting at "right"
 const GESTURE_MOVES = ['LS_A_L2R', 'LS_A_TL2BR', 'LS_A_T2B', 'LS_A_TR2BL', 'LS_A_R2L', 'LS_A_BR2TL', 'LS_A_BL2TR', 'LS_A_BL2TR'];
+// Jedi Academy's dual sabers (style 6) and saberstaff (style 7): their own special moves where Jedi Outcast has a single
+// saber one (the rest map group for group: BOTH_A1_* -> BOTH_A6_*, BOTH_P1_S1_* -> BOTH_P6_S6_* ...). Used only when
+// the local Jedi Academy bank is loaded (engine/assets.js loadLocalBank).
+export const KIT_SPECIALS = Object.freeze({
+  6: { LS_A_BACK: 'BOTH_A6_FB', LS_A_BACK_CR: 'BOTH_SPINATTACK6', LS_A_JUMP_T__B_: 'BOTH_JUMPATTACK6', LS_A_LUNGE: 'BOTH_A6_LR' },
+  7: { LS_A_BACK: 'BOTH_SPINATTACK7', LS_A_BACK_CR: 'BOTH_SPINATTACK7', LS_A_JUMP_T__B_: 'BOTH_JUMPATTACK7' },
+});
+export const KIT_STANCES = Object.freeze({ 6: 'BOTH_SABERDUAL_STANCE', 7: 'BOTH_SABERSTAFF_STANCE' });
 export class SaberLogic {
   constructor(data, host) {
     this.M = data.moves; this.TR = data.transition; this.host = host;
@@ -15,6 +23,7 @@ export class SaberLogic {
     this.holstered = true; this.inFlight = false; this.blocked = null; this.active = false;
     this.attackStartedAt = -1; this.moveAnim = null; this.moveStart = 0; this.moveLen = 0;
     this.rageMul = 1;
+    this.animLevel = 0; // 6 dual sabers, 7 saberstaff (Jedi Academy sets), 0 the stance's own animations
   }
   // --- predicates (bg_panimate.c)
   inAttack(m) { const I = this.I; return (m >= I.LS_A_TL2BR && m <= I.LS_A_T2B) || this.inSpecial(m); }
@@ -28,11 +37,15 @@ export class SaberLogic {
   inReturn(m) { const I = this.I; return m >= I.LS_R_TL2BR && m <= I.LS_R_T2B; }
   isActiveSwing() { return this.inAttack(this.move) || this.inStart(this.move) || this.inTransition(this.move); }
   isDownSlash(m) { const I = this.I; return m === I.LS_A_T2B || m === I.LS_A_TL2BR || m === I.LS_A_TR2BL; }
-  stanceAnim() { return this.level === 2 ? 'BOTH_STAND2' : this.level === 3 ? 'BOTH_SABERSLOW_STANCE' : 'BOTH_SABERFAST_STANCE'; }
+  stanceAnim() { const k = KIT_STANCES[this.animLevel]; if (k && this.host.hasAnim(k)) return k; return this.level === 2 ? 'BOTH_STAND2' : this.level === 3 ? 'BOTH_SABERSLOW_STANCE' : 'BOTH_SABERFAST_STANCE'; }
   kataDone() { const r = (a, b) => a + Math.floor(Math.random() * (b - a + 1)); return (this.level >= 3 && this.chain > r(0, 1)) || (this.level === 2 && this.chain > r(2, 5)); }
   // anim name for a move at the current style level
   animFor(move) {
-    const m = this.M[move]; let a = m.anim; const lv = this.level;
+    const m = this.M[move]; let a = m.anim; const lv = this.level, al = this.animLevel, H = this.host;
+    if (al) { // dual sabers / saberstaff: the kit's special, else the same move from its Jedi Academy group
+      const sp = KIT_SPECIALS[al]?.[m.ls]; if (sp && H.hasAnim(sp)) return sp;
+      if (!this.inIdle(move)) { const cand = a.replace(/^BOTH_([ATSRPKVHDB])1_/, 'BOTH_$1' + al + '_').replace(/S1(?=_|$)/g, 'S' + al); if (cand !== a && H.hasAnim(cand)) return cand; }
+    }
     if (lv > 1 && !this.inIdle(move) && !this.inParry(move) && !this.inReflect(move) && !this.inSpecial(move) && !this.inTransition(move)) {
       const cand = a.replace(/^BOTH_([ABDSR])1_/, (s, g) => 'BOTH_' + g + lv + '_');
       if (cand !== a && this.host.hasAnim(cand)) a = cand;
@@ -43,7 +56,7 @@ export class SaberLogic {
   setMove(newMove, now, flags = {}) {
     const I = this.I, m = this.M[newMove], H = this.host;
     if (newMove === I.LS_READY) this.chain = 0; else if (this.inAttack(newMove)) this.chain = Math.min(16, this.chain + 1);
-    let anim = this.animFor(newMove); const info = H.animInfo(anim);
+    let anim = flags.anim && H.hasAnim(flags.anim) ? flags.anim : this.animFor(newMove); const info = H.animInfo(anim); // flags.anim: a kata's own animation
     const hold = m.flag !== 'AFLAG_IDLE'; const holdless = m.flag === 'AFLAG_ACTIVE';
     let parts = 'torso';
     if (anim === 'BOTH_STAND1' || anim === 'BOTH_STAND2' || anim === 'BOTH_SABERFAST_STANCE' || anim === 'BOTH_SABERSLOW_STANCE') {
@@ -54,6 +67,7 @@ export class SaberLogic {
     // Standing still, a swing (wind-up, strike, transition, return) plays on the whole body as authored. Each attack has its own
     // hip turn; laid over the stance legs the torso lost it and a vertical chop landed ~70 degrees off to the side.
     else if (hold && (this.inStart(newMove) || this.inAttack(newMove) || this.inTransition(newMove) || this.inReturn(newMove)) && H.standingStill && H.standingStill()) parts = 'whole';
+    if (flags.parts) parts = flags.parts; // a kata's animation is the whole body
     const lerp = 1000 / Math.abs(info.fps);
     let dur = hold ? info.n * lerp : 0; if (holdless) dur = Math.max(lerp, dur - 2 * lerp);
     dur /= this.rageMul;

@@ -62,7 +62,9 @@ through the real director, including a checkpoint restart.
 
 ## Online multiplayer: the free-for-all arena
 
-One Lightsaber Training arena everybody shares: up to 10 players plus the AI Reborn, every fighter for themselves.
+An arena on every map (the lobby picks it; `server/game2/arena.mjs` keeps one room per map), with no player limit (the
+server has a safety ceiling of 200 per arena, `GAME2_MAX_PLAYERS`), plus the optional AI Reborn, every fighter for
+themselves. A server from before map arenas has only Lightsaber Training, and the lobby says so.
 Players come in and leave whenever they like. A defeated fighter is back after 3 s at the spawn point farthest from
 everyone, with 1.5 s of spawn protection. Jedi or Dark Jedi is the look a player picks (blade and robes). The HUD shows
 your kills, the leader, ping, a scoreboard (kills / deaths) and a kill feed.
@@ -108,11 +110,44 @@ their throat, further out (up to 10 m) Force Pull, Lightning, then a Force Speed
 
 **Force quick-cast (hold a key for channeled abilities):**
 1 Push, 2 Pull, 3 Grip, 4 Lightning, 5 Heal, 6 Speed, 7 Mind Trick,
-8 Rage, 9 Protect, 0 Absorb. The numeric keypad also works. Hold 1 to charge Force Push (farther and harder, more Force).
+8 Rage, 9 Protect, 0 Absorb. The numeric keypad also works. Hold 1 to charge Force Push (farther and harder, more Force); held the full 3 s it is pushed with both hands and throws them twice as far.
 G is Force Levitate: lifts the foe (or prop) in front of you helplessly for 3.5 s so you can get away (any hit drops
-them; a Force Push launches them). X unleashes Force Repulse once its meter (filled by damage and defeats) is full, the
+them; a Force Push launches them). X unleashes Force Repulse once its meter (filled by damage and defeats) reaches 80%, the
 way Starkiller does it: you rise, curl into a ball while the Force gathers, then burst open with your arms flung wide;
 everyone within 7 m is blasted outward and disintegrates in the air, and you float back down.
+
+**Mind Dominance (`dominance` in `engine/executions.js`):** V, at 55% of the same meter, takes the mind of the foe in
+front of you (within 15 m, on their feet, with a saber in hand or on the belt, at any health). Their blade goes out, the
+hilt comes into both hands and turns around against their solar plexus while they tremble (the first frame of Jedi
+Outcast's `BOTH_WALK9` holds the hands together; `Fighter.hiltPose` places the hilt), then they ignite it through
+themselves - the blade comes out of the back - and sink to their knees and fall (`BOTH_DEATH18`); the caster holds the
+mind trick (`BOTH_MINDTRICK1` at its peak). A saberstaff's other blade stays off.
+A foe holding Force Absorb resists it and nothing is spent. AI fighters use it on a foe below 60% health. Repulse (X)
+costs 80, Mind Dominance 55; the meter shows both marks.
+
+**Counter:** a block can parry the attacking blade away (25% for the player, more mid-parry; the AI by skill). The
+attacker is thrown open, arms over the head (the strong style's broken top parry, held), unable to guard for 0.9 s,
+with a heartbeat of slow motion; the defender's next click is a critical strike - the strong top-to-bottom cut,
+stepping in, unblockable, twice the damage - and a killing one splits the victim down the middle (a vertical cut:
+the halves fall away to either side). The AI strikes on its own when it parries you. Offline modes only.
+
+**Force Dodge (`Combat.tryDodge`, `Fighter.startDodge`):** a saber strike that gets past the guard of someone with 15
+Force to spare may be sidestepped instead (30% for the player, the AI by skill; then 1.5 s before the next; the Counter's
+critical strike cannot be). It is a flash step: 2.6 m to whichever side has floor and no wall, a little away from the
+attacker, in 0.13 s - untouchable meanwhile - leaving glowing afterimages of the body behind (`Game.drawGhosts`, drawn
+additively) and landing in Jedi Outcast's sidestep (`BOTH_DODGE_L` / `_R`). Offline modes only.
+
+**Force clash (`engine/clash.js`):** two pushes meeting (you push someone who pushed, or answered a push of, you in the
+last 0.5 s), or two lightning streams meeting, lock both fighters in a clash for 3 s. Click as fast as you can: the
+energy between your hands drifts toward whoever is losing, and the one with more clicks wins; the loser is blasted away
+(or electrocuted and thrown down), a tie throws both back, and anyone else's hit breaks it. AI fighters who keep their
+feet often push back, and click at their own pace. Offline modes only.
+
+**Lightning storm (`tickStorm` in `engine/force.js`):** keep Lightning (4) held for 1.5 s and it becomes a storm: the
+caster raises an open hand (Jedi Outcast's quick-heal pose, held) and the lightning leaves the palm upward, arcs over in
+a U and strikes down on every foe within 45 m like natural lightning, in any direction, nearest first, each one struck
+two or so times a second for 5 damage (Absorb soaks it as usual). It drains 16 Force a second and ends when the key is
+released. The player only; AI casters keep the aimed stream.
 
 **Combos:** Jump and Pull a foe below you: they are lifted up in front of you and hang there for a moment; Push them then
 and they are blown away with the Force Push knockdown (any foe flying helplessly is). Push then Speed (6) dashes you in front of the pushed foe as they hit the ground, with a bonus hit. Lightning
@@ -126,6 +161,27 @@ they are beyond the ten direct-cast slots.
 
 F1 shows/hides the controls; Enter rematches; Ctrl + mouse wheel or - / = zooms.
 Mouse movement looks around, including a fallback when the browser rejects pointer lock.
+
+## Jedi Academy dual sabers and saberstaff (local install)
+
+Jedi Outcast has no dual-saber or saberstaff animations, so on their own those kits reuse single-saber moves. Jedi
+Academy fights with them in styles of their own (6 dual, 7 staff), and with a Jedi Academy install the game uses them:
+
+```bash
+node tools/game2/ja-anim-bank.mjs   # reads ../local-retail/jka/_humanoid.gla + animation.cfg
+```
+
+Extract `models/players/_humanoid/_humanoid.gla` and `animation.cfg` from `GameData/base/assets1.pk3` into
+`../local-retail/jka` (next to the repo) first. The tool writes `public/game2/local/ja/` (ignored by git: retail data
+stays on that PC and is never committed or deployed). `engine/assets.js` appends those 609 animations after the Jedi
+Outcast bank when they are there, so nothing existing moves; without them (the live site) everything is as before.
+
+With them: dual sabers and the saberstaff stand, run, walk, swing, chain, parry, deflect and recover with Jedi
+Academy's own sets (`BOTH_A6_*`, `BOTH_P7_S7_*`…, `saber.js` `animFor`), have their own specials (dual front-back and
+left-right attacks, spin and jump attacks), the real katas on both mouse buttons (`BOTH_A1/A2/A3_SPECIAL`,
+`BOTH_A6_SABERPROTECT`, `BOTH_A7_SOULCAL`), and the saberstaff kicks on right mouse + a direction. The staff is held in
+the middle with a blade out of each end, as in Jedi Academy. A quarter of the skirmish bots then fight with dual sabers
+and a quarter with a staff. Jedi Academy's skeleton lacks 22 of Game 2's 72 bones (finger joints, toes): those keep a two-handed grip.
 
 ## Push, pull, grip and lightning rules
 
