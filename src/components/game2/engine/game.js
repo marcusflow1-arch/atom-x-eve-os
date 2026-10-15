@@ -197,14 +197,14 @@ export class Game {
     this.combatTrack.setUrl(url);
   }
   // Settings' Music volume under the master volume; silent while muted (M).
-  musicLevel() { return this.sfx.muted ? 0 : (this.settings?.musicVolume ?? 0.5) * (this.sfx.volume ?? 0.7); }
+  musicLevel() { return this.sfx?.muted ? 0 : (this.settings?.musicVolume ?? 0.5) * (this.sfx?.volume ?? 0.7); }
   // Fight detection follows the actual Game 2 player, foes, hit and round state.
   // No shared Game 1 Audio element: Game 2 owns its own loop/fades and cleanup.
   updateMusic(dt) {
-    if (this.attract || this.disposed) return;
+    if (this.attract || this.disposed || (!this.combatTrack && !this.score)) return;
     const fighting = game2CombatActive(this);
     const level = this.musicLevel();
-    const externalPlaying = this.combatTrack.update({ fighting, volume: level, dt });
+    const externalPlaying = this.combatTrack?.update({ fighting, volume: level, dt }) ?? false;
     const S = this.score;
     if (!S) return;
     S.setLevel(externalPlaying ? level * 0.08 : level); // duck arena score under Combat 2
