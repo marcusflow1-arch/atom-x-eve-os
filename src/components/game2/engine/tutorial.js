@@ -56,6 +56,11 @@ export class Game2TutorialDirector {
       npc.force?.reset();
       g.respawnNpc(npc); npc.hp = npc.maxHp; npc.spawnShield = 0;
     }
+    if (this.selected()?.goal === 'counter' && this.target) {
+      const p = g.player, y = p.yaw;
+      this.target.pos = [p.pos[0] + Math.sin(y) * 1.6, p.pos[1], p.pos[2] + Math.cos(y) * 1.6];
+      this.target.yaw = this.target.targetYaw = y + Math.PI;
+    }
     if (this.trainer) {
       this.trainer.force.fp = this.trainer.force.max = 180;
       this.trainer.yaw = this.trainer.targetYaw = Math.atan2(this.target.pos[0] - this.trainer.pos[0], this.target.pos[2] - this.trainer.pos[2]);
@@ -146,8 +151,13 @@ export class Game2TutorialDirector {
     this.g.hud.msg('Training: follow the steps on the right. F1 opens game controls.');
     return true;
   }
-  demoCmd(cmd) {
-    if (this.phase !== 'demo') return;
+  demoCmd(fighter, cmd) {
+    if (fighter === this.target && this.phase === 'practice' && this.selected()?.goal === 'counter') {
+      // A deliberately predictable strike teaches the real parry/counter window.
+      cmd.attack = this.g.t % 1.8 < 0.7;
+      return;
+    }
+    if (fighter !== this.trainer || this.phase !== 'demo') return;
     if (this.g.t < this.demoAttackUntil) cmd.attack = true;
     if (this.g.t < this.demoJumpUntil) {
       cmd.jump = true; cmd.up = 1; cmd.jumpPressed = this.g.t - this.demoJumpStart < 0.04;
