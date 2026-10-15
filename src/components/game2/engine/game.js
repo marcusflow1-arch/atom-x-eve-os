@@ -518,7 +518,7 @@ export class Game {
     if (i.pressed('KeyR')) { if (this.playerWeapon === 'bryar') this.switchWeapon('saber'); else { const ex = this.execCandidate && findExecutable(this, p); if (ex) this.startExecution(p, ex.victim, ex.kind); else p.toggleSaber(); } }
     if (i.pressed('KeyQ') && this.playerWeapon) this.switchWeapon();
     if (i.pressed('KeyT')) p.taunt();
-    if (i.pressed('Tab')) { if (p.saber.animLevel) h.msg((p.saberKit === 'dual' ? 'Dual sabers' : 'Saberstaff') + ' fight in a style of their own'); else { p.setStyle(p.saber.level % 3 + 1); h.msg('Saber style: ' + STYLE_NAMES[p.saber.level]); } }
+    if (i.pressed('Tab')) { if (p.kitStyle?.()) h.msg((p.saberKit === 'dual' ? 'Dual sabers' : 'Saberstaff') + ' fight in a style of their own'); else { p.setStyle(p.saber.level % 3 + 1); h.msg('Saber style: ' + STYLE_NAMES[p.saber.level]); } }
     // both mouse buttons: a saber kata (Jedi Academy: attack + alt attack, 50 Force). The right button alone throws the
     // saber once it has been held KATA_CHORD s, so pressing both together never throws first
     if ((i.btnPressed[0] || i.btnPressed[2]) && i.btn[0] && i.btn[2] && !p.saber.holstered && !p.thrown && p.status === 'normal') { this.throwAt = null; if (p.startKata()) h.msg('Saber kata'); }
