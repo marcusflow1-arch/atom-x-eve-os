@@ -110,7 +110,7 @@ their throat, further out (up to 10 m) Force Pull, Lightning, then a Force Speed
 
 **Force quick-cast (hold a key for channeled abilities):**
 1 Push, 2 Pull, 3 Grip, 4 Lightning, 5 Heal, 6 Speed, 7 Mind Trick,
-8 Rage, 9 Protect, 0 Absorb. The numeric keypad also works. Hold 1 to charge Force Push (farther and harder, more Force).
+8 Rage, 9 Protect, 0 Absorb. The numeric keypad also works. Hold 1 to charge Force Push (farther and harder, more Force); held the full 3 s it is pushed with both hands and throws them twice as far.
 G is Force Levitate: lifts the foe (or prop) in front of you helplessly for 3.5 s so you can get away (any hit drops
 them; a Force Push launches them). X unleashes Force Repulse once its meter (filled by damage and defeats) is full, the
 way Starkiller does it: you rise, curl into a ball while the Force gathers, then burst open with your arms flung wide;

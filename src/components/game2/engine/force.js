@@ -15,8 +15,9 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 // tank) and Force does not regenerate while healing.
 export const THROW_COST = 22, THROW_RECOVERY = 0.55, HEAL_FP_PER_HP = 1.3;
 // Charged Force Push: hold the Push key; the push goes on release (or at PUSH_CHARGE_MAX s). A tap (under PUSH_TAP s) is a
-// normal push. Charge 0..1 adds range, knock-back and damage, up to PUSH_CHARGE_COST more Force, and from 0.75 one level.
-export const PUSH_CHARGE_MAX = 1.1, PUSH_TAP = 0.15, PUSH_CHARGE_COST = 14;
+// normal push. Charge 0..1 adds range, knock-back (up to twice as far) and damage, up to PUSH_CHARGE_COST more Force,
+// and from 0.75 one level; from PUSH_TWO_HANDED (2 s of the 3) it is pushed with both hands (G2_FORCEPUSH_2H).
+export const PUSH_CHARGE_MAX = 3, PUSH_TAP = 0.15, PUSH_CHARGE_COST = 20, PUSH_TWO_HANDED = 0.66;
 export const pushCharge = held => clamp((held - PUSH_TAP) / (PUSH_CHARGE_MAX - PUSH_TAP), 0, 1);
 export const POWERS = [
   { id: 'push', name: 'Force Push', cost: THROW_COST }, { id: 'pull', name: 'Force Pull', cost: THROW_COST },
@@ -228,11 +229,13 @@ export class Force {
     const g = this.g, p = this.p, ch = clamp(o.charge || 0, 0, 1); this.freeFromGrip('push');
     for (const f of g.fighters()) if (f !== p && f.thrown && v3.dist(f.thrown.pos, p.chest()) < 0.9) f.unlodgeSaber(); // a push knocks a saber spinning in you loose
     const d = this.aim(); const col = this.npc ? [1, 0.5, 0.45] : [0.7, 0.86, 1];
-    this.anim('BOTH_FORCEPUSH', { durMs: 680 }); g.sfxAt('push', p.pos, 1 + 0.3 * ch); this.shake(0.22 + 0.25 * ch);
+    const two = ch >= PUSH_TWO_HANDED && p.actor.skel.anims.G2_FORCEPUSH_2H; // charged long enough: both hands
+    this.anim(two ? 'G2_FORCEPUSH_2H' : 'BOTH_FORCEPUSH', { durMs: 680 }); g.sfxAt('push', p.pos, 1 + 0.3 * ch); if (two) g.sfxAt('hit3', p.pos, 0.6); this.shake(0.22 + 0.3 * ch);
+    if (two && p.isPlayer) g.banner('TWO-HANDED PUSH', [0.7, 0.9, 1], 1.1);
     this.later(0, () => { // w_force.c ForceThrow: the push lands on the frame it is cast, no wind-up delay
       if (!this.alive()) return;
       const hands = this.hands(); const mid = v3.lerp(hands[0], hands[1], 0.5); this.pushFx(mid, d, col, ch);
-      const range = 13 + 5 * ch;
+      const range = 13 + 8 * ch;
       this.lastPush = { t: g.t, targets: [] }; // for Push + Speed
       for (const h of this.cone(range, 52)) {
         const t = h.t, fall = clamp(1 - h.L / (15 + 5 * ch), 0.2, 1); const dir = this.flat(h.v); if (t.type === 'npc') this.lastPush.targets.push(t.ref);

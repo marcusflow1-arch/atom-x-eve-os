@@ -335,10 +335,10 @@ export class Game {
           note(vp ? 'PULLED' + (why ? '  ·  ' + why : '') : (res.outcome === 'knockdown' ? 'KNOCKDOWN' : 'PULL HIT'), vp ? [1, 0.5, 0.4] : [0.7, 1, 0.75]);
           if (vp) { this.shake(0.25); this.hud.hit(3); }
         } else if (res.outcome === 'knockdown') {
-          const k = 0.5 + 0.5 * sc; victim.push(dir, (6 + 7 * fall) * k * (1 + 0.7 * ch), (3.6 + 2.4 * fall) * k * (1 + 0.3 * ch), { keepYaw: false, quicker: true }); const dmg = (6 + 10 * ch) * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit2', victim.pos, 0.6); // w_force.c: pushed down -> quicker getup
+          const k = 0.5 + 0.5 * sc; victim.push(dir, (6 + 7 * fall) * k * (1 + ch), (3.6 + 2.4 * fall) * k * (1 + 0.3 * ch), { keepYaw: false, quicker: true }); /* a full charge sends them twice as far */ const dmg = (6 + 10 * ch) * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit2', victim.pos, 0.6); // w_force.c: pushed down -> quicker getup
           note(vp ? 'KNOCKED DOWN' + (why ? '  ·  ' + why : '') : 'KNOCKDOWN', vp ? [1, 0.45, 0.35] : [0.7, 1, 0.75]); if (vp) { this.shake(0.35); this.hud.hit(dmg); }
         } else { // a hit that does not knock down: breaks the swing and slides the target back
-          victim.stagger(dir, (9 + 4 * fall) * sc * (1 + 0.6 * ch)); const dmg = (3 + 6 * ch) * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit1', victim.pos, 0.6);
+          victim.stagger(dir, (9 + 4 * fall) * sc * (1 + ch)); const dmg = (3 + 6 * ch) * (F.dmgScale ?? 1); victim.hurt(dmg, att, { noFlinch: true }); this.sfxAt('hit1', victim.pos, 0.6);
           note(vp ? 'PUSHED' + (why ? '  ·  ' + why : '') : 'PUSH HIT' + (why ? '  ·  ' + why : ''), vp ? [1, 0.55, 0.4] : [0.7, 1, 0.75]); if (vp) { this.shake(0.28); this.hud.hit(dmg); }
         }
       }

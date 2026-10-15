@@ -6,6 +6,28 @@ import { m4, q as Q, clamp } from './math.js';
 
 const gx = v => [v[0], v[2], -v[1]]; // G2 (X left, Y back, Z up) -> glTF (X left, Y up, Z front)
 
+// Animations derived from the bank at load (appended after it, before any optional local bank, so indices match for
+// every player). G2_FORCEPUSH_2H: Jedi Outcast's Force Push is one-handed (the left hand; the right holds the saber);
+// the fully charged push gives the right arm the mirror image of the left one. Every arm bone's rotation is relative to
+// the thoracic bone and the rest pose is symmetric, so the mirror across the body's left / right plane (G2 axes: X left)
+// is per bone: (w, x, y, z) -> (w, x, -y, -z).
+const MIRROR_ARM = /^(r(clavical|humerus|humerusX|radius|radiusX|hand)|r_d\d_j\d)$/;
+export function withDerivedAnims(rigJson, bank) {
+  const R = rigJson.rig, NB = R.nBones, names = R.g2Bones, src = rigJson.anims.find(a => a.name === 'BOTH_FORCEPUSH');
+  if (!src || rigJson.anims.some(a => a.name === 'G2_FORCEPUSH_2H')) return { rigJson, bank };
+  const idx = Object.fromEntries(names.map((n, i) => [n, i]));
+  const pairs = names.map((n, i) => MIRROR_ARM.test(n) ? [i, idx['l' + n.slice(1)]] : null).filter(p => p && p[1] != null);
+  const F0 = bank.q.length / (NB * 4), n = src.n, q = new Int16Array(bank.q.length + n * NB * 4), pel = new Float32Array(bank.pel.length + n * 3);
+  q.set(bank.q); pel.set(bank.pel);
+  for (let k = 0; k < n; k++) {
+    const s = (src.first + k) * NB * 4, d = (F0 + k) * NB * 4;
+    q.set(bank.q.subarray(s, s + NB * 4), d);
+    for (const [r, l] of pairs) { const o = s + l * 4, t = d + r * 4; q[t] = bank.q[o]; q[t + 1] = bank.q[o + 1]; q[t + 2] = -bank.q[o + 2]; q[t + 3] = -bank.q[o + 3]; }
+    pel.set(bank.pel.subarray((src.first + k) * 3, (src.first + k) * 3 + 3), (F0 + k) * 3);
+  }
+  return { rigJson: { ...rigJson, rig: { ...R, nFrames: F0 + n }, anims: [...rigJson.anims, { name: 'G2_FORCEPUSH_2H', first: F0, n, loop: -1, fps: src.fps }] }, bank: { q, pel } };
+}
+
 export class Skeleton {            // shared, immutable data
   constructor(rigJson, qBank, pelBank, glb) {
     this.rigJson = rigJson; this.qBank = qBank; this.pelBank = pelBank;

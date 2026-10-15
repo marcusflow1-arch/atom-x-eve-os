@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { parseGLB } from './glb.js';
 import { fetchGame2Binary } from './chunked.js';
-import { Skeleton } from './actor.js';
+import { Skeleton, withDerivedAnims } from './actor.js';
 import { parseRBSP } from './rbsp.js';
 import { GAME2_ARENA_MAPS } from './arenaMaps.js';
 
@@ -53,6 +53,7 @@ export async function loadLocalBank(base, rigJson, bank, progress = () => { }, r
 export async function loadAll(base = 'assets/', progress = () => { }, o = {}) { // o.map === false: missions build their own level
   progress('rig'); let rigJson = await fetchGame2Json(base, 'rig.json');
   let bank = await loadBank(base, progress);
+  ({ rigJson, bank } = withDerivedAnims(rigJson, bank)); // before the optional local bank: same indices for every player
   ({ rigJson, bank } = await loadLocalBank(base, rigJson, bank, progress));
   progress('model'); const glb = parseGLB(await fetchBuf(base + 'Explorer_G2_Game.glb'));
   const skel = new Skeleton(rigJson, bank.q, bank.pel, glb);
