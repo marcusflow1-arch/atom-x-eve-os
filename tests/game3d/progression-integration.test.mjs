@@ -175,3 +175,139 @@ test('halo batches consume actual kill currency and stop at existing cap', () =>
     assert.equal(kills.getKillCount(), 95);
   } finally { Math.random = original; }
 });
+
+function withFailedWrites(prefix, action) {
+  const proto = Object.getPrototypeOf(localStorage);
+  const original = proto.setItem;
+  proto.setItem = function (key, value) {
+    if (String(key).startsWith(prefix)) throw new dom.window.DOMException('Simulated full storage', 'QuotaExceededError');
+    return original.call(this, key, value);
+  };
+  try { return action(); } finally { proto.setItem = original; }
+}
+
+test('checked character storage reports a rejected write without altering a previous save', () => {
+  reset(); const save = storage.characterScopedStorage('checked-save');
+  assert.equal(save.setChecked('before'), true);
+  withFailedWrites('checked-save', () => {
+    assert.equal(save.setChecked('after'), false);
+    assert.doesNotThrow(() => save.set('legacy-call'));
+    assert.equal(save.get(), 'before');
+  });
+  assert.equal(save.setChecked('after'), true);
+});
+
+test('failed mount mutations preserve resources, audit, progression, and subscribers', () => {
+  const id = reset(); mounts.awardAXEMountXP(id, 10000);
+  const second = mounts.grantAXEMount('axe_mount_iron_wolf').mount.instanceId;
+  const before = mounts.getAXEMountState();
+  const saved = storage.characterScopedStorage('axe_mount_progression_v1').get();
+  const stats = structuredClone(hud.getPlayerHUD().derived);
+  let notifications = 0; const stop = mounts.subscribeAXEMounts(() => notifications++);
+  const operations = [
+    () => mounts.registerAXEMount(second),
+    () => mounts.activateAXEMount(second),
+    () => mounts.awardAXEMountXP(id, 20, 'pvp', { opponentId: 'enemy', now: 0 }),
+    () => mounts.setAXEMountSpiritualMode(id, 'utility'),
+    () => mounts.strengthenAXEMountSpiritualWeapon(id, { confirmed: true, expectedRank: 0 }),
+    () => mounts.grantAXEMount('axe_mount_spirit_wolf'),
+    () => mounts.craftLegendaryAXEMount(id, { confirmed: true, rng: () => 0.4 }),
+    () => mounts.grantAXEMountMaterials({ gold: 100 }),
+    () => mounts.releaseAXEMount(second, { confirmed: true }),
+  ];
+  try {
+    withFailedWrites('axe_mount_progression_v1', () => {
+      for (const operation of operations) {
+        assert.equal(operation().reason, 'SAVE_FAILED');
+        assert.deepEqual(mounts.getAXEMountState(), before);
+        assert.equal(storage.characterScopedStorage('axe_mount_progression_v1').get(), saved);
+        assert.deepEqual(hud.getPlayerHUD().derived, stats);
+      }
+    });
+    assert.equal(notifications, 1, 'no failed action may publish a new state');
+  } finally { stop(); }
+  assert.equal(mounts.strengthenAXEMountSpiritualWeapon(id, { confirmed: true, expectedRank: 0 }).ok, true);
+  assert.equal(mounts.getAXEMountState().mounts[0].spiritualProfile.availableXp, 9500);
+  storage.notifyCharacterChange();
+  assert.equal(mounts.getAXEMountState().mounts[0].spiritualProfile.rank, 1);
+});
+
+test('failed legendary add/reroll retains the rolled abilities and materials', () => {
+  const id = reset(); mounts.awardAXEMountXP(id, 700);
+  mounts.craftLegendaryAXEMount(id, { confirmed: true, rng: () => 0.3 });
+  const before = mounts.getAXEMountState();
+  withFailedWrites('axe_mount_progression_v1', () => {
+    assert.equal(mounts.addLegendaryAXEMountAbility(id, { confirmed: true, rng: () => 0.7 }).reason, 'SAVE_FAILED');
+    assert.deepEqual(mounts.getAXEMountState(), before);
+    assert.equal(mounts.rerollLegendaryAXEMountAbility(id, 0, { confirmed: true, rng: () => 0.8 }).reason, 'SAVE_FAILED');
+    assert.deepEqual(mounts.getAXEMountState(), before);
+  });
+  assert.equal(mounts.addLegendaryAXEMountAbility(id, { confirmed: true, rng: () => 0.7 }).ok, true);
+  assert.equal(mounts.getAXEMountState().mounts[0].legendary.abilities.length, 4);
+});
+
+test('riding/dismounting remains possible when storage fails, with earned riding XP retained for retry', () => {
+  const id = reset();
+  withFailedWrites('axe_mount_progression_v1', () => {
+    assert.equal(mounts.setAXEMountRiding(true).ok, true);
+    assert.equal(mounts.tickAXEMountRideActivity(30, { moving: true, distanceMeters: 25 }).reason, 'SAVE_FAILED');
+    assert.equal(mounts.getAXEMountState().ridingMountId, id);
+  });
+  assert.equal(mounts.tickAXEMountRideActivity(0, { moving: true, distanceMeters: 0 }).ok, true);
+  assert.equal(mounts.getAXEMountState().mounts[0].totalXp, 5);
+  assert.equal(mounts.tickAXEMountRideActivity(0, { moving: true, distanceMeters: 0 }), null);
+  withFailedWrites('axe_mount_progression_v1', () => assert.equal(mounts.setAXEMountRiding(false).ok, true));
+  assert.equal(mounts.getAXEMountState().ridingMountId, null);
+});
+
+test('failed vanity mutations preserve cards, equipped pieces, visuals and combat stats', () => {
+  reset(); const before = vanity.getAXEVanityState();
+  const stats = structuredClone(hud.getPlayerHUD().derived);
+  let notifications = 0; const stop = vanity.subscribeAXEVanity(() => notifications++);
+  const piece = 'axe_vanity_wanderer_head';
+  try {
+    withFailedWrites('axe_vanity_custom_pieces_v1', () => {
+      for (const action of [
+        () => vanity.equipAXEVanityPiece(piece),
+        () => vanity.unequipAXEVanitySlot('head'),
+        () => vanity.activateAXEVanityPiece(piece, 'silver'),
+        () => vanity.grantAXEVanityCard('gold', 1),
+        () => vanity.grantAXEVanityPiece(piece),
+        () => vanity.setAXEVanityHidden(true),
+      ]) {
+        assert.equal(action().reason, 'SAVE_FAILED');
+        assert.deepEqual(vanity.getAXEVanityState(), before);
+        assert.deepEqual(hud.getPlayerHUD().derived, stats);
+      }
+    });
+    assert.equal(notifications, 1);
+  } finally { stop(); }
+  assert.equal(vanity.activateAXEVanityPiece(piece, 'silver').ok, true);
+  assert.equal(vanity.getAXEVanityState().cards.silver, 3);
+  storage.notifyCharacterChange();
+  assert.equal(vanity.getAXEVanityState().cards.silver, 3);
+  assert.equal(vanity.activateAXEVanityPiece(piece, 'silver').reason, 'ALREADY_ACTIVATED');
+});
+
+test('failed saves after switching characters restore that character, not the previous one', () => {
+  const id = reset(); mounts.awardAXEMountXP(id, 10000); vanity.unequipAXEVanitySlot('head');
+  reset(); const beforeMounts = mounts.getAXEMountState(); const beforeVanity = vanity.getAXEVanityState();
+  withFailedWrites('axe_', () => {
+    assert.equal(mounts.awardAXEMountXP(beforeMounts.activeMountId, 50).reason, 'SAVE_FAILED');
+    assert.equal(vanity.unequipAXEVanitySlot('head').reason, 'SAVE_FAILED');
+  });
+  assert.deepEqual(mounts.getAXEMountState(), beforeMounts);
+  assert.deepEqual(vanity.getAXEVanityState(), beforeVanity);
+});
+
+test('returned mount grants and legendary results cannot change committed state', () => {
+  reset(); const granted = mounts.grantAXEMount('axe_mount_iron_wolf');
+  granted.mount.totalXp = 999999;
+  assert.equal(mounts.getAXEMountState().mounts.find(x => x.instanceId === granted.mount.instanceId).totalXp, 0);
+  const id = mounts.getAXEMountState().activeMountId; mounts.awardAXEMountXP(id, 700);
+  const crafted = mounts.craftLegendaryAXEMount(id, { confirmed: true, rng: () => 0.4 });
+  const before = mounts.getAXEMountState();
+  crafted.legendary.abilities[0].value = 999999;
+  crafted.mount.sourceStats.pveXp = 999999;
+  assert.deepEqual(mounts.getAXEMountState(), before);
+});
