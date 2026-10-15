@@ -226,3 +226,31 @@ Yavin JPEG textures from the user's Drive have been included under
 public/game2/maps/textures/yavin. Materials not yet included use a visible
 flat-shaded fallback. This is a native-map geometry import, not a full Jedi
 Outcast game engine port.
+
+## Guided Arena Tutorial (offline)
+
+**Launch:** Game 2 main menu → **Arena Tutorial** → **Enter tutorial arena**.
+The tutorial is its own `tutorial` mode in the real Lightsaber Training arena. An allied AI
+instructor and an idle enemy target are reset between lessons. It never opens a network room,
+awards cards/currency, changes story checkpoints, or replaces Duel Practice.
+
+Select a technique and either **Watch AI demonstrate** or **Try it myself**. The AI drives
+real Fighter/Force moves, not a pre-rendered mockup. Readable, numbered text explains each
+input; the practice check listens for genuine cast/swing state and combo order. Automatic
+Force Dodge has only a demonstration. Completed lesson IDs are cached in the browser under
+`atomxe.game2.tutorial.completed.v1`; additional lessons appear uncompleted.
+
+The live curriculum is implemented in `engine/tutorialCatalog.js` and `engine/tutorial.js`.
+Selectable `POWERS` and current hotkeys are imported directly from `force.js`, so newly
+added selectable Force powers automatically receive a basic cast-and-practice lesson.
+For **new combo mechanics** or actions that require special validation, call
+`registerGame2TutorialLesson({ id, title, group, steps, goal, demo })` when the feature is
+registered, and extend `Game2TutorialDirector.achieved` and its demonstration dispatcher
+for the new goal/demo. Registration returns an unregister callback. This prevents the
+tutorial from claiming a new move is playable before its action/validation exists.
+
+**QA:** `node --test tests/game2-tutorial.test.mjs tests/game2-combos.test.mjs tests/game2-duel.test.mjs`,
+then `npm run build`, followed by a browser walkthrough of draw, saber attack, Force casts,
+Push → Speed, held Lightning, special meter, automatic Dodge, replay/reset, and leaving to
+the main menu. Test the single/dual/staff curriculum separately. Exercise on a test deployment
+before enabling the feature for live players; offline mode leaves multiplayer unchanged.
