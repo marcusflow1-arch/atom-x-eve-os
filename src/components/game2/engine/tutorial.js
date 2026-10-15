@@ -116,6 +116,10 @@ export class Game2TutorialDirector {
         add(0.5, () => { f.pos[1] += 2; f.onGround = false; cast('pull'); });
         add(1.15, () => cast('push'));
         break;
+      case 'levitate-push':
+        add(0.5, () => cast('levitate'));
+        add(1.0, () => cast('push'));
+        break;
       case 'throw-lightning':
         add(0.5, () => f.throwSaber([Math.sin(f.yaw), 0, Math.cos(f.yaw)]));
         add(1.3, () => hold('lightning', 1.2));
@@ -142,7 +146,7 @@ export class Game2TutorialDirector {
     // Held casts have release events scheduled *during* their first action. Do not
     // end the demonstration before the channel duration/second combo action.
     const duration = { storm: 3.6, 'throw-lightning': 3.8, 'pull-push': 3.1,
-      'push-speed': 2.7, repulse: 3.5, power: 3.1, dominance: 3.2 }[lesson.demo] || 2.8;
+      'push-speed': 2.7, 'levitate-push': 3.0, repulse: 3.5, power: 3.1, dominance: 3.2 }[lesson.demo] || 2.8;
     this.demoEnds = this.demoStarted + duration;
   }
   practice() {
@@ -187,6 +191,7 @@ export class Game2TutorialDirector {
         const pull = this.events.find(e => e.id === 'pull' && e.airborne);
         return !!pull && this.events.some(e => e.id === 'push' && e.t > pull.t);
       }
+      case 'levitatepush': return this.hasSequence(['levitate', 'push']);
       case 'chargedblade': return !!p.thrown && (p.thrown.chargedUntil || 0) > g.t;
       case 'storm': return !!F.storm;
       case 'counter': return !!p.critStrike;
