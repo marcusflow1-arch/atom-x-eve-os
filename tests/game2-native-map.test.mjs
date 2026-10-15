@@ -52,7 +52,7 @@ test('Game 2 uses imported mesh while leaving Game 1 and legacy explorer alone',
   assert.equal(world.bodies.length,0,'old barrels/crates not scattered over the genuine map');
   world.draw();world.update(1/60);
   const src=readFileSync(new URL('../src/components/game2/engine/game.js',import.meta.url),'utf8');
-  assert.match(src,/const arena = \(this\.duel \|\| this\.online \|\| this\.teamMode \|\| this\.attract\) && !this\.arenaDef/); // legacy duel/online remain on imported BSP (team modes too, unless an authored arena is picked)
+  assert.match(src,/const arena = \(this\.duel \|\| this\.online \|\| this\.teamMode \|\| this\.attract(?: \|\| this\.tutorialMode)?\) && !this\.arenaDef/); // legacy duel/online remain on imported BSP (team modes too, unless an authored arena is picked)
   assert.match(src,/new World\(R, arena \? A\.duelMap : null, level\)/);
   assert.match(src,/label: 'Reborn'/);
   const assets=readFileSync(new URL('../src/components/game2/engine/assets.js',import.meta.url),'utf8');
