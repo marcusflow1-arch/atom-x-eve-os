@@ -7,6 +7,8 @@ import { appParams } from '@/lib/app-params';
 import { game2RailwayUrl } from './net/railway.js';
 import Game2Lobby from './Game2Lobby';
 import Game2Menu from './Game2Menu';
+import Game2TutorialOverlay from './Game2TutorialOverlay';
+import { Game2TutorialDirector } from './engine/tutorial.js';
 import { GAME2_AUTHORED_MAPS } from './engine/arenaMaps.js';
 import { loadSettings } from './settings.js';
 
@@ -19,6 +21,10 @@ const BASE = import.meta.env?.BASE_URL ?? '/';
 const ASSET_BASE = `${BASE}game2/`;
 
 const MODES = {
+  tutorial: {
+    tag: 'Tutorial', title: 'Guided Arena Academy', loading: 'Training arena', icon: Swords,
+    blurb: 'Watch an AI instructor demonstrate real moves, follow the directions, and practice against an idle target.',
+  },
   single: {
     tag: 'Single player', title: 'Mission 1 · Kejim Post', loading: 'Kejim Post', icon: Swords,
     blurb: 'Land in the canyon with Jan Ors, breach an Imperial outpost, pull its flight logs while the garrison counter-attacks, and face what waits in the hangar.',
@@ -70,6 +76,8 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
   const mode = MODES[choice] || PRACTICE;
   const [status, setStatus] = useState({ phase: 'loading', text: `Loading ${mode.loading}` });
   const [humanCount, setHumanCount] = useState(null);
+  const directorRef = useRef(null);
+  const [tutorialSnapshot, setTutorialSnapshot] = useState(null);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -78,6 +86,7 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
     let game = null;
     let renderer = null;
     let raf = 0;
+    let tutorialTimer = null;
     // fresh canvases per mount: a WebGL canvas cannot get a second context after the first one was released (StrictMode remounts)
     const canvas = document.createElement('canvas');
     const hud = document.createElement('canvas');
@@ -86,7 +95,7 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
     canvas.tabIndex = 0;
     hud.style.pointerEvents = 'none';
     host.append(canvas, hud);
-    const duel = choice === 'multi', teamMode = TEAM_CHOICES.includes(choice);
+    const duel = choice === 'multi' || choice === 'tutorial', teamMode = TEAM_CHOICES.includes(choice);
     const arena = choice !== 'single';
     const map = choice === 'online' ? online?.mapId || 'training' : mapId; // online: the arena picked in the lobby
     const authored = arena && !!GAME2_AUTHORED_MAPS[map]; // a large authored level instead of a BSP
@@ -101,7 +110,7 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
     let engineOptions = teamMode
       ? { mode: choice, ...common }
       : duel
-        ? { mode: 'duel', ...common }
+        ? { mode: choice === 'tutorial' ? 'tutorial' : 'duel', ...common }
         : { mode: 'mission', mission: 'kejim', ...common };
 
     (async () => {
@@ -135,6 +144,15 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
           }
         }
         game = new Game(renderer, assets, canvas, hud, engineOptions);
+        if (choice === 'tutorial') {
+          const tutorial = new Game2TutorialDirector(game);
+          game.tutorial = tutorial;
+          directorRef.current = tutorial;
+          setTutorialSnapshot(tutorial.snapshot());
+          tutorialTimer = setInterval(() => {
+            if (!cancelled && !game?.disposed) setTutorialSnapshot(tutorial.snapshot());
+          }, 160);
+        }
         combatTrackRequest.then((url) => {
           if (!cancelled && game && url) game.setCombatTrackUrl(url);
         });
@@ -172,6 +190,8 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
+      if (tutorialTimer) clearInterval(tutorialTimer);
+      directorRef.current = null;
       if (game?._connectionTimer) clearInterval(game._connectionTimer);
       if (game) game.dispose();
       try {
@@ -193,8 +213,11 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
         className="absolute left-3.5 top-[62px] z-20 flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#080a16]/70 px-2.5 py-1.5 text-[11px] font-semibold text-white/70 backdrop-blur transition hover:bg-[#101528]/90 hover:text-white"
       >
         <Menu className="h-3.5 w-3.5" />
-        {choice === 'single' ? 'Main menu' : 'Lobby'}
+        {choice === 'online' ? 'Lobby' : 'Main menu'}
       </button>
+      {choice === 'tutorial' && status.phase === 'ready' && (
+        <Game2TutorialOverlay director={directorRef.current} snapshot={tutorialSnapshot} onChange={setTutorialSnapshot} />
+      )}
       {choice === 'online' && status.phase === 'ready' && humanCount !== null && (
         <div role="status" aria-live="polite" className="absolute right-3 top-[62px] z-20 rounded-lg border border-white/15 bg-[#080a16]/85 px-3 py-2 text-xs font-semibold text-white/90">
           {humanCount === 1
