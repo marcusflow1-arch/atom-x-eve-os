@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, ChevronRight, DoorOpen, Gamepad2, Keyboard, Settings2, Swords, Trophy, Users } from 'lucide-react';
+import { BookOpen, ChevronRight, DoorOpen, Gamepad2, GraduationCap, Keyboard, Settings2, Swords, Trophy, Users } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { GAME2_SKIRMISH_MAPS } from './engine/arenaMaps.js';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings } from './settings.js';
@@ -16,6 +16,7 @@ const MENU_ITEMS = [
   { id: 'multiplayer', label: 'Multiplayer', icon: Users },
   { id: 'skirmish', label: 'Skirmish', icon: Trophy },
   { id: 'practice', label: 'Duel Practice', icon: Swords },
+  { id: 'tutorial', label: 'Arena Tutorial', icon: GraduationCap },
   { id: 'settings', label: 'Settings', icon: Settings2 },
   { id: 'controls', label: 'Controls', icon: Keyboard },
   { id: 'exit', label: 'Exit to Luna', icon: DoorOpen },
@@ -292,6 +293,17 @@ export default function Game2Menu({ onStart }) {
       </div>
       <SaberPicker saber={saber} setSaber={setSaber} />
       <PlayButton onClick={() => start('multi')}>Start the duel</PlayButton>
+    </Panel>
+  );
+  else if (item === 'tutorial') panel = (
+    <Panel kicker="Guided Training · offline" title="Learn every move in the arena">
+      <p className="text-sm leading-relaxed text-white/75">
+        Enter Lightsaber Training and choose a lesson. Watch the AI instructor perform a real combo or Force power
+        first, then follow large, step-by-step prompts and try it yourself. Automatic reactions are demonstration-only.
+        New powers and registered combos are added to the curriculum as Game 2 evolves.
+      </p>
+      <SaberPicker saber={saber} setSaber={setSaber} />
+      <PlayButton onClick={() => start('tutorial', { mapId: 'training' })}>Enter tutorial arena</PlayButton>
     </Panel>
   );
   else if (item === 'settings') panel = <SettingsPanel settings={settings} setSettings={setSettings} />;

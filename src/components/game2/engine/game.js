@@ -43,20 +43,20 @@ class NullInput {
 
 export class Game {
   constructor(R, A, canvas, hudCanvas, opts = {}) {
-    this.opts = opts; this.mode = opts.mode || 'explorer'; this.duel = this.mode === 'duel'; this.online = this.mode === 'online'; this.teamMode = !!TEAM_MODES[this.mode]; this.boss = null; this.round = { state: 'intro', t: 0 }; this.arcs = []; this.disposed = false;
+    this.opts = opts; this.mode = opts.mode || 'explorer'; this.duel = this.mode === 'duel'; this.tutorialMode = this.mode === 'tutorial'; this.online = this.mode === 'online'; this.teamMode = !!TEAM_MODES[this.mode]; this.boss = null; this.round = { state: 'intro', t: 0 }; this.arcs = []; this.disposed = false;
     this.attract = this.mode === 'attract'; // the main menu's background: two AI fighters duel under a slow cinematic camera
-    this.openArena = this.online || this.teamMode || this.attract; // every fighter fights the fighters hostile to it (not just the player)
+    this.openArena = this.online || this.teamMode || this.attract || this.tutorialMode; // every fighter fights the fighters hostile to it (not just the player)
     this.missionDef = this.mode === 'mission' ? MISSIONS[opts.mission || 'kejim'] : null;
     if (this.mode === 'mission' && !this.missionDef) throw new Error('Unknown Game 2 mission: ' + opts.mission);
-    this.forceMenu = this.duel || this.online || this.teamMode || !!this.missionDef; // wheel / F Force selector and the ten quick-cast powers
+    this.forceMenu = this.duel || this.tutorialMode || this.online || this.teamMode || !!this.missionDef; // wheel / F Force selector and the ten quick-cast powers
     this.R = R; this.A = A; this.skel = A.skel; this.saberData = A.saberData; this.attach = A.attach; this.canvas = canvas;
     this.t = 0; this.dtFrame = STEP; this.fps = 60; this.acc = 0; this.started = false; this.flashes = []; this.lightFlash = 0; this.lightFlashPos = [0, 2, 0]; this.shakeAmt = 0; this.frameNo = 0;
     this.bodyMesh = R.uploadSkinned(A.body); this.hiltMesh = R.uploadStatic(A.hilt); this.lodMesh = A.lod ? R.uploadSkinned(A.lod) : this.bodyMesh;
     const gun = geo(); gun.box(0, 0.03, 0, 0.05, 0.13, 0.06, [0.16, 0.16, 0.19, 1]).box(0, -0.12, 0, 0.045, 0.2, 0.05, [0.32, 0.33, 0.38, 1]).box(0, -0.235, 0, 0.03, 0.05, 0.03, [0.9, 0.25, 0.15, 1]); this.gunMesh = R.uploadStatic(gun.build());
-    this.arenaDef = this.teamMode || this.duel || this.online ? AUTHORED_LEVELS[opts.mapId] || null : null; // a large authored arena instead of a BSP
+    this.arenaDef = this.teamMode || this.duel || this.tutorialMode || this.online ? AUTHORED_LEVELS[opts.mapId] || null : null; // a large authored arena instead of a BSP
     const level = this.missionDef ? buildLevel(this.missionDef.layout) : this.arenaDef ? buildLevel(this.arenaDef.layout) : null;
     this.scoreDef = level?.music ? SCORES[level.music] || null : null; // an authored arena's own generated score (music.js)
-    const arena = (this.duel || this.online || this.teamMode || this.attract) && !this.arenaDef;
+    const arena = (this.duel || this.online || this.teamMode || this.attract || this.tutorialMode) && !this.arenaDef;
     if (arena && !A.duelMap) throw new Error('Game 2 selected map not loaded');
     this.world = new World(R, arena ? A.duelMap : null, level);
     this.playerSpawn = arena ? this.world.spawns.player.slice() : level ? level.playerSpawn.slice() : SPAWN.slice();
@@ -97,6 +97,13 @@ export class Game {
       h.help = false;
       this.started = true;
       h.msg('WASD to move · F1 for controls');
+    } else if (this.tutorialMode) {
+      const h = this.hud; this.input.wheelThrottle = 90;
+      h.helpList = HELP_DUEL; h.helpW = 820;
+      h.title = 'GUIDED ARENA TRAINING';
+      h.subtitle = 'Watch the instructor · follow on-screen steps · then try it';
+      h.debug = false; h.help = false; this.started = true;
+      this.aiOff = true;
     } else if (this.online) {
       const h = this.hud; this.input.wheelThrottle = 90;
       h.helpList = HELP_ONLINE; h.helpW = 820; h.title = 'ONLINE · JEDI VS DARK JEDI'; h.subtitle = (this.arenaDef ? this.arenaDef.label : GAME2_ARENA_MAPS[opts.mapId]?.label || 'Lightsaber Training') + ' arena · F1 = controls';
@@ -139,12 +146,31 @@ export class Game {
     if (this.online) { this.remotes = []; this.readySaber(this.player); return; }
     if (this.teamMode) { this.teamMatch = new Game2TeamMatch(this, this.mode, this.opts.mapId || 'training'); return; }
     if (this.attract) return this.populateAttract();
+    if (this.tutorialMode) return this.populateTutorial();
     if (this.duel) return this.populateDuel();
     if (this.missionDef) { this.director = new MissionDirector(this, this.missionDef); return; }
     const droidTints = [[0.55, 0.75, 1.0], [0.9, 0.8, 0.5], [0.7, 1.0, 0.75]];
     [[9, 3], [-9, 6], [4, 15]].forEach(([x, z], i) => this.addNpc('droid', x, z, { name: 'droid' + i, label: 'Training Droid', team: 'enemy', hp: 70, tint: droidTints[i], tintAmt: 0.42, saber: false, yaw: Math.PI + 0.4 * i }));
     this.duelist = this.addNpc('duelist', 0, 7, { name: 'duelist', label: 'Sith Duelist', team: 'enemy', hp: 170, tint: [0.62, 0.22, 0.22], tintAmt: 0.3, saber: true, blade: [1, 0.08, 0.06], yaw: Math.PI, dmgScale: 0.55, blockSkill: 0.5 });
     this.ally = this.addNpc('ally', -7, -4, { name: 'ally', label: 'Jedi Ally', team: 'ally', hp: 100, tint: [0.35, 0.7, 0.45], tintAmt: 0.3, saber: true, blade: [0.2, 1, 0.3], yaw: 0.6 }); this.ally.hp = 50;
+  }
+  populateTutorial() {
+    // A private, offline arena. Stationary target receives real combat actions;
+    // the instructor shares the player's actual Fighter, Force and animations.
+    const p = this.playerSpawn, y = this.playerSpawnYaw ?? 0;
+    const fw = [Math.sin(y), Math.cos(y)], right = [Math.cos(y), -Math.sin(y)];
+    const at = [p[0] + right[0] * 2, p[1], p[2] + right[1] * 2];
+    const foe = [p[0] + fw[0] * 5.5 + right[0], p[1], p[2] + fw[1] * 5.5 + right[1]];
+    const target = this.addNpc('darkjedi', foe[0], foe[2], { name: 'tutorial-target', label: 'Training Target', team: 'enemy', hp: 500,
+      tint: [0.85, 0.55, 0.36], tintAmt: 0.3, saber: true, blade: [1, 0.3, 0.12], yaw: y + Math.PI, dmgScale: 0, blockSkill: 0 });
+    target.pos[1] = foe[1]; target.spawn = foe.slice(); target.hp = target.maxHp = 500; target.reaction = 0;
+    const trainer = this.addNpc('darkjedi', at[0], at[2], { name: 'tutorial-instructor', label: 'AI Instructor', team: 'ally', hp: 500,
+      tint: [0.2, 0.65, 0.9], tintAmt: 0.25, saber: true, blade: [0.15, 0.8, 1], yaw: y, dmgScale: 0.5, blockSkill: 0 });
+    trainer.pos[1] = at[1]; trainer.spawn = at.slice(); trainer.hp = trainer.maxHp = 500;
+    trainer.force = new Force(this, trainer, { npc: true, fp: 180, list: SELECT_ORDER });
+    this.tutorialTrainer = trainer; this.tutorialTarget = target; this.boss = target;
+    this.readySaber(this.player);
+    this.round = { state: 'fight', t: 0 };
   }
   populateDuel() {
     // one opponent: a Dark Jedi with the same Force powers, costs and rules as the player (missions spawn the same values from archetypes.js 'reborn')
@@ -227,6 +253,7 @@ export class Game {
     for (const f of this.fighters()) if (!f.saber.holstered && f.hasSaber && f.blade.lit !== false) { f.hum = null; this.humStart(f); }
   }
   onSwing(f, move) {
+    this.tutorial?.onSwing(f, move);
     if (!this.attract && this.player && (f.isPlayer || this.foesOf(this.player).includes(f)) &&
         Math.hypot(f.pos[0] - this.player.pos[0], f.pos[2] - this.player.pos[2]) < 20) {
       this.lastCombatMusicEventAt = this.t;
@@ -236,10 +263,11 @@ export class Game {
   onLand(f, impact) { if (impact > 8) { this.dust(f.pos, 0.6 + impact * 0.03, 8); } } // no camera shake: Jedi Outcast lands with a short LAND1 only
   // a taunt: the voice line (when the optional voices are installed) and, online, everyone else hears it too
   onTaunt(f, side, n, fromNet = false) {
+    this.tutorial?.onTaunt(f);
     this.sfx.voice?.(side, n, { pos: f.pos, vol: f.isPlayer ? 0.9 : 0.75 });
     if (this.net && !fromNet && !f.remote && f.fid) this.net.fx('taunt', { fid: f.fid, side, n });
   }
-  onDeath(f) { if (f.killedBy && f.killedBy !== f && !f.remote) this.creditKill(f.killedBy); const K = f.killedBy; if (K && !K.isPlayer && !K.remote && K.taunt && K !== f && Math.random() < 0.6) K.after(0.9, () => { if (K.status === 'normal') K.taunt(); }); /* the AI gloats now and then */ this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (this.teamMatch) this.teamMatch.onDeath(f); if (this.net) this.net.onDeath(f); if (f.isPlayer && !this.online) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
+  onDeath(f) { if (f.killedBy && f.killedBy !== f && !f.remote) this.creditKill(f.killedBy); const K = f.killedBy; if (K && !K.isPlayer && !K.remote && K.taunt && K !== f && Math.random() < 0.6) K.after(0.9, () => { if (K.status === 'normal') K.taunt(); }); /* the AI gloats now and then */ this.sfxAt('hit3', f.pos, 0.8); this.dust(f.pos, 1.0, 12); if (this.teamMatch) this.teamMatch.onDeath(f); if (this.net) this.net.onDeath(f); if (f.isPlayer && !this.online && !this.tutorialMode) this.hud.msg(this.duel ? 'The Dark Jedi has bested you' : 'You were slain'); if (this.duel && !this.tutorialMode) { if (f === this.boss) this.endRound('won'); else if (f.isPlayer) this.endRound('lost'); } if (this.director) this.director.onDeath(f); }
   endRound(state) { if (this.round.state === 'won' || this.round.state === 'lost') return; this.round = { state, t: 0 }; this.hud.banners.length = 0; } // the result overlay in hud.js replaces any banner
   onForceJump(f) { this.sfxAt('jump', f.pos, 0.9); this.sfxAt('jumpbuild', f.pos, 0.5); this.fx.ring({ p: [f.pos[0], 0.05, f.pos[2]], n: [0, 1, 0], r0: 0.3, r1: 2.2, life: 0.5, w: 0.14, c: [0.6, 0.85, 1, 0.9] }); this.dust(f.pos, 1.0, 14); if (f.isPlayer) this.shake(0.12); }
   dust(p, size = 0.8, n = 8) { for (let i = 0; i < n; i++) { const a = rnd(0, 6.28); this.fx.emit({ p: [p[0] + Math.cos(a) * 0.3, 0.08, p[2] + Math.sin(a) * 0.3], v: [Math.cos(a) * rnd(0.8, 2.6) * size, rnd(0.2, 0.9), Math.sin(a) * rnd(0.8, 2.6) * size], life: rnd(0.4, 0.9), size: rnd(0.12, 0.28), grow: 0.5, c0: [0.5, 0.48, 0.55, 0.22], c1: [0.4, 0.38, 0.45, 0], drag: 2.5 }); } }
@@ -486,7 +514,7 @@ export class Game {
   // ---------------- player input
   stepPressed(code) { return this.firstSub && (this.stepPresses ? this.stepPresses.has(code) : this.input.pressed(code)); }
   buildPlayerCmd() {
-    const i = this.input, p = this.player, c = p.cmd; if (this.hud.help) { c.fwd = c.right = 0; c.attack = c.alt = c.jump = c.crouch = c.walk = false; c.jumpPressed = c.crouchPressed = false; return; }
+    const i = this.input, p = this.player, c = p.cmd; if (this.hud.help || (this.tutorialMode && this.tutorialPhase === 'demo')) { c.fwd = c.right = 0; c.attack = c.alt = c.jump = c.crouch = c.walk = false; c.jumpPressed = c.crouchPressed = false; return; }
     c.fwd = (i.held('KeyW') ? 1 : 0) - (i.held('KeyS') ? 1 : 0); c.right = (i.held('KeyD') ? 1 : 0) - (i.held('KeyA') ? 1 : 0);
     c.aimPitch = this.cam.pitch; c.walk = i.held('ShiftLeft') || i.held('ShiftRight'); c.crouch = i.held('KeyC'); c.attack = !!i.btn[0] || this.stepPressed('Mouse0'); c.alt = !!i.btn[2]; c.jump = i.held('Space');
     c.up = c.jump ? 1 : c.crouch ? -1 : 0; c.jumpPressed = this.stepPressed('Space'); c.crouchPressed = this.stepPressed('KeyC');
@@ -496,6 +524,7 @@ export class Game {
   }
   frameInput(dt) {
     const i = this.input, p = this.player, c = this.cam, h = this.hud;
+    if (this.tutorialMode && this.tutorialPhase === 'demo') return;
     if (i.pressed('F1')) h.help = !h.help; if (i.pressed('F3')) h.debug = !h.debug; if (i.pressed('KeyM')) { this.sfx.muted = !this.sfx.muted; h.msg(this.sfx.muted ? 'Sound off' : 'Sound on'); }
     if (h.help && (i.btnPressed[0] || ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space'].some(key => i.pressed(key))) && !i.pressedSet.has('F1')) {
       h.help = false; this.started = true;
@@ -578,11 +607,12 @@ export class Game {
   // ---------------- simulation
   step(dt) {
     this.t += dt; this.dtFrame = dt; const p = this.player;
+    this.tutorial?.update();
     if (this.net) this.net.beforeStep(dt);
     this.updateExecutions(dt); // before the fighters: they show where the execution put them this step
     if (this.clash) this.clash.update(dt);
     this.execCandidate = this.attract || p.status !== 'normal' ? null : findExecutable(this, p);
-    this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.inp); if (this.playerWeapon) this.updatePistol(dt);
+    this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.tutorialMode && this.tutorialPhase === 'demo' ? null : this.inp); if (this.playerWeapon) this.updatePistol(dt);
     this.stepNo = (this.stepNo | 0) + 1; const big = this.npcs.length > 16;
     for (const n of this.npcs) {
       // a big match's bots further from the camera update less often, each covering the steps it skipped: over 12 m at
@@ -591,6 +621,7 @@ export class Game {
       const brain = BRAINS[n.kind]; n.aimPitch = this.aimPitchToward(n);
       if (n.critAt && this.t >= n.critAt) { n.critAt = 0; n.startCritStrike(); } // an AI that parried you open strikes on its own
       if (this.aiOff || this.teamMatch?.ended) { clearCmd(n.cmd); } else if (this.teamMatch) this.teamMatch.brain(n, ndt); else if (brain) brain(this, n, ndt);
+      if (this.tutorialMode) this.tutorial?.demoCmd(n, n.cmd);
       n.update(ndt); if (n.force) n.force.update(ndt); if (n.healFlash > 0) n.healFlash = Math.max(0, n.healFlash - ndt);
       if (n.status === 'dead' && this.t - n.deadAt > 8 && this.mode === 'explorer') this.respawnNpc(n);
       if (n.status === 'dead' && this.attract && this.t - n.deadAt > 3) { this.respawnNpc(n); n.hp = n.maxHp; if (n.force) n.force.reset(); this.shield(n); }

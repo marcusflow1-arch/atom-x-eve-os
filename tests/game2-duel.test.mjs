@@ -30,7 +30,7 @@ test('the old Y Bot viewer has been removed', () => {
 test('wrapper loads the engine lazily, uses fresh canvases and releases everything on unmount', () => {
   const src = read('src/components/game2/Game2Duel.jsx');
   assert.match(src, /import\('\.\/engine\/game\.js'\)/);
-  assert.match(src, /mode: 'duel'/);
+  assert.match(src, /mode: choice === 'tutorial' \? 'tutorial' : 'duel'/); // preserve the duel engine alongside the separate training mode
   assert.match(src, /document\.createElement\('canvas'\)/);
   assert.match(src, /cancelAnimationFrame\(raf\)/);
   assert.match(src, /game\.dispose\(\)/);

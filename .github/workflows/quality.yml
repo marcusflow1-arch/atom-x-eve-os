@@ -32,6 +32,8 @@ jobs:
         run: node --test tests/jedi-original-data.test.mjs tests/jedi-launcher.test.mjs tests/jedi-camera-contract.test.mjs
       - name: Verify Game 2 shared arena multiplayer networking
         run: node --test tests/game2-online.test.mjs tests/game2-arena-coordinator.test.mjs tests/game2-remote-smoothing.test.mjs
+      - name: Verify Game 2 guided arena tutorial and core combat
+        run: node --test tests/game2-tutorial.test.mjs tests/game2-combos.test.mjs tests/game2-duel.test.mjs
       - name: Install Game 2 Railway server dependencies
         run: npm ci --prefix server/game2
       - name: Test Game 2 Railway two-client realtime combat
