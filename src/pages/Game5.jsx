@@ -1,10 +1,11 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Gamepad2, Play, RefreshCw, ShieldAlert, Terminal } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { useAuth } from '../components/auth/AuthContext';
 
 import { createGame5QuestHttpTransport } from '@/game5/client/game5QuestHttpTransport.mjs';
+const Game5Systems = lazy(() => import('@/game5/client/Game5Systems.jsx'));
 const Game5QuestPreview = lazy(() => import('@/game5/client/Game5QuestPreview.jsx'));
 const tile = 'rounded-2xl border border-white/10 bg-[#101b2b]/85 p-5 backdrop-blur-xl';
 
@@ -16,6 +17,7 @@ export default function Game5() {
     try { return sessionStorage.getItem('game5.quest.display-mode') === 'connected'; }
     catch { return false; }
   });
+  const [systemsOpen, setSystemsOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [mode, setMode] = useState(() => {
     try { return sessionStorage.getItem('game5.quest.display-mode') === 'connected' ? 'connected' : 'demo'; }
@@ -33,10 +35,13 @@ export default function Game5() {
     return <main className="flex min-h-screen items-center justify-center bg-[#07101d] px-6 text-white"><section className={tile}><ShieldAlert className="mb-3 text-cyan-300" /><h1 className="text-xl font-semibold">Admin access required</h1><p className="mt-2 text-sm text-white/60">The Game 5 development dashboard is restricted to administrators.</p><button className="mt-4 text-cyan-300 underline" onClick={() => navigate(createPageUrl('LunaTemplate'))}>Return to Luna Dashboard</button></section></main>;
   }
 
+  if (systemsOpen) return <Suspense fallback={<main className="min-h-screen bg-[#101719] p-8 text-white">Loading character systems…</main>}><Game5Systems onBack={() => setSystemsOpen(false)} /></Suspense>;
+
   return <main className="min-h-screen bg-[#070f1c] text-white">
     <header className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b border-white/10 bg-[#0c1928]/95 px-5 py-3 backdrop-blur-xl">
       <button onClick={() => navigate(createPageUrl('LunaTemplate'))} className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-white/75 hover:bg-white/10"><ArrowLeft size={16}/> Luna</button>
       <div className="min-w-0 flex-1"><h1 className="text-base font-bold tracking-wide">GAME 5 <span className="text-cyan-300">/ DEVELOPMENT DASHBOARD</span></h1><p className="text-xs text-white/45">Original Wuxia MMORPG · Retrieve the Lost Card</p></div>
+      <button type="button" onClick={() => setSystemsOpen(true)} className="rounded-lg border border-emerald-200/30 bg-emerald-200/10 px-4 py-2 text-sm text-emerald-100">Character systems</button>
       <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-xs text-amber-200">{mode === 'demo' ? 'BROWSER DEMO · SIMULATED' : 'CONNECTED TEST · BACKEND REQUIRED'}</span>
     </header>
     <div className="mx-auto grid max-w-[1600px] gap-5 p-5 xl:grid-cols-[minmax(0,1fr)_320px]">

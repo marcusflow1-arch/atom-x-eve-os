@@ -24,6 +24,7 @@ import { AUTHORED_LEVELS } from './levels/index.js';
 import { GAME2_ARENA_MAPS } from './arenaMaps.js';
 import { Score, SCORES } from './music.js';
 import { ForceClash, canClash, CLASH_WINDOW } from './clash.js';
+import { Game2CombatTrack, game2CombatActive } from './combatTrack.js';
 import { Execution, findExecutable, cutTransforms, EXECUTION_NAMES } from './executions.js';
 // Team arenas use the real Drive BSP selected by the player, or an authored arena (levels/) such as Skybridge Citadel.
 
@@ -62,16 +63,23 @@ export class Game {
     this.enemySpawn = arena ? this.world.spawns.enemy.slice() : level?.teamHomes ? level.teamHomes.red.slice() : [0, 0, 8];
     if (this.duel && level?.duelSpawns) { this.playerSpawn = level.duelSpawns.player.slice(); this.enemySpawn = level.duelSpawns.enemy.slice(); this.playerSpawnYaw = level.playerYaw; } // an authored arena's duel ground
     this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = this.attract ? new NullInput() : new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
-    // Reuse Atom XE's configured battle theme from the moment the map loads.
-    // Browser autoplay restrictions may require the first player gesture.
-    this.battleMusic = null;
-    this.battleMusicUnlock = () => this.startMapMusic();
+    // The old bgm_boss is a backup only. Once the UI resolves Game 1's
+    // HeroBackground "Combat 2" track, that same URL takes precedence.
+    // Never start combat music while loading or walking through a quiet map.
+    this.combatTrack = new Game2CombatTrack();
+    let fallbackCombatUrl = '';
+    try {
+      const configured = JSON.parse(globalThis.localStorage?.getItem('combat_audio_map_v1') || '{}');
+      fallbackCombatUrl = typeof configured?.bgm_boss === 'string' ? configured.bgm_boss : '';
+    } catch { /* no browser storage available */ }
+    this.combatTrack.setUrl(opts.combatMusicUrl || fallbackCombatUrl);
+    this.battleMusicUnlock = () => { this.startMapMusic(); this.combatTrack.unlock(); };
     if (!this.attract) this.startMapMusic();
     if (typeof window !== 'undefined' && !this.attract) {
       window.addEventListener('pointerdown', this.battleMusicUnlock, { once: true });
       window.addEventListener('keydown', this.battleMusicUnlock, { once: true });
     }
-    this.input.onFirstGesture = () => { this.startAudio(); this.startMapMusic(); };
+    this.input.onFirstGesture = () => { this.startAudio(); this.startMapMusic(); this.combatTrack.unlock(); };
     // the main menu's Settings (settings.js), read once when the match starts
     const S = this.settings = opts.settings || null;
     if (S) { this.input.sens = 0.0022 * S.sensitivity; this.invertY = !!S.invertY; this.baseFov = S.fov; this.sfx.volume = S.masterVolume; this.hud.showFps = !!S.showFps; }
@@ -181,53 +189,49 @@ export class Game {
   humStop(f) { if (f.hum) { f.hum.stop(0.1); f.hum = null; } }
   startMapMusic() {
     if (this.disposed) return;
-    if (this.scoreDef) { // the arena's own score, played through the game's audio context once the first click / key opened it
+    if (this.scoreDef) { // Generated exploration score retained for authored Game 2 arenas.
       if (this.score || !this.sfx.ctx) return;
-      this.score = new Score(this.sfx.ctx, this.scoreDef, { level: this.musicLevel() }); this.score.start(); return;
+      this.score = new Score(this.sfx.ctx, this.scoreDef, { level: this.musicLevel() });
+      this.score.start();
     }
-    if (typeof window === 'undefined' || typeof Audio === 'undefined') return;
-    if (this.battleMusic) {
-      if (this.battleMusic.paused) this.battleMusic.play().catch(() => {});
-      return;
-    }
-    let url = '';
-    try {
-      const configured = JSON.parse(window.localStorage.getItem('combat_audio_map_v1') || '{}');
-      url = String(configured?.bgm_boss || '');
-    } catch (e) { console.warn('Game 2 battle music configuration unavailable', e); }
-    if (!url) return;
-    const audio = new Audio(url);
-    audio.loop = true;
-    audio.volume = this.settings?.musicVolume ?? 0.5;
-    this.battleMusic = audio;
-    audio.play().catch(() => { /* First player interaction retries playback. */ });
   }
-  // Settings' Music volume under the master volume; silent while muted (M)
-  musicLevel() { return this.sfx.muted ? 0 : (this.settings?.musicVolume ?? 0.5) * (this.sfx.volume ?? 0.7); }
-  // the score follows the fight: battle when a foe is close to the player or they were just hurt, calm otherwise
+  setCombatTrackUrl(url) {
+    if (this.disposed || this.attract) return;
+    this.combatTrack.setUrl(url);
+  }
+  // Settings' Music volume under the master volume; silent while muted (M).
+  musicLevel() { return this.sfx?.muted ? 0 : (this.settings?.musicVolume ?? 0.5) * (this.sfx?.volume ?? 0.7); }
+  // Fight detection follows the actual Game 2 player, foes, hit and round state.
+  // No shared Game 1 Audio element: Game 2 owns its own loop/fades and cleanup.
   updateMusic(dt) {
-    const S = this.score; if (!S) return; S.setLevel(this.musicLevel());
-    const P = this.player, close = P.status !== 'dead' && this.foesOf(P).some(f => Math.hypot(f.pos[0] - P.pos[0], f.pos[2] - P.pos[2]) < 14);
-    S.setIntensity(close || this.t - (P.lastHurt ?? -99) < 4 ? 1 : 0.3, dt); S.tick();
+    if (this.attract || this.disposed || (!this.combatTrack && !this.score)) return;
+    const fighting = game2CombatActive(this);
+    const level = this.musicLevel();
+    const externalPlaying = this.combatTrack?.update({ fighting, volume: level, dt }) ?? false;
+    const S = this.score;
+    if (!S) return;
+    S.setLevel(externalPlaying ? level * 0.08 : level); // duck arena score under Combat 2
+    S.setIntensity(fighting ? 1 : 0.3, dt);
+    S.tick();
   }
   stopMapMusic() {
     if (this.score) { this.score.stop(); this.score = null; }
+    this.combatTrack?.dispose();
     if (typeof window !== 'undefined' && this.battleMusicUnlock) {
       window.removeEventListener('pointerdown', this.battleMusicUnlock);
       window.removeEventListener('keydown', this.battleMusicUnlock);
-    }
-    if (this.battleMusic) {
-      this.battleMusic.pause();
-      this.battleMusic.removeAttribute('src');
-      this.battleMusic.load();
-      this.battleMusic = null;
     }
   }
   async startAudio() {
     this.sfx.resume(); try { await this.sfx.loading; } catch (e) { }
     for (const f of this.fighters()) if (!f.saber.holstered && f.hasSaber && f.blade.lit !== false) { f.hum = null; this.humStart(f); }
   }
-  onSwing(f, move) { const lv = f.saber.level; this.sfx.play(Math.random() < 0.5 ? 'swing1' : 'swing2', { pos: f.pos, vol: f.isPlayer ? 0.8 : 0.55, rate: (lv === 1 ? 1.12 : lv === 3 ? 0.88 : 1) * (f.saber.rageMul > 1 ? 1.1 : 1), vary: 0.1 }); }
+  onSwing(f, move) {
+    if (!this.attract && this.player && (f.isPlayer || this.foesOf(this.player).includes(f)) &&
+        Math.hypot(f.pos[0] - this.player.pos[0], f.pos[2] - this.player.pos[2]) < 20) {
+      this.lastCombatMusicEventAt = this.t;
+    }
+    const lv = f.saber.level; this.sfx.play(Math.random() < 0.5 ? 'swing1' : 'swing2', { pos: f.pos, vol: f.isPlayer ? 0.8 : 0.55, rate: (lv === 1 ? 1.12 : lv === 3 ? 0.88 : 1) * (f.saber.rageMul > 1 ? 1.1 : 1), vary: 0.1 }); }
   onThud(f) { this.sfxAt('hit1', f.pos, 0.7); this.dust(f.pos, 0.9, 10); if (f.isPlayer) this.shake(0.18); }
   onLand(f, impact) { if (impact > 8) { this.dust(f.pos, 0.6 + impact * 0.03, 8); } } // no camera shake: Jedi Outcast lands with a short LAND1 only
   // a taunt: the voice line (when the optional voices are installed) and, online, everyone else hears it too

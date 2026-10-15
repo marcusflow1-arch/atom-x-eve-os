@@ -1,0 +1,122 @@
+import { migratePlayer } from "./state.mjs";
+import { check, RULES } from "./rules.mjs";
+import { progression } from "./progression.mjs";
+import { combat, tick, retaliate } from "./combat.mjs";
+import { statsFor, activeSets } from "./stats.mjs";
+export const COMMANDS = {
+  overcharge: ["itemId"],
+  spiritualMode: ["mode"],
+  equip: ["itemId", "ready"],
+  unequip: ["itemId"],
+  switchWeapon: ["slot"],
+  lock: ["itemId", "locked"],
+  salvage: ["itemId"],
+  enchant: ["itemId", "material", "protection"],
+  refine: ["itemId"],
+  socket: ["itemId", "gem"],
+  allocate: ["stat", "points"],
+  buy: ["itemId", "quantity"],
+  craft: ["itemId"],
+  absorb: ["material"],
+  feedMount: [],
+  spiritual: [],
+  augment: ["itemId"],
+  reroll: ["itemId", "index"],
+  headHalo: ["protect"],
+  wingHalo: [],
+  selectPet: ["petId"],
+  hatchPet: [],
+  fusePet: ["petIds"],
+  title: [],
+  rebirth: [],
+  tower: ["tower"],
+  faction: ["faction"],
+  defect: [],
+  use: ["material"],
+  encounter: ["encounter"],
+  attack: ["targetId", "skillId"],
+  guard: ["active"],
+  potion: ["material"],
+  recover: [],
+  retreat: [],
+  tick: [],
+};
+export function validate(c) {
+  check(
+    c &&
+      typeof c === "object" &&
+      !Array.isArray(c) &&
+      Object.hasOwn(COMMANDS, c.type),
+    "UNKNOWN_COMMAND",
+  );
+  check(
+    Object.keys(c).every((k) => k === "type" || COMMANDS[c.type].includes(k)),
+    "UNEXPECTED_FIELDS",
+  );
+  for (const k of ["locked", "protect", "active"])
+    if (Object.hasOwn(c, k)) check(typeof c[k] === "boolean", "INVALID_INPUT");
+  for (const v of Object.values(c))
+    if (typeof v === "string") check(v.length <= 100, "INPUT_TOO_LONG");
+}
+export function snapshot(p, now) {
+  p = migratePlayer(p);
+  const player = structuredClone(p);
+  delete player.receipts;
+  return {
+    player,
+    stats: statsFor(p, now),
+    sets: activeSets(p),
+    serverTime: now,
+  };
+}
+export function applyCommand(player, c, ctx) {
+  validate(c);
+  player = migratePlayer(player);
+  check(player.schemaVersion === RULES.version, "SCHEMA_MISMATCH");
+  check(
+    Number.isFinite(ctx.now) && typeof ctx.random === "function",
+    "INVALID_SERVER_CONTEXT",
+  );
+  check(!player.trade || c.type === "tick", "IN_TRADE");
+  const p = structuredClone(player);
+  tick(p, ctx.now);
+  const fighting = !!p.duel || !!(p.encounter && !p.encounter.finished);
+  if (fighting)
+    check(
+      [
+        "attack",
+        "guard",
+        "potion",
+        "retreat",
+        "tick",
+        "switchWeapon",
+        "absorb",
+      ].includes(c.type),
+      "IN_COMBAT",
+      "Finish or retreat before changing equipment.",
+    );
+  if (
+    ["attack", "encounter", "tick"].includes(c.type) ||
+    (p.encounter && !p.encounter.finished)
+  )
+    check(
+      ctx.position &&
+        Number.isFinite(ctx.position.x) &&
+        Number.isFinite(ctx.position.z) &&
+        typeof ctx.lineOfSight === "function",
+      "POSITION_REQUIRED",
+    );
+  const result = progression(p, c, ctx) ?? combat(p, c, ctx);
+  check(result !== null, "UNKNOWN_COMMAND");
+  const response = typeof result === "string" ? { message: result } : result;
+  if (ctx.position) response.retaliation = retaliate(p, ctx);
+  const s = statsFor(p, ctx.now);
+  p.combat.hp = Math.min(s.maxHp, p.combat.hp);
+  p.combat.spirit = Math.min(s.maxSpirit, p.combat.spirit);
+  p.revision++;
+  if (c.type !== "tick") {
+    p.history.unshift({ at: ctx.now, type: c.type, message: response.message });
+    p.history = p.history.slice(0, 80);
+  }
+  return { player: p, ...response };
+}
