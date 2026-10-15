@@ -1,6 +1,6 @@
 // Wuxia blueprint §4: Mount Soul Fusion (seven gear slots, combination share,
 // absorption pills) on the real AXE mount store, equipment and player HUD.
-import { test, after } from 'node:test';
+import { test, after, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 import { JSDOM } from 'jsdom';
@@ -14,6 +14,8 @@ const temp = await mkdtemp(path.join(tmpdir(), 'axe-fusion-'));
 const dom = new JSDOM('', { url: 'http://localhost/' });
 Object.assign(globalThis, { window: dom.window, document: dom.window.document,
   localStorage: dom.window.localStorage, CustomEvent: dom.window.CustomEvent });
+// skill sounds create Audio elements; the test environment has none, so a silent stand-in
+globalThis.Audio = class { constructor() { this.volume = 1; this.currentTime = 0; } play() { return Promise.resolve(); } pause() {} load() {} addEventListener() {} removeEventListener() {} cloneNode() { return new globalThis.Audio(); } };
 const intervals = [];
 const nativeSetInterval = globalThis.setInterval;
 globalThis.setInterval = (...args) => { const timer = nativeSetInterval(...args); intervals.push(timer); return timer; };
@@ -21,6 +23,7 @@ const modules = {
   fusion: 'axe/progression/AXEMountFusionSystem.js', mounts: 'axe/progression/AXEMountStore.js',
   mountSystem: 'axe/progression/AXEMountSystem.js', inv: 'axe/equipment/AXEEquipmentInventoryStore.js',
   storage: 'characterStorage.jsx', hud: 'playerHUDStore.jsx',
+  registry: 'skills/skillRegistry.jsx', executor: 'skills/skillExecutor.jsx', validator: 'skills/weaponValidator.jsx',
 };
 await build({ stdin: { contents: Object.entries(modules).map(([name, file]) =>
   `export * as ${name} from './src/components/game3d/${file}';`).join('\n'), resolveDir: root },
@@ -32,7 +35,7 @@ await build({ stdin: { contents: Object.entries(modules).map(([name, file]) =>
       'export const base44 = { auth: { updateMe: async () => ({}), me: async () => ({}) } };' }));
   } }], logLevel: 'silent',
 });
-const { fusion, mounts, mountSystem, inv, storage, hud } = await import(pathToFileURL(path.join(temp, 'stores.mjs')));
+const { fusion, mounts, mountSystem, inv, storage, hud, registry, executor, validator } = await import(pathToFileURL(path.join(temp, 'stores.mjs')));
 after(async () => { intervals.forEach(clearInterval); globalThis.setInterval = nativeSetInterval; dom.window.close(); await rm(temp, { recursive: true, force: true }); });
 
 let user = 0;
@@ -143,4 +146,39 @@ test('while absorbed, the equipment stats are multiplied by (1 + share / 100) in
   assert.deepEqual(fused.mountFusion, { active: true, share: 25 });
   mounts.releaseAXEMountFusion();
   assert.ok(Math.abs(hud.getPlayerHUD().derived.damage - geared) < 1e-9, 'back to normal');
+});
+
+test('soul echoes: single-hit skills gain a spectral strike, 3+ hit combos two elemental strikes, AoE a second explosion', () => {
+  const plan = (id) => fusion.planAXEMountSoulEchoes(registry.getSkillById(id));
+  const heavy = plan('sword_heavy_strike');
+  assert.deepEqual(heavy.map((e) => [e.kind, e.atMs, e.multiplierScale]), [['spectral', 280, 0.75]], '1 -> 2 hits, after the strike lands');
+  const triple = registry.getSkillById('sword_triple_slash'), d = triple.hit_delay * 1000;
+  assert.deepEqual(plan('sword_triple_slash').map((e) => [e.kind, e.atMs]), [['elemental', 3 * d], ['elemental', 4 * d]], '3 -> 5 hits, on the same rhythm');
+  assert.equal(plan('guardian_twin_fang').length, 2); assert.equal(plan('ranged_barrage').length, 2);
+  assert.deepEqual(plan('ranged_double_shot'), [], 'two-hit skills match none of the three');
+  assert.deepEqual(plan('aegis_shield'), [], 'self casts strike nothing');
+  const aoe = fusion.planAXEMountSoulEchoes({ cast_type: 'single_hit', hit_count: 1, aoe_radius: 4 });
+  assert.deepEqual(aoe.map((e) => [e.kind, e.aoeRadius]), [['spectral_aoe', 5]], 'an AoE echoes as a wider explosion');
+});
+
+test('a real cast while absorbed: Heavy Strike lands twice, Triple Slash five times; unabsorbed, unchanged', () => {
+  fresh(); inv.resetAXEEquipmentInventoryToStarter();
+  for (const w of inv.getEquippedAXEItemsByCategory('weapon')) inv.unequipAXEInventoryItem(w.instanceId);
+  inv.addAXEEquipmentItem({ id: 'echo_test_sword', name: 'Echo Test Sword', slot: 'weapon', category: 'weapon', rarity: 'common', baseStats: { damage: 10 } }, { equipped: true });
+  assert.equal(validator.canCastWithEquippedWeapon('sword_heavy_strike').ok, true, 'a sword casts sword skills (' + validator.getEquippedWeaponType() + ')');
+  const strikes = []; const on = (e) => strikes.push(e.detail); window.addEventListener('playerSkillStrike', on);
+  mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    const cast = (id) => { strikes.length = 0; assert.ok(executor.castSkill(id, { slotIndex: 0 }).ok, id); mock.timers.tick(3000); return strikes.slice(); };
+    assert.equal(cast('sword_heavy_strike').length, 1, 'not absorbed: one strike');
+    assert.ok(mounts.absorbAXEMount('absorption_pill_s').ok);
+    const heavy = cast('sword_heavy_strike');
+    assert.deepEqual(heavy.map((s) => s.soulEcho), [null, 'spectral']);
+    assert.ok(Math.abs(heavy[1].multiplier / heavy[0].multiplier - 0.75) < 1e-9); assert.equal(heavy[1].soulPalette, 'flame');
+    const triple = cast('sword_triple_slash');
+    assert.deepEqual(triple.map((s) => s.soulEcho), [null, null, null, 'elemental', 'elemental']);
+    assert.ok(triple.every((s) => s.hitsTotal === 5));
+    mounts.releaseAXEMountFusion();
+    assert.equal(cast('sword_triple_slash').length, 3, 'released: back to three');
+  } finally { mock.timers.reset(); window.removeEventListener('playerSkillStrike', on); }
 });

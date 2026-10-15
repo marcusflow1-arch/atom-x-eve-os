@@ -95,3 +95,45 @@ export function scaleAXEGearForFusion(bonuses = {}, sharePercent = 0) {
   if (k === 1) return bonuses;
   return Object.fromEntries(Object.entries(bonuses || {}).map(([key, v]) => [key, typeof v === 'number' ? v * k : v]));
 }
+
+// ---- Mount soul skill transformations (blueprint v3 §7.2) -------------------
+// While absorbed, the mount's soul answers the hero's skills:
+//   single-hit skill  -> a second, spectral strike   (1 -> 2 hits)
+//   3+ hit combo      -> two more elemental strikes  (3 -> 5 hits)
+//   AoE skill         -> a second, wider spectral explosion with its own crit roll
+// Every echo is its own strike event, so it rolls its own critical hit. Two-hit
+// skills (Double Shot) match none of the three and are left as they are.
+// Damage scales are provisional balance.
+export const AXE_MOUNT_SOUL_SKILL_CONFIG = Object.freeze({
+  spectral: Object.freeze({ delayMs: 160, multiplierScale: 0.75 }),
+  elemental: Object.freeze({ multiplierScale: 0.8 }),
+  spectralAoe: Object.freeze({ delayMs: 220, multiplierScale: 0.8, radiusScale: 1.25 }),
+});
+
+// When the skill's own last strike lands (ms from the cast), per skillExecutor's schedules.
+export function getAXESkillLastHitMs(skill) {
+  const d = Number(skill?.hit_delay || 0) * 1000, n = Number(skill?.hit_count || 0);
+  switch (skill?.cast_type) {
+    case 'single_hit': return 120;
+    case 'multi_hit_sequential':
+    case 'ranged_barrage': return Math.max(0, n - 1) * d;
+    case 'multi_hit_burst': return n >= 4 ? d + Number(skill.follow_up_delay ?? 0.4) * 1000 : d;
+    case 'ranged_double': return d;
+    default: return null; // self casts and passives have no strikes
+  }
+}
+
+// The extra strikes a skill gets while a mount is absorbed: [{ kind, atMs, multiplierScale, aoeRadius? }]
+export function planAXEMountSoulEchoes(skill) {
+  const last = getAXESkillLastHitMs(skill);
+  if (last === null || !Number(skill?.hit_count)) return [];
+  const C = AXE_MOUNT_SOUL_SKILL_CONFIG;
+  const radius = Number(skill.aoe_radius || 0);
+  if (radius > 0) return [{ kind: 'spectral_aoe', atMs: last + C.spectralAoe.delayMs, multiplierScale: C.spectralAoe.multiplierScale, aoeRadius: radius * C.spectralAoe.radiusScale }];
+  if (skill.hit_count === 1) return [{ kind: 'spectral', atMs: last + C.spectral.delayMs, multiplierScale: C.spectral.multiplierScale }];
+  if (skill.hit_count >= 3) {
+    const gap = Number(skill.hit_delay || 0) * 1000 || 180;
+    return [1, 2].map((k) => ({ kind: 'elemental', atMs: last + gap * k, multiplierScale: C.elemental.multiplierScale }));
+  }
+  return [];
+}

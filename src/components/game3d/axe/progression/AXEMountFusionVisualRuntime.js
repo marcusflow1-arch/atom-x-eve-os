@@ -100,9 +100,69 @@ export function createAXEMountFusionVisualRuntime({ model, initialState = null }
     haloMat.opacity = 0.12 + 0.14 * k;
   };
 
+  // soul skill echoes (skillExecutor, planAXEMountSoulEchoes): a spectral claw rake for the
+  // spectral strike, a spray of sparks for elemental strikes, a ground shockwave for the AoE echo
+  const effects = [];
+  const clawGeo = new THREE.TorusGeometry(0.42, 0.022, 6, 24, Math.PI * 0.55);
+  const sparkGeo = new THREE.SphereGeometry(0.05, 8, 6);
+  const waveGeo = new THREE.RingGeometry(0.9, 1, 64);
+  const spawnEcho = (kind, aoeRadius) => {
+    const fx = new THREE.Group();
+    const mats = [];
+    const mat = (color, opacity) => { const m = additive(color, opacity); mats.push(m); return m; };
+    if (kind === 'spectral') {
+      for (let i = 0; i < 3; i++) {
+        const claw = new THREE.Mesh(clawGeo, mat(i === 1 ? secondary : primary, 0.85));
+        claw.position.set((i - 1) * 0.16, 1.15 + (i - 1) * 0.05, 0.9);
+        claw.rotation.z = -0.6;
+        fx.add(claw);
+      }
+    } else if (kind === 'elemental') {
+      for (let i = 0; i < 8; i++) {
+        const spark = new THREE.Mesh(sparkGeo, mat(i % 2 ? secondary : primary, 0.9));
+        spark.position.set(0, 1.15, 0.8);
+        spark.userData.v = new THREE.Vector3((Math.random() - 0.5) * 3, (Math.random() - 0.2) * 2.5, 1.5 + Math.random() * 2);
+        fx.add(spark);
+      }
+    } else {
+      const ring = new THREE.Mesh(waveGeo, mat(primary, 0.7));
+      ring.material.side = THREE.DoubleSide;
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.05;
+      ring.userData.max = Math.max(1.5, Number(aoeRadius) || 3);
+      fx.add(ring);
+    }
+    fx.userData = { kind, life: kind === 'spectral_aoe' ? 0.6 : 0.4, t: 0, mats };
+    group.add(fx);
+    effects.push(fx);
+  };
+  const updateEffects = (dt) => {
+    for (let i = effects.length - 1; i >= 0; i--) {
+      const fx = effects[i], u = fx.userData;
+      u.t += dt;
+      const k = Math.min(1, u.t / u.life);
+      if (u.kind === 'spectral') fx.scale.setScalar(0.7 + 0.6 * k);
+      else if (u.kind === 'elemental') fx.children.forEach((s) => s.position.addScaledVector(s.userData.v, dt));
+      else fx.children[0].scale.setScalar(0.3 + (fx.children[0].userData.max - 0.3) * k);
+      u.mats.forEach((m) => { m.opacity = (1 - k) * 0.85; });
+      if (k >= 1) {
+        group.remove(fx);
+        u.mats.forEach((m) => m.dispose());
+        effects.splice(i, 1);
+      }
+    }
+  };
+  const onStrike = (event) => {
+    const d = event?.detail;
+    if (d?.soulEcho && group.visible) spawnEcho(d.soulEcho, d.aoeRadius);
+  };
+
   applyState(initialState || {});
   const onChange = (event) => applyState(event?.detail || {});
-  if (typeof window !== 'undefined') window.addEventListener('axeMountFusionChanged', onChange);
+  if (typeof window !== 'undefined') {
+    window.addEventListener('axeMountFusionChanged', onChange);
+    window.addEventListener('playerSkillStrike', onStrike);
+  }
 
   return {
     update(delta = 0) {
@@ -115,6 +175,7 @@ export function createAXEMountFusionVisualRuntime({ model, initialState = null }
       rings[0].rotation.z += dt * 1.6;
       rings[1].rotation.z -= dt * 1.1;
       foot.material.opacity = 0.16 + Math.sin(elapsed * 2) * 0.06;
+      updateEffects(Math.min(dt, 0.1)); // a frame hitch must not swallow an echo whole
       if (lowEffects) return;
       for (let i = 0; i < PARTICLES; i++) {
         const s = seeds[i];
@@ -128,9 +189,13 @@ export function createAXEMountFusionVisualRuntime({ model, initialState = null }
       pointsGeo.attributes.position.needsUpdate = true;
     },
     dispose() {
-      if (typeof window !== 'undefined') window.removeEventListener('axeMountFusionChanged', onChange);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('axeMountFusionChanged', onChange);
+        window.removeEventListener('playerSkillStrike', onStrike);
+      }
+      effects.forEach((fx) => fx.userData.mats.forEach((m) => m.dispose()));
       if (group.parent) group.parent.remove(group);
-      [coreGeo, haloGeo, ringGeo, footGeo, pointsGeo].forEach((g) => g.dispose());
+      [coreGeo, haloGeo, ringGeo, footGeo, pointsGeo, clawGeo, sparkGeo, waveGeo].forEach((g) => g.dispose());
       [coreMat, haloMat, ...ringMats, footMat, pointsMat].forEach((m) => m.dispose());
     },
   };
