@@ -24,6 +24,7 @@ import AXEDungeonRuntime from '../components/game3d/axe/dungeons/AXEDungeonRunti
 import AXEFactionWarRuntime from '../components/game3d/axe/factions/AXEFactionWarRuntime';
 import AXEWeaponIdentityMount from '../components/game3d/axe/weapons/AXEWeaponIdentityMount';
 import AXEWeaponQuickSwitchMount from '../components/game3d/axe/weapons/AXEWeaponQuickSwitchMount';
+import AXEMountFusionHUD from '../components/game3d/axe/progression/AXEMountFusionHUD';
 import FriendsListPanel from '../components/game3d/social/FriendsListPanel';
 import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
@@ -350,6 +351,8 @@ export default function GameView() {
       <AXEWeaponIdentityMount />
       {/* Wuxia blueprint: Shift+1 / Shift+2 draw the two quick-slot weapons. */}
       <AXEWeaponQuickSwitchMount />
+      {/* Wuxia blueprint: Mount Soul Fusion timer while a mount is absorbed. */}
+      <AXEMountFusionHUD />
       {/* Host-authoritative enemy/boss sync — elects one host per channel,
           broadcasts world snapshots, and applies them on non-hosts. */}
       <WorldSyncMount />

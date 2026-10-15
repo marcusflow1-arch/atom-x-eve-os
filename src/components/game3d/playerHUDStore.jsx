@@ -21,7 +21,8 @@ import { getEquippedAXECostumeBonuses, subscribeAXECostumes } from './axe/progre
 import { getEquippedAXECapeBonuses, subscribeAXECapes } from './axe/progression/AXECapeStore';
 import { getAXEElixirAttributeBonuses, subscribeAXEElixirs } from './axe/progression/AXEElixirStore';
 import { getRegisteredAXEPetBonuses, subscribeAXEPets } from './axe/progression/AXEPetStore';
-import { getRegisteredAXEMountBonuses, subscribeAXEMounts } from './axe/progression/AXEMountStore';
+import { getAXEMountFusionState, getRegisteredAXEMountBonuses, subscribeAXEMounts } from './axe/progression/AXEMountStore';
+import { scaleAXEGearForFusion } from './axe/progression/AXEMountFusionSystem';
 import { getEquippedAXEVanityActivationProfile, getEquippedAXEVanityBaseBonuses, subscribeAXEVanity } from './axe/progression/AXEVanityStore';
 import { applyAXEVanityActivationToDerived, getAXEVanitySpiritVirtualBonus } from './axe/progression/AXEVanitySystem';
 import { getAXEEquipmentRuntimeBonuses, applyAXEEquipmentFinalMultipliers } from './axe/equipment/AXEEquipmentRuntimeStats';
@@ -83,7 +84,12 @@ const normalizeCostumeBonuses = (raw = {}) => ({
 });
 
 const getBonuses = () => {
-  const equipment = getAXEEquipmentRuntimeBonuses();
+  const rawEquipment = getAXEEquipmentRuntimeBonuses();
+  // Mount Soul Fusion: while a mount is absorbed its combination share multiplies the equipment stats
+  const fusion = getAXEMountFusionState();
+  const equipment = fusion.active
+    ? { ...rawEquipment, attr: scaleAXEGearForFusion(rawEquipment.attr, fusion.share), flat: scaleAXEGearForFusion(rawEquipment.flat, fusion.share) }
+    : rawEquipment;
   const advancedClass = getActiveAXEAdvancedClassRuntime();
   const core = getRegisteredAXECoreBonuses();
   const pet = getRegisteredAXEPetBonuses();
@@ -134,6 +140,7 @@ const getBonuses = () => {
     advancedClassMultipliers: advancedClass.multipliers,
     advancedClassCombat: advancedClass.combat,
     weaponAffinity: getAXEWeaponAffinityProfile(),
+    mountFusion: { active: fusion.active, share: fusion.share },
     equipmentDebug: equipment,
     advancedClassDebug: advancedClass,
   };
@@ -156,7 +163,8 @@ const computeDerivedWithVanity = (baseStats, bonuses) => {
   const withVanity = applyAXEVanityActivationToDerived(withSpirit, bonuses.vanityActivation);
   const withEquipment = applyAXEEquipmentFinalMultipliers(withVanity, bonuses.equipmentMultipliers);
   const withClass = applyAXEAdvancedClassDerivedMultipliers(withEquipment, bonuses.advancedClassMultipliers);
-  return applyAXEWeaponAffinityToDerived(withClass, bonuses.weaponAffinity); // the weapon in hand's archetype passive, doubled when specialized
+  const withAffinity = applyAXEWeaponAffinityToDerived(withClass, bonuses.weaponAffinity); // the weapon in hand's archetype passive, doubled when specialized
+  return bonuses.mountFusion ? { ...withAffinity, mountFusion: bonuses.mountFusion } : withAffinity;
 };
 
 const buildDefault = () => {

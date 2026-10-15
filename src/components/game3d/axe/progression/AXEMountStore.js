@@ -4,6 +4,13 @@ import { characterScopedStorage, subscribeCharacterChange } from '../../characte
 import { setActiveCompanion, setMounted } from '../../companionStore';
 import { advanceMountSpiritualWeapon, getMountSpiritualProfile } from './AXEMountSpiritualSystem';
 import {
+  AXE_MOUNT_FUSION_CONFIG,
+  getAXEMountCombinationShare,
+  getAXEMountGearStageCost,
+  getAXEMountSoulPalette,
+  refineAXEMountGearSlot,
+} from './AXEMountFusionSystem';
+import {
   AXE_MOUNT_CONFIG,
   AXE_MOUNT_DEFINITIONS,
   addAXEMountXP,
@@ -42,7 +49,10 @@ const starter = () => ({
     ascension_core: 2,
     mount_ability_seal: 1,
     gold: 20000,
+    absorption_pill_s: 3, // starter pills so Mount Soul Fusion can be tried (provisional; existing saves receive them once)
+    absorption_pill_600: 0,
   },
+  fusion: null, // { mountId, until } while a mount is absorbed (Mount Soul Fusion)
   audit: [],
 });
 
@@ -60,6 +70,8 @@ const load = () => {
       materials: { ...starter().materials, ...(parsed.materials || {}) },
       audit: Array.isArray(parsed.audit) ? parsed.audit.slice(-100) : [],
       ridingMountId: null,
+      fusion: parsed.fusion && Number(parsed.fusion.until) > Date.now() && mounts.some((m) => m.instanceId === parsed.fusion.mountId)
+        ? { mountId: parsed.fusion.mountId, until: Number(parsed.fusion.until) } : null,
     };
   } catch {
     return starter();
@@ -103,13 +115,110 @@ const emit = () => {
   listeners.forEach((fn) => fn(snapshot));
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('axeMountChanged', { detail: snapshot }));
+    window.dispatchEvent(new CustomEvent('axeMountFusionChanged', { detail: getAXEMountFusionState() }));
   }
+  scheduleFusionExpiry();
 };
+
+// ---- Mount Soul Fusion (AXEMountFusionSystem) --------------------------------
+let fusionTimer = null;
+function scheduleFusionExpiry() {
+  if (fusionTimer) clearTimeout(fusionTimer);
+  fusionTimer = null;
+  if (!state.fusion) return;
+  const wait = Math.max(0, Math.min(2 ** 31 - 1, state.fusion.until - Date.now()));
+  fusionTimer = setTimeout(() => tickAXEMountFusion(), wait + 25);
+  fusionTimer?.unref?.(); // never keeps a Node test process alive
+}
+
+// End the fusion once its time is up (also checked by the expiry timer).
+export function tickAXEMountFusion(now = Date.now()) {
+  if (!state.fusion || state.fusion.until > now) return false;
+  appendAudit('fusion_ended', state.fusion.mountId, { reason: 'expired' });
+  state = { ...state, fusion: null };
+  emit();
+  return true;
+}
+
+export function getAXEMountFusionState(now = Date.now()) {
+  const f = state.fusion;
+  const mount = f && f.until > now ? state.mounts.find((m) => m.instanceId === f.mountId) : null;
+  if (!mount) return { active: false, mountId: null, until: null, remainingMs: 0, share: 0, palette: null, mountName: null };
+  const def = getAXEMountDefinition(mount.definitionId);
+  return {
+    active: true,
+    mountId: mount.instanceId,
+    until: f.until,
+    remainingMs: f.until - now,
+    share: getAXEMountCombinationShare(mount).total,
+    palette: getAXEMountSoulPalette(def),
+    mountName: def?.name || 'Mount',
+  };
+}
+
+// While absorbed, the share multiplies the character's equipment stats.
+export function getAXEMountFusionGearScale(now = Date.now()) {
+  const f = getAXEMountFusionState(now);
+  return f.active ? 1 + f.share / 100 : 1;
+}
+
+// Absorb the registered mount with a pill; another pill while absorbed adds its time.
+export function absorbAXEMount(pillId, { now = Date.now() } = {}) {
+  const pill = AXE_MOUNT_FUSION_CONFIG.pills[pillId];
+  if (!pill) return { ok: false, reason: 'UNKNOWN_PILL' };
+  if (Number(state.materials?.[pillId] || 0) < 1) return { ok: false, reason: 'NO_ABSORPTION_PILL' };
+  const mount = state.mounts.find((m) => m.instanceId === state.registeredMountId);
+  if (!mount) return { ok: false, reason: 'NO_REGISTERED_MOUNT' };
+  const current = state.fusion && state.fusion.until > now && state.fusion.mountId === mount.instanceId ? state.fusion.until : now;
+  if (state.ridingMountId) setAXEMountRiding(false); // the absorbed mount cannot be ridden
+  consumeMountMaterials({ [pillId]: 1 });
+  state = { ...state, fusion: { mountId: mount.instanceId, until: current + pill.minutes * 60_000 } };
+  appendAudit('fusion_absorb', mount.instanceId, { pillId, until: state.fusion.until });
+  emit();
+  return { ok: true, until: state.fusion.until, message: `${getAXEMountDefinition(mount.definitionId)?.name || 'Mount'} absorbed for ${pill.minutes} minutes.` };
+}
+
+// End the fusion early (the pill is spent).
+export function releaseAXEMountFusion() {
+  if (!state.fusion) return { ok: true, reason: 'NOT_ABSORBED' };
+  appendAudit('fusion_ended', state.fusion.mountId, { reason: 'released' });
+  state = { ...state, fusion: null };
+  emit();
+  return { ok: true, message: 'Mount Soul Fusion released.' };
+}
+
+export function previewAXEMountGearRefine(instanceId, slotId) {
+  const mount = state.mounts.find((m) => m.instanceId === instanceId);
+  if (!mount) return { ok: false, reason: 'MOUNT_MISSING' };
+  const r = refineAXEMountGearSlot(mount, slotId);
+  if (!r.ok) return r;
+  return { ok: true, cost: r.cost, nextStage: r.stage, canAfford: canAffordMountMaterials(r.cost) };
+}
+
+// Refine one gear slot by a stage (confirmed, from the stage that was reviewed).
+export function refineAXEMountGear(instanceId, slotId, { confirmed = false, expectedStage } = {}) {
+  const index = state.mounts.findIndex((m) => m.instanceId === instanceId);
+  if (index < 0) return { ok: false, reason: 'MOUNT_MISSING' };
+  if (!confirmed) return { ok: false, reason: 'CONFIRMATION_REQUIRED' };
+  const r = refineAXEMountGearSlot(state.mounts[index], slotId, expectedStage);
+  if (!r.ok) return r;
+  if (!canAffordMountMaterials(r.cost)) return { ok: false, reason: 'INSUFFICIENT_MATERIALS' };
+  consumeMountMaterials(r.cost);
+  state = { ...state, mounts: state.mounts.map((m, i) => (i === index ? r.mount : m)) };
+  appendAudit('refine_mount_gear', instanceId, { slotId, stage: r.stage, cost: r.cost });
+  emit();
+  return { ok: true, stage: r.stage, cost: r.cost, message: `Refined to Stage ${r.stage}.` };
+}
+
+export { getAXEMountGearStageCost };
+scheduleFusionExpiry(); // a fusion saved before a reload still ends on time
 
 subscribeCharacterChange(() => {
   state = load();
   rideActivity = { seconds: 0, distanceMeters: 0 };
   listeners.forEach((fn) => fn(getAXEMountState()));
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('axeMountFusionChanged', { detail: getAXEMountFusionState() }));
+  scheduleFusionExpiry();
 });
 
 export function getAXEMountState() {
@@ -119,12 +228,14 @@ export function getAXEMountState() {
       ...mount,
       definition: getAXEMountDefinition(mount.definitionId),
       bonuses: getAXEMountBonuses(mount),
+      combination: getAXEMountCombinationShare(mount),
       speedMultiplier: getAXEMountSpeedMultiplier(mount),
       spiritualProfile: getMountSpiritualProfile(mount),
     })),
     pvpVictimCooldowns: { ...state.pvpVictimCooldowns },
     materials: { ...(state.materials || {}) },
     audit: [...(state.audit || [])],
+    fusionState: getAXEMountFusionState(),
   });
 }
 
@@ -187,6 +298,7 @@ export function activateAXEMount(instanceId) {
 export function setAXEMountRiding(riding, context = {}) {
   const mount = getActiveAXEMount();
   if (!mount) return { ok: false, reason: 'NO_ACTIVE_MOUNT' };
+  if (riding && getAXEMountFusionState().mountId === mount.instanceId) return { ok: false, reason: 'MOUNT_ABSORBED' };
 
   if (riding) {
     const allowed = canRideAXEMount(mount, context);
@@ -413,17 +525,12 @@ export function rerollLegendaryAXEMountAbility(instanceId, abilityIndex, {
   return { ok: true, ability: result.ability, cost };
 }
 
+const GRANTABLE_MOUNT_MATERIALS = Object.freeze(['legendary_mount_soul', 'ascension_core', 'mount_ability_seal', 'gold', ...Object.keys(AXE_MOUNT_FUSION_CONFIG.pills)]);
 export function grantAXEMountMaterials(delta = {}) {
   const current = state.materials || {};
-  state = {
-    ...state,
-    materials: {
-      legendary_mount_soul: Number(current.legendary_mount_soul || 0) + Math.max(0, Number(delta.legendary_mount_soul || 0)),
-      ascension_core: Number(current.ascension_core || 0) + Math.max(0, Number(delta.ascension_core || 0)),
-      mount_ability_seal: Number(current.mount_ability_seal || 0) + Math.max(0, Number(delta.mount_ability_seal || 0)),
-      gold: Number(current.gold || 0) + Math.max(0, Number(delta.gold || 0)),
-    },
-  };
+  const next = { ...current }; // keeps every other material (absorption pills used to be dropped here)
+  for (const id of GRANTABLE_MOUNT_MATERIALS) next[id] = Number(current[id] || 0) + Math.max(0, Number(delta[id] || 0));
+  state = { ...state, materials: next };
   emit();
   return { ...state.materials };
 }
@@ -438,7 +545,7 @@ export function releaseAXEMount(instanceId, { confirmed = false } = {}) {
       highValue: !!mount.legendary?.isLegendary || Number(mount.growthPercent || 0) >= 20,
     };
   }
-  if (state.activeMountId === instanceId || state.registeredMountId === instanceId || state.ridingMountId === instanceId) {
+  if (state.activeMountId === instanceId || state.registeredMountId === instanceId || state.ridingMountId === instanceId || state.fusion?.mountId === instanceId) {
     return { ok: false, reason: 'MOUNT_IN_USE' };
   }
 

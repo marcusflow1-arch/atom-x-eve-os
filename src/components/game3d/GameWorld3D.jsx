@@ -25,7 +25,7 @@ import { updateBossMovement, projectBossHead } from './boss/updateBossMovement';
 import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
 import CompanionMountHUD from './CompanionMountHUD';
 import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
-import { getActiveAXEMountSpeedMultiplier, setAXEMountRiding, tickAXEMountRideActivity } from './axe/progression/AXEMountStore';
+import { getActiveAXEMountSpeedMultiplier, getAXEMountFusionState, setAXEMountRiding, tickAXEMountRideActivity } from './axe/progression/AXEMountStore';
 import { awardCompanionXP, getCompanionProgression, subscribeCompanionProgression } from './companionProgressionStore';
 import CompanionHealthBar from './CompanionHealthBar';
 import PlayerNameTag from './PlayerNameTag';
@@ -72,6 +72,7 @@ import {
 import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
 import { getTitleState, recordTitleKill, subscribeTitles } from './progression/titleStore';
 import { getHaloState } from './progression/haloStore';
+import { createAXEMountFusionVisualRuntime } from './axe/progression/AXEMountFusionVisualRuntime';
 import { createAXEHaloVisualRuntime } from './axe/progression/AXEHaloVisualRuntime'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
@@ -850,6 +851,7 @@ export default function GameWorld3D() {
     let model;
     let playerAnim;
     let haloVisualRuntime = null;
+    let fusionVisualRuntime = null; // Mount Soul Fusion aura
     const playerStateMachine = new CorePlayerStateMachine();
     let coreAnimationController = null;
     const playerCameraSystem = new PlayerCameraSystem({ camera, orbit, modelRef, lockOnTargetRef });
@@ -875,6 +877,7 @@ export default function GameWorld3D() {
 
       scene.add(fbx);
       haloVisualRuntime = createAXEHaloVisualRuntime({ model: fbx, initialState: getHaloState() });
+      fusionVisualRuntime = createAXEMountFusionVisualRuntime({ model: fbx, initialState: getAXEMountFusionState() });
       // Snap the player's feet to the terrain at spawn
       snapToGround(fbx, 0);
       mixer = new THREE.AnimationMixer(fbx);
@@ -1232,6 +1235,7 @@ export default function GameWorld3D() {
       const npcsVisible = npcsVisibleRef.current; // '=' toggles all non-boss entities (NPCs/enemies/companion)
       envSystem.update(delta);
       haloVisualRuntime?.update?.(delta);
+      fusionVisualRuntime?.update?.(delta);
       bossEncounter.update(delta);
       charLights.update(delta, envSystem.getState, modelRef.current, camera);
       if (mixer) mixer.update(delta);
@@ -1276,6 +1280,8 @@ export default function GameWorld3D() {
               isMountedRef.current = true;
               setIsMounted(true);
               setMounted(true);
+            } else if (rideResult.reason === 'MOUNT_ABSORBED') {
+              showCombatNotice('Your mount is absorbed in Soul Fusion and cannot be ridden');
             }
           }
         }
@@ -2280,6 +2286,8 @@ export default function GameWorld3D() {
       avatarLoadDisposed=true;
       haloVisualRuntime?.dispose?.();
       haloVisualRuntime = null;
+      fusionVisualRuntime?.dispose?.();
+      fusionVisualRuntime = null;
       modelRef.current = null;
       // Mark guard disposed FIRST so any in-flight animate() bails before
       // touching the renderer — prevents the null.trim shadow-map crash.

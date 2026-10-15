@@ -116,6 +116,10 @@ The owner's third version adds the following. v1 governs where versions conflict
   (`AXEWeaponQuickSwitchMount.jsx`, mounted in `GameView.jsx`); a Character Hub view, Weapon Mastery →
   Affinity & Quick-Switch (`progression/hub/WeaponAffinityPanel.jsx`). Report:
   [reports/WUXIA-A-weapons.md](reports/WUXIA-A-weapons.md).
+- **Slice B, Mount Soul Fusion (2026-10-15):** seven mount gear slots (Stage 0–20, +2% share each when finished),
+  combination share 25% → 39%, Absorption Pills (60 / 600 min) on the registered mount, equipment ×(1 + share) while
+  absorbed, clan-coloured aura and HUD timer, Mounts → Soul Fusion. Report:
+  [reports/WUXIA-B-mount-fusion.md](reports/WUXIA-B-mount-fusion.md).
 
 ## Decisions the owner must make
 

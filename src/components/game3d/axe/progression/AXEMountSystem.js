@@ -1,4 +1,5 @@
 import { collectAXELegendaryMountBonuses } from './AXELegendaryMountSystem';
+import { normalizeAXEMountGear } from './AXEMountFusionSystem';
 import { finiteMountXP, getMountSpiritualProfile, normalizeMountSpiritualWeapon } from './AXEMountSpiritualSystem';
 
 // AXE Prompt 034 — Mount foundation: riding, EXP, PvP growth and stat percentages.
@@ -122,6 +123,7 @@ export function normalizeAXEMountInstance(mount = {}) {
     ...mount,
     totalXp,
     spiritualWeapon: normalizeMountSpiritualWeapon(mount.spiritualWeapon, totalXp),
+    gear: normalizeAXEMountGear(mount.gear), // Mount Soul Fusion gear slots (old saves: all Stage 0)
     growthPercent: resolveAXEMountGrowthPercent(totalXp),
     registered: !!mount.registered,
     active: !!mount.active,
