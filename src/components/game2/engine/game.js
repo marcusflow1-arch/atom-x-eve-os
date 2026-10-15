@@ -612,7 +612,7 @@ export class Game {
     this.updateExecutions(dt); // before the fighters: they show where the execution put them this step
     if (this.clash) this.clash.update(dt);
     this.execCandidate = this.attract || p.status !== 'normal' ? null : findExecutable(this, p);
-    this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.inp); if (this.playerWeapon) this.updatePistol(dt);
+    this.buildPlayerCmd(); p.update(dt); this.force.update(dt, this.tutorialMode && this.tutorialPhase === 'demo' ? null : this.inp); if (this.playerWeapon) this.updatePistol(dt);
     this.stepNo = (this.stepNo | 0) + 1; const big = this.npcs.length > 16;
     for (const n of this.npcs) {
       // a big match's bots further from the camera update less often, each covering the steps it skipped: over 12 m at
