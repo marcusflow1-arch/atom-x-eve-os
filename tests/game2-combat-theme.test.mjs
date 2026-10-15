@@ -101,7 +101,7 @@ test('Game 2 session loads HeroBackground Combat 2 and engine owns cleanup', () 
  assert.match(session,/\.then\(selectGame1CombatTrack\)/);
  assert.match(session,/game\.setCombatTrackUrl\(url\)/);
  assert.match(engine,/game2CombatActive\(this\)/);
- assert.match(engine,/this\.combatTrack\.update\(/);
+ assert.match(engine,/this\.combatTrack\?\.update\(/);
  assert.match(engine,/this\.combatTrack\?\.dispose\(\)/);
  assert.doesNotMatch(engine,/this\.battleMusic\s*=\s*new Audio\(/);
 });
