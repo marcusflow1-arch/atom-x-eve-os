@@ -38,6 +38,10 @@ export const LEVITATE_S = 3.5;
 //  Saber throw + Lightning: lightning aimed at your thrown saber charges it; while it flows, arcs jump from the spinning
 //  blade to every foe within SABER_ARC_R m of it (SABER_ARC_DPS each) and the Force drains twice as fast.
 export const INTERCEPT_WINDOW = 1.6, INTERCEPT_BONUS = 1.5, SABER_ARC_R = 4, SABER_ARC_DPS = 30;
+// Lightning storm (Atom X Eve): Force Lightning held STORM_CHARGE s (the player) rises into a storm - the hand raised, bolts
+// climbing into the sky and striking down on every foe within STORM_RADIUS m (STORM_DMG each strike, about one a foe
+// every 0.6 s), draining STORM_DRAIN more Force a second on top of the channel's own
+export const STORM_CHARGE = 1.5, STORM_RADIUS = 45, STORM_DMG = 5, STORM_DRAIN = 16, STORM_STRIKES_PER_S = 24, STORM_BOLT_S = 0.22;
 // Force Repulse (special, X; "pulse" in the code): the meter fills from damage you deal (PULSE_PER_HP per point) and
 // defeats (PULSE_PER_KILL). When it is full the caster rises REPULSE_RISE m and curls into a ball while the Force gathers
 // (PULSE_WINDUP s), then bursts open with the arms flung wide: every foe within PULSE_RADIUS m is blasted outward and
@@ -75,7 +79,7 @@ const GRIP_WHY = { busy: 'Force Grip: busy', 'mid-swing': 'Force Grip: finish th
 export class Force {
   constructor(game, p, o = {}) {
     this.g = game; this.p = p; this.npc = !!o.npc; this.fp = o.fp ?? 100; this.max = this.fp; this.regen = o.regen ?? 9; this.active = {}; this.holding = null; this.holdVia = 'key'; this.cool = {}; this.gcd = 0; this.loops = {}; this.pending = [];
-    this.target = null; this.bolts = []; this.boltT = 0; this.beam = null; this.healT = 0; this.lt = 0; this.want = {}; this.bodyBolts = null;
+    this.target = null; this.bolts = []; this.boltT = 0; this.beam = null; this.healT = 0; this.lt = 0; this.want = {}; this.bodyBolts = null; this.stormBolts = []; this.storm = null;
     this.lv = Object.assign({ push: 3, pull: 3, grip: 3, lightning: 3, heal: 3, speed: 3, mind: 3, rage: 3, protect: 3, absorb: 3, drain: 3, see: 3 }, o.levels);
     this.list = (o.list || SELECT_ORDER).slice(); this.sel = Math.max(0, this.list.indexOf(o.select || 'push')); this.selShow = 0;
     this.dmgScale = o.dmgScale ?? 1; this.healRate = o.healRate ?? 24; this.spd = o.speedGain ?? 1.75; this.protectMul = o.protectMul ?? 0.2;
@@ -141,6 +145,7 @@ export class Force {
     // timed powers
     for (const k of Object.keys(this.active)) { if (now >= this.active[k].until) this.endTimed(k); else this.tickTimed(k, dt); }
     if (this.dash) this.tickDash(dt);
+    if (this.stormBolts.length) { for (const b of this.stormBolts) b.t -= dt; this.stormBolts = this.stormBolts.filter(b => b.t > 0); }
     if (this.pulsing) this.tickPulse(dt);
     // delayed effects
     for (let i = this.pending.length - 1; i >= 0; i--) if (this.pending[i].t <= now) { const f = this.pending[i].fn; this.pending.splice(i, 1); f(); }
@@ -484,6 +489,7 @@ export class Force {
       }
       if (this.hitT <= 0) this.hitT = 0.28; g.lightFlash = 0.7; g.lightFlashPos = S.pos; return;
     }
+    if (!this.npc && this.lt >= STORM_CHARGE) return this.tickStorm(dt); // held long enough: the storm
     // Re-evaluate the lock as opponents move or die; the visual bolts use the
     // same target selection on their next refresh.
     this.ltTargets = this.cone(14, 65, { npcOnly: true }).filter(h => hostile(this.p, h.t.ref)).slice(0, 1);
@@ -510,12 +516,43 @@ export class Force {
     for (const hnd of hands) if (Math.random() < 0.5) g.fx.emit({ p: hnd, v: [rnd(-1, 1), rnd(-0.5, 1.2), rnd(-1, 1)], life: 0.25, size: 0.04, c0: [0.7, 0.85, 1, 1], c1: [0.4, 0.5, 1, 0] });
     g.lightFlash = 0.6; g.lightFlashPos = hands[0];
   }
+  // the lightning storm: the left hand raised, open palm (Jedi Outcast's quick heal gesture, held); a strike on each foe
+  // within STORM_RADIUS m about every 0.6 s, nearest first, at most STORM_STRIKES_PER_S in all
+  tickStorm(dt) {
+    const g = this.g, p = this.p, now = g.t, S = this.storm ??= { next: new Map() };
+    if (!S.posed) {
+      S.posed = true; this.bolts.length = 0; this.ltTargets = [];
+      p.actor.setTorso('BOTH_FORCEHEAL_QUICK', { blend: 0.25, restart: true, loop: false, speed: 0.02, startAt: 0.48 / 0.02 });
+      g.sfxAt('lightning2', p.pos, 1); g.shake?.(0.25); if (p.isPlayer) g.banner('LIGHTNING STORM', [0.7, 0.85, 1], 1.2);
+    }
+    this.fp -= STORM_DRAIN * dt; // on top of the channel's own drain
+    const palm = p.actor.bonePos('lhand'), from = [palm[0], palm[1] + 0.15, palm[2]];
+    const foes = g.foesOf(p).filter(v => v.status !== 'dead' && !(v.spawnShield > now) && Math.abs(v.pos[1] - p.pos[1]) < 15 && Math.hypot(v.pos[0] - p.pos[0], v.pos[2] - p.pos[2]) <= STORM_RADIUS)
+      .sort((a, b) => Math.hypot(a.pos[0] - p.pos[0], a.pos[2] - p.pos[2]) - Math.hypot(b.pos[0] - p.pos[0], b.pos[2] - p.pos[2]));
+    S.budget = Math.min(6, (S.budget || 0) + STORM_STRIKES_PER_S * dt);
+    for (const v of foes) { if (S.budget < 1) break; if (now < (S.next.get(v) ?? 0)) continue; S.next.set(v, now + rnd(0.45, 0.75)); S.budget -= 1; this.stormStrike(v, from); }
+    if (Math.random() < 0.7) g.fx.emit({ p: from, v: [rnd(-0.6, 0.6), rnd(1.5, 4), rnd(-0.6, 0.6)], life: 0.3, size: 0.05, c0: [0.8, 0.9, 1, 1], c1: [0.4, 0.5, 1, 0] });
+    g.lightFlash = Math.max(g.lightFlash, 0.45); g.lightFlashPos = from;
+  }
+  // one strike: the bolt climbs from the palm, crosses the sky and comes straight down on them (a U)
+  stormStrike(v, from) {
+    const g = this.g, p = this.p, c = v.chest(), VF = g.forceOf(v), lm = lightningMul(this.absorbDef(v), this.lv.lightning, 1);
+    const up = [from[0], from[1] + 9, from[2]], over = [c[0], c[1] + 12, c[2]], pts = [];
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20, a = (1 - t) ** 3, b = 3 * (1 - t) ** 2 * t, e = 3 * (1 - t) * t * t, d = t ** 3, q = [0, 1, 2].map(k => a * from[k] + b * up[k] + e * over[k] + d * c[k]);
+      if (i > 0 && i < 20) for (let k = 0; k < 3; k++) q[k] += rnd(-0.4, 0.4); pts.push(q);
+    }
+    this.stormBolts.push({ pts, t: STORM_BOLT_S });
+    g.fx.sparks(c, [0, 1, 0], 8, [0.7, 0.85, 1, 1]); g.sfxAt('lhit' + (1 + Math.floor(Math.random() * 3)), c, 0.8); g.flashLight?.(c, [0.6, 0.75, 1], 0.12);
+    if (lm.mul <= 0) { if (VF) VF.addFp(4); this.absorbFx(v, 0.1); return; } // Force Absorb: no damage, the absorber gains Force
+    v.markAttacker?.(p); v.electrify(0.45); v.hurt(STORM_DMG * p.damageMul * this.dmgScale * lm.mul, p, { noFlinch: true });
+  }
   absorbFx(v, dt) {
     const g = this.g; if (Math.random() < 0.7) g.fx.sparks(v.chest(), [0, 1, 0], 2, [0.75, 0.45, 1, 1]);
     if (this.absorbMsgT <= 0) { this.absorbMsgT = 0.9; g.sfxAt('absorbhit', v.pos, 0.8); g.banner('LIGHTNING ABSORBED', [0.78, 0.5, 1]); }
   }
   bodyArcs(n) { this.g.bodyArc(n); }
-  end_lightning(silent) { if (!silent) this.p.playForce('BOTH_FORCELIGHTNING_RELEASE', { durMs: 420 }); this.ltTargets = []; this.g.lightFlash = 0; }
+  end_lightning(silent) { this.storm = null; if (!silent) this.p.playForce('BOTH_FORCELIGHTNING_RELEASE', { durMs: 420 }); this.ltTargets = []; this.g.lightFlash = 0; }
   do_heal() {
     const g = this.g, p = this.p; this.holding = 'heal'; p.forceHold = false; this.healT = 0; this.healCompleted = false;
   }
@@ -550,7 +587,8 @@ export class Force {
   draw(R) {
     const g = this.g;
     if (this.beam) { const b = this.beam; const pts = bolt(b.a, b.b, 14, 0.06); for (let i = 0; i < pts.length - 1; i++) { R.beam(pts[i], pts[i + 1], 0.06, [b.col[0], b.col[1], b.col[2], 0.3]); R.beam(pts[i], pts[i + 1], 0.018, [1, 0.8 + b.col[1] * 0.2, 0.8, 0.9]); } }
-    if (this.holding === 'lightning') for (const bl of this.bolts) { drawBolt(R, bl.pts, [0.55, 0.75, 1], bl.w); for (const br of bl.br) drawBolt(R, br, [0.55, 0.75, 1], 0.55); }
+    if (this.holding === 'lightning' && !this.storm) for (const bl of this.bolts) { drawBolt(R, bl.pts, [0.55, 0.75, 1], bl.w); for (const br of bl.br) drawBolt(R, br, [0.55, 0.75, 1], 0.55); }
+    for (const sb of this.stormBolts) { const a = Math.max(0, sb.t / STORM_BOLT_S), P = sb.pts; for (let i = 0; i < P.length - 1; i++) { R.beam(P[i], P[i + 1], 0.16, [0.55, 0.7, 1, 0.35 * a]); R.beam(P[i], P[i + 1], 0.04, [1, 1, 1, 0.95 * a]); } } // the storm's bolts
     const c = this.p.chest();
     for (const id of ['protect', 'absorb']) if (this.active[id]) { const col = id === 'protect' ? [0.3, 0.9, 0.7] : [0.7, 0.4, 1]; const pulse = 0.5 + 0.15 * Math.sin(g.t * 5); R.billboard(c, 1.55, [col[0], col[1], col[2], 0.20 * pulse], 0); R.billboard(c, 1.2, [col[0], col[1], col[2], 0.12], 0); }
     if (this.active.rage) R.billboard(c, 1.4, [1, 0.1, 0.05, 0.12 + 0.05 * Math.sin(g.t * 8)], 0);

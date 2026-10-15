@@ -128,6 +128,12 @@ energy between your hands drifts toward whoever is losing, and the one with more
 (or electrocuted and thrown down), a tie throws both back, and anyone else's hit breaks it. AI fighters who keep their
 feet often push back, and click at their own pace. Offline modes only.
 
+**Lightning storm (`tickStorm` in `engine/force.js`):** keep Lightning (4) held for 1.5 s and it becomes a storm: the
+caster raises an open hand (Jedi Outcast's quick-heal pose, held) and the lightning leaves the palm upward, arcs over in
+a U and strikes down on every foe within 45 m like natural lightning, in any direction, nearest first, each one struck
+two or so times a second for 5 damage (Absorb soaks it as usual). It drains 16 Force a second and ends when the key is
+released. The player only; AI casters keep the aimed stream.
+
 **Combos:** Jump and Pull a foe below you: they are lifted up in front of you and hang there for a moment; Push them then
 and they are blown away with the Force Push knockdown (any foe flying helplessly is). Push then Speed (6) dashes you in front of the pushed foe as they hit the ground, with a bonus hit. Lightning
 while your saber is thrown charges it: the lightning spreads around it as it flies (and drains Force much faster).

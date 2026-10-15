@@ -81,3 +81,20 @@ test('a killing critical strike splits them down the middle', () => {
   let n = 0; while (foe.status !== 'dead' && n++ < 90) run(g, 1);
   assert.equal(foe.status, 'dead'); assert.ok(foe.cut && foe.cut.vertical, 'cut vertically');
 });
+
+test('Force Lightning held 1.5 s becomes a storm: the hand raised, bolts striking every foe within 45 m from the sky', async () => {
+  const { STORM_CHARGE, STORM_RADIUS } = await import('../src/components/game2/engine/force.js');
+  const g = makeGame({ world: { collide() {}, floorAt: () => 0 } }), P = g.player, F = g.force; run(g, 20); // an open floor: nothing pulls them back into the arena
+  const near = addFoe(g, [3, 0, -6]), far = addFoe(g, [-30, 0, 25]), out = addFoe(g, [STORM_RADIUS + 5, 0, 0]); // behind and far: the storm needs no aim
+  out.pos = [STORM_RADIUS + 5, 0, 0];
+  const hp = [near.hp, far.hp, out.hp]; ready(F);
+  assert.ok(F.activate('lightning', 'Digit4'));
+  run(g, Math.round(STORM_CHARGE * 60) + 5, () => ({ held: new Set(['Digit4']) }));
+  assert.ok(F.storm, 'the storm'); assert.equal(P.actor.torso.name, 'BOTH_FORCEHEAL_QUICK', 'the hand raised');
+  let bolts = 0; for (let i = 0; i < 60; i++) { run(g, 1, () => ({ held: new Set(['Digit4']) })); bolts = Math.max(bolts, F.stormBolts.length); }
+  assert.ok(near.hp < hp[0] && far.hp < hp[1], 'everyone in reach is struck, wherever they stand');
+  assert.equal(out.hp, hp[2], 'not beyond 45 m');
+  assert.ok(bolts > 0, 'bolts in the sky'); const fp = F.fp;
+  run(g, 30, () => ({ held: new Set(['Digit4']) })); assert.ok(fp - F.fp > 10, 'it drains fast (' + (fp - F.fp).toFixed(1) + ' in 0.5 s)');
+  assert.equal(F.holding, 'lightning'); run(g, 2); assert.equal(F.holding, null, 'released with the key'); assert.equal(F.storm, null);
+});

@@ -46,6 +46,7 @@ const CONTROLS = [
   ['Force Push (charge)', 'Hold 1, release to throw: the longer the hold, the harder the push; the full 3 s pushes with both hands, twice as far'],
   ['Force Pull', '2 · jump first to yank them up in front of you; Push them while they hang there to blow them away'],
   ['Grip · Lightning · Heal', '3 · 4 · 5 (hold to channel)'],
+  ['Lightning storm', 'Keep holding 4 for 1.5 s: raise your open hand and the lightning arcs up into the sky and strikes down on every foe within 45 m (drains Force fast)'],
   ['Speed · Mind Trick · Rage · Protect · Absorb', '6 · 7 · 8 · 9 · 0'],
   ['Force Levitate', 'G · lifts a foe helplessly; any hit on them, or an attack by you, drops them'],
   ['Force Repulse (special)', 'X when the REPULSE meter is full: rise, curl up, burst open; foes around you are blasted away and disintegrate'],
