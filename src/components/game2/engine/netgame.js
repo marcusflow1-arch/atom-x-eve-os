@@ -292,7 +292,7 @@ export class NetGame {
       case 'unlodgeSaber': f.unlodgeSaber(); return;
       case 'levitate': { const [on, o] = a; if (on && f.spawnShield > g.t) return; f.levitate(!!on, o || {}); return; }
       case 'vaporize': { const [att] = a; if (att) f.vaporize(att); return; }
-      case 'executedBy': { const [att, kind, o] = a; if (att && (kind === 'crush' || kind === 'bisect') && f.status !== 'dead' && !(f.spawnShield > g.t)) g.startExecution(att, f, kind, { ...(o || {}), fromNet: true }); return; }
+      case 'executedBy': { const [att, kind, o] = a; if (att && (kind === 'crush' || kind === 'bisect' || kind === 'dominance') && f.status !== 'dead' && !(f.spawnShield > g.t)) g.startExecution(att, f, kind, { ...(o || {}), fromNet: true }); return; }
       case 'grip': { const [on, lift, o] = a; if (on) { if (f.spawnShield > g.t) return; f.grip(true, lift, { carry: o && o.carry && o.from ? this.carryOf(o.from) : null }); } else f.grip(false, 0, o || {}); return; }
       case 'blocked': if (!f.saber.holstered && f.status === 'normal') f.saber.blocked = a[0]; return;
       case 'fp': { const F = g.forceOf(f); if (F) F.fp = clamp(F.fp + a[0], 0, F.max); return; }

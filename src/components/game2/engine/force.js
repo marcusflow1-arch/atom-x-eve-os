@@ -7,6 +7,7 @@
 import { v3, clamp } from './math.js';
 import { hostile } from './combat.js';
 import { bolt, drawBolt } from './fx.js';
+import { dominanceFor, findDominated } from './executions.js';
 import { GRIP_MAX_DIST, gripBlocker, gripPhase, gripEffectiveLevel, gripBroken, lightningMul } from './forcerules.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -133,6 +134,7 @@ export class Force {
       }
       if (this.charging) this.tickCharge(input);
       if (input.pressed('KeyX') && free) this.startPulse();
+      if (input.pressed('KeyV') && free) this.startDominance();
       if (input.pressed('KeyJ')) { p.jumpLevel = p.jumpLevel % 3 + 1; g.hud.msg('Force Jump level ' + p.jumpLevel); }
     }
     // held powers
@@ -329,6 +331,20 @@ export class Force {
     this.pulsing = { t0: g.t, y0: p.pos[1], burst: 0 }; holdPose(p, REPULSE_BALL, 0.25);
     g.sfxAt('jumpbuild', p.pos, 1); g.sfxAt('rage', p.pos, 0.8);
     if (g.net) g.net.onCast(this, 'pulse'); return true;
+  }
+  // ---------------- Mind Dominance (special, DOMINANCE_COST of the same meter): the foe in front turns their own lightsaber
+  // on themselves (executions.js 'dominance'); a foe holding Force Absorb resists it and nothing is spent
+  dominanceReady() { return (this.pulse || 0) >= DOMINANCE_COST; }
+  startDominance(target) {
+    const g = this.g, p = this.p;
+    if (!this.dominanceReady()) { if (!this.npc) this.say('Mind Dominance needs ' + DOMINANCE_COST + '% of the meter'); return false; }
+    if (this.pulsing || this.holding || p.status !== 'normal' || !p.onGround || !g.startExecution) return false;
+    const vic = target ? (dominanceFor(g, p, target) ? target : null) : findDominated(g, p);
+    if (!vic) { if (!this.npc) this.say('Mind Dominance: no foe with a lightsaber in front of you'); return false; }
+    const VF = g.forceOf(vic);
+    if (VF && VF.active && VF.active.absorb) { this.gcd = 0.6; g.sfxAt('absorb', vic.pos, 1); if (!this.npc) this.say('Mind Dominance resisted: they are absorbing the Force'); else if (vic.isPlayer) g.hud.msg('You resisted Mind Dominance'); return false; }
+    this.charging = null; const ex = g.startExecution(p, vic, 'dominance'); if (!ex) return false;
+    this.pulse -= DOMINANCE_COST; return true;
   }
   tickPulse(dt) {
     const g = this.g, p = this.p, S = this.pulsing, T = g.t - S.t0, top = S.y0 + REPULSE_RISE;

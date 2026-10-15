@@ -98,3 +98,31 @@ test('Force Lightning held 1.5 s becomes a storm: the hand raised, bolts strikin
   run(g, 30, () => ({ held: new Set(['Digit4']) })); assert.ok(fp - F.fp > 10, 'it drains fast (' + (fp - F.fp).toFixed(1) + ' in 0.5 s)');
   assert.equal(F.holding, 'lightning'); run(g, 2); assert.equal(F.holding, null, 'released with the key'); assert.equal(F.storm, null);
 });
+
+test('Mind Dominance (V) at 55% of the meter: the foe in front turns their own lightsaber through their centre and falls', () => {
+  const g = makeGame(), P = g.player, F = g.force, foe = addFoe(g, [0, 0, 6], { hp: 300 }); foe.igniteNow(); run(g, 20); ready(F);
+  F.pulse = 54; run(g, 1, () => ({ pressed: ['KeyV'] })); assert.equal(foe.status, 'normal', 'not at 54%');
+  F.pulse = 60; run(g, 1, () => ({ pressed: ['KeyV'] }));
+  assert.equal(foe.status, 'executed', 'dominated'); assert.equal(P.status, 'executing'); assert.ok(Math.abs(F.pulse - 5) < 1e-9, 'it costs 55');
+  assert.equal(foe.blade.lit, false, 'the blade goes out while they turn it around');
+  let through = false;
+  for (let i = 0; i < 180 && foe.status !== 'dead'; i++) {
+    run(g, 1);
+    if (foe.hiltPose && foe.blade.len > 0.9) { // ignited: from their hands, through the spine, out of the back
+      const sp = foe.actor.bonePos('upper_lumbar'), b = foe.blade.base, d = foe.blade.dir, rel = [sp[0] - b[0], sp[1] - b[1], sp[2] - b[2]], t = rel[0] * d[0] + rel[1] * d[1] + rel[2] * d[2];
+      const miss = Math.hypot(rel[0] - d[0] * t, rel[1] - d[1] * t, rel[2] - d[2] * t), fw = [Math.sin(foe.yaw), Math.cos(foe.yaw)], back = (foe.blade.tip[0] - foe.pos[0]) * fw[0] + (foe.blade.tip[2] - foe.pos[2]) * fw[1];
+      if (miss < 0.06 && t > 0 && back < -0.4) through = true;
+    }
+  }
+  assert.ok(through, 'the blade runs through their centre and out of the back');
+  assert.equal(foe.status, 'dead'); assert.equal(foe.killedBy, P, 'it is the caster\'s kill');
+  run(g, 60); assert.equal(P.status, 'normal', 'the caster is free'); assert.equal(foe.hiltPose, null);
+});
+
+test('Force Absorb resists Mind Dominance (nothing spent); Force Repulse needs 80% of the meter', () => {
+  const g = makeGame(), F = g.force, foe = addFoe(g, [0, 0, 5]); foe.igniteNow(); run(g, 20); ready(F);
+  foe.force.cast('absorb'); run(g, 2); F.pulse = 70;
+  assert.equal(F.startDominance(), false); assert.equal(foe.status, 'normal'); assert.equal(F.pulse, 70, 'nothing spent');
+  F.pulse = 79; assert.equal(F.startPulse(), false, 'Repulse not at 79%');
+  F.pulse = 80; assert.equal(F.startPulse(), true, 'Repulse at 80%'); assert.equal(F.pulse, 0);
+});

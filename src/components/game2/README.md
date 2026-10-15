@@ -112,9 +112,18 @@ their throat, further out (up to 10 m) Force Pull, Lightning, then a Force Speed
 1 Push, 2 Pull, 3 Grip, 4 Lightning, 5 Heal, 6 Speed, 7 Mind Trick,
 8 Rage, 9 Protect, 0 Absorb. The numeric keypad also works. Hold 1 to charge Force Push (farther and harder, more Force); held the full 3 s it is pushed with both hands and throws them twice as far.
 G is Force Levitate: lifts the foe (or prop) in front of you helplessly for 3.5 s so you can get away (any hit drops
-them; a Force Push launches them). X unleashes Force Repulse once its meter (filled by damage and defeats) is full, the
+them; a Force Push launches them). X unleashes Force Repulse once its meter (filled by damage and defeats) reaches 80%, the
 way Starkiller does it: you rise, curl into a ball while the Force gathers, then burst open with your arms flung wide;
 everyone within 7 m is blasted outward and disintegrates in the air, and you float back down.
+
+**Mind Dominance (`dominance` in `engine/executions.js`):** V, at 55% of the same meter, takes the mind of the foe in
+front of you (within 15 m, on their feet, with a saber in hand or on the belt, at any health). Their blade goes out, the
+hilt comes into both hands and turns around against their solar plexus while they tremble (the first frame of Jedi
+Outcast's `BOTH_WALK9` holds the hands together; `Fighter.hiltPose` places the hilt), then they ignite it through
+themselves - the blade comes out of the back - and sink to their knees and fall (`BOTH_DEATH18`); the caster holds the
+mind trick (`BOTH_MINDTRICK1` at its peak). A saberstaff's other blade stays off.
+A foe holding Force Absorb resists it and nothing is spent. AI fighters use it on a foe below 60% health. Repulse (X)
+costs 80, Mind Dominance 55; the meter shows both marks.
 
 **Counter:** a block can parry the attacking blade away (25% for the player, more mid-parry; the AI by skill). The
 attacker is thrown open, arms over the head (the strong style's broken top parry, held), unable to guard for 0.9 s,

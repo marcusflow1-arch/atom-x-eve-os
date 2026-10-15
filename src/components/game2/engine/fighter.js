@@ -348,7 +348,7 @@ export class Fighter {
   }
   die(from, opts = {}) {
     if (this.force && this.force.releaseAll) this.force.releaseAll(true);
-    this.hp = 0; this.killedBy = from || null; this.g.foesGen = (this.g.foesGen | 0) + 1; this.endForce(); this.cancelAttackState(); const wasFlung = this.status === 'flung'; this.status = 'dead'; this.statusT = 0; this.deadAt = this.now; if (!this.saber.holstered) { this.saber.holstered = true; this.blade.set(false); this.g.humStop && this.g.humStop(this); }
+    this.hp = 0; this.killedBy = from || null; this.hiltPose = null; this.g.foesGen = (this.g.foesGen | 0) + 1; this.endForce(); this.cancelAttackState(); const wasFlung = this.status === 'flung'; this.status = 'dead'; this.statusT = 0; this.deadAt = this.now; if (!this.saber.holstered) { this.saber.holstered = true; this.blade.set(false); this.g.humStop && this.g.humStop(this); }
     if (!wasFlung) this.playWhole(opts.deathAnim || DEATHS[Math.floor(Math.random() * DEATHS.length)], { blend: 0.08 }); else this.playWhole('BOTH_KNOCKDOWN1', { blend: 0.05 });
     this.g.onDeath && this.g.onDeath(this);
   }
@@ -369,7 +369,7 @@ export class Fighter {
   }
   // another player's game executes this fighter (RPC on their puppet of us): run our side of the same execution
   executedBy(att, kind, o = {}) { if (this.g.startExecution) this.g.startExecution(att, this, kind, { ...o, fromNet: true }); }
-  revive(at) { this.g.foesGen = (this.g.foesGen | 0) + 1; this.kicking = null; this.critUntil = 0; this.critAt = 0; this.critStrike = null; this.openUntil = 0; this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.pullHang = null; this.kata = null; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
+  revive(at) { this.g.foesGen = (this.g.foesGen | 0) + 1; this.hiltPose = null; this.kicking = null; this.critUntil = 0; this.critAt = 0; this.critStrike = null; this.openUntil = 0; this.vaporized = 0; this.tauntUntil = 0; this.fellOut = false; this.lastAttacker = null; this.pullLand = false; this.pullHang = null; this.kata = null; this.landAnim = null; this.cut = null; this.actor.frozen = false; this.executor = null; this.executing = null; this.hp = this.maxHp; this.status = 'normal'; this.vel = [0, 0, 0]; this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0; this.forceUntil = 0; this.legsLockUntil = 0; this.thrown = null; this.saber.inFlight = false; this._prev = null; this._prevCap = null; this.hitSet.clear(); this.hitMove = -1; this.speedMul = this.damageMul = this.takeMul = 1; this.glow = 0; this.pos = (at || this.spawn).slice(); this.alpha = 1; this.cmd = emptyCmd(); this.actor.setBoth('BOTH_STAND1', { blend: 0 }); this.actor.followLegs(); this.onGround = true; this.ducked = false; }
   chest() { const y = this.status === 'down' || this.status === 'dead' ? 0.3 : this.ducked ? 0.75 : 1.15; return [this.pos[0], this.pos[1] + y, this.pos[2]]; }
   headPos() { return this.actor.bonePos('cranium', [0, 0, 0]); }
   // ---------- per-frame update
@@ -640,15 +640,17 @@ export class Fighter {
   // thrown); dual sabers hold the second one in the left hand (mirrored grip), on the left thigh when holstered
   updateHilt2(dt, M) {
     const A = this.g.attach, a = this.actor, L = A.hiltLen * (this.hiltScaleY || 1), M2 = this.hilt2Mat, B2 = this.blade2; let len = L;
-    if (this.saberKit === 'staff') m4.mul(M, m4.trs([0, 0, 0], FLIP_X, [1, 1, 1]), M2); // the second half of the staff runs from the hand the other way: held in the middle (Jedi Academy twoHanded staff)
+    if (this.hiltPose && this.saberKit !== 'staff') { M2.set(M); M2[12] += M[0] * 0.05; M2[13] += M[1] * 0.05; M2[14] += M[2] * 0.05; } // both hilts together
+    else if (this.saberKit === 'staff') m4.mul(M, m4.trs([0, 0, 0], FLIP_X, [1, 1, 1]), M2); // the second half of the staff runs from the hand the other way: held in the middle (Jedi Academy twoHanded staff)
     else if (this.hilt === 'thigh' || this.hilt === 'none') { m4.mul(a.boneMatrix('lfemurYZ'), m4.trs([-A.holster.t[0], A.holster.t[1], A.holster.t[2]], [A.holster.q[0], -A.holster.q[1], -A.holster.q[2], A.holster.q[3]], [1, 1, 1]), M2); len = A.hiltLen; }
     else { const g = A.grip; m4.mul(a.boneMatrix('lhand'), m4.trs([-g.t[0], g.t[1], g.t[2]], [g.q[0], -g.q[1], -g.q[2], g.q[3]], g.s), M2); len = A.hiltLen * (g.s?.[1] || 1); }
-    if (B2.lit !== this.blade.lit) B2.set(this.blade.lit); B2.color = this.blade.color;
+    const lit2 = this.blade.lit && !this.hiltPose; if (B2.lit !== lit2) B2.set(lit2); B2.color = this.blade.color; // turned on its owner: only the one blade
     B2.update(dt, M2, len, 1, this.now); B2.trailOn = this.blade.trailOn;
   }
   updateHilt(dt) {
     const A = this.g.attach, a = this.actor; let M = this.hiltMat;
-    if (this.hilt === 'hand') { const bm = a.boneMatrix(A.grip.bone); const loc = m4.trs(A.grip.t, A.grip.q, A.grip.s); m4.mul(bm, loc, M); this.hiltScaleY = A.grip.s[1]; }
+    if (this.hiltPose) { M.set(this.hiltPose); this.hiltScaleY = 1; } // posed by someone else (Mind Dominance turns it on its owner)
+    else if (this.hilt === 'hand') { const bm = a.boneMatrix(A.grip.bone); const loc = m4.trs(A.grip.t, A.grip.q, A.grip.s); m4.mul(bm, loc, M); this.hiltScaleY = A.grip.s[1]; }
     else if (this.hilt === 'thigh') { const bm = a.boneMatrix(A.holster.bone); const loc = m4.trs(A.holster.t, A.holster.q, [1, 1, 1]); m4.mul(bm, loc, M); this.hiltScaleY = 1; }
     else if (this.hilt === 'thrown' && this.thrown) {
       const T = this.thrown, d = [Math.cos(T.ang), 0, Math.sin(T.ang)]; const Y = v3.scale(d, -1), X = v3.norm(v3.cross([0, 1, 0], Y)), Z = v3.cross(X, Y);

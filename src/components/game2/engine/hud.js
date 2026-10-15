@@ -1,6 +1,6 @@
 /* eslint-disable */
 // 2D overlay: health / force bars, power chips, saber style, live animation names, messages, enemy bars, help.
-import { POWERS, POWER_BY_ID, FORCE_DUR, FORCE_HOTKEY_LABELS } from './force.js';
+import { POWERS, POWER_BY_ID, FORCE_DUR, FORCE_HOTKEY_LABELS, DOMINANCE_COST, REPULSE_COST } from './force.js';
 import { STYLE_NAMES } from './saber.js';
 import { EXECUTION_NAMES } from './executions.js';
 
@@ -79,7 +79,11 @@ export class HUD {
     if (F.charging) { const ch = F.chargeLevel(); x.strokeStyle = ch >= 1 ? '#ffffff' : 'rgba(140,210,255,0.95)'; x.lineWidth = 3; x.beginPath(); x.arc(cx, cy, 15, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.04, ch)); x.stroke(); x.font = '700 10px system-ui,sans-serif'; x.textAlign = 'center'; x.fillStyle = '#cfeaff'; x.fillText(ch >= 1 ? 'FULL PUSH' : 'PUSH', cx, cy + 30); x.textAlign = 'left'; } // charged Force Push
     // bars bottom-left
     const bx = 22, by = H - 62; this.bar(x, bx, by, 250, 18, P.hp / P.maxHp, ['#c01818', '#ff6a4a'], 'HEALTH  ' + Math.ceil(P.hp)); this.bar(x, bx, by + 26, 250, 18, F.fp / F.max, ['#1f5fd6', '#6fd2ff'], 'FORCE  ' + Math.floor(F.fp));
-    { const pr = F.pulseReady && F.pulseReady(), k = (F.pulse || 0) / 100; x.globalAlpha = pr ? 0.75 + 0.25 * Math.sin(g.t * 7) : 1; this.bar(x, bx, by - 20, 250, 13, k, ['#a86a12', '#ffd27a'], pr ? '[X]  FORCE REPULSE READY' : 'REPULSE  ' + Math.floor(k * 100) + '%'); x.globalAlpha = 1; } // Force Repulse meter
+    { // the special meter: Mind Dominance (V) from DOMINANCE_COST, Force Repulse (X) from REPULSE_COST, marked on the bar
+      const pr = F.pulseReady && F.pulseReady(), dr = F.dominanceReady && F.dominanceReady(), k = (F.pulse || 0) / 100, pct = Math.floor(k * 100) + '%';
+      x.globalAlpha = pr || dr ? 0.75 + 0.25 * Math.sin(g.t * 7) : 1; this.bar(x, bx, by - 20, 250, 13, k, ['#a86a12', '#ffd27a'], pr ? '[X] REPULSE  ·  [V] DOMINANCE' : dr ? '[V] MIND DOMINANCE  ' + pct : 'REPULSE  ' + pct); x.globalAlpha = 1;
+      x.fillStyle = 'rgba(255,255,255,0.7)'; for (const m of [DOMINANCE_COST, REPULSE_COST]) x.fillRect(bx + 250 * m / 100 - 1, by - 22, 2, 17);
+    }
     // power chips bottom-center
     const chips = g.forceMenu ? F.list.map(id => POWER_BY_ID[id]) : POWERS; const chip = 64, gap = 6; const perRow = W < 1280 ? (g.forceMenu ? 6 : 7) : (g.forceMenu ? 12 : 14); const rows = Math.ceil(chips.length / perRow); const totalW = Math.min(perRow, chips.length) * (chip + gap) - gap; const sx = Math.max(300, (W - totalW) / 2 + (W > 1280 ? 120 : 130)); void sx;
     const x0 = Math.min(W - totalW - 16, Math.max(bx + 270, (W - totalW) / 2)); const y0 = H - 18 - rows * (46 + gap) + gap;
