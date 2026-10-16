@@ -1,10 +1,20 @@
 # Game 3D collaboration handoff
 
-Updated 2026-10-15. Working target: `src/pages/GameView.jsx` and its existing `src/components/game3d` runtime.
+Updated 2026-10-16. Working target: `src/pages/GameView.jsx` and its existing `src/components/game3d` runtime.
 
-## Repository baseline and coordination
+## Current continuation: companion saves
 
-This continuation starts from main `362e24ca843f602503e00b3a5465f6e2bdd6a70a`.
+Branch `game3d/companion-character-saves`, based on main `632177cc0f0e32dac2fdc00e4e04ed06e0af4a50`. PR #87 is now merged. Claude's Wuxia slice A in #86 (weapon archetypes, affinity and quick-switch) remains intact. No direct Claude session connection is established; this document and the PR are the handoff.
+
+Companion selection/gear now uses account-and-character-scoped local saves, validated catalog slots, detached snapshots, captured async scopes and a prepared per-character cloud entity. The legacy Gear-menu adapter shares this state. Save/conflict feedback is shown in the current Mounts service panel and legacy equipment panels. Details, commands, migration policy and rollout prerequisites are in [COMPANION_SAVES.md](COMPANION_SAVES.md).
+
+The new schema has **not** been deployed. Owner-only policy and conditional revision writes need live verification; first-create uniqueness remains an explicit limitation with duplicate detection. This does not make preferences an authoritative inventory or synchronize the local character roster. No supplied model, animation, map, balance rule, camera/mouse handler, Game 2 file or AI Battle queue was changed.
+
+Please coordinate before editing `companionStore.jsx`, `companion/`, `equipment/companionFusionStore.jsx`, `equipment/CompanionSaveStatus.jsx`, or `progression/hub/MountSubTab.jsx`. The prior tasks below remain useful: actual mount vanity asset bindings and server-authoritative progression are not complete. Task C's global save boundary is now addressed by this branch, subject to the documented deployment/concurrency limits.
+
+## Previous continuation (merged #87): baseline and coordination
+
+The previous continuation started from main `362e24ca843f602503e00b3a5465f6e2bdd6a70a`.
 
 - PR #78 (earlier Game5 systems workbench) and PR #82 (GameView progression integration) are merged. Do not reapply those commits or replace the current AXE runtime with the Game5 simulator.
 - Claude's co-authored Game 2 dual-saber/staff change `4f8746cb3cf0e8c8fa0bd57bda3e9c45d1165724` is present via merged PR #85. The newer Game 2 tutorial PR #84 is also present. This branch does not edit Game 2, its animation banks, or its tutorial.

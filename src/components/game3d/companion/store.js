@@ -18,8 +18,8 @@ export function createCompanionStore({ storage, scope, onScopeChange, cloud, leg
   const snapshot = () => ({ ...copy(document.loadout), isMounted: mounted, sync: { ...status } });
   const publish = () => listeners.forEach(fn => fn(snapshot()));
   const setStatus = (phase, message = '') => { status = { phase, message }; publish(); };
-  const save = (next, errorMessage = 'Equipment was not changed: device storage is full or blocked. Free space and try again.') => {
-    if (!storage.setChecked(JSON.stringify(next))) { setStatus('save-error', errorMessage); return false; }
+  const save = (next, errorMessage = 'Equipment was not changed: device storage is full or blocked. Free space and try again.', errorPhase = 'save-error') => {
+    if (!storage.setChecked(JSON.stringify(next))) { setStatus(errorPhase, errorMessage); return false; }
     document = next;
     return true;
   };
@@ -52,7 +52,7 @@ export function createCompanionStore({ storage, scope, onScopeChange, cloud, leg
           if (!row) { setStatus('error', 'No cloud save exists to load. Your device equipment is unchanged.'); return; }
           const previousActive = document.loadout.activeCompanionId;
           if (!save({ version: 2, exists: true, dirty: false, cloud: cloudRef(row), loadout: row.loadout },
-            'Cloud equipment could not be saved on this device. Your current equipment is unchanged.')) return;
+            'Cloud equipment could not be saved on this device. Your current equipment is unchanged.', 'error')) return;
           if (previousActive !== row.loadout.activeCompanionId) mounted = false;
           setStatus('synced', 'Companion equipment synced.');
           return;
@@ -63,7 +63,7 @@ export function createCompanionStore({ storage, scope, onScopeChange, cloud, leg
         if (!current(g)) return;
         // Preserve edits made during the request, carrying forward its acknowledgement.
         if (!save({ ...document, dirty: edits !== e, cloud: cloudRef(result) },
-          'Equipment is saved on this device, but the cloud confirmation could not be saved. Retry sync.')) return;
+          'Equipment is saved on this device, but the cloud confirmation could not be saved. Retry sync.', 'error')) return;
         if (edits === e) setStatus('synced', 'Companion equipment synced.');
       } catch (error) {
         if (!current(g)) return;

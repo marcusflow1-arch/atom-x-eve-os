@@ -181,3 +181,28 @@ test('entity declares owner-only operations and immutable owner/character identi
   for (const op of ['read', 'create', 'update']) assert.deepEqual(schema.rls[op], { 'data.owner_id': '{{user.id}}' });
   assert.equal(schema.rls.delete, false); assert.equal(schema.properties.owner_id.rls.update, false); assert.equal(schema.properties.character_id.rls.update, false);
 });
+
+
+test('simultaneous first saves stop on duplicates rather than choosing a winner', async t => {
+  const b=api(), a=harness(t,b), c=harness(t,b); await Promise.all([a.store.sync(),c.store.sync()]);
+  a.store.equip('shadow_wolf','saddle','racing_saddle'); c.store.equip('shadow_wolf','saddle','royal_saddle');
+  await Promise.all([a.store.sync(),c.store.sync()]);
+  assert.equal(b.rows.length,2); assert.match(a.store.getState().sync.message,/Multiple cloud saves/);
+  assert.match(c.store.getState().sync.message,/Multiple cloud saves/);
+  await a.store.sync(); assert.equal(b.rows.length,2); assert.equal(a.saved().dirty,true);
+});
+
+test('failed cloud hydration write preserves current equipment and offers retry', async t => {
+  const b=api(), wait=deferred();b.rows=[row('A','royal_saddle')];b.beforeRead=()=>wait.promise;
+  const h=harness(t,b), pending=h.store.sync();await tick(); h.blocked=true;wait.resolve();await pending;
+  assert.deepEqual(h.store.getState().gear,{});assert.equal(h.store.getState().sync.phase,'error');
+  h.blocked=false; b.beforeRead=null;await h.store.sync();
+  assert.equal(h.store.getState().gear.shadow_wolf.saddle,'royal_saddle');
+});
+
+test('failed acknowledgement persistence retains dirty state and retry does not spend another revision', async t => {
+  const b=api();b.rows=[row()];const h=harness(t,b);await h.store.sync();
+  h.store.equip('shadow_wolf','saddle','royal_saddle');b.beforeWrite=()=>{h.blocked=true;};
+  await h.store.sync(); assert.equal(h.saved().dirty,true);assert.equal(h.store.getState().sync.phase,'error');
+  h.blocked=false;b.beforeWrite=null;await h.store.sync();assert.equal(h.saved().dirty,false);assert.equal(b.rows[0].revision,2);
+});
