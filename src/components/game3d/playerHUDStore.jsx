@@ -46,12 +46,22 @@ const STAT_POINTS_PER_LEVEL = 3;
 // they pass through the same statsSystem formulas as allocated points
 // (e.g. +1 STR → +3 phys dmg). Equipped-wing specialization + title are FLAT
 // FINAL stats applied after the formulas.
+// Providers name Vitality and Spirit either way (constitution / vitality, focus / spirit),
+// and statsSystem reads `vitality` and `spirit` first. Each provider's value is read under
+// whichever name it used and written to both, so none is dropped and none counts twice.
+const canonicalAttr = (o) => ({
+  ...o,
+  constitution: o.constitution || o.vitality || 0,
+  vitality: o.vitality || o.constitution || 0,
+  focus: o.focus || o.spirit || 0,
+  spirit: o.spirit || o.focus || 0,
+});
 const sumAttr = (...objs) => {
   const out = {
     strength: 0, constitution: 0, dexterity: 0, intelligence: 0, focus: 0,
     vitality: 0, spirit: 0, criticalChance: 0, criticalDefense: 0, criticalDamage: 0,
   };
-  objs.forEach((o) => { if (!o) return; Object.keys(out).forEach((k) => { out[k] += o[k] || 0; }); });
+  objs.forEach((o) => { if (!o) return; const c = canonicalAttr(o); Object.keys(out).forEach((k) => { out[k] += c[k] || 0; }); });
   return out;
 };
 const sumFlat = (...objs) => {
