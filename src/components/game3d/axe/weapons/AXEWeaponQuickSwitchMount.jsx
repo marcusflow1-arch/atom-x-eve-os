@@ -43,7 +43,7 @@ export default function AXEWeaponQuickSwitchMount() {
   return (
     <div
       key={notice.key}
-      className="pointer-events-none fixed bottom-28 left-1/2 z-[60] -translate-x-1/2 flex items-center gap-3 rounded-sm px-4 py-2"
+      className="pointer-events-none fixed bottom-[15rem] left-1/2 z-[60] -translate-x-1/2 flex items-center gap-3 rounded-sm px-4 py-2"
       style={{ background: 'rgba(17,16,15,0.86)', boxShadow: '0 0 0 1px rgba(239,230,210,0.12), 0 8px 24px rgba(0,0,0,0.45)' }}
       role="status"
     >

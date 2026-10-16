@@ -11,7 +11,8 @@ import QuestFloatingLabel from './QuestFloatingLabel';
 import QuestDialogueBox from './QuestDialogueBox';
 import FloatingDamageNumbers from './FloatingDamageNumbers';
 import { setPlayerHUD, awardXP, getPlayerHUD, setHP, tickRegen } from './playerHUDStore';
-import { DEFAULT_PLAYER_STATS, ENEMY_STAT_TEMPLATES, computeDerivedStats, calculateHit } from './statsSystem';
+import { DEFAULT_PLAYER_STATS, computeDerivedStats, calculateHit, rollAXEHit } from './statsSystem';
+import { getAXEEnemyStats } from './axe/balance/AXEPowerBudget';
 import { QUEST_NPCS, QUESTS, getAvailableQuestForNPC } from './questData';
 import { acceptQuest, completeQuest, isQuestComplete, reportEnemyKill, subscribeQuests, getQuestState } from './useQuestStore';
 import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioStore';
@@ -25,7 +26,7 @@ import { updateBossMovement, projectBossHead } from './boss/updateBossMovement';
 import { castLegacyTargetedAbility } from './legacyTargetedAbilities';
 import CompanionMountHUD from './CompanionMountHUD';
 import { getCompanionState, subscribeCompanion, setMounted, getEffectiveSpeedMultiplier } from './companionStore';
-import { getActiveAXEMountSpeedMultiplier, setAXEMountRiding, tickAXEMountRideActivity } from './axe/progression/AXEMountStore';
+import { getActiveAXEMountSpeedMultiplier, getAXEMountFusionState, setAXEMountRiding, tickAXEMountRideActivity } from './axe/progression/AXEMountStore';
 import { awardCompanionXP, getCompanionProgression, subscribeCompanionProgression } from './companionProgressionStore';
 import CompanionHealthBar from './CompanionHealthBar';
 import PlayerNameTag from './PlayerNameTag';
@@ -72,6 +73,9 @@ import {
 import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
 import { getTitleState, recordTitleKill, subscribeTitles } from './progression/titleStore';
 import { getHaloState } from './progression/haloStore';
+import { createAXEMountFusionVisualRuntime } from './axe/progression/AXEMountFusionVisualRuntime';
+import { createAXEAscensionVisualRuntime } from './axe/progression/AXEAscensionVisualRuntime';
+import { bankAXEAscensionDamage, getAXEAscensionProfile } from './axe/progression/AXEAscensionStore';
 import { createAXEHaloVisualRuntime } from './axe/progression/AXEHaloVisualRuntime'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
@@ -604,6 +608,9 @@ export default function GameWorld3D() {
       }));
     };
     window.addEventListener('playerSkillStrike', handlePlayerSkillStrike);
+    // Mount Soul Fusion absorbed the mount: run the normal dismount on the next frame
+    const handleForceDismount = () => { if (isMountedRef.current) mountToggleRef.current = true; };
+    window.addEventListener('axeMountForceDismount', handleForceDismount);
     window.addEventListener('playerSkillCastStart', handlePlayerSkillCastStart);
     window.addEventListener('axeAerialSkillCast', handleAXEAerialSkillCast);
 
@@ -750,10 +757,9 @@ export default function GameWorld3D() {
         // DETERMINISTIC tier + level — uses the seeded tierRoll from spawn config
         // so every client picks the same tier for the same enemy id.
         const tier = spawn.fixedTier ? getEnemyTierByName(spawn.fixedTier) : pickTier(spawn.tierRoll);
-        const enemyLevel = tier.level + (spawn.tierRoll > 0.5 ? 1 : 0);
-        // Derive enemy combat stats from the shared stat system
-        const enemyBaseStats = ENEMY_STAT_TEMPLATES[tier.name];
-        const enemyDerived = computeDerivedStats(enemyBaseStats, []);
+        const enemyLevel = spawn.level || tier.level + (spawn.tierRoll > 0.5 ? 1 : 0); // the zone sets the level
+        // stats from the enemy's level and tier: the power budget's enemy curve
+        const enemyDerived = getAXEEnemyStats(enemyLevel, tier.name);
         const box = new THREE.Box3().setFromObject(fbx);
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
@@ -849,6 +855,8 @@ export default function GameWorld3D() {
     let model;
     let playerAnim;
     let haloVisualRuntime = null;
+    let fusionVisualRuntime = null; // Mount Soul Fusion aura
+    let ascensionVisualRuntime = null; // Taurus Chosen Ascension: levitation, Angel Cloak, Destroyer shockwave, Defensive shield
     const playerStateMachine = new CorePlayerStateMachine();
     let coreAnimationController = null;
     const playerCameraSystem = new PlayerCameraSystem({ camera, orbit, modelRef, lockOnTargetRef });
@@ -874,6 +882,8 @@ export default function GameWorld3D() {
 
       scene.add(fbx);
       haloVisualRuntime = createAXEHaloVisualRuntime({ model: fbx, initialState: getHaloState() });
+      fusionVisualRuntime = createAXEMountFusionVisualRuntime({ model: fbx, initialState: getAXEMountFusionState() });
+      ascensionVisualRuntime = createAXEAscensionVisualRuntime({ model: fbx, initialState: getAXEAscensionProfile() });
       // Snap the player's feet to the terrain at spawn
       snapToGround(fbx, 0);
       mixer = new THREE.AnimationMixer(fbx);
@@ -1061,10 +1071,12 @@ export default function GameWorld3D() {
         playerAnim?.requestCrouch(!playerAnim.getIsCrouching());
         e.preventDefault();
       }
-      // E = interact, F = Kick
+      // E = interact, F = Kick. Next to your companion (while the 'F Mount' prompt shows) or while
+      // riding, F mounts / dismounts instead: the kick rebinding (6a64a744) had left mounting unreachable.
       if (k === 'e') interactPressed.current = true;
       if (k === 'f') {
-        if (playerAnim?.requestAttack('kick', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
+        if (nearbyCompanionRef.current || isMountedRef.current) { if (!e.repeat) mountToggleRef.current = true; }
+        else if (playerAnim?.requestAttack('kick', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
         e.preventDefault();
       }
       // AXE Prompt 014: Skills 1..9 use keys 1..9, Skill 10 uses key 0.
@@ -1207,9 +1219,12 @@ export default function GameWorld3D() {
       const npcsVisible = npcsVisibleRef.current; // '=' toggles all non-boss entities (NPCs/enemies/companion)
       envSystem.update(delta);
       haloVisualRuntime?.update?.(delta);
+      fusionVisualRuntime?.update?.(delta);
+      ascensionVisualRuntime?.update?.(delta);
       bossEncounter.update(delta);
       charLights.update(delta, envSystem.getState, modelRef.current, camera);
       if (mixer) mixer.update(delta);
+      ascensionVisualRuntime?.lateUpdate?.(); // levitation lifts the posed skeleton
       if (dodgeVanish.active) {
         dodgeVanish.timer += delta;
         if (dodgeVanish.timer >= dodgeVanish.duration) {
@@ -1251,6 +1266,8 @@ export default function GameWorld3D() {
               isMountedRef.current = true;
               setIsMounted(true);
               setMounted(true);
+            } else if (rideResult.reason === 'MOUNT_ABSORBED') {
+              showCombatNotice('Your mount is absorbed in Soul Fusion and cannot be ridden');
             }
           }
         }
@@ -1719,14 +1736,12 @@ export default function GameWorld3D() {
               // Damage lands — only if player still in range and not invulnerable
               if (playerInRange && playerInvulTimer.current <= 0 && !rollDodge() && !rollGuard() && !rollRangedEvade() && !rollDodgeBuff()) {
                 const playerDerived = getPlayerHUD().derived || playerDerivedRef.current;
+                // 0 when the enemy's Accuracy loses to the hero's Block; the level gap is in the combat maths
                 let dmg = calculateHit(enemy.derived, playerDerived);
-                const levelDiff = enemy.level - playerLevelRef.current;
-                if (levelDiff > 0) dmg = Math.round(dmg * (1 + levelDiff * 0.25));
-                else if (levelDiff < 0) dmg = Math.max(1, Math.round(dmg * Math.max(0.4, 1 + levelDiff * 0.15)));
                 // God's Deflection keeps priority. Otherwise, weapon mastery and
                 // the active Advanced Class resolve dodge/block/reflect/mitigation
                 // through the same incoming-damage backend.
-                if (rollReflect()) {
+                if (dmg > 0 && rollReflect()) {
                   enemy.hp -= dmg;
                   spawnDamageFloat(enemy.id, dmg);
                   playActionSound('enemy_hit');
@@ -1873,12 +1888,16 @@ export default function GameWorld3D() {
               if (d < closestEnemyDist) { closestEnemyDist = d; closestEnemy = enemy; }
             });
           }
-          if (closestEnemy) {
+          // The hit roll: the hero's Accuracy against the enemy's Block. A miss shows MISS and spends
+          // no damage buff, charge or skill multiplier.
+          const swingMissed = !!closestEnemy && !rollAXEHit(getPlayerHUD().derived || playerDerivedRef.current, closestEnemy.derived);
+          if (swingMissed) { spawnDamageFloat(closestEnemy.id, 'MISS'); skillStrikeMultRef.current = 1.0; }
+          if (closestEnemy && !swingMissed) {
             // Pull live derived stats from store so stat allocations actually affect damage.
             const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
             const boosted = { ...liveDerived, critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct() };
             const powerChargeMult = consumePowerChargeMultiplier();
-            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * powerChargeMult * getWeaponDamageMult() * skillStrikeMultRef.current * consumeShopDamageBuff()); skillStrikeMultRef.current = 1.0; const _sc = consumeShopCritBuff(); if (_sc > 0 && Math.random() * 100 < _sc) dmg = Math.round(dmg * 1.5);
+            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived, { hitRoll: false }) * consumeDamageBuffMultiplier() * powerChargeMult * getWeaponDamageMult() * skillStrikeMultRef.current * consumeShopDamageBuff()); skillStrikeMultRef.current = 1.0; const _sc = consumeShopCritBuff(); if (_sc > 0 && Math.random() * 100 < _sc) dmg = Math.round(dmg * 1.5);
             if (rollLethalBlow()) { dmg = closestEnemy.hp; spawnDamageFloat(closestEnemy.id, 9999); }
 
             // Weapon Mastery — adjust damage, apply identity/milestone passives.
@@ -1900,6 +1919,7 @@ export default function GameWorld3D() {
 
             const activeWeaponId = getActiveWeaponId();
             reportWeaponHit({ weaponId: activeWeaponId, damage: dmg, isCrit: masteryRes.isCrit, isBoss: !!closestEnemy.isBoss });
+            bankAXEAscensionDamage(dmg, { maxHP: liveDerived?.maxHP || 0 }); // Defensive Nature: 30% of the blow becomes a shield
 
             combatSystem.applyDamage(closestEnemy, dmg, { sourceId: closestEnemy.id, sound: 'enemy_hit' });
 
@@ -2255,6 +2275,10 @@ export default function GameWorld3D() {
       avatarLoadDisposed=true;
       haloVisualRuntime?.dispose?.();
       haloVisualRuntime = null;
+      fusionVisualRuntime?.dispose?.();
+      fusionVisualRuntime = null;
+      ascensionVisualRuntime?.dispose?.();
+      ascensionVisualRuntime = null;
       modelRef.current = null;
       // Mark guard disposed FIRST so any in-flight animate() bails before
       // touching the renderer — prevents the null.trim shadow-map crash.
@@ -2266,6 +2290,7 @@ export default function GameWorld3D() {
       window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('mouseup', onMouseUp); window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('resize', handleResize);
       window.removeEventListener('playerSkillStrike', handlePlayerSkillStrike);
+      window.removeEventListener('axeMountForceDismount', handleForceDismount);
       window.removeEventListener('playerSkillCastStart', handlePlayerSkillCastStart);
       window.removeEventListener('axeAerialSkillCast', handleAXEAerialSkillCast);
       renderer.domElement.removeEventListener('mousedown', onMouseDown);

@@ -2,7 +2,17 @@
 
 Updated 2026-10-16. Working target: `src/pages/GameView.jsx` and its existing `src/components/game3d` runtime.
 
-## Current continuation: companion saves
+## Current continuation: weapon-switch integration
+
+Branch `game3d/integration-corrections` started at merged companion-save PR #88 (`50fc8be7`) and incorporates current main `b3ef8e8c` / PR #89 before verification. The newer stat budget, mount fusion, ascension, social server routing and party/world-chat work are preserved. Coordination remains this committed document and the PR; no direct Claude session notification is claimed.
+
+Quick-switch used to publish an unequip before validating/equipping the target. The transient max-HP change healed a damaged character, including on a rejected switch. It also reported success when storage failed. Draws now validate and save one complete inventory document, including return history, before notifying combat consumers. Slot/specialty changes use checked saves and visible errors. The mounted hotkey handler passes the live player level. Mastery, role and the existing legacy weapon hotbar follow only committed draws.
+
+See [WEAPON_SWITCH_INTEGRATION.md](WEAPON_SWITCH_INTEGRATION.md) for the reproduction, precise scope, tests and remaining risks. On the integrated branch: 102 Game3D/backend tests pass, scoped ESLint and production build pass, and the real panel/hotkey/identity components pass isolated Chromium checks with disposable local characters. No signed-in live GameView, renderer, multiplayer or deployment validation is claimed.
+
+Coordinate before changing `axe/equipment/AXEEquipmentInventoryStore.js`, `axe/weapons/AXEWeaponAffinityStore.js`, `AXEWeaponIdentityMount.jsx`, `AXEWeaponQuickSwitch.js`, `AXEWeaponQuickSwitchMount.jsx`, or `progression/hub/WeaponAffinityPanel.jsx`. This patch adds no assets, balance changes, animations or live-service writes. The next combat review should cover the two skill/cooldown systems and shared keyboard routing; authoritative inventory remains a separate task.
+
+## Previous continuation (merged #88): companion saves
 
 Branch `game3d/companion-character-saves`, based on main `632177cc0f0e32dac2fdc00e4e04ed06e0af4a50`. PR #87 is now merged. Claude's Wuxia slice A in #86 (weapon archetypes, affinity and quick-switch) remains intact. No direct Claude session connection is established; this document and the PR are the handoff.
 
@@ -65,9 +75,9 @@ The current companion catalog in `companionData.jsx` has saddle/armor/charm meta
 - Return committed state/revision, reconcile locally, and expose network/save failures without false success. Test lost responses, retries, stale revisions, concurrent spending and unauthorized access.
 - Keep Game3D rules separate from the dashboard AI Battle adapter. The attached design explicitly rejects treating racing/PvE/world events as renamed avatar duels.
 
-### C. Existing companion-save boundary
+### C. Companion-save deployment follow-up
 
-`companionStore.jsx` still uses a global local-storage key and a user-level `companion_state` field, unlike the scoped AXE stores. Its delayed cloud hydration/write can race character changes. Investigate this before mount vanity depends on that persistence. A migration needs an explicit legacy-owner policy, per-character server schema and server-side concurrency handling; do not claim it is fixed by the scoped mount checkpoint alone.
+The global companion-save boundary described in the original task was addressed in merged #88. Use [COMPANION_SAVES.md](COMPANION_SAVES.md) for the migration and remaining live deployment/concurrency checks; do not reapply the old global-key implementation.
 
 ## Limits
 

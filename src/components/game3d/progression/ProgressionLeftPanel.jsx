@@ -41,7 +41,7 @@ export default function ProgressionLeftPanel({ hud }) {
               }}
             />
           </div>
-          <span className="text-[10px] text-white/50 tabular-nums">{xp}/{xpForNext} XP</span>
+          <span className="text-[10px] text-white/50 tabular-nums">{Number.isFinite(xpForNext) ? `${xp}/${xpForNext} XP` : 'MAX LEVEL'}</span>
         </div>
       </div>
 

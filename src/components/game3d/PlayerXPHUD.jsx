@@ -42,7 +42,7 @@ export default function PlayerXPHUD({ level, xp, xpForNext }) {
         />
       </div>
       <div className="text-[10px] text-white/60 mt-1 text-right font-mono">
-        {xp} / {xpForNext} XP
+        {Number.isFinite(xpForNext) ? `${xp} / ${xpForNext} XP` : 'MAX LEVEL'}
       </div>
     </div>
   );

@@ -41,11 +41,12 @@ export default function TradeSessionWatcher({ userId }) {
       // Look up the partner name from a recent SocialRequest if available.
       let partnerName = 'Trade Partner';
       try {
-        const reqs = await base44.entities.SocialRequest.filter({ kind: 'trade' });
-        const match = (reqs || []).find((r) =>
-          (r.sender_id === partnerId && r.receiver_id === userId) ||
-          (r.sender_id === userId && r.receiver_id === partnerId)
-        );
+        // only this pair's requests (it used to read every trade request it could)
+        const [incomingReqs, outgoingReqs] = await Promise.all([
+          base44.entities.SocialRequest.filter({ kind: 'trade', sender_id: partnerId, receiver_id: userId }),
+          base44.entities.SocialRequest.filter({ kind: 'trade', sender_id: userId, receiver_id: partnerId }),
+        ]);
+        const match = [...(incomingReqs || []), ...(outgoingReqs || [])][0];
         if (match) {
           partnerName = match.sender_id === partnerId
             ? (match.sender_name || partnerName)
@@ -58,8 +59,13 @@ export default function TradeSessionWatcher({ userId }) {
 
     const scan = async () => {
       try {
-        const rows = await base44.entities.TradeSession.filter({ status: 'accepted' });
-        (rows || []).forEach(tryOpenSession);
+        // only my sessions: TradeSession has no access rules, so an unscoped query read
+        // every player's accepted trades
+        const [mine, theirs] = await Promise.all([
+          base44.entities.TradeSession.filter({ status: 'accepted', initiator_id: userId }),
+          base44.entities.TradeSession.filter({ status: 'accepted', recipient_id: userId }),
+        ]);
+        [...(mine || []), ...(theirs || [])].forEach(tryOpenSession);
       } catch (e) {
         // silent — polling will retry
       }

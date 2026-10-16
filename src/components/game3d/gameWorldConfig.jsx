@@ -4,6 +4,7 @@
 
 import { AXE_FOUNDATION } from './axe/core/axeFoundation';
 import { AXE_PLAYER_TRAVERSAL_CONFIG } from './axe/player/AXEPlayerTraversalConfig';
+import { AXE_LEVEL_CAP } from './axe/balance/AXEPowerBudget';
 
 export { AXE_FOUNDATION, AXE_PLAYER_TRAVERSAL_CONFIG };
 
@@ -70,4 +71,7 @@ export const pickTier = (roll = Math.random()) => {
 
 // XP curve: XP_TABLE[n] = XP to reach level n+2 from n+1.
 export const XP_TABLE = [5, 7, 14, 22, 35, 50, 70, 95, 125, 160];
-export const xpForLevel = (level) => XP_TABLE[Math.min(level - 1, XP_TABLE.length - 1)] || 200;
+// At the level cap (AXEPowerBudget) no amount of XP is enough, so every level-up loop stops there.
+export const xpForLevel = (level) => (level >= AXE_LEVEL_CAP
+  ? Infinity
+  : XP_TABLE[Math.min(level - 1, XP_TABLE.length - 1)] || 200);

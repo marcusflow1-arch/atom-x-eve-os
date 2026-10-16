@@ -58,10 +58,11 @@ export function getSuccessChanceForLevel(currentLevel) {
   return HALO_SUCCESS_BANDS[HALO_SUCCESS_BANDS.length - 1].chance;
 }
 
-// Per-level Halo bonuses. Each Halo level grants:
-//   +1 strength, +1 constitution, +1 dexterity, +1 intelligence, +1 focus
-//   +0.2% additive critical chance
-//   +0.3% critical defense (reduces incoming crit bonus damage)
+// Per-level Halo bonuses. The halo's role is the critical strike (power budget,
+// docs/game3d/STAT_SYSTEM_AUDIT.md). Each Halo level grants:
+//   +0.15 strength, +0.15 vitality, +0.15 agility, +0.15 spirit
+//   +0.075% additive critical chance
+//   +0.15% critical defense (reduces incoming crit bonus damage)
 //   +0.1% critical damage (added to crit multiplier)
 //
 // IMPORTANT: Halo NEVER bypasses the attribute system. Each +1 stat is a
@@ -70,15 +71,16 @@ export function getSuccessChanceForLevel(currentLevel) {
 // STAT_RATES.strength, +0.5% hit chance, +0.3% damage variance, etc.
 //
 // At MAX_HALO_LEVEL (200) the totals are:
-//   200 STR / CON / DEX / INT / FOC, +40% crit, +60% crit defense, +20 crit dmg.
+//   30 STR / VIT / AGI / SPI, +15% crit, +30% crit defense, +0.2 crit damage.
+// (It was +200 to every attribute, the same curve as the Aura and the wing level.)
 export const PER_LEVEL_HALO_BONUSES = {
-  strength:         1,
-  constitution:     1,
-  dexterity:        1,
-  intelligence:     1,
-  focus:            1,
-  criticalChance:   0.2,   // +0.2% per Halo level (additive crit chance)
-  criticalDefense:  0.003, // +0.3% per Halo level (stored as 0..1 multiplier)
+  strength:         0.15,
+  constitution:     0.15,
+  dexterity:        0.15,
+  intelligence:     0,     // Intelligence is not a Game 3D attribute
+  focus:            0.15,
+  criticalChance:   0.075, // +0.075% per Halo level (additive crit chance)
+  criticalDefense:  0.0015, // +0.15% per Halo level (stored as 0..1 multiplier)
   criticalDamage:   0.001, // +0.1% per Halo level (stored as 0..1 multiplier added to crit)
 };
 

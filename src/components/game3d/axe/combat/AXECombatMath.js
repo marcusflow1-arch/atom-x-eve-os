@@ -1,6 +1,17 @@
 // AXE Prompt 013 — authoritative combat math / hit-resolution pipeline.
 // Pure calculation only: no UI, animation, random generation, or persistence.
 // Existing runtime systems can supply the crit roll and consume the result.
+//
+// Power budget rules (docs/game3d/STAT_SYSTEM_AUDIT.md, AXEPowerBudget.js): defense is a
+// percentage reduction with diminishing returns instead of a subtraction, attribute attack
+// is extra damage only attribute defense reduces, crits are x2 (+ crit damage) up to 50%,
+// and the level gap counts both ways. The hit roll itself lives with the RNG (statsSystem).
+import {
+  AXE_COMBAT_RULES,
+  getAXEAttributeReduction,
+  getAXEDamageReduction,
+  getAXELevelGapMultiplier,
+} from '../balance/AXEPowerBudget';
 
 export const AXE_COMBAT_MODE = Object.freeze({
   PVE: 'pve',
@@ -9,9 +20,9 @@ export const AXE_COMBAT_MODE = Object.freeze({
 
 export const AXE_COMBAT_CONFIG = Object.freeze({
   minimumDamage: 1,
-  defaultCriticalMultiplier: 3,
-  criticalChanceCapPct: 75,
-  maximumMitigationPct: 90,
+  defaultCriticalMultiplier: AXE_COMBAT_RULES.critMultiplier,
+  criticalChanceCapPct: AXE_COMBAT_RULES.critChanceCapPct,
+  maximumMitigationPct: AXE_COMBAT_RULES.mitigationCapPct,
   coefficients: Object.freeze({
     pve: Object.freeze({ outgoing: 1, incoming: 1 }),
     pvp: Object.freeze({ outgoing: 1, incoming: 1 }),
@@ -69,6 +80,10 @@ export function resolveAXEHit({
     outgoingMultiplier,
     modeCoefficient: configuredMode.outgoing,
   });
+  // attribute (elemental) attack rides the same skill / weapon / outgoing scaling
+  const scaleSoFar = Math.max(0, Number(skillCoefficient) || 0) * Math.max(0, Number(weaponCoefficient) || 0)
+    * Math.max(0, Number(outgoingMultiplier) || 0) * Math.max(0, Number(configuredMode.outgoing) || 0);
+  let attributeDamage = Math.max(0, Number(attackerStats.attributionAttack || 0)) * scaleSoFar;
 
   const didCrit = Boolean(critical && criticalAllowed);
   if (didCrit) {
@@ -77,9 +92,9 @@ export function resolveAXEHit({
       AXE_COMBAT_CONFIG.defaultCriticalMultiplier + Number(attackerStats.criticalDamage || 0),
     );
     const criticalDefense = clamp(defenderStats.criticalDefense || 0, 0, 1);
-    const normalPart = damage;
-    const bonusPart = damage * (critMultiplier - 1) * (1 - criticalDefense);
-    damage = normalPart + bonusPart;
+    const critScale = 1 + (critMultiplier - 1) * (1 - criticalDefense);
+    damage *= critScale;
+    attributeDamage *= critScale;
     breakdown.push({
       stage: 'critical',
       value: damage,
@@ -88,9 +103,20 @@ export function resolveAXEHit({
     });
   }
 
+  const attackerLevel = Number(attackerStats.level) || 1;
+  const defenderLevel = Number(defenderStats.level) || 1;
   const defense = Math.max(0, Number(defenderStats.defense || 0));
-  damage = Math.max(AXE_COMBAT_CONFIG.minimumDamage, damage - defense);
-  breakdown.push({ stage: 'defense', value: damage, defense });
+  const reduction = getAXEDamageReduction(defense, attackerLevel);
+  damage *= 1 - reduction;
+  breakdown.push({ stage: 'defense', value: damage, defense, reductionPct: reduction * 100 });
+
+  const attributeReduction = getAXEAttributeReduction(defenderStats.attributionDefense, attackerLevel);
+  damage += attributeDamage * (1 - attributeReduction);
+  breakdown.push({ stage: 'attribute', value: damage, attributeDamage, reductionPct: attributeReduction * 100 });
+
+  const levelGap = getAXELevelGapMultiplier(attackerLevel, defenderLevel);
+  damage = Math.max(AXE_COMBAT_CONFIG.minimumDamage, damage * levelGap);
+  breakdown.push({ stage: 'level-gap', value: damage, multiplier: levelGap, attackerLevel, defenderLevel });
 
   const resolvedFlatMitigation = Math.max(
     0,

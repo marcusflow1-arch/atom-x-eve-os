@@ -252,7 +252,7 @@ function XPBar({ level, xp, xpForNext }) {
       </motion.div>
       <div className="absolute inset-0 flex items-center justify-between px-2 text-[10px] font-bold tabular-nums drop-shadow-md">
         <span className="text-yellow-100" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>LVL {level}</span>
-        <span className="text-yellow-50" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{xp}/{xpForNext} XP</span>
+        <span className="text-yellow-50" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{Number.isFinite(xpForNext) ? `${xp}/${xpForNext} XP` : 'MAX LEVEL'}</span>
       </div>
     </div>
   );

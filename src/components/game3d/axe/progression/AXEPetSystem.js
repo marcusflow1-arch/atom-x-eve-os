@@ -26,7 +26,7 @@ export const AXE_PET_DEFINITIONS = Object.freeze({
     modelRef: 'shadow_wolf',
     tradeable: true,
     bindOnRegister: false,
-    level200Stats: Object.freeze({ hp: 1200, chi: 350, defense: 140, attack: 170, attributeAttack: 80, attributeDefense: 70 }),
+    level200Stats: Object.freeze({ hp: 600, chi: 175, defense: 70, attack: 75, attributeAttack: 40, attributeDefense: 35 }),
   }),
   war_wolf: Object.freeze({
     id: 'war_wolf',
@@ -37,7 +37,7 @@ export const AXE_PET_DEFINITIONS = Object.freeze({
     modelRef: 'shadow_wolf',
     tradeable: true,
     bindOnRegister: false,
-    level200Stats: Object.freeze({ hp: 900, chi: 250, defense: 110, attack: 230, attributeAttack: 100, attributeDefense: 55 }),
+    level200Stats: Object.freeze({ hp: 450, chi: 125, defense: 55, attack: 100, attributeAttack: 50, attributeDefense: 28 }),
   }),
   iron_wolf: Object.freeze({
     id: 'iron_wolf',
@@ -48,7 +48,7 @@ export const AXE_PET_DEFINITIONS = Object.freeze({
     modelRef: 'shadow_wolf',
     tradeable: true,
     bindOnRegister: false,
-    level200Stats: Object.freeze({ hp: 1050, chi: 250, defense: 220, attack: 125, attributeAttack: 60, attributeDefense: 105 }),
+    level200Stats: Object.freeze({ hp: 525, chi: 125, defense: 110, attack: 55, attributeAttack: 30, attributeDefense: 52 }),
   }),
   spirit_wolf: Object.freeze({
     id: 'spirit_wolf',
@@ -59,7 +59,7 @@ export const AXE_PET_DEFINITIONS = Object.freeze({
     modelRef: 'shadow_wolf',
     tradeable: true,
     bindOnRegister: false,
-    level200Stats: Object.freeze({ hp: 950, chi: 650, defense: 125, attack: 135, attributeAttack: 90, attributeDefense: 80 }),
+    level200Stats: Object.freeze({ hp: 475, chi: 325, defense: 62, attack: 60, attributeAttack: 45, attributeDefense: 40 }),
   }),
 });
 

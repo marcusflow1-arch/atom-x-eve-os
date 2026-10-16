@@ -18,7 +18,6 @@ import {
   MAX_HALO_LEVEL,
   HALO_ATTEMPT_COST,
   getSuccessChanceForLevel,
-  getHaloBonusesForLevel,
 } from './haloData';
 
 export const MAX_WING_LEVEL = MAX_HALO_LEVEL;        // same cap as Halo
@@ -27,9 +26,11 @@ export const WING_ATTEMPT_COST = HALO_ATTEMPT_COST;  // same cost as Halo
 // Reuse Halo's success bands — wings share the Halo enhancement curve.
 export const getWingSuccessChance = getSuccessChanceForLevel;
 
-// The halo-style multiplier for a given wing level (virtual attribute points).
+// The wing level's virtual attribute points: +0.1 to each attribute per level (20 at 200).
+// It used to be the Halo's whole bonus again (docs/game3d/STAT_SYSTEM_AUDIT.md).
 export function getWingMultiplierForLevel(level) {
-  return getHaloBonusesForLevel(level);
+  const a = 0.1 * Math.max(0, Math.min(MAX_WING_LEVEL, Number(level) || 0));
+  return { strength: a, constitution: a, vitality: a, dexterity: a, focus: a, spirit: a };
 }
 
 // ── Wing Path Definitions ─────────────────────────────────────────────────
@@ -51,8 +52,8 @@ export const WING_PATHS = [
     color: '#22c55e',
     primaryStat: 'hp',
     description: 'Spiritual wings that fortify the body. Massive HP and defense specialization atop the halo multiplier.',
-    lv1:   { hp: 40,    damage: 0,    defense: 6,    critChance: 0,   critDamage: 0,     criticalDefense: 0.001 },
-    lv200: { hp: 16000, damage: 600,  defense: 2400, critChance: 2,   critDamage: 0.10,  criticalDefense: 0.40 },
+    lv1:   { hp: 9,    damage: 0,   defense: 1.3, critChance: 0,    critDamage: 0,     criticalDefense: 0.001 },
+    lv200: { hp: 1100, damage: 40,  defense: 180, critChance: 0,    critDamage: 0.05,  criticalDefense: 0.15 },
   },
   {
     id: 'strength',
@@ -61,8 +62,8 @@ export const WING_PATHS = [
     color: '#ef4444',
     primaryStat: 'damage',
     description: 'Spiritual wings that channel raw power. Huge flat damage specialization atop the halo multiplier.',
-    lv1:   { hp: 20,   damage: 12,   defense: 2,    critChance: 0.2, critDamage: 0.005, criticalDefense: 0.001 },
-    lv200: { hp: 6000, damage: 6000, defense: 800,  critChance: 6,   critDamage: 0.30,  criticalDefense: 0.15 },
+    lv1:   { hp: 4,    damage: 1.3, defense: 0.5, critChance: 0.01, critDamage: 0.001, criticalDefense: 0.001 },
+    lv200: { hp: 700,  damage: 140, defense: 90,  critChance: 2,    critDamage: 0.10,  criticalDefense: 0.05 },
   },
   {
     id: 'precision',
@@ -71,8 +72,8 @@ export const WING_PATHS = [
     color: '#38bdf8',
     primaryStat: 'critChance',
     description: 'Spiritual wings of lethal focus. Critical chance and damage specialization atop the halo multiplier.',
-    lv1:   { hp: 20,   damage: 6,    defense: 3,    critChance: 1,    critDamage: 0.02,  criticalDefense: 0.001 },
-    lv200: { hp: 5000, damage: 2500, defense: 1000, critChance: 30,  critDamage: 0.80,  criticalDefense: 0.20 },
+    lv1:   { hp: 3,    damage: 0.9, defense: 0.5, critChance: 0.04, critDamage: 0.001, criticalDefense: 0.001 },
+    lv200: { hp: 600,  damage: 120, defense: 100, critChance: 8,    critDamage: 0.15,  criticalDefense: 0.05 },
   },
   {
     id: 'spirit',
@@ -81,8 +82,8 @@ export const WING_PATHS = [
     color: '#a855f7',
     primaryStat: 'critDamage',
     description: 'Spiritual wings of arcane devastation. Critical damage and resistance specialization atop the halo multiplier.',
-    lv1:   { hp: 25,   damage: 5,    defense: 3,    critChance: 0.3, critDamage: 0.03,  criticalDefense: 0.002 },
-    lv200: { hp: 5500, damage: 2200, defense: 1100, critChance: 10,  critDamage: 1.20,  criticalDefense: 0.35 },
+    lv1:   { hp: 3,    damage: 0.8, defense: 0.6, critChance: 0.02, critDamage: 0.002, criticalDefense: 0.001 },
+    lv200: { hp: 650,  damage: 110, defense: 110, critChance: 3,    critDamage: 0.30,  criticalDefense: 0.10 },
   },
 ];
 

@@ -1,8 +1,8 @@
 // questEnemySpawner.js — spawns quest-target enemies on the map when a quest is accepted.
 import * as THREE from 'three';
-import { ENEMY_STAT_TEMPLATES, computeDerivedStats } from './statsSystem';
+import { getAXEEnemyStats } from './axe/balance/AXEPowerBudget';
+import { getPlayerHUD } from './playerHUDStore';
 import { CREATURE_MODEL_URL } from './creatureAssets';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
 const QUEST_TIER_MAP = {
   normal:   { name: 'normal',   scale: 1.0,  ringColor: 0xff3030, tintColor: null     },
@@ -19,8 +19,8 @@ const QUEST_TIER_MAP = {
 export function createQuestEnemySpawner({ scene, enemies, loader, snapToGround, walkClipPromise, idleClipPromise, setEnemyCount }) {
   return function spawnQuestEnemies({ count, tierName, playerPos, metadata = null }) {
     const tierDef = QUEST_TIER_MAP[tierName] || QUEST_TIER_MAP.normal;
-    const enemyStats = ENEMY_STAT_TEMPLATES[tierDef.name] || ENEMY_STAT_TEMPLATES['normal'];
-    const derived = computeDerivedStats(enemyStats, []);
+    // quest targets match the hero's level: the quest is offered where the hero is
+    const derived = getAXEEnemyStats(getPlayerHUD().level || 1, tierDef.name);
 
     for (let i = 0; i < count; i++) {
       loader.load(CREATURE_MODEL_URL, (fbx) => {

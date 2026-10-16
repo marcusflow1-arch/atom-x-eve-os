@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, Lock, Swords } from 'lucide-react';
 import { WEAPONS, MASTERY_MAX_LEVEL, getDamageScalingFor } from '../weaponSynergyData';
 import { subscribeMastery } from '../weaponMasteryStore';

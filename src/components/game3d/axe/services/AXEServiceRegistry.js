@@ -35,6 +35,7 @@ export const AXE_SERVICE_REGISTRY = Object.freeze([
   service({ id: 'elixir', label: 'Elixirs', category: AXE_SERVICE_CATEGORIES.PROGRESSION, kind: 'progression_panel' }),
   service({ id: 'pet', label: 'Pets', category: AXE_SERVICE_CATEGORIES.PROGRESSION, kind: 'progression_panel' }),
   service({ id: 'mount', label: 'Mounts', category: AXE_SERVICE_CATEGORIES.PROGRESSION, kind: 'progression_panel' }),
+  service({ id: 'ascension', label: 'Ascension', category: AXE_SERVICE_CATEGORIES.PROGRESSION, kind: 'progression_panel' }),
 
   service({ id: 'vanity', label: 'Vanity', category: AXE_SERVICE_CATEGORIES.APPEARANCE, kind: 'progression_panel' }),
   service({ id: 'costume', label: 'Costumes', category: AXE_SERVICE_CATEGORIES.APPEARANCE, kind: 'progression_panel' }),
