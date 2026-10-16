@@ -1,75 +1,24 @@
-// Tiny store for the equipment menu's "fusion mode" toggle.
-// Decides whether the gear tab shows the PLAYER's gear or the COMPANION's gear.
-// Also tracks which companion gear slot is currently selected when in companion mode.
-
-import { COMPANION_DEFINITIONS, COMPANION_GEAR } from '../companionData';
-
-const STORAGE_KEY = 'wwm_companion_fusion_v1';
-
-const buildDefault = () => ({
-  // 'player' = normal equipment view, 'companion' = companion view
-  mode: 'player',
-  // Currently selected companion (we only have one for now)
-  activeCompanionId: COMPANION_DEFINITIONS[0]?.id || null,
-  // Equipped companion gear, keyed by slot id (saddle/armor/charm)
-  equippedGear: {},
-  // Currently selected companion gear slot (for the inspector panel)
-  selectedSlot: 'saddle',
-});
-
-let state = (() => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return { ...buildDefault(), ...JSON.parse(saved) };
-  } catch {}
-  return buildDefault();
-})();
-
+// UI selection is transient; equipment lives in the canonical character store.
+import { COMPANION_GEAR, getCompanionById } from '../companionData';
+import { getCompanionState, subscribeCompanion, equipCompanionGear as equip, unequipCompanionGear as unequip } from '../companionStore';
+import { subscribeCharacterChange } from '../characterStorage';
+let mode = 'player', selectedSlot = 'saddle';
 const listeners = new Set();
-const persist = () => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-};
-const emit = () => {
-  persist();
-  listeners.forEach((fn) => fn(state));
-};
-
-export const getFusionState = () => state;
-export const subscribeFusion = (fn) => {
-  listeners.add(fn);
-  fn(state);
-  return () => listeners.delete(fn);
-};
-
-export const setFusionMode = (mode) => {
-  if (mode !== 'player' && mode !== 'companion') return;
-  state = { ...state, mode };
-  emit();
-};
-
-export const toggleFusionMode = () => {
-  setFusionMode(state.mode === 'player' ? 'companion' : 'player');
-};
-
-export const setSelectedCompanionSlot = (slotId) => {
-  state = { ...state, selectedSlot: slotId };
-  emit();
-};
-
-export const equipCompanionGear = (slotId, itemId) => {
-  const next = { ...state, equippedGear: { ...state.equippedGear } };
-  // Toggle: clicking the same equipped item unequips it
-  if (next.equippedGear[slotId] === itemId) {
-    delete next.equippedGear[slotId];
-  } else {
-    next.equippedGear[slotId] = itemId;
-  }
-  state = next;
-  emit();
-};
-
-export const getActiveCompanion = () =>
-  COMPANION_DEFINITIONS.find((c) => c.id === state.activeCompanionId) || COMPANION_DEFINITIONS[0] || null;
-
-export const getCompanionItem = (slotId, itemId) =>
-  (COMPANION_GEAR[slotId] || []).find((it) => it.id === itemId) || null;
+export function getFusionState() {
+  const state = getCompanionState();
+  return { mode, selectedSlot, activeCompanionId: state.activeCompanionId,
+    equippedGear: { ...state.gear[state.activeCompanionId] }, sync: state.sync };
+}
+const emit = () => listeners.forEach(fn => fn(getFusionState()));
+subscribeCompanion(emit);
+subscribeCharacterChange(() => { mode = 'player'; selectedSlot = 'saddle'; emit(); });
+export const subscribeFusion = fn => { listeners.add(fn); fn(getFusionState()); return () => listeners.delete(fn); };
+export const setFusionMode = next => { if (['player', 'companion'].includes(next)) { mode = next; emit(); } };
+export const toggleFusionMode = () => setFusionMode(mode === 'player' ? 'companion' : 'player');
+export const setSelectedCompanionSlot = slot => { if (getActiveCompanion()?.gearSlots.includes(slot)) { selectedSlot = slot; emit(); } };
+export function equipCompanionGear(slot, item) {
+  const state = getFusionState();
+  return state.equippedGear[slot] === item ? unequip(state.activeCompanionId, slot) : equip(state.activeCompanionId, slot, item);
+}
+export const getActiveCompanion = () => getCompanionById(getCompanionState().activeCompanionId);
+export const getCompanionItem = (slot, item) => COMPANION_GEAR[slot]?.find(it => it.id === item) || null;

@@ -58,7 +58,7 @@ export default function VanitySubTab() {
             </p>
           </div>
           <button
-            onClick={() => setAXEVanityHidden(!state.hidden)}
+            onClick={() => setLastResult(setAXEVanityHidden(!state.hidden))}
             className="rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 text-xs text-white/70"
           >
             {state.hidden ? 'Show Vanity' : 'Hide Vanity'}
@@ -92,7 +92,7 @@ export default function VanitySubTab() {
           <div role="status" className="mt-4 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/80">
             {lastResult.ok
               ? lastResult.message || `Vanity activated: +${lastResult.percent}% ${AXE_VANITY_SLOTS[lastResult.slotId]?.mappedStatLabel || 'stat'}.`
-              : lastResult.reason?.replaceAll('_', ' ')}
+              : lastResult.message || lastResult.reason?.replaceAll('_', ' ')}
           </div>
         )}
 

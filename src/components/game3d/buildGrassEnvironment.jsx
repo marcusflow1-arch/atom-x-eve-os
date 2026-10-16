@@ -20,24 +20,17 @@ const loadRepeatingTexture = (url, repeatX, repeatY, colorSpace = THREE.SRGBColo
   return tex;
 };
 
+// Game 3D is currently a systems/animation sandbox. Keep one flat walkable
+// collider instead of authored maps, scenery, terrain streams, or arena walls.
 export function buildGrassEnvironment(scene) {
   const ground = new THREE.Mesh(
-    new THREE.CircleGeometry(37.5, 96),
-    new THREE.MeshStandardMaterial({ color: 0x86a86a, roughness: 1, metalness: 0 }),
+    new THREE.PlaneGeometry(400, 400),
+    new THREE.MeshStandardMaterial({ color: 0x53616e, roughness: 0.92, metalness: 0 }),
   );
+  ground.name = 'Systems Test Plane';
+  ground.userData.isTerrain = true;
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
-  // MeshStandardMaterial reacts to the scene's sun + moon + hemisphere lights,
-  // so as the sun and moon move the ground brightens and dims with them.
   scene.add(ground);
-
-  const barrier = new THREE.Mesh(
-    new THREE.CylinderGeometry(37.5, 37.5, 4, 96, 1, true),
-    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }),
-  );
-  barrier.position.y = 2;
-  barrier.name = 'invisible_arena_barrier';
-  scene.add(barrier);
-
   return ground;
 }

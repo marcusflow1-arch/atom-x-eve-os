@@ -132,6 +132,17 @@ export function characterScopedStorage(baseKey) {
     set(value) {
       try { localStorage.setItem(scopedKey(baseKey), value); } catch {}
     },
+    // Opt-in for transactional stores. A synchronous localStorage write either
+    // succeeds or throws; do not claim a purchase persisted when it failed.
+    // Keep set() unchanged for existing callers outside this migration.
+    setChecked(value) {
+      try {
+        localStorage.setItem(scopedKey(baseKey), value);
+        return true;
+      } catch {
+        return false;
+      }
+    },
     remove() {
       try { localStorage.removeItem(scopedKey(baseKey)); } catch {}
     },

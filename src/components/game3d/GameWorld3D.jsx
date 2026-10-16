@@ -711,10 +711,9 @@ export default function GameWorld3D() {
     // Spawn the visible world boss (creature model x7, 1000x HP). isBoss=true
     // keeps it outside the '=' visibility toggle. The autonomous attack cycle
     // above fires scripted patterns using this entity as the beam origin.
-    spawnWorldBoss({
-      loader, scene, snapToGround, bossEntities, setBosses,
-      walkClipPromise, idleClipPromise,
-    });
+    // Default world boss disabled: this scene is for movement, animation and
+    // combat-system experiments. Preserve dungeon-boss APIs for future modes.
+    setBosses([]);
     const pendingAXEDungeonBossSpawns = new Set();
     window.__gw3dSpawnAXEDungeonBoss = ({
       bossDef,
@@ -1087,31 +1086,7 @@ export default function GameWorld3D() {
         window.dispatchEvent(new CustomEvent('axeOpenCharacterHub', { detail: { tab: 'inventory' } }));
         e.preventDefault();
       }
-      // F9 keeps the old boss-encounter development toggle without stealing Skill 9.
-      if (e.code === 'F9' && !e.repeat) {
-        if (!bossEncounter.isActive()) {
-          bossEncounter.start({ bossId: 'kali' });
-          bossDialogue.queueLine({
-            id: 'boss_intro',
-            name: 'Kali',
-            text: 'You have entered my storm.',
-            duration: 4,
-            once: true,
-          });
-          setTimeout(() => bossEncounter.beginCombat(), 1200);
-        } else {
-          bossEncounter.end();
-          bossDialogue.reset();
-          bossDialogue.queueLine({
-            id: 'boss_outro',
-            name: 'Kali',
-            text: 'This form fades... but the storm remains.',
-            duration: 4,
-            once: true,
-          });
-        }
-        e.preventDefault();
-      }
+      // No F9 boss encounter in the systems test scene.
       // = = toggle all non-boss entities (quest NPCs, mutant enemies, companion)
       //      on/off the map. Hidden by default so only the boss remains.
       if (k === '=' && !e.repeat) {
