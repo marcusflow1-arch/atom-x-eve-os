@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, Users, ArrowLeftRight, Swords, Check, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -8,25 +8,28 @@ import {
 } from './socialStores';
 // Each kind has its own accept/decline module so the flows stay independent.
 import { acceptFriendRequest, declineFriendRequest } from './friendRequest';
-import { acceptPartyInvite, declinePartyInvite } from './partyInvite';
+import { acceptPartyInvite, declinePartyInvite, fetchPartyState } from './partyInvite';
 import { acceptTradeRequest, declineTradeRequest } from './tradeRequest';
-import { acceptDuelChallenge, declineDuelChallenge } from './duelChallenge';
+import { acceptDuelChallenge, declineDuelChallenge, fetchDuelState } from './duelChallenge';
 
 /**
  * IncomingRequestToast — global subscriber for the real-time social system.
  *
  * Responsibilities:
- *  1. Subscribe to SocialRequest changes → show accept/decline popups for
- *     incoming pending requests addressed to the current user.
- *  2. When a request is accepted, persist the friendship / party membership
- *     and push updates to BOTH users' local stores.
- *  3. Sync the user's accepted friends and active party session from the DB
- *     so both panels show real-time, verified shared state.
+ *  1. Show accept/decline popups for requests addressed to the current user. They come
+ *     from the shared backends (docs/game3d/BACKEND_AUDIT.md):
+ *       friend → FriendRequest (socialActions), party → PartyInvite (partySystem),
+ *       duel → DuelSession (duelSystem), trade → SocialRequest (friendCardTrade).
+ *  2. Keep the friends list and the party in step with the server.
+ *  3. Tell the sender when a request they sent is answered.
  *
  * Mounted once at the top of the game world (GameView).
  */
-export default function IncomingRequestToast({ userId, userName }) {
+const asRequest = (kind, id, senderId, senderName) => ({ kind, id, sender_id: senderId, sender_name: senderName || 'Player' });
+
+export default function IncomingRequestToast({ userId }) {
   const [incoming, setIncoming] = useState([]); // pending requests addressed to me
+  const partyIdRef = useRef(null);
 
   // ─── Hydrate friends list from DB ───
   const refreshFriends = useCallback(async () => {
@@ -47,83 +50,107 @@ export default function IncomingRequestToast({ userId, userName }) {
     } catch (e) { console.warn('[Social] refreshFriends', e); }
   }, [userId]);
 
-  // ─── Hydrate party from DB ───
-  const refreshParty = useCallback(async () => {
+  // ─── The party and every pending request addressed to me, in one pass ───
+  // A source that fails leaves the others standing.
+  const refreshSocial = useCallback(async () => {
     if (!userId) return;
-    try {
-      const sessions = await base44.entities.PartySession.filter({ active: true });
-      const mine = (sessions || []).find((s) => (s.member_ids || []).includes(userId));
-      if (mine) {
-        setPartyState({
-          members: mine.members || [],
-          partyId: mine.id,
-          leaderId: mine.leader_id,
-        });
-      } else {
-        setPartyState({ members: [], partyId: null, leaderId: null });
-      }
-    } catch (e) { console.warn('[Social] refreshParty', e); }
-  }, [userId]);
-
-  // ─── Refresh pending incoming requests ───
-  // Fetch all requests where I am the receiver (RLS allows this),
-  // then filter to pending client-side to avoid multi-field filter issues
-  // on the live published app.
-  const refreshIncoming = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const reqs = await base44.entities.SocialRequest.filter({ receiver_id: userId });
-      const pending = (reqs || []).filter((r) => r.status === 'pending');
-      setIncoming(pending);
-    } catch (e) { console.warn('[Social] refreshIncoming', e); }
+    const [friendReqs, party, duels, trades] = await Promise.allSettled([
+      base44.entities.FriendRequest.filter({ receiver_id: userId, status: 'pending' }),
+      fetchPartyState(),
+      fetchDuelState(),
+      base44.entities.SocialRequest.filter({ receiver_id: userId }),
+    ]);
+    if (party.status === 'fulfilled') {
+      const { party: p, members = [] } = party.value || {};
+      partyIdRef.current = p?.id || null;
+      setPartyState({
+        members: p ? members.map((m) => ({ id: m.user_id, name: m.user_name || 'Player' })) : [],
+        partyId: p?.id || null,
+        leaderId: p?.leaderId || null,
+      });
+    } else console.warn('[Social] party state', party.reason);
+    const list = [];
+    if (friendReqs.status === 'fulfilled') {
+      for (const r of friendReqs.value || []) list.push(asRequest('friend', r.id, r.sender_id, r.sender_name));
+    }
+    if (party.status === 'fulfilled') {
+      for (const inv of party.value?.invitations || []) list.push(asRequest('party', inv.id, inv.inviter_id, inv.inviter_name));
+    }
+    if (duels.status === 'fulfilled') {
+      for (const d of duels.value?.incoming || []) list.push(asRequest('duel', d.id, d.challenger_id, d.challenger_name));
+    }
+    if (trades.status === 'fulfilled') {
+      for (const r of trades.value || []) if (r.kind === 'trade' && r.status === 'pending') list.push({ ...r, kind: 'trade' });
+    }
+    setIncoming(list);
   }, [userId]);
 
   // Initial load + real-time subscriptions
   useEffect(() => {
     if (!userId) return;
     refreshFriends();
-    refreshParty();
-    refreshIncoming();
+    refreshSocial();
 
-    const unsubReq = base44.entities.SocialRequest.subscribe(() => refreshIncoming());
-    const unsubFriend = base44.entities.SocialFriendship.subscribe(() => refreshFriends());
-    const unsubParty = base44.entities.PartySession.subscribe(() => refreshParty());
-
-    return () => {
-      unsubReq && unsubReq();
-      unsubFriend && unsubFriend();
-      unsubParty && unsubParty();
-    };
-  }, [userId, refreshFriends, refreshParty, refreshIncoming]);
+    const mine = (row) => row && (row.recipient_id === userId || row.receiver_id === userId || row.sender_id === userId
+      || row.user_id === userId || row.challenger_id === userId || row.opponent_id === userId
+      || (partyIdRef.current && row.party_id === partyIdRef.current));
+    const unsubs = [
+      // the servers notify me of friend requests, party invites and duel challenges
+      base44.entities.SocialNotification.subscribe((event) => {
+        const n = event?.data;
+        if (!n || n.recipient_id !== userId) return;
+        if (event.type === 'create' && n.type === 'friend_accepted') toast.success(n.body || 'Friend request accepted');
+        refreshSocial();
+        if (n.type === 'friend_accepted' || n.type === 'friend_request') refreshFriends();
+      }),
+      base44.entities.SocialRequest.subscribe((event) => { if (mine(event?.data)) refreshSocial(); }),
+      base44.entities.SocialFriendship.subscribe(() => refreshFriends()),
+      base44.entities.PartyMember.subscribe((event) => {
+        const m = event?.data;
+        if (!mine(m)) return;
+        if (event.type === 'create' && m.user_id !== userId && m.party_id === partyIdRef.current) toast.success(`${m.user_name || 'Player'} joined your party`);
+        refreshSocial();
+      }),
+      base44.entities.DuelSession.subscribe((event) => {
+        const d = event?.data;
+        if (!mine(d)) return;
+        if (event.type === 'update' && d.challenger_id === userId) {
+          if (d.status === 'active') toast.success(`${d.opponent_name || 'Player'} accepted your duel! Mid-click to strike.`);
+          else if (d.status === 'declined') toast(`${d.opponent_name || 'Player'} declined your duel`);
+        }
+        refreshSocial();
+      }),
+    ];
+    return () => unsubs.forEach((u) => u && u());
+  }, [userId, refreshFriends, refreshSocial]);
 
   // ─── ACCEPT handler ───
-  // Each kind has its own accept module. We dispatch to the right one and
-  // show a kind-specific success toast — the flows are kept independent.
   const accept = async (req) => {
     try {
       if (req.kind === 'friend') {
-        await acceptFriendRequest(req, userName);
+        await acceptFriendRequest(req);
         toast.success(`You and ${req.sender_name} are now friends`);
+        refreshFriends();
       } else if (req.kind === 'party') {
-        await acceptPartyInvite(req, userName);
+        await acceptPartyInvite(req);
         toast.success(`Joined ${req.sender_name}'s party`);
       } else if (req.kind === 'trade') {
         await acceptTradeRequest(req);
         toast.success(`Trade started with ${req.sender_name}`);
       } else if (req.kind === 'duel') {
-        await acceptDuelChallenge(req, userName);
+        await acceptDuelChallenge(req);
         toast.success(`Duel started with ${req.sender_name}`);
       }
     } catch (e) {
       console.error('[Social] accept failed', e);
       if (e?.code === 'party_full') toast.error('Party is full');
-      else toast.error('Could not accept request');
+      else toast.error(e?.message || 'Could not accept request');
+    } finally {
+      refreshSocial();
     }
   };
 
   // ─── DECLINE handler ───
-  // Same per-kind dispatch — each module owns the timing of the hard-delete
-  // that prevents declined rows from blocking future retries.
   const decline = async (req) => {
     try {
       if (req.kind === 'friend') await declineFriendRequest(req);
@@ -131,29 +158,18 @@ export default function IncomingRequestToast({ userId, userName }) {
       else if (req.kind === 'trade') await declineTradeRequest(req);
       else if (req.kind === 'duel') await declineDuelChallenge(req);
       toast(`${req.sender_name}'s ${req.kind} request declined`);
-    } catch (e) { console.error('[Social] decline failed', e); }
+    } catch (e) { console.error('[Social] decline failed', e); } finally { refreshSocial(); }
   };
 
-  // ─── Watch for OUTGOING requests that got accepted/declined → notify sender ───
+  // ─── An outgoing trade request was accepted → open the trade for the sender ───
   useEffect(() => {
     if (!userId) return;
-    const unsub = base44.entities.SocialRequest.subscribe(async (event) => {
+    const unsub = base44.entities.SocialRequest.subscribe((event) => {
       if (event.type !== 'update') return;
       const r = event.data;
-      if (!r || r.sender_id !== userId) return;
-      if (r.status === 'accepted') {
-        if (r.kind === 'trade') {
-          openTrade({ id: r.receiver_id, name: r.receiver_name || 'Player' });
-        } else if (r.kind === 'friend') {
-          toast.success(`${r.receiver_name || 'Player'} accepted your friend request`);
-        } else if (r.kind === 'party') {
-          toast.success(`${r.receiver_name || 'Player'} joined your party`);
-        } else if (r.kind === 'duel') {
-          toast.success(`${r.receiver_name || 'Player'} accepted your duel! Mid-click to strike.`);
-        }
-      } else if (r.status === 'declined') {
-        toast(`${r.receiver_name || 'Player'} declined your ${r.kind} request`);
-      }
+      if (!r || r.sender_id !== userId || r.kind !== 'trade') return;
+      if (r.status === 'accepted') openTrade({ id: r.receiver_id, name: r.receiver_name || 'Player' });
+      else if (r.status === 'declined') toast(`${r.receiver_name || 'Player'} declined your trade request`);
     });
     return () => unsub && unsub();
   }, [userId]);

@@ -11,7 +11,7 @@
     },
     "opponent_id": {
       "type": "string",
-      "description": "User ID of the player who accepted the duel"
+      "description": "User ID of the player who was challenged"
     },
     "opponent_name": {
       "type": "string"
@@ -19,10 +19,14 @@
     "status": {
       "type": "string",
       "enum": [
+        "pending",
         "active",
-        "finished"
+        "finished",
+        "declined",
+        "expired"
       ],
-      "default": "active"
+      "default": "pending",
+      "description": "pending = challenge sent; active = accepted and fighting; finished = someone won, forfeited or the duel timed out"
     },
     "winner_id": {
       "type": "string",
@@ -30,6 +34,10 @@
     },
     "loser_id": {
       "type": "string"
+    },
+    "finish_reason": {
+      "type": "string",
+      "description": "knockout | forfeit | timeout"
     },
     "challenger_hp": {
       "type": "number",
@@ -41,11 +49,60 @@
     },
     "max_hp": {
       "type": "number",
-      "default": 100
+      "default": 100,
+      "description": "Legacy single pool size; duels now use each duelist's own max HP"
+    },
+    "challenger_max_hp": {
+      "type": "number"
+    },
+    "opponent_max_hp": {
+      "type": "number"
+    },
+    "challenger_stats": {
+      "type": "object",
+      "description": "The challenger's combat stats for this duel, clamped by the server (axePowerBudget clampAXEDuelStats)"
+    },
+    "opponent_stats": {
+      "type": "object",
+      "description": "The opponent's combat stats for this duel, clamped by the server"
+    },
+    "last_hit_at": {
+      "type": "object",
+      "description": "user id -> epoch ms of that duelist's last accepted hit (the server's rate limit)"
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "A pending challenge expires at this time"
+    },
+    "last_action_at": {
+      "type": "string",
+      "description": "An active duel with no hit for two minutes times out"
     }
   },
   "required": [
     "challenger_id",
     "opponent_id"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "id": "{{user.id}}"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }

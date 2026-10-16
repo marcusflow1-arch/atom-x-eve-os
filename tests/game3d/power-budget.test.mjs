@@ -67,6 +67,20 @@ test('the combat the game runs is the combat the budget assumes', () => {
   assert.ok(Math.abs(crit - plain * (1 + (critMultiplier - 1) * (1 - Math.min(1, enemy.criticalDefense || 0)))) <= 1.5, `a crit: ${crit} from ${plain}`);
 });
 
+test('the duel server resolves a swing exactly as the game does (computeAXESwing = resolveAXEHit)', () => {
+  for (const [aL, dL, tier] of [[10, 10, 'normal'], [50, 45, 'elite'], [100, 100, 'worldBoss'], [5, 20, 'champion']]) {
+    const hero = buildAXEHero(m, { level: aL, progress: progressAt(aL) });
+    const foe = { ...B.getAXEEnemyStats(dL, tier), criticalDefense: 0.2 };
+    for (const critical of [false, true]) {
+      for (const skillMultiplier of [1, 2.5]) {
+        const game = m.combat.resolveAXEHit({ attackerStats: hero, defenderStats: foe, critical, skillCoefficient: skillMultiplier }).damage;
+        const server = B.computeAXESwing(hero, foe, { critical, skillMultiplier });
+        assert.ok(Math.abs(game - server) <= 1, `L${aL} vs ${tier} L${dL}, crit ${critical}, x${skillMultiplier}: game ${game}, server ${server}`);
+      }
+    }
+  }
+});
+
 test('nobody is immune: defense always leaves real damage through, in both directions', () => {
   const maxHero = buildAXEHero(m, { level: 100, progress: 1 });
   const freshHero = buildAXEHero(m, { level: 1, progress: 0 });

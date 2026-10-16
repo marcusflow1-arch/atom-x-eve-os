@@ -1,5 +1,4 @@
 import { base44 } from '@/api/base44Client';
-import { deleteRequest } from './socialRequestHygiene';
 import { openTrade } from './socialStores';
 
 const TRADE_BUCKET = 'trade';
@@ -29,7 +28,6 @@ export const acceptTradeRequest = async (req) => {
   // Open the same real-time trade surface immediately for the receiver. The
   // sender is opened by TradeSessionWatcher / the accepted SocialRequest event.
   openTrade({ id: req.sender_id, name: req.sender_name });
-  setTimeout(() => deleteRequest(req.id), 8000);
   return data.session;
 };
 
@@ -40,7 +38,7 @@ export const declineTradeRequest = async (req) => {
   });
   const data = dataOf(response);
   if (data.error) throw new Error(data.error);
-  setTimeout(() => deleteRequest(req.id), 2500);
+  // friendCardTrade marks the request declined; the browser cannot delete it
   return data.session;
 };
 

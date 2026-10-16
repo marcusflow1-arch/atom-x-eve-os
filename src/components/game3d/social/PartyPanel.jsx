@@ -1,15 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { Users, X, Mic, MicOff } from 'lucide-react';
+import { Users, X, LogOut } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useAuth } from '@/components/auth/AuthContext';
 import { partyStore, removePartyMember, PARTY_MAX } from './socialStores';
+import { kickPartyMember, leaveParty } from './partyInvite';
 
 /**
  * PartyPanel — small box anchored under the Active Quest panel (top-left).
- * Lists current party members and lets the user kick them.
+ * Lists the party members (the shared partySystem party). You can leave; the
+ * leader can remove others. Both go through the server, which owns the party.
  */
 export default function PartyPanel() {
+  const { user } = useAuth();
   const [partyState, setState] = useState(partyStore.get());
-  const { members, partyId } = partyState;
+  const { members, partyId, leaderId } = partyState;
   useEffect(() => partyStore.subscribe(setState), []);
+  const me = user?.id;
+  const isLeader = !!me && leaderId === me;
+  const removeFromParty = async (member) => {
+    try {
+      if (member.id === me) await leaveParty(); else await kickPartyMember(member.id);
+      removePartyMember(member.id); // the server's change refreshes the store too
+    } catch (e) {
+      toast.error(e?.message || 'Could not update the party');
+    }
+  };
 
   // When party forms or changes, switch voice chat to the party-specific channel
   // so party members hear only each other, no matter where they are on the map.
@@ -56,13 +71,15 @@ export default function PartyPanel() {
               {(m.name || '?').charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0 text-xs text-white truncate font-medium">{m.name}</div>
-            <button
-              title="Kick"
-              onClick={() => removePartyMember(m.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-red-300"
-            >
-              <X className="w-3 h-3" />
-            </button>
+            {(m.id === me || isLeader) && (
+              <button
+                title={m.id === me ? 'Leave the party' : 'Remove from the party'}
+                onClick={() => removeFromParty(m)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-red-300"
+              >
+                {m.id === me ? <LogOut className="w-3 h-3" /> : <X className="w-3 h-3" />}
+              </button>
+            )}
           </div>
         ))}
       </div>

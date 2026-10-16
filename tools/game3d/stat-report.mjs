@@ -2,8 +2,8 @@
 //
 //   node tools/game3d/stat-report.mjs          each group's share of a level-100 hero, against
 //                                               the budget, and par heroes against even-level enemies
-//   node tools/game3d/stat-report.mjs --par    the AXE_PAR_HERO_TABLE rows for AXEPowerBudget.js
-//   node tools/game3d/stat-report.mjs --write-par   regenerate that table in AXEPowerBudget.js
+//   node tools/game3d/stat-report.mjs --par    the AXE_PAR_HERO_TABLE rows for base44/shared/axePowerBudget.ts
+//   node tools/game3d/stat-report.mjs --write-par   regenerate that table there
 //
 // docs/game3d/STAT_SYSTEM_AUDIT.md explains the budget and the par hero.
 import { readFile, rm, writeFile } from 'node:fs/promises';
@@ -17,7 +17,8 @@ const n0 = (v) => (Math.abs(v) >= 100 ? Math.round(v).toLocaleString('en-US') : 
 const pct = (v) => `${(v * 100).toFixed(1)}%`;
 
 if (process.argv.includes('--par') || process.argv.includes('--write-par')) {
-  const lines = ['export const AXE_PAR_HERO_TABLE = Object.freeze(['];
+  const TABLE_START = 'export const AXE_PAR_HERO_TABLE: ReadonlyArray<ReadonlyArray<number>> = Object.freeze([';
+  const lines = [TABLE_START];
   for (const level of PAR_LEVELS) {
     const h = buildAXEHero(m, { level, progress: progressAt(level) });
     const row = [level, h.damage, h.maxHP, h.defense, h.attackSuccess, h.attackBlock, h.critChance, h.attributionAttack || 0, h.attributionDefense || 0]
@@ -26,9 +27,9 @@ if (process.argv.includes('--par') || process.argv.includes('--write-par')) {
   }
   lines.push(']);');
   if (process.argv.includes('--write-par')) {
-    const file = 'src/components/game3d/axe/balance/AXEPowerBudget.js';
+    const file = 'base44/shared/axePowerBudget.ts';
     const src = await readFile(file, 'utf8');
-    const a = src.indexOf('export const AXE_PAR_HERO_TABLE = Object.freeze([');
+    const a = src.indexOf(TABLE_START);
     const b = src.indexOf(']);', a) + 3;
     if (a < 0 || b < 3) throw new Error('AXE_PAR_HERO_TABLE not found in ' + file);
     const eol = src.includes('\r\n') ? '\r\n' : '\n';

@@ -401,7 +401,7 @@ export default function GameView() {
       <PartyPanel />
       <TradePanel />
       <TradeSessionWatcher userId={user?.id} />
-      <IncomingRequestToast userId={user?.id} userName={user?.full_name || user?.username || 'Player'} />
+      <IncomingRequestToast userId={user?.id} />
       <DuelSystem userId={user?.id} />
       <DuelMarkers localUserId={user?.id} />
 
