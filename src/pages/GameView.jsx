@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { createPageUrl } from '@/utils';
@@ -49,11 +49,11 @@ import { sendPartyInvite } from '../components/game3d/social/partyInvite';
 import { sendTradeRequest } from '../components/game3d/social/tradeRequest';
 import { sendDuelChallenge } from '../components/game3d/social/duelChallenge';
 import { useAuth } from '@/components/auth/AuthContext';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import PassiveSkillAuraEffects from '../components/game3d/PassiveSkillAuraEffects';
 import PlayerHaloAura from '../components/game3d/PlayerHaloAura';
 import PlayerAngelWings from '../components/game3d/PlayerAngelWings';
-import { getLearnedSkillIds, subscribeLootInventory, subscribeLearnedSkills } from '../components/game3d/lootStore';
+import { getLearnedSkillIds, subscribeLearnedSkills } from '../components/game3d/lootStore';
 import { runOneTimeProgressionReset } from '../components/game3d/progression/oneTimeReset';
 import SlashEffectLayer from '../components/game3d/SlashEffect';
 import PauseMenu from '../components/game3d/PauseMenu';
@@ -353,6 +353,14 @@ export default function GameView() {
       <AXEWeaponQuickSwitchMount />
       {/* Wuxia blueprint: Mount Soul Fusion timer while a mount is absorbed. */}
       <AXEMountFusionHUD />
+      {/* GameView renders outside the app Layout, whose Toaster is the only one, so every in-game
+          toast (skill activations, weapon and PvP notices, social requests) was silently dropped.
+          This one sits below the boss bar, in the ink style of the Wuxia HUD. */}
+      <Toaster
+        position="top-center"
+        containerStyle={{ top: 128 }}
+        toastOptions={{ style: { background: 'rgba(17,16,15,0.9)', color: '#efe6d2', border: '1px solid rgba(239,230,210,0.14)', fontFamily: 'Georgia, "Noto Serif", serif', fontSize: 13 } }}
+      />
       {/* Host-authoritative enemy/boss sync — elects one host per channel,
           broadcasts world snapshots, and applies them on non-hosts. */}
       <WorldSyncMount />

@@ -22,7 +22,7 @@ export default function AXEMountFusionHUD() {
   if (!fusion.active) return null;
   return (
     <div
-      className="pointer-events-none fixed left-1/2 top-24 z-[55] -translate-x-1/2 flex items-center gap-3 rounded-sm px-3 py-1.5"
+      className="pointer-events-none fixed right-4 top-[10.5rem] z-[55] flex items-center gap-3 rounded-sm px-3 py-1.5"
       style={{ background: 'rgba(17,16,15,0.82)', boxShadow: `0 0 0 1px ${fusion.palette.primary}55, 0 0 18px ${fusion.palette.primary}40` }}
       role="status"
       aria-label={`Mount Soul Fusion: ${fusion.mountName}, ${fusion.share}% share, ${clock(fusion.remainingMs)} left`}

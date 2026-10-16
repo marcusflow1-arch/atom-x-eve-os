@@ -605,6 +605,9 @@ export default function GameWorld3D() {
       }));
     };
     window.addEventListener('playerSkillStrike', handlePlayerSkillStrike);
+    // Mount Soul Fusion absorbed the mount: run the normal dismount on the next frame
+    const handleForceDismount = () => { if (isMountedRef.current) mountToggleRef.current = true; };
+    window.addEventListener('axeMountForceDismount', handleForceDismount);
     window.addEventListener('playerSkillCastStart', handlePlayerSkillCastStart);
     window.addEventListener('axeAerialSkillCast', handleAXEAerialSkillCast);
 
@@ -1065,10 +1068,12 @@ export default function GameWorld3D() {
         playerAnim?.requestCrouch(!playerAnim.getIsCrouching());
         e.preventDefault();
       }
-      // E = interact, F = Kick
+      // E = interact, F = Kick. Next to your companion (while the 'F Mount' prompt shows) or while
+      // riding, F mounts / dismounts instead: the kick rebinding (6a64a744) had left mounting unreachable.
       if (k === 'e') interactPressed.current = true;
       if (k === 'f') {
-        if (playerAnim?.requestAttack('kick', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
+        if (nearbyCompanionRef.current || isMountedRef.current) { if (!e.repeat) mountToggleRef.current = true; }
+        else if (playerAnim?.requestAttack('kick', 1.0)) setTimeout(() => { attackPressed.current = true; }, 260);
         e.preventDefault();
       }
       // AXE Prompt 014: Skills 1..9 use keys 1..9, Skill 10 uses key 0.
@@ -2299,6 +2304,7 @@ export default function GameWorld3D() {
       window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('mouseup', onMouseUp); window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('resize', handleResize);
       window.removeEventListener('playerSkillStrike', handlePlayerSkillStrike);
+      window.removeEventListener('axeMountForceDismount', handleForceDismount);
       window.removeEventListener('playerSkillCastStart', handlePlayerSkillCastStart);
       window.removeEventListener('axeAerialSkillCast', handleAXEAerialSkillCast);
       renderer.domElement.removeEventListener('mousedown', onMouseDown);

@@ -49,11 +49,12 @@ function ArchetypeCard({ id, specialized, inHand, onSpecialize }) {
         )}
       </div>
       <p className="mt-2 text-xs leading-5 text-white/45">{def.summary}</p>
-      <div className="mt-3 space-y-1 text-[11px]">
+      {/* stacked so the narrow five-column hub layout stays readable */}
+      <div className="mt-3 space-y-2 text-[11px] leading-4">
         {base.map((line, i) => (
-          <div key={line} className="flex justify-between gap-2">
-            <span className={isSpec ? 'text-white/30 line-through' : 'text-white/70'}>{line}</span>
-            <span className={isSpec ? 'font-semibold text-amber-100' : 'text-white/30'}>{doubled[i]} specialized</span>
+          <div key={line}>
+            <div className={isSpec ? 'text-white/30 line-through' : 'text-white/75'}>{line}</div>
+            <div className={isSpec ? 'font-semibold text-amber-100' : 'text-white/30'}>Specialized: {doubled[i]}</div>
           </div>
         ))}
       </div>

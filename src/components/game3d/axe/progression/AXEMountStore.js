@@ -171,6 +171,8 @@ export function absorbAXEMount(pillId, { now = Date.now() } = {}) {
   if (!mount) return { ok: false, reason: 'NO_REGISTERED_MOUNT' };
   const current = state.fusion && state.fusion.until > now && state.fusion.mountId === mount.instanceId ? state.fusion.until : now;
   if (state.ridingMountId) setAXEMountRiding(false); // the absorbed mount cannot be ridden
+  // the game world keeps its own mounted flag: tell it to get off the mount it just absorbed
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('axeMountForceDismount', { detail: { reason: 'absorbed' } }));
   consumeMountMaterials({ [pillId]: 1 });
   state = { ...state, fusion: { mountId: mount.instanceId, until: current + pill.minutes * 60_000 } };
   appendAudit('fusion_absorb', mount.instanceId, { pillId, until: state.fusion.until });

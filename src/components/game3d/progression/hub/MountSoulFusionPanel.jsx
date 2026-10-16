@@ -81,6 +81,12 @@ export default function MountSoulFusionPanel({ state }) {
         <span>Base {share.base}% <span className="text-white/35">({share.growthPercent}% growth of {AXE_MOUNT_FUSION_CONFIG.baseShareMax}%)</span></span>
         <span>Gear +{share.gear}% <span className="text-white/35">({share.maxedPieces}/{AXE_MOUNT_GEAR_SLOTS.length} pieces at Stage {AXE_MOUNT_FUSION_CONFIG.maxGearStage})</span></span>
       </div>
+      {share.growthPercent < 100 && (
+        <p className="mt-2 text-xs text-amber-100/70">
+          Ride, hunt and duel with this mount to grow it: its base share rises with growth, up to {AXE_MOUNT_FUSION_CONFIG.baseShareMax}% at 100%.
+          {share.total === 0 ? ' Until then an absorption only brings the aura and the soul strikes.' : ''}
+        </p>
+      )}
 
       <ProgressionReview review={review} onCancel={() => setReview(null)} onConfirm={confirm} />
       {result && (
