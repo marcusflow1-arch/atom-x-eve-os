@@ -18,6 +18,7 @@ import CoreSubTab from '../../progression/hub/CoreSubTab';
 import ElixirSubTab from '../../progression/hub/ElixirSubTab';
 import PetSubTab from '../../progression/hub/PetSubTab';
 import MountSubTab from '../../progression/hub/MountSubTab';
+import AscensionSubTab from '../../progression/hub/AscensionSubTab';
 import VanitySubTab from '../../progression/hub/VanitySubTab';
 import CostumeSubTab from '../../progression/hub/CostumeSubTab';
 
@@ -70,6 +71,7 @@ const PROGRESSION_PANELS = {
   elixir: ElixirSubTab,
   pet: PetSubTab,
   mount: MountSubTab,
+  ascension: AscensionSubTab,
   vanity: VanitySubTab,
   costume: CostumeSubTab,
 };

@@ -73,6 +73,8 @@ import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/W
 import { getTitleState, recordTitleKill, subscribeTitles } from './progression/titleStore';
 import { getHaloState } from './progression/haloStore';
 import { createAXEMountFusionVisualRuntime } from './axe/progression/AXEMountFusionVisualRuntime';
+import { createAXEAscensionVisualRuntime } from './axe/progression/AXEAscensionVisualRuntime';
+import { bankAXEAscensionDamage, getAXEAscensionProfile } from './axe/progression/AXEAscensionStore';
 import { createAXEHaloVisualRuntime } from './axe/progression/AXEHaloVisualRuntime'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
@@ -855,6 +857,7 @@ export default function GameWorld3D() {
     let playerAnim;
     let haloVisualRuntime = null;
     let fusionVisualRuntime = null; // Mount Soul Fusion aura
+    let ascensionVisualRuntime = null; // Taurus Chosen Ascension: levitation, Angel Cloak, Destroyer shockwave, Defensive shield
     const playerStateMachine = new CorePlayerStateMachine();
     let coreAnimationController = null;
     const playerCameraSystem = new PlayerCameraSystem({ camera, orbit, modelRef, lockOnTargetRef });
@@ -881,6 +884,7 @@ export default function GameWorld3D() {
       scene.add(fbx);
       haloVisualRuntime = createAXEHaloVisualRuntime({ model: fbx, initialState: getHaloState() });
       fusionVisualRuntime = createAXEMountFusionVisualRuntime({ model: fbx, initialState: getAXEMountFusionState() });
+      ascensionVisualRuntime = createAXEAscensionVisualRuntime({ model: fbx, initialState: getAXEAscensionProfile() });
       // Snap the player's feet to the terrain at spawn
       snapToGround(fbx, 0);
       mixer = new THREE.AnimationMixer(fbx);
@@ -1241,9 +1245,11 @@ export default function GameWorld3D() {
       envSystem.update(delta);
       haloVisualRuntime?.update?.(delta);
       fusionVisualRuntime?.update?.(delta);
+      ascensionVisualRuntime?.update?.(delta);
       bossEncounter.update(delta);
       charLights.update(delta, envSystem.getState, modelRef.current, camera);
       if (mixer) mixer.update(delta);
+      ascensionVisualRuntime?.lateUpdate?.(); // levitation lifts the posed skeleton
       if (dodgeVanish.active) {
         dodgeVanish.timer += delta;
         if (dodgeVanish.timer >= dodgeVanish.duration) {
@@ -1936,6 +1942,7 @@ export default function GameWorld3D() {
 
             const activeWeaponId = getActiveWeaponId();
             reportWeaponHit({ weaponId: activeWeaponId, damage: dmg, isCrit: masteryRes.isCrit, isBoss: !!closestEnemy.isBoss });
+            bankAXEAscensionDamage(dmg, { maxHP: liveDerived?.maxHP || 0 }); // Defensive Nature: 30% of the blow becomes a shield
 
             combatSystem.applyDamage(closestEnemy, dmg, { sourceId: closestEnemy.id, sound: 'enemy_hit' });
 
@@ -2293,6 +2300,8 @@ export default function GameWorld3D() {
       haloVisualRuntime = null;
       fusionVisualRuntime?.dispose?.();
       fusionVisualRuntime = null;
+      ascensionVisualRuntime?.dispose?.();
+      ascensionVisualRuntime = null;
       modelRef.current = null;
       // Mark guard disposed FIRST so any in-flight animate() bails before
       // touching the renderer — prevents the null.trim shadow-map crash.

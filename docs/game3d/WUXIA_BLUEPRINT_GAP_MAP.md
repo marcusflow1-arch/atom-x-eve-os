@@ -101,7 +101,7 @@ The owner's third version adds the following. v1 governs where versions conflict
 |---|---|---|
 | Central buff/state container recalculating on Weapon Switch / Mount Fusion / Ascension / Imbuement events | `playerHUDStore.jsx` already aggregates ~15 bonus providers and recomputes on each one's change event | **Present** (new systems plug in as providers) |
 | Weapon Affinity: specialize in one archetype, its passive doubles (2×) | Delivered in slice A (below) | **Done** |
-| Taurus Chosen Ascension: Destroyer (1.5× skill damage, shockwaves) / Balanced (0 s swap GCD, +20% stats) / Defensive (30% damage as party shield, 1.5× defense); levitation; Angel Cloak | `AXE_POWER_TIERS` lists an Ascension tier (label only) | **Missing** |
+| Taurus Chosen Ascension: Destroyer (1.5× skill damage, shockwaves) / Balanced (0 s swap GCD, +20% stats) / Defensive (30% damage as party shield, 1.5× defense); levitation; Angel Cloak | Slice D. The shockwave is visual only (no splash damage yet), the Defensive shield protects the hero alone (no party combat yet), and level 100 is a provisional threshold | **Done (with those limits)** |
 | 5-piece sets: Rare +100%, Elite +110%, Taurus Chosen Word +150% (+25% crit / crit defense, +10 skill points, +50% skill damage) | `AXESetBonusSystem.js` grades rare / elite / heroic | Partial / different |
 | Mount energy imbuement 0–120 on armor, weapons and rings; energy flowing in the gaps; feather drops and aura pulse at the maximum | Nothing | **Missing** (needs the gear visual layers) |
 | Companion armor over-enchant: 20% passive + 20% in fusion = 40% stat transfer | Companion gear and fusion exist (`equipment/Companion*`, `companionFusionStore.jsx`) | Not compared yet |
@@ -123,6 +123,12 @@ The owner's third version adds the following. v1 governs where versions conflict
 - **Slice C, mount soul skill transformations (2026-10-15):** while absorbed, single-hit skills gain a spectral strike
   (1 → 2 hits), 3+ hit combos two elemental strikes (3 → 5), AoE skills a second, wider explosion with its own crit
   roll; clan-coloured claw rake / sparks / shockwave. Report: [reports/WUXIA-C-soul-skills.md](reports/WUXIA-C-soul-skills.md).
+- **Slice D, Taurus Chosen Ascension (2026-10-15):** a one-time, confirmed ritual from level 100; three Natures
+  (Destroyer: skill damage ×1.5 and a shockwave on single-hit skills; Balanced: the core combat stats ×1.2; Defensive:
+  defense ×1.5 and 30% of damage dealt banked as a shield, capped at 40% max HP, fading after 8 s), re-attuned after a
+  one-hour cooldown; levitation (0.15 m, movement ×1.12) and the Angel Cloak (+500 HP, +40 defense, +30 attribution
+  defense, +3% movement; the mesh can be hidden). Progression → Ascension. Report:
+  [reports/WUXIA-D-ascension.md](reports/WUXIA-D-ascension.md).
 
 ## Decisions the owner must make
 

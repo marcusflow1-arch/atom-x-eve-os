@@ -10,6 +10,7 @@ import { armForcedCriticalHit } from '../combat/forcedCriticalBridge';
 import { setCombatFlag } from '../talents/advancedClassStore';
 import { getAXEMountFusionState } from '../axe/progression/AXEMountStore';
 import { planAXEMountSoulEchoes } from '../axe/progression/AXEMountFusionSystem';
+import { getAXEAscensionSkillMultiplier, hasAXEAscensionShockwave } from '../axe/progression/AXEAscensionStore';
 import {
   onTripleSlashCast,
   onTripleSlashFinalHit,
@@ -46,7 +47,8 @@ function toast(text) {
 function dispatchStrike(skill, hitIndex, level, echo = null) {
   if (typeof window === 'undefined') return;
   const baseMult = scaleStat(skill, 'damage_pct', level || 1) || 1;
-  const multiplier = applyMasteryToSkillMultiplier(baseMult) * (echo?.multiplierScale ?? 1);
+  // Destroyer Nature (Taurus Chosen Ascension): skill damage x1.5, echoes included
+  const multiplier = applyMasteryToSkillMultiplier(baseMult) * (echo?.multiplierScale ?? 1) * getAXEAscensionSkillMultiplier();
   const criticalAllowed = skill.critical_allowed !== false;
   const forceCritical = !echo && criticalAllowed && skill.cast_type === CAST_TYPE.SINGLE_HIT
     ? consumeCriticalFocusForSingleHit()
@@ -69,6 +71,7 @@ function dispatchStrike(skill, hitIndex, level, echo = null) {
       aoeRadius: echo?.aoeRadius ?? Number(skill.aoe_radius || 0),
       soulEcho: echo?.kind || null, // 'spectral' | 'elemental' | 'spectral_aoe'
       soulPalette: echo?.palette || null,
+      ascensionShockwave: !echo && skill.cast_type === CAST_TYPE.SINGLE_HIT && hasAXEAscensionShockwave(),
       divine: Boolean(skill.divine),
       aerial: Boolean(skill.aerial),
     },

@@ -48,7 +48,7 @@ export function createAXEMountFusionVisualRuntime({ model, initialState = null }
   footMat.side = THREE.DoubleSide;
   const foot = new THREE.Mesh(footGeo, footMat);
   foot.rotation.x = -Math.PI / 2;
-  foot.position.y = 0.03;
+  foot.position.y = 0.1; // above road and path decals, which sit up to ~7 cm high
   group.add(foot);
 
   // particles spiralling up through the body
@@ -128,7 +128,7 @@ export function createAXEMountFusionVisualRuntime({ model, initialState = null }
       const ring = new THREE.Mesh(waveGeo, mat(primary, 0.7));
       ring.material.side = THREE.DoubleSide;
       ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.05;
+      ring.position.y = 0.11;
       ring.userData.max = Math.max(1.5, Number(aoeRadius) || 3);
       fx.add(ring);
     }

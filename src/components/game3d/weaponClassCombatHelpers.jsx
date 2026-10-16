@@ -3,10 +3,11 @@
 // GameWorld3D can stay under its line cap.
 import { getActiveBuffValues } from './weaponClassBuffStore';
 import { getAXEAffinityMoveSpeedMult } from './axe/weapons/AXEWeaponAffinityStore';
+import { getAXEAscensionMoveSpeedMult } from './axe/progression/AXEAscensionStore';
 
 // Movement-speed multiplier from Swift Marksman (Ranged).
 export function getWeaponMoveSpeedMult() {
-  return (1 + (getActiveBuffValues().moveSpeedBonusPct || 0)) * getAXEAffinityMoveSpeedMult(); // + the ranged archetype passive (Weapon Affinity)
+  return (1 + (getActiveBuffValues().moveSpeedBonusPct || 0)) * getAXEAffinityMoveSpeedMult() * getAXEAscensionMoveSpeedMult(); // + the ranged archetype passive (Weapon Affinity) and levitation (Ascension)
 }
 
 // Outgoing damage multiplier — all three paths add some % damage.

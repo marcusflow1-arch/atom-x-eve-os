@@ -35,6 +35,8 @@ import { getActiveAXEAdvancedClassRuntime, applyAXEAdvancedClassDerivedMultiplie
 import { subscribeAdvancedClass } from './talents/advancedClassStore';
 import { getAXEWeaponAffinityProfile, subscribeAXEWeaponAffinity } from './axe/weapons/AXEWeaponAffinityStore';
 import { applyAXEWeaponAffinityToDerived } from './axe/weapons/AXEWeaponArchetypes';
+import { getAXEAscensionFlatBonuses, getAXEAscensionProfile, subscribeAXEAscension } from './axe/progression/AXEAscensionStore';
+import { applyAXEAscensionToDerived } from './axe/progression/AXEAscensionSystem';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -134,6 +136,7 @@ const getBonuses = () => {
       mount,
       equipment.flat,
       advancedClass.flat,
+      getAXEAscensionFlatBonuses(), // the Angel Cloak (Taurus Chosen Ascension)
     ),
     vanityActivation,
     equipmentMultipliers: equipment.multipliers,
@@ -141,6 +144,7 @@ const getBonuses = () => {
     advancedClassCombat: advancedClass.combat,
     weaponAffinity: getAXEWeaponAffinityProfile(),
     mountFusion: { active: fusion.active, share: fusion.share },
+    ascension: getAXEAscensionProfile(),
     equipmentDebug: equipment,
     advancedClassDebug: advancedClass,
   };
@@ -164,7 +168,8 @@ const computeDerivedWithVanity = (baseStats, bonuses) => {
   const withEquipment = applyAXEEquipmentFinalMultipliers(withVanity, bonuses.equipmentMultipliers);
   const withClass = applyAXEAdvancedClassDerivedMultipliers(withEquipment, bonuses.advancedClassMultipliers);
   const withAffinity = applyAXEWeaponAffinityToDerived(withClass, bonuses.weaponAffinity); // the weapon in hand's archetype passive, doubled when specialized
-  return bonuses.mountFusion ? { ...withAffinity, mountFusion: bonuses.mountFusion } : withAffinity;
+  const withAscension = applyAXEAscensionToDerived(withAffinity, bonuses.ascension); // Balanced / Defensive Natures
+  return bonuses.mountFusion ? { ...withAscension, mountFusion: bonuses.mountFusion } : withAscension;
 };
 
 const buildDefault = () => {
@@ -443,6 +448,7 @@ subscribeAXESockets(recomputeFromBonuses);
 subscribeAXEAura(recomputeFromBonuses);
 subscribeAdvancedClass(recomputeFromBonuses);
 subscribeAXEWeaponAffinity(recomputeFromBonuses);
+subscribeAXEAscension(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {
