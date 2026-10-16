@@ -1,3 +1,4 @@
+import CompanionSaveStatus from '../../equipment/CompanionSaveStatus';
 import { useEffect, useState } from 'react';
 import { subscribeCharacterChange } from '../../characterStorage';
 import ProgressionReview from './ProgressionReview';
@@ -87,6 +88,8 @@ export default function MountSubTab() {
           ))}
         </div>
 
+        <CompanionSaveStatus />
+
         <ProgressionReview review={review} onCancel={() => setReview(null)} onConfirm={confirmReview} />
 
         {lastResult && (
@@ -95,7 +98,7 @@ export default function MountSubTab() {
               ? (lastResult.message || (lastResult.legendary ? 'Legendary Mount crafting completed.'
                 : lastResult.ability ? `Ability acquired: ${lastResult.ability.label}`
                 : 'Mount action completed.'))
-              : lastResult.reason?.replaceAll('_', ' ')}
+              : lastResult.message || lastResult.reason?.replaceAll('_', ' ')}
           </div>
         )}
 
