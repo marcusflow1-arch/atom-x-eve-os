@@ -11,7 +11,8 @@ import QuestFloatingLabel from './QuestFloatingLabel';
 import QuestDialogueBox from './QuestDialogueBox';
 import FloatingDamageNumbers from './FloatingDamageNumbers';
 import { setPlayerHUD, awardXP, getPlayerHUD, setHP, tickRegen } from './playerHUDStore';
-import { DEFAULT_PLAYER_STATS, ENEMY_STAT_TEMPLATES, computeDerivedStats, calculateHit } from './statsSystem';
+import { DEFAULT_PLAYER_STATS, computeDerivedStats, calculateHit, rollAXEHit } from './statsSystem';
+import { getAXEEnemyStats } from './axe/balance/AXEPowerBudget';
 import { QUEST_NPCS, QUESTS, getAvailableQuestForNPC } from './questData';
 import { acceptQuest, completeQuest, isQuestComplete, reportEnemyKill, subscribeQuests, getQuestState } from './useQuestStore';
 import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioStore';
@@ -757,10 +758,9 @@ export default function GameWorld3D() {
         // DETERMINISTIC tier + level — uses the seeded tierRoll from spawn config
         // so every client picks the same tier for the same enemy id.
         const tier = spawn.fixedTier ? getEnemyTierByName(spawn.fixedTier) : pickTier(spawn.tierRoll);
-        const enemyLevel = tier.level + (spawn.tierRoll > 0.5 ? 1 : 0);
-        // Derive enemy combat stats from the shared stat system
-        const enemyBaseStats = ENEMY_STAT_TEMPLATES[tier.name];
-        const enemyDerived = computeDerivedStats(enemyBaseStats, []);
+        const enemyLevel = spawn.level || tier.level + (spawn.tierRoll > 0.5 ? 1 : 0); // the zone sets the level
+        // stats from the enemy's level and tier: the power budget's enemy curve
+        const enemyDerived = getAXEEnemyStats(enemyLevel, tier.name);
         const box = new THREE.Box3().setFromObject(fbx);
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
@@ -1761,14 +1761,12 @@ export default function GameWorld3D() {
               // Damage lands — only if player still in range and not invulnerable
               if (playerInRange && playerInvulTimer.current <= 0 && !rollDodge() && !rollGuard() && !rollRangedEvade() && !rollDodgeBuff()) {
                 const playerDerived = getPlayerHUD().derived || playerDerivedRef.current;
+                // 0 when the enemy's Accuracy loses to the hero's Block; the level gap is in the combat maths
                 let dmg = calculateHit(enemy.derived, playerDerived);
-                const levelDiff = enemy.level - playerLevelRef.current;
-                if (levelDiff > 0) dmg = Math.round(dmg * (1 + levelDiff * 0.25));
-                else if (levelDiff < 0) dmg = Math.max(1, Math.round(dmg * Math.max(0.4, 1 + levelDiff * 0.15)));
                 // God's Deflection keeps priority. Otherwise, weapon mastery and
                 // the active Advanced Class resolve dodge/block/reflect/mitigation
                 // through the same incoming-damage backend.
-                if (rollReflect()) {
+                if (dmg > 0 && rollReflect()) {
                   enemy.hp -= dmg;
                   spawnDamageFloat(enemy.id, dmg);
                   playActionSound('enemy_hit');
@@ -1915,12 +1913,16 @@ export default function GameWorld3D() {
               if (d < closestEnemyDist) { closestEnemyDist = d; closestEnemy = enemy; }
             });
           }
-          if (closestEnemy) {
+          // The hit roll: the hero's Accuracy against the enemy's Block. A miss shows MISS and spends
+          // no damage buff, charge or skill multiplier.
+          const swingMissed = !!closestEnemy && !rollAXEHit(getPlayerHUD().derived || playerDerivedRef.current, closestEnemy.derived);
+          if (swingMissed) { spawnDamageFloat(closestEnemy.id, 'MISS'); skillStrikeMultRef.current = 1.0; }
+          if (closestEnemy && !swingMissed) {
             // Pull live derived stats from store so stat allocations actually affect damage.
             const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
             const boosted = { ...liveDerived, critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct() };
             const powerChargeMult = consumePowerChargeMultiplier();
-            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived) * consumeDamageBuffMultiplier() * powerChargeMult * getWeaponDamageMult() * skillStrikeMultRef.current * consumeShopDamageBuff()); skillStrikeMultRef.current = 1.0; const _sc = consumeShopCritBuff(); if (_sc > 0 && Math.random() * 100 < _sc) dmg = Math.round(dmg * 1.5);
+            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived, { hitRoll: false }) * consumeDamageBuffMultiplier() * powerChargeMult * getWeaponDamageMult() * skillStrikeMultRef.current * consumeShopDamageBuff()); skillStrikeMultRef.current = 1.0; const _sc = consumeShopCritBuff(); if (_sc > 0 && Math.random() * 100 < _sc) dmg = Math.round(dmg * 1.5);
             if (rollLethalBlow()) { dmg = closestEnemy.hp; spawnDamageFloat(closestEnemy.id, 9999); }
 
             // Weapon Mastery — adjust damage, apply identity/milestone passives.

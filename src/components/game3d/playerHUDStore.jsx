@@ -14,7 +14,7 @@ import {
 import { getEquippedTitleAttributeBonuses, getEquippedTitleBonuses, subscribeTitles } from './progression/titleStore';
 import { consumeRestedForGain } from './restedXPStore';
 import { xpForLevel } from './gameWorldConfig';
-import { characterScopedStorage, subscribeCharacterChange } from './characterStorage';
+import { characterScopedStorage, getActiveId, getStorageUser, subscribeCharacterChange } from './characterStorage';
 import { AXE_PRIMARY_STATS, createDefaultAXEPowerProgression, normalizeAXEPowerProgression } from './axe/progression/AXECharacterProgressionConfig';
 import { getRegisteredAXECoreBonuses, subscribeAXECores } from './axe/progression/AXECoreStore';
 import { getEquippedAXECostumeBonuses, subscribeAXECostumes } from './axe/progression/AXECostumeStore';
@@ -24,8 +24,10 @@ import { getRegisteredAXEPetBonuses, subscribeAXEPets } from './axe/progression/
 import { getAXEMountFusionState, getRegisteredAXEMountBonuses, subscribeAXEMounts } from './axe/progression/AXEMountStore';
 import { scaleAXEGearForFusion } from './axe/progression/AXEMountFusionSystem';
 import { getEquippedAXEVanityActivationProfile, getEquippedAXEVanityBaseBonuses, subscribeAXEVanity } from './axe/progression/AXEVanityStore';
-import { applyAXEVanityActivationToDerived, getAXEVanitySpiritVirtualBonus } from './axe/progression/AXEVanitySystem';
-import { getAXEEquipmentRuntimeBonuses, applyAXEEquipmentFinalMultipliers } from './axe/equipment/AXEEquipmentRuntimeStats';
+import { getAXEVanitySpiritVirtualBonus } from './axe/progression/AXEVanitySystem';
+import { getAXEEquipmentRuntimeBonuses } from './axe/equipment/AXEEquipmentRuntimeStats';
+import { applyAXEPercentPool, sumAXEPercentPools } from './axe/balance/AXEStatPool';
+import { getAXEEnemyStats, getAXEHitChancePct } from './axe/balance/AXEPowerBudget';
 import { subscribeAXEEquipmentInventory } from './axe/equipment/AXEEquipmentInventoryStore';
 import { subscribeEnchantments } from './equipment/enchantmentStore';
 import { subscribeAXEItemAdvancement } from './axe/equipment/AXEItemAdvancementStore';
@@ -88,8 +90,8 @@ const normalizeCostumeBonuses = (raw = {}) => ({
     damage: raw.damage || raw.attack || 0,
     defense: raw.defense || 0,
     critChance: raw.critChance || raw.criticalChance || 0,
-    critDamage: raw.critDamage || raw.criticalDamage || 0,
-    criticalDefense: raw.criticalDefense || raw.critDefense || 0,
+    critDamage: (raw.critDamage || raw.criticalDamage || 0) / 100, // costume data is in percentage points
+    criticalDefense: (raw.criticalDefense || raw.critDefense || 0) / 100,
     attributionAttack: raw.attributionAttack || raw.attributeAttack || 0,
     attributionDefense: raw.attributionDefense || raw.attributeDefense || 0,
   },
@@ -116,11 +118,13 @@ const getBonuses = () => {
     damage: cape.damage || cape.attack || 0,
     defense: cape.defense || 0,
     critChance: cape.critChance || cape.criticalChance || 0,
-    critDamage: cape.critDamage || cape.criticalDamage || 0,
-    criticalDefense: cape.criticalDefense || cape.critDefense || 0,
+    critDamage: (cape.critDamage || cape.criticalDamage || 0) / 100, // cape data is in percentage points
+    criticalDefense: (cape.criticalDefense || cape.critDefense || 0) / 100,
   };
   const coreFlat = {
     ...core,
+    critDamage: (core.critDamage || 0) / 100, // core data is in percentage points
+    criticalDefense: (core.criticalDefense || 0) / 100,
     attributionAttack: core.attributeAttack || core.attributionAttack || 0,
     attributionDefense: core.attributeDefense || core.attributionDefense || 0,
   };
@@ -136,6 +140,7 @@ const getBonuses = () => {
       equipment.attr,
     ),
     title: sumFlat(
+      getAuraBonuses(), // attribute attack / defense (its attributes go in the sum above)
       getEquippedTitleBonuses(),
       getEquippedWingsFlatBonuses(),
       coreFlat,
@@ -174,12 +179,50 @@ const computeDerivedWithVanity = (baseStats, bonuses) => {
         bonuses.title,
       )
     : preliminary;
-  const withVanity = applyAXEVanityActivationToDerived(withSpirit, bonuses.vanityActivation);
-  const withEquipment = applyAXEEquipmentFinalMultipliers(withVanity, bonuses.equipmentMultipliers);
-  const withClass = applyAXEAdvancedClassDerivedMultipliers(withEquipment, bonuses.advancedClassMultipliers);
-  const withAffinity = applyAXEWeaponAffinityToDerived(withClass, bonuses.weaponAffinity); // the weapon in hand's archetype passive, doubled when specialized
-  const withAscension = applyAXEAscensionToDerived(withAffinity, bonuses.ascension); // Balanced / Defensive Natures
+  // Every percentage bonus (vanity activation, gear %, advanced class, weapon affinity) joins
+  // one pool per stat and is applied once, so systems add to each other instead of compounding.
+  const va = bonuses.vanityActivation || {};
+  const em = bonuses.equipmentMultipliers || {};
+  const cm = bonuses.advancedClassMultipliers || {};
+  const aff = bonuses.weaponAffinity || {};
+  const pool = sumAXEPercentPools(
+    { damagePct: va.damagePct, defensePct: va.defensePct, hpPct: va.hpPct },
+    em,
+    { hpPct: cm.hpPct, defensePct: cm.defensePct },
+    { damagePct: (aff.damagePct || 0) * 100, defensePct: (aff.defensePct || 0) * 100 },
+  );
+  // the stages below only add what is not a percentage of the sheet, and the labels the hub shows
+  const withPool = {
+    ...applyAXEPercentPool(withSpirit, pool),
+    vanityActivation: {
+      spiritPct: Number(va.spiritPct || 0), hpPct: Number(va.hpPct || 0), defensePct: Number(va.defensePct || 0),
+      damagePct: Number(va.damagePct || 0), activePieces: [...(va.activePieces || [])],
+    },
+    equipmentMultipliers: {
+      damagePct: Number(em.damagePct || 0), defensePct: Number(em.defensePct || 0), hpPct: Number(em.hpPct || 0), chiPct: Number(em.chiPct || 0),
+    },
+  };
+  const withClass = applyAXEAdvancedClassDerivedMultipliers(withPool, { elementalDamagePct: cm.elementalDamagePct });
+  if (withClass?.advancedClass) withClass.advancedClass = { ...withClass.advancedClass, hpPct: Number(cm.hpPct || 0), defensePct: Number(cm.defensePct || 0) };
+  // the weapon in hand's archetype passive: its damage and defense are in the pool, dodge and crit dodge apply here
+  const withAffinity = applyAXEWeaponAffinityToDerived(withClass, aff.archetype ? { ...aff, damagePct: 0, defensePct: 0 } : aff);
+  const withAscension = applyAXEAscensionToDerived(withAffinity, bonuses.ascension); // the Nature: the one true multiplier
   return bonuses.mountFusion ? { ...withAscension, mountFusion: bonuses.mountFusion } : withAscension;
+};
+
+// The hero's level rides on the derived stats (the combat maths reads both sides' levels),
+// and Hit % / Evasion % are shown against an even-level enemy, the way combat rolls them.
+// (computeDerivedStats compared the hero's Accuracy with the hero's own Block.)
+const withCombatLevel = (derived, level) => {
+  if (!derived) return derived;
+  const lv = Math.max(1, Number(level) || 1);
+  const foe = getAXEEnemyStats(lv, 'normal');
+  return {
+    ...derived,
+    level: lv,
+    hitChance: getAXEHitChancePct(derived.attackSuccess, foe.attackBlock),
+    evasionPct: 100 - getAXEHitChancePct(foe.attackSuccess, derived.attackBlock),
+  };
 };
 
 const buildDefault = () => {
@@ -193,7 +236,7 @@ const buildDefault = () => {
     unspentPoints: 0,
     hp: derived.maxHP,
     maxHP: derived.maxHP,
-    derived,
+    derived: withCombatLevel(derived, 1),
     powerProgression: createDefaultAXEPowerProgression(),
   };
 };
@@ -210,12 +253,12 @@ const loadState = () => {
       return {
         level: parsed.level || 1,
         xp: parsed.xp || 0,
-        xpForNext: parsed.xpForNext || 5,
+        xpForNext: parsed.xpForNext || xpForLevel(parsed.level || 1), // Infinity is saved as null at the cap
         baseStats: base,
         unspentPoints: parsed.unspentPoints || 0,
         maxHP: derived.maxHP,
         hp: Math.min(derived.maxHP, parsed.hp ?? derived.maxHP),
-        derived,
+        derived: withCombatLevel(derived, parsed.level || 1),
         powerProgression: normalizeAXEPowerProgression(parsed.powerProgression),
       };
     }
@@ -223,10 +266,17 @@ const loadState = () => {
   return buildDefault();
 };
 
+// Which character the in-memory state belongs to. On a switch every progression store
+// reloads and notifies this one before this store's own reload runs; without this guard
+// that recompute saved the PREVIOUS character's level, points and stats into the new
+// character's slot (and a brand-new character inherited them).
+const characterIdentity = () => `${getStorageUser()}::${getActiveId()}`;
 let state = loadState();
+let stateOwner = characterIdentity();
 
 const listeners = new Set();
 const persist = () => {
+  if (characterIdentity() !== stateOwner) return; // never write one character into another's slot
   storage.set(JSON.stringify({
     level: state.level,
     xp: state.xp,
@@ -238,6 +288,7 @@ const persist = () => {
   }));
 };
 const emit = () => {
+  state = { ...state, derived: withCombatLevel(state.derived, state.level) };
   persist();
   listeners.forEach((fn) => fn(state));
 };
@@ -245,6 +296,7 @@ const emit = () => {
 // When the active character changes, reload that character's progression.
 subscribeCharacterChange(() => {
   state = loadState();
+  stateOwner = characterIdentity();
   listeners.forEach((fn) => fn(state));
 });
 
@@ -429,6 +481,12 @@ export function refundStat(statKey) {
 // HUD, damage formulas, and UI all reflect the new bonuses instantly.
 // Heals the player by any maxHP increase so leveling up Halo feels rewarding.
 function recomputeFromBonuses() {
+  if (characterIdentity() !== stateOwner) { // mid-switch: load the new character's own save (no write)
+    state = loadState();
+    stateOwner = characterIdentity();
+    listeners.forEach((fn) => fn(state));
+    return;
+  }
   const b = getBonuses();
   const newDerived = computeDerivedWithVanity(state.baseStats, b);
   const hpGain = newDerived.maxHP - state.maxHP;

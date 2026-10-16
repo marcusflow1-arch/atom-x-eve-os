@@ -133,17 +133,18 @@ test('wrong-slot vanity cannot supply activation bonuses or appearance layers', 
   assert.deepEqual(vanitySystem.getAXEVanityAppearanceLayers(wrong), []);
 });
 
-test('vanity activation consumes one card, applies locked ten percent, and cannot be duplicated', () => {
+test('vanity activation consumes one card, applies its locked percent, and cannot be duplicated', () => {
+  const PCT = vanitySystem.AXE_VANITY_ACTIVATION_PERCENT; // power-budget balance (AXEVanitySystem)
   reset(); const id = 'axe_vanity_wanderer_leggings';
   const before = hud.getPlayerHUD().derived.damage;
   assert.equal(vanity.activateAXEVanityPiece(id, 'silver').ok, true);
   assert.equal(vanity.getAXEVanityState().cards.silver, 3);
-  assert.equal(vanity.getEquippedAXEVanityActivationProfile().damagePct, 10);
+  assert.equal(vanity.getEquippedAXEVanityActivationProfile().damagePct, PCT);
   assert.ok(hud.getPlayerHUD().derived.damage > before);
   assert.equal(vanity.activateAXEVanityPiece(id, 'gold').reason, 'ALREADY_ACTIVATED');
   assert.equal(vanity.getAXEVanityState().cards.gold, 2);
   const snapshot = vanity.getAXEVanityState(); snapshot.activationByPieceId[id].active = false;
-  assert.equal(vanity.getEquippedAXEVanityActivationProfile().damagePct, 10);
+  assert.equal(vanity.getEquippedAXEVanityActivationProfile().damagePct, PCT);
   vanity.unequipAXEVanitySlot('leggings');
   assert.equal(vanity.getEquippedAXEVanityActivationProfile().damagePct, 0);
 });

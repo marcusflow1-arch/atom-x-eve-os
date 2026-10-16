@@ -6,7 +6,7 @@
 
 import * as THREE from 'three';
 import { CREATURE_MODEL_URL } from '../creatureAssets';
-import { ENEMY_STAT_TEMPLATES, computeDerivedStats } from '../statsSystem';
+import { getAXEEnemyStats } from '../axe/balance/AXEPowerBudget';
 
 export function makeBossMinionSpawner({
   scene, loader, enemies, bossEntities, snapToGround,
@@ -14,8 +14,8 @@ export function makeBossMinionSpawner({
 }) {
   return function spawnBossMinion(bossId, payload) {
     loader.load(CREATURE_MODEL_URL, (fbx) => {
-      const baseStats = ENEMY_STAT_TEMPLATES.normal; // there is no 'common' template: minions fell back to the player's default stats
-      const derived = computeDerivedStats(baseStats, []);
+      const minionLevel = Number(payload.level) || 5; // the minion entry below is level 5
+      const derived = getAXEEnemyStats(minionLevel, 'normal');
       const box = new THREE.Box3().setFromObject(fbx);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);

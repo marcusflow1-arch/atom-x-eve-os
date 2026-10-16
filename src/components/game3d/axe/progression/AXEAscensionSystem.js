@@ -23,22 +23,22 @@ export const AXE_ASCENSION_NATURES = Object.freeze({
   destroyer: Object.freeze({
     id: 'destroyer',
     label: 'Path of the Destroyer',
-    summary: 'Unrelenting power: skill damage ×1.5, and single-hit skills unleash a shockwave.',
-    skillDamageMult: 1.5,
+    summary: 'Unrelenting power: skill damage ×1.25, and single-hit skills unleash a shockwave.',
+    skillDamageMult: 1.25,
     shockwave: true,
   }),
   balanced: Object.freeze({
     id: 'balanced',
     label: 'Path of the Balanced',
-    summary: 'Harmony in every discipline: damage, defense, HP, chi, accuracy and block all +20%.',
-    allStatsMult: 1.2,
+    summary: 'Harmony in every discipline: damage, defense, HP, chi, accuracy and block all +6%.',
+    allStatsMult: 1.06,
   }),
   defensive: Object.freeze({
     id: 'defensive',
     label: 'Path of the Defensive',
-    summary: 'Guardian of allies and strongholds: defense ×1.5, and 30% of the damage you deal becomes a protective shield.',
-    defenseMult: 1.5,
-    shieldFromDamage: 0.3,
+    summary: 'Guardian of allies and strongholds: defense ×1.25, and 20% of the damage you deal becomes a protective shield.',
+    defenseMult: 1.25,
+    shieldFromDamage: 0.2,
     shieldCapOfMaxHp: 0.4, // the shield never holds more than 40% of max HP
     shieldLifeMs: 8000, // and fades 8 s after the last blow that fed it
   }),
@@ -56,7 +56,8 @@ export function canAXECharacterAscend({ level = 0, ascended = false } = {}) {
   return { ok: true };
 }
 
-// Balanced: the core combat stats ×1.2. Defensive: defense ×1.5. Destroyer acts on skills (skillExecutor).
+// Balanced: the core combat stats ×1.06. Defensive: defense ×1.25. Destroyer acts on skills (skillExecutor).
+// The Nature is the one true multiplier on the stat sheet, so it is kept small (power budget).
 const BALANCED_KEYS = Object.freeze(['damage', 'physicalDamage', 'totalDamage', 'defense', 'maxHP', 'chi', 'attackSuccess', 'attackBlock']);
 export function applyAXEAscensionToDerived(derived, profile) {
   if (!derived || !profile?.ascended) return derived;

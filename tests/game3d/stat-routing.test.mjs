@@ -21,7 +21,7 @@ globalThis.setInterval = (...args) => { const timer = nativeSetInterval(...args)
 const modules = {
   storage: 'characterStorage.jsx', hud: 'playerHUDStore.jsx', stats: 'statsSystem.jsx',
   inv: 'axe/equipment/AXEEquipmentInventoryStore.js', titles: 'progression/titleStore.jsx',
-  elixirs: 'axe/progression/AXEElixirStore.js', halo: 'progression/haloStore.jsx',
+  elixirs: 'axe/progression/AXEElixirStore.js', halo: 'progression/haloStore.jsx', haloData: 'progression/haloData.jsx',
 };
 await build({ stdin: { contents: Object.entries(modules).map(([name, file]) =>
   `export * as ${name} from './src/components/game3d/${file}';`).join('\n'), resolveDir: root },
@@ -33,7 +33,7 @@ await build({ stdin: { contents: Object.entries(modules).map(([name, file]) =>
       'export const base44 = { auth: { updateMe: async () => ({}), me: async () => ({}) } };' }));
   } }], logLevel: 'silent',
 });
-const { storage, hud, stats, inv, titles, elixirs, halo } = await import(pathToFileURL(path.join(temp, 'stores.mjs')));
+const { storage, hud, stats, inv, titles, elixirs, halo, haloData } = await import(pathToFileURL(path.join(temp, 'stores.mjs')));
 after(async () => { intervals.forEach(clearInterval); globalThis.setInterval = nativeSetInterval; dom.window.close(); await rm(temp, { recursive: true, force: true }); });
 
 let user = 0;
@@ -74,10 +74,25 @@ test('Vitality and Spirit elixirs add HP and chi', () => {
   assert.ok(Math.abs(derived().chi - before.chi - 5 * CHI_PER_SPI) <= 1, `chi ${before.chi} -> ${derived().chi}`);
 });
 
+test('switching characters never copies one character\'s level, points or stats into another', () => {
+  storage.setStorageUser('switch-alt'); hud.setPlayerHUD({ level: 5, unspentPoints: 2 });
+  storage.setStorageUser('switch-main');
+  hud.setPlayerHUD({ level: 50, unspentPoints: 9, baseStats: { ...hud.getPlayerHUD().baseStats, strength: 77 } });
+  const snapshot = () => { const s = hud.getPlayerHUD(); return [s.level, s.unspentPoints, s.baseStats.strength]; };
+  storage.setStorageUser('switch-alt');
+  assert.deepEqual(snapshot(), [5, 2, 3], 'the alt keeps its own save (it used to become a copy of the main)');
+  storage.setStorageUser('switch-main');
+  assert.deepEqual(snapshot(), [50, 9, 77]);
+  storage.setStorageUser('switch-brand-new');
+  assert.deepEqual(snapshot(), [1, 0, 3], 'a new character starts fresh');
+});
+
 test('a system that names both keys (the halo) is not counted twice', () => {
   fresh();
   const before = derived().maxHP;
-  halo.setHaloLevel(10); // +10 constitution and +10 vitality: the same 10 points
-  assert.ok(Math.abs(derived().maxHP - before - 10 * HP_PER_VIT) <= 1, `HP ${before} -> ${derived().maxHP}`);
+  halo.setHaloLevel(100); // the halo names its Vitality both ways: constitution and vitality are the same points
+  const vit = haloData.getHaloBonusesForLevel(100).vitality;
+  assert.equal(haloData.getHaloBonusesForLevel(100).constitution, vit);
+  assert.ok(Math.abs(derived().maxHP - before - vit * HP_PER_VIT) <= 1, `HP ${before} -> ${derived().maxHP}`);
   halo.setHaloLevel(0);
 });

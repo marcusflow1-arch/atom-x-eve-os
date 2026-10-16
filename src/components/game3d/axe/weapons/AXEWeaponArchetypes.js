@@ -7,7 +7,9 @@
 // archetypes add the blueprint's archetype passive, which the one archetype a
 // player specializes in gets doubled (Weapon Affinity, 2.0x).
 //
-// Passive values are the blueprint's table. They stack with the existing native
+// Passive values were the blueprint's table (+20% damage, +10% crit dodge, +15% dodge and
+// movement, +50% defense), scaled down to fit the power budget (owner decision 2026-10-15,
+// docs/game3d/STAT_SYSTEM_AUDIT.md). They stack with the existing native
 // class passives (weaponClassBuffStore) and are provisional balance.
 
 export const AXE_WEAPON_ARCHETYPES = Object.freeze({
@@ -16,35 +18,35 @@ export const AXE_WEAPON_ARCHETYPES = Object.freeze({
     label: 'Single-Hit Burst',
     examples: 'Greatswords, heavy polearms',
     summary: 'Massive single-instance damage that punches through high armor.',
-    passive: Object.freeze({ damagePct: 0.20 }),
+    passive: Object.freeze({ damagePct: 0.05 }),
   }),
   multi_hit: Object.freeze({
     id: 'multi_hit',
     label: 'Multi-Hit Combo',
     examples: 'Dual daggers, twin blades',
     summary: 'Rapid flurries; every hit rolls its own critical strike.',
-    passive: Object.freeze({ critDodgePct: 0.10 }), // the blueprint's "Critical Strike Focus" row
+    passive: Object.freeze({ critDodgePct: 0.05 }), // the blueprint's "Critical Strike Focus" row
   }),
   ranged: Object.freeze({
     id: 'ranged',
     label: 'Ranged',
     examples: 'Bows, magic rings, lutes, fans',
     summary: 'Long-distance projectiles for kiting and zone control.',
-    passive: Object.freeze({ dodgePct: 0.15, moveSpeedPct: 0.15 }),
+    passive: Object.freeze({ dodgePct: 0.05, moveSpeedPct: 0.08 }),
   }),
   close_combat: Object.freeze({
     id: 'close_combat',
     label: 'Close-Combat Melee',
     examples: 'Dao blades, swords, martial fists',
     summary: 'Fast chaining at medium range, balancing speed with blocking.',
-    passive: Object.freeze({ damagePct: 0.20 }),
+    passive: Object.freeze({ damagePct: 0.05 }),
   }),
   defensive: Object.freeze({
     id: 'defensive',
     label: 'Defensive',
     examples: 'Guard shields, defensive implements',
     summary: 'Cuts incoming damage, holds threat and counters on a block.',
-    passive: Object.freeze({ defensePct: 0.50 }),
+    passive: Object.freeze({ defensePct: 0.10 }),
   }),
 });
 
@@ -111,6 +113,7 @@ export function applyAXEWeaponAffinityToDerived(derived, passive) {
     for (const k of ['damage', 'physicalDamage', 'totalDamage']) if (Number.isFinite(out[k])) out[k] *= dmg;
   }
   if (passive.defensePct && Number.isFinite(out.defense)) out.defense *= 1 + passive.defensePct;
+  if (passive.dodgePct && Number.isFinite(out.attackBlock)) out.attackBlock *= 1 + passive.dodgePct; // Block decides the hit roll
   if (passive.dodgePct && Number.isFinite(out.evasionPct)) out.evasionPct *= 1 + passive.dodgePct;
   if (passive.critDodgePct) out.critChanceReductionPct = Number(out.critChanceReductionPct || 0) + passive.critDodgePct * 100;
   out.weaponAffinity = { archetype: passive.archetype, doubled: passive.doubled, scale: passive.scale };

@@ -79,9 +79,13 @@ export default function HUDVitals() {
           }}
         >
           <span style={{ color: 'rgba(255, 220, 150, 0.95)' }}>Lv. {hud.level}</span>
-          <span className="opacity-90">{xpDisplay}</span>
-          <span className="opacity-60">/ 100</span>
-          <span className="opacity-80 text-[11px]">EXP</span>
+          {Number.isFinite(hud.xpForNext) ? (
+            <>
+              <span className="opacity-90">{xpDisplay}</span>
+              <span className="opacity-60">/ 100</span>
+              <span className="opacity-80 text-[11px]">EXP</span>
+            </>
+          ) : <span className="opacity-80 text-[11px]">MAX LEVEL</span>}
           {restedPct > 0 && (
             <span
               className="ml-2 px-1.5 py-[1px] rounded-sm text-[9px] font-black tracking-wider"

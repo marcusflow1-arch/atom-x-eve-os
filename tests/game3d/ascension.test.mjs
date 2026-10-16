@@ -42,6 +42,9 @@ after(async () => { intervals.forEach(clearInterval); globalThis.setInterval = n
 let user = 0;
 const fresh = () => storage.setStorageUser(`ascension-qa-${++user}`);
 const HOUR = 3_600_000, T = 1_700_000_000_000;
+const NATURES = sys.AXE_ASCENSION_NATURES; // the Natures' numbers are power-budget balance (AXEAscensionSystem)
+const BAL = NATURES.balanced.allStatsMult, DEF = NATURES.defensive.defenseMult, DES = NATURES.destroyer.skillDamageMult;
+const SHARE = NATURES.defensive.shieldFromDamage;
 const ascend = () => assert.ok(asc.ascendAXECharacter({ level: 100, confirmed: true }).ok);
 const near = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-6, `${msg}: ${a} vs ${b}`);
 
@@ -81,12 +84,12 @@ test('the Angel Cloak and the Natures act on the live derived stats', () => {
 
   assert.ok(asc.setAXEAscensionNature('balanced', { now: T }).ok);
   const balanced = hud.getPlayerHUD().derived;
-  for (const k of ['damage', 'defense', 'maxHP', 'chi', 'attackSuccess', 'attackBlock']) near(balanced[k], cloaked[k] * 1.2, `balanced ${k} x1.2`);
+  for (const k of ['damage', 'defense', 'maxHP', 'chi', 'attackSuccess', 'attackBlock']) near(balanced[k], cloaked[k] * BAL, `balanced ${k} x${BAL}`);
   assert.equal(balanced.critChance, cloaked.critChance, 'secondary stats untouched');
 
   assert.ok(asc.setAXEAscensionNature('defensive', { now: T + HOUR }).ok);
   const defensive = hud.getPlayerHUD().derived;
-  near(defensive.defense, cloaked.defense * 1.5, 'defensive defense x1.5');
+  near(defensive.defense, cloaked.defense * DEF, `defensive defense x${DEF}`);
   near(defensive.damage, cloaked.damage, 'defensive leaves damage alone');
 
   asc.setAXEAngelCloakHidden(true);
@@ -101,7 +104,7 @@ test('levitation and the cloak speed the hero up', () => {
   near(helpers.getWeaponMoveSpeedMult() / before, 1.12 * 1.03, 'x1.12 levitation, +3% cloak');
 });
 
-test('Destroyer: a real cast deals x1.5 skill damage, and only single-hit skills send a shockwave', () => {
+test('Destroyer: a real cast deals its skill-damage multiplier, and only single-hit skills send a shockwave', () => {
   fresh(); inv.resetAXEEquipmentInventoryToStarter();
   for (const w of inv.getEquippedAXEItemsByCategory('weapon')) inv.unequipAXEInventoryItem(w.instanceId);
   inv.addAXEEquipmentItem({ id: 'ascension_test_sword', name: 'Ascension Test Sword', slot: 'weapon', category: 'weapon', rarity: 'common', baseStats: { damage: 10 } }, { equipped: true });
@@ -115,10 +118,10 @@ test('Destroyer: a real cast deals x1.5 skill damage, and only single-hit skills
     ascend();
     assert.ok(asc.setAXEAscensionNature('destroyer', { now: T }).ok);
     const [heavy] = cast('sword_heavy_strike');
-    near(heavy.multiplier / mortal.multiplier, 1.5, 'heavy strike x1.5');
+    near(heavy.multiplier / mortal.multiplier, DES, `heavy strike x${DES}`);
     assert.equal(heavy.ascensionShockwave, true);
     const triple = cast('sword_triple_slash');
-    near(triple[0].multiplier / mortalTriple[0].multiplier, 1.5, 'triple slash x1.5');
+    near(triple[0].multiplier / mortalTriple[0].multiplier, DES, `triple slash x${DES}`);
     assert.ok(triple.every((s) => s.ascensionShockwave === false), 'multi-hit skills: no shockwave');
     assert.ok(asc.setAXEAscensionNature('balanced', { now: T + HOUR }).ok);
     const [plain] = cast('sword_heavy_strike');
@@ -127,23 +130,23 @@ test('Destroyer: a real cast deals x1.5 skill damage, and only single-hit skills
   } finally { mock.timers.reset(); window.removeEventListener('playerSkillStrike', on); }
 });
 
-test('Defensive: 30% of damage dealt banks a shield (capped at 40% max HP) that absorbs incoming damage after Aegis', () => {
+test('Defensive: a share of damage dealt banks a shield (capped at 40% max HP) that absorbs incoming damage after Aegis', () => {
   fresh(); ascend();
   assert.equal(asc.bankAXEAscensionDamage(1000, { maxHP: 2000 }), 0, 'no Nature: no shield');
   assert.ok(asc.setAXEAscensionNature('defensive', { now: T }).ok);
   const shieldEvents = []; const on = (e) => shieldEvents.push(e.detail.amount); window.addEventListener('axeAscensionShield', on);
   try {
-    assert.equal(asc.bankAXEAscensionDamage(1000, { maxHP: 2000 }), 300);
+    assert.equal(asc.bankAXEAscensionDamage(1000, { maxHP: 2000 }), 1000 * SHARE);
     assert.equal(asc.bankAXEAscensionDamage(10_000, { maxHP: 2000 }), 800, 'capped at 40% of max HP');
     assert.equal(buffs.absorbShield(200), 200, 'the world absorb path drains it');
     assert.equal(asc.getAXEAscensionShield(), 600);
     assert.equal(buffs.absorbShield(1000), 600, 'it absorbs no more than it holds');
     assert.equal(asc.getAXEAscensionShield(), 0);
-    assert.deepEqual(shieldEvents, [300, 800, 600, 0]);
+    assert.deepEqual(shieldEvents, [1000 * SHARE, 800, 600, 0]);
   } finally { window.removeEventListener('axeAscensionShield', on); }
   const now = Date.now();
   asc.bankAXEAscensionDamage(1000, { maxHP: 2000, now });
-  assert.equal(asc.getAXEAscensionShield(now + 7999), 300);
+  assert.equal(asc.getAXEAscensionShield(now + 7999), 1000 * SHARE);
   assert.equal(asc.getAXEAscensionShield(now + 8001), 0, 'fades 8 s after the last blow');
 });
 

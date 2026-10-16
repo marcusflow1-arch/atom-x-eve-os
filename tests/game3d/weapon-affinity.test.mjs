@@ -62,13 +62,18 @@ test('every existing weapon kind maps to one of the five archetypes', () => {
   assert.equal(arche.inferAXEWeaponArchetype(null), null);
 });
 
-test('the blueprint passives, doubled only for the specialized archetype', () => {
+// The passive values are power-budget balance (AXEWeaponArchetypes): the tests read them from there.
+const passiveOf = (id) => arche.AXE_WEAPON_ARCHETYPES[id].passive;
+
+test('every archetype has its passive, doubled only for the specialized archetype', () => {
   const p = (id, spec) => arche.getAXEArchetypePassive(id, spec);
-  assert.equal(p('close_combat', null).damagePct, 0.20); assert.equal(p('close_combat', 'close_combat').damagePct, 0.40);
-  assert.equal(p('single_hit', 'single_hit').damagePct, 0.40);
-  assert.equal(p('defensive', null).defensePct, 0.50); assert.equal(p('defensive', 'defensive').defensePct, 1.00);
-  assert.deepEqual([p('ranged', 'ranged').dodgePct, p('ranged', 'ranged').moveSpeedPct], [0.30, 0.30]);
-  assert.equal(p('multi_hit', 'multi_hit').critDodgePct, 0.20);
+  assert.equal(arche.AXE_WEAPON_AFFINITY_MULTIPLIER, 2);
+  for (const id of Object.keys(arche.AXE_WEAPON_ARCHETYPES)) {
+    for (const [k, v] of Object.entries(passiveOf(id))) {
+      assert.ok(v > 0, `${id} ${k}`);
+      assert.equal(p(id, null)[k], v); assert.equal(p(id, id)[k], v * 2, `${id} ${k} doubled`);
+    }
+  }
   assert.equal(p('close_combat', 'ranged').doubled, false, 'specializing elsewhere leaves it at 1x');
 });
 
@@ -80,7 +85,11 @@ test('the weapon in hand drives the derived stats; specializing in its archetype
   affinity.setAXESpecializedArchetype('close_combat');
   const spec = hud.getPlayerHUD().derived;
   assert.equal(spec.weaponAffinity.doubled, true);
-  assert.ok(Math.abs(spec.damage / base.damage - 1.4 / 1.2) < 1e-9, `damage x1.4 instead of x1.2 (${(spec.damage / base.damage).toFixed(4)})`);
+  // the passive joins the percent pool: specializing adds the passive once more
+  const extra = passiveOf('close_combat').damagePct * 100;
+  assert.ok(Math.abs(spec.percentPool.damagePct - base.percentPool.damagePct - extra) < 1e-9, 'one more passive in the pool');
+  const expected = base.damage * (1 + spec.percentPool.damagePct / 100) / (1 + base.percentPool.damagePct / 100);
+  assert.ok(Math.abs(spec.damage - expected) <= 1, `damage ${base.damage} -> ${spec.damage} (expected about ${expected.toFixed(1)})`);
   assert.equal(spec.defense, base.defense, 'nothing else moves');
   affinity.setAXESpecializedArchetype('defensive');
   assert.ok(Math.abs(hud.getPlayerHUD().derived.damage - base.damage) < 1e-9, 'specialized elsewhere: back to 1x');
@@ -91,7 +100,8 @@ test('a ranged weapon in hand speeds movement; specialized, twice as much', () =
   fresh('Test Longbow');
   affinity.setAXESpecializedArchetype(null); const one = helpers.getWeaponMoveSpeedMult();
   affinity.setAXESpecializedArchetype('ranged'); const two = helpers.getWeaponMoveSpeedMult();
-  assert.ok(Math.abs(two / one - 1.30 / 1.15) < 1e-9, `${(two / one).toFixed(4)}`);
+  const m = passiveOf('ranged').moveSpeedPct;
+  assert.ok(Math.abs(two / one - (1 + 2 * m) / (1 + m)) < 1e-9, `${(two / one).toFixed(4)}`);
   const d = hud.getPlayerHUD().derived; assert.equal(d.weaponAffinity.archetype, 'ranged');
 });
 

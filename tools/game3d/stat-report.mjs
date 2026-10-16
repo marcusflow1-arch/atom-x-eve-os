@@ -1,160 +1,69 @@
-// Game 3D power report: builds one character up system by system through the REAL stores
-// (the same code the game runs), records the live derived stats after each step, and
-// compares the result with the enemies the world spawns.
+// Game 3D power report, built from the REAL stores (tools/game3d/powerBuild.mjs).
 //
-//   node tools/game3d/stat-report.mjs
+//   node tools/game3d/stat-report.mjs          each group's share of a level-100 hero, against
+//                                               the budget, and par heroes against even-level enemies
+//   node tools/game3d/stat-report.mjs --par    the AXE_PAR_HERO_TABLE rows for AXEPowerBudget.js
+//   node tools/game3d/stat-report.mjs --write-par   regenerate that table in AXEPowerBudget.js
 //
-// Output is Markdown; docs/game3d/STAT_SYSTEM_AUDIT.md was made from it.
-import { build } from 'esbuild';
-import { JSDOM, VirtualConsole } from 'jsdom';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+// docs/game3d/STAT_SYSTEM_AUDIT.md explains the budget and the par hero.
+import { readFile, rm, writeFile } from 'node:fs/promises';
+import { AXE_POWER_GROUPS, buildAXEHero, loadAXEStores, measureAXEGroupShares } from './powerBuild.mjs';
 
-const root = process.cwd();
-const dom = new JSDOM('', { url: 'http://localhost/', virtualConsole: new VirtualConsole() });
-Object.assign(globalThis, { window: dom.window, document: dom.window.document,
-  localStorage: dom.window.localStorage, CustomEvent: dom.window.CustomEvent });
-globalThis.Audio = class { play() { return Promise.resolve(); } pause() {} load() {} addEventListener() {} removeEventListener() {} };
+const m = await loadAXEStores();
+const B = m.budget;
+const PAR_LEVELS = [1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100];
+const progressAt = (level) => (level - 1) / (B.AXE_LEVEL_CAP - 1);
+const n0 = (v) => (Math.abs(v) >= 100 ? Math.round(v).toLocaleString('en-US') : String(Number(Number(v).toFixed(1))));
+const pct = (v) => `${(v * 100).toFixed(1)}%`;
 
-const modules = {
-  storage: 'characterStorage.jsx', hud: 'playerHUDStore.jsx', stats: 'statsSystem.jsx',
-  halo: 'progression/haloStore.jsx', haloData: 'progression/haloData.jsx',
-  aura: 'progression/auraStore.jsx', auraData: 'progression/auraData.jsx',
-  wings: 'progression/wingsStore.jsx', wingsData: 'progression/wingsData.jsx',
-  titles: 'progression/titleStore.jsx', titleData: 'progression/titleData.jsx',
-  elixir: 'axe/progression/AXEElixirStore.js', elixirSys: 'axe/progression/AXEElixirSystem.js',
-  cape: 'axe/progression/AXECapeStore.js', capeSys: 'axe/progression/AXECapeSystem.js',
-  core: 'axe/progression/AXECoreStore.js', coreSys: 'axe/progression/AXECoreSystem.js',
-  pet: 'axe/progression/AXEPetStore.js', petSys: 'axe/progression/AXEPetSystem.js',
-  mount: 'axe/progression/AXEMountStore.js',
-  costume: 'axe/progression/AXECostumeStore.js', costumeSys: 'axe/progression/AXECostumeSystem.js',
-  vanity: 'axe/progression/AXEVanityStore.js', vanitySys: 'axe/progression/AXEVanitySystem.js',
-  inv: 'axe/equipment/AXEEquipmentInventoryStore.js', invData: 'equipment/inventoryData.jsx',
-  enhance: 'axe/equipment/AXEItemEnhancementSystem.js', advance: 'axe/equipment/AXEItemAdvancementSystem.js',
-  runtimeStats: 'axe/equipment/AXEEquipmentRuntimeStats.js',
-  asc: 'axe/progression/AXEAscensionStore.js', world: 'gameWorldConfig.jsx',
-};
-const temp = await mkdtemp(path.join(tmpdir(), 'axe-stat-report-'));
-await build({ stdin: { contents: Object.entries(modules).map(([n, f]) => `export * as ${n} from './src/components/game3d/${f}';`).join('\n'), resolveDir: root },
-  bundle: true, jsx: 'automatic', format: 'esm', platform: 'node', outfile: path.join(temp, 'stores.mjs'),
-  alias: { '@': path.join(root, 'src') }, define: { 'import.meta.env': '{}' },
-  plugins: [{ name: 'offline-service-boundary', setup(b) {
-    b.onResolve({ filter: /api\/base44Client/ }, () => ({ path: 'base44-offline', namespace: 'offline' }));
-    b.onLoad({ filter: /.*/, namespace: 'offline' }, () => ({ contents: 'export const base44 = { auth: { updateMe: async () => ({}), me: async () => ({}) } };' }));
-  } }], logLevel: 'silent' });
-const m = await import(pathToFileURL(path.join(temp, 'stores.mjs')));
-const { storage, hud, stats } = m;
-storage.setStorageUser(`stat-report-${Date.now()}`);
-
-const KEYS = ['damage', 'defense', 'maxHP', 'chi', 'critChance'];
-const snap = () => { const d = hud.getPlayerHUD().derived; return Object.fromEntries(KEYS.map((k) => [k, Number(d[k] || 0)])); };
-const rows = [{ label: 'Starting hero (level 1, starter kit)', note: '', now: snap() }];
-const step = (label, fn) => {
-  let note = '';
-  try { note = fn() || ''; } catch (e) { note = `ERROR ${e.message}`; }
-  rows.push({ label, note, now: snap() });
-};
-const score = (o = {}) => (o.damage || o.attack || 0) * 3 + (o.defense || 0) * 2 + (o.hp || o.maxHP || 0) * 0.2
-  + ['strength', 'dexterity', 'constitution', 'focus', 'vitality', 'spirit'].reduce((s, k) => s + (o[k] || 0) * 5, 0);
-const best = (defs, bonusOf) => Object.values(defs).map((d) => ({ d, s: score(bonusOf(d)) })).sort((a, b) => b.s - a.s)[0]?.d;
-
-step('Level 100, 297 stat points', () => {
-  hud.setPlayerHUD({ level: 100, unspentPoints: (hud.getPlayerHUD().unspentPoints || 0) + 297 });
-  const r = hud.applyAttributeAllocationPlan({ strength: 120, dexterity: 60, constitution: 80, focus: 37 });
-  return r.ok ? 'STR 120 / AGI 60 / VIT 80 / SPI 37' : r.reason;
-});
-step('Halo 200/200', () => { m.halo.setHaloLevel(m.haloData.MAX_HALO_LEVEL); });
-step('Aura 200/200', () => { m.aura.setAuraLevel(m.auraData.MAX_AURA_LEVEL); });
-step('Wings 200/200 (strongest path)', () => {
-  const p = m.wingsData.WING_PATHS.map((w) => ({ w, s: score(m.wingsData.getWingFlatBonusesForLevel(w.id, 200)) })).sort((a, b) => b.s - a.s)[0].w;
-  m.wings.setWingLevel(p.id, m.wingsData.MAX_WING_LEVEL); m.wings.equipWings(p.id);
-  return `${p.name}; wing reinforcement left at 0%`;
-});
-step('Title 15/15 (strongest path)', () => {
-  const p = m.titleData.TITLE_PATHS.map((t) => ({ t, s: score(m.titleData.getTitleBonusesForLevel(t.id, 15)) + score(m.titleData.getTitleAttributeBonusesForLevel(t.id, 15)) })).sort((a, b) => b.s - a.s)[0].t;
-  m.titles.setTitleLevel(p.id, m.titleData.MAX_TITLE_LEVEL); m.titles.equipTitle(p.id);
-  return p.name;
-});
-step('Elixirs, full capacity', () => {
-  const types = Object.keys(m.elixirSys.AXE_ELIXIR_TYPES);
-  const each = Math.floor(m.elixirSys.AXE_ELIXIR_CONFIG.baseCapacity / types.length);
-  for (const t of types) { m.elixir.grantAXEElixirs(t, each); m.elixir.useAXEElixir(t, each); }
-  return `${each} of each: ${types.join(', ')}`;
-});
-step('Cape (strongest)', () => { const d = best(m.capeSys.AXE_CAPE_DEFINITIONS, (c) => c.stats); m.cape.grantAXECape(d.id); m.cape.equipAXECape(d.id); return d.id; });
-step('Cores (2 strongest, level 20)', () => {
-  const defs = Object.values(m.coreSys.AXE_CORE_DEFINITIONS).map((d) => ({ d, s: score(m.coreSys.getAXECoreBonuses({ ...m.coreSys.createAXECoreInstance(d.id), level: 20 })) }))
-    .sort((a, b) => b.s - a.s).slice(0, 2).map((x) => x.d);
-  const levels = [];
-  for (const d of defs) {
-    m.core.grantAXECoreEssence(10_000_000); m.core.grantAXECore(d.id);
-    const id = m.core.getAXECoreState().cores.at(-1)?.instanceId;
-    for (let i = 0; i < 400; i++) if (!m.core.upgradeAXECore(id, { xpAmount: 1000 }).ok) break;
-    m.core.registerAXECore(id); levels.push(`${d.id} lv${m.core.getAXECoreState().cores.find((c) => c.instanceId === id)?.level}`);
+if (process.argv.includes('--par') || process.argv.includes('--write-par')) {
+  const lines = ['export const AXE_PAR_HERO_TABLE = Object.freeze(['];
+  for (const level of PAR_LEVELS) {
+    const h = buildAXEHero(m, { level, progress: progressAt(level) });
+    const row = [level, h.damage, h.maxHP, h.defense, h.attackSuccess, h.attackBlock, h.critChance, h.attributionAttack || 0, h.attributionDefense || 0]
+      .map((v, i) => (i === 0 ? v : Math.round(v * 10) / 10));
+    lines.push(`  [${row.join(', ')}],`);
   }
-  return levels.join(', ');
-});
-step('Pet (strongest, level 200, over-enchant 200%)', () => {
-  const d = best(m.petSys.AXE_PET_DEFINITIONS, (p) => m.petSys.getAXEPetStatBonuses({ ...m.petSys.createAXEPetInstance(p.id), level: 200, overEnchantPercent: 200 }));
-  const g = m.pet.grantAXEPet(d.id, { level: 200, overEnchantPercent: 200 }); m.pet.registerAXEPet(g.pet.instanceId); return d.id;
-});
-step('Mount (registered, 100% growth)', () => {
-  const s = m.mount.getAXEMountState(); const id = s.registeredMountId || s.mounts[0]?.instanceId;
-  if (!s.registeredMountId && id) m.mount.registerAXEMount(id);
-  m.mount.awardAXEMountXP(id, 10_000_000);
-});
-step('Costume (strongest)', () => { const d = best(m.costumeSys.AXE_COSTUME_DEFINITIONS, (c) => m.costumeSys.getAXECostumeBonuses(c.id)); m.costume.grantAXECostume(d.id); m.costume.equipAXECostume(d.id); return d.id; });
-step('Vanity (4 slots, top card)', () => {
-  const card = Object.keys(m.vanitySys.AXE_VANITY_CARD_TYPES).at(-1); const bySlot = {};
-  for (const p of Object.values(m.vanitySys.AXE_VANITY_PIECES)) bySlot[p.slot] ||= p;
-  for (const p of Object.values(bySlot)) { m.vanity.grantAXEVanityPiece(p.id); m.vanity.equipAXEVanityPiece(p.id); m.vanity.grantAXEVanityCard(card, 1); m.vanity.activateAXEVanityPiece(p.id, card); }
-  return `${card} card`;
-});
-step('Gear: heroic Lv100 Q20 drops, every upgrade maxed', () => {
-  for (const it of m.inv.getEquippedAXEItems()) m.inv.unequipAXEInventoryItem(it.instanceId);
-  const loot = 1.8 * (1 + 99 * 0.025) * 1.2; // AXEEquipmentLootSystem: heroic x level 100 x quality 20
-  const E = m.enhance, A = m.advance;
-  const enhancement = E.getAXEEnhancementStatMultiplier({ reinforcement: { percent: E.AXE_REINFORCEMENT_CONFIG.maxPercent },
-    enchantments: Array(E.AXE_ENCHANTMENT_CONFIG.slots).fill(E.AXE_ENCHANTMENT_CONFIG.maxLevelPerSlot), overEnchant: { level: E.AXE_OVER_ENCHANT_CONFIG.maxLevel } });
-  const c = m.runtimeStats.AXE_ADVANCEMENT_STAT_CONFIG;
-  const advancement = 1 + A.AXE_COMBINE_CONFIG.maxCombines * c.combinePerSuccess + (A.AXE_STAGE_CONFIG.stages.length - 1) * c.stagePerRank
-    + A.AXE_REFINE_CONFIG.maxLevel * c.refinePerLevel + A.AXE_ULTIMATE_CONFIG.maxLevel * c.ultimatePerLevel;
-  const used = new Set(); let n = 0;
-  for (const slot of ['weapon', 'helm', 'chest', 'gloves', 'legs', 'boots', 'ring', 'ring', 'necklace', 'trinket']) {
-    const tpl = Object.values(m.invData.INVENTORY).flat().find((t) => t.slot === slot && !used.has(t.id) && Object.keys(t.baseStats || {}).length);
-    if (!tpl) continue; used.add(tpl.id);
-    const baseStats = Object.fromEntries(Object.entries(tpl.baseStats).map(([k, v]) => [k, v * loot * enhancement * advancement]));
-    if (m.inv.addAXEEquipmentItem({ ...tpl, instanceId: undefined, id: `${tpl.id}_max`, category: tpl.category || slot, rarity: 'heroic', baseStats }, { equipped: true }).ok) n++;
+  lines.push(']);');
+  if (process.argv.includes('--write-par')) {
+    const file = 'src/components/game3d/axe/balance/AXEPowerBudget.js';
+    const src = await readFile(file, 'utf8');
+    const a = src.indexOf('export const AXE_PAR_HERO_TABLE = Object.freeze([');
+    const b = src.indexOf(']);', a) + 3;
+    if (a < 0 || b < 3) throw new Error('AXE_PAR_HERO_TABLE not found in ' + file);
+    const eol = src.includes('\r\n') ? '\r\n' : '\n';
+    await writeFile(file, src.slice(0, a) + lines.join(eol) + src.slice(b));
+    console.log(`AXE_PAR_HERO_TABLE regenerated in ${file}`);
+  } else console.log(lines.join('\n'));
+} else {
+  const { full, shares } = measureAXEGroupShares(m, { level: B.AXE_LEVEL_CAP, progress: 1 });
+  console.log(`**Fully built level-${B.AXE_LEVEL_CAP} hero:** ${n0(full.damage)} damage, ${n0(full.maxHP)} HP, ${n0(full.defense)} defense, ${n0(full.critChance)}% crit.\n`);
+  console.log('| Group | Systems | Damage | HP | Offense | Survival | Budget band | |');
+  console.log('|---|---|---|---|---|---|---|---|');
+  for (const [group, label] of Object.entries(AXE_POWER_GROUPS)) {
+    const band = B.AXE_POWER_BUDGET[group]; const s = shares[group];
+    const ok = [s.damageShare, s.hpShare].every((v) => v >= band.min && v <= band.max); // the budget is on damage and HP
+    console.log(`| ${group} | ${label} | ${pct(s.damageShare)} | ${pct(s.hpShare)} | ${pct(s.offenseShare)} | ${pct(s.survivalShare)} | ${pct(band.min)}–${pct(band.max)} (target ${pct(band.target)}) | ${ok ? 'in band' : '**out of band**'} |`);
   }
-  return `${n} pieces; drop x${loot.toFixed(2)}, enhancement x${enhancement.toFixed(2)}, advancement x${advancement.toFixed(3)}; sockets, item auras and sets not included`;
-});
-step('Taurus Chosen Ascension (Balanced)', () => { m.asc.ascendAXECharacter({ level: 100, confirmed: true }); m.asc.setAXEAscensionNature('balanced'); });
-step('Mount Soul Fusion (absorbed)', () => { const r = m.mount.absorbAXEMount('absorption_pill_s'); return r.ok ? `share ${m.mount.getAXEMountFusionState().share}%` : r.reason; });
-
-const final = rows.at(-1).now;
-const n0 = (v) => (Math.abs(v) >= 100 ? Math.round(v).toLocaleString('en-US') : String(Number(v.toFixed(1))));
-const pct = (v, total) => `${((v / total) * 100).toFixed(1)}%`;
-console.log('| Step | Damage | Share of final damage | Max HP | Share of final HP | Defense | Crit % | Notes |');
-console.log('|---|---|---|---|---|---|---|---|');
-rows.forEach((r, i) => {
-  const prev = i ? rows[i - 1].now : { damage: 0, maxHP: 0 };
-  const dd = r.now.damage - prev.damage, dh = r.now.maxHP - prev.maxHP;
-  console.log(`| ${r.label} | ${i ? '+' : ''}${n0(dd)} | ${pct(dd, final.damage)} | ${i ? '+' : ''}${n0(dh)} | ${pct(dh, final.maxHP)} | ${n0(r.now.defense)} | ${n0(r.now.critChance)} | ${r.note} |`);
-});
-console.log(`| **Total** | **${n0(final.damage)}** | | **${n0(final.maxHP)}** | | **${n0(final.defense)}** | **${n0(final.critChance)}** | |`);
-
-const versus = (hero, label) => {
-  console.log(`\n${label}\n\n| Enemy | Level | HP | Attack | Defense | Hero's hit | Hits to kill | Enemy's hit | Hits to kill the hero |`);
+  console.log('\n**Par hero against an even-level enemy** (average swings, misses and crits included)\n');
+  console.log('| Level | Hero damage | Hero HP | Hero defense | Enemy HP | Enemy attack | Hero hits to kill | Enemy hits to kill the hero | Hero hit chance |');
   console.log('|---|---|---|---|---|---|---|---|---|');
-  for (const tier of m.world.ENEMY_TIERS) {
-    const e = stats.computeDerivedStats(stats.ENEMY_STAT_TEMPLATES[tier.name], []);
-    const heroHit = Math.max(1, Math.round(hero.damage - e.defense)), enemyHit = Math.max(1, Math.round(e.damage - hero.defense));
-    console.log(`| ${tier.name} | ${tier.level} | ${e.maxHP} | ${e.damage} | ${n0(e.defense)} | ${n0(heroHit)} | ${Math.ceil(e.maxHP / heroHit)} | ${enemyHit} | ${n0(Math.ceil(hero.maxHP / enemyHit))} |`);
+  for (const level of PAR_LEVELS) {
+    const hero = buildAXEHero(m, { level, progress: progressAt(level) });
+    const enemy = B.getAXEEnemyStats(level, 'normal');
+    const heroSwing = B.getAXEExpectedHit(hero, enemy), enemySwing = B.getAXEExpectedHit(enemy, hero);
+    console.log(`| ${level} | ${n0(hero.damage)} | ${n0(hero.maxHP)} | ${n0(hero.defense)} | ${n0(enemy.maxHP)} | ${n0(enemy.damage)} | ${n0(enemy.maxHP / heroSwing)} | ${n0(hero.maxHP / enemySwing)} | ${n0(B.getAXEHitChancePct(hero.attackSuccess, enemy.attackBlock))}% |`);
   }
-};
-versus(rows[0].now, '**Starting hero against every enemy tier** (plain hits: no crits, skills or level modifier)');
-versus(final, '**Fully built hero against every enemy tier**');
-dom.window.close(); await rm(temp, { recursive: true, force: true });
+  const max = buildAXEHero(m, { level: B.AXE_LEVEL_CAP, progress: 1 });
+  console.log('\n**Fully built level-100 hero against every tier at level 100, and a level-1 normal enemy**\n');
+  console.log('| Enemy | HP | Attack | Hero hits to kill | Enemy hits to kill the hero |');
+  console.log('|---|---|---|---|---|');
+  for (const tier of Object.keys(B.AXE_ENEMY_TIERS)) {
+    const e = B.getAXEEnemyStats(100, tier);
+    console.log(`| ${tier} Lv100 | ${n0(e.maxHP)} | ${n0(e.damage)} | ${n0(e.maxHP / B.getAXEExpectedHit(max, e))} | ${n0(max.maxHP / B.getAXEExpectedHit(e, max))} |`);
+  }
+  const low = B.getAXEEnemyStats(1, 'normal');
+  console.log(`| normal Lv1 | ${n0(low.maxHP)} | ${n0(low.damage)} | ${n0(low.maxHP / B.getAXEExpectedHit(max, low))} | ${n0(max.maxHP / B.getAXEExpectedHit(low, max))} |`);
+}
+await rm(m.temp, { recursive: true, force: true });
 process.exit(0);

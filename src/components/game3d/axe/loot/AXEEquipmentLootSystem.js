@@ -3,6 +3,7 @@
 // Balance values are provisional and data-driven; ownership/state is the key contract.
 
 import { INVENTORY } from '../../equipment/inventoryData';
+import { isAXERateStat } from '../equipment/AXEEquipmentRuntimeStats';
 
 export const AXE_EQUIPMENT_DROP_CONFIG = Object.freeze({
   chanceByTier: Object.freeze({
@@ -65,6 +66,12 @@ const scaleForRarity = (rarity) => ({
   heroic: 1.8,
 }[rarity] || 1);
 
+// How much stronger a drop is for each level of the hero who earned it (docs/game3d/STAT_SYSTEM_AUDIT.md).
+export const AXE_LOOT_LEVEL_SCALE_PER_LEVEL = 0.06; // was 0.025: gear is the largest share of the budget
+export function getAXELootLevelScale(playerLevel = 1) {
+  return 1 + Math.max(0, Number(playerLevel || 1) - 1) * AXE_LOOT_LEVEL_SCALE_PER_LEVEL;
+}
+
 const buildTemplatePool = () =>
   DROP_CATEGORIES.flatMap((category) =>
     (INVENTORY[category] || []).map((item) => ({
@@ -92,14 +99,15 @@ export function rollAXEEquipmentDrop(enemyTier = 'normal', isBoss = false, {
   const qualityBands = AXE_EQUIPMENT_DROP_CONFIG.qualityBands;
   const qualityBand = qualityBands[Math.floor(clampRng(rng()) * qualityBands.length)];
   const rarityScale = scaleForRarity(rarity);
-  const levelScale = 1 + Math.max(0, Number(playerLevel || 1) - 1) * 0.025;
+  const levelScale = getAXELootLevelScale(playerLevel);
   const qualityScale = 1 + Number(qualityBand || 0) / 100;
   const statScale = rarityScale * levelScale * qualityScale;
 
   const scaledBaseStats = Object.fromEntries(
     Object.entries(template.baseStats || {}).map(([key, value]) => [
       key,
-      Number((Number(value || 0) * statScale).toFixed(
+      // rate stats (crit, percentages) improve with rarity only, never with level or quality
+      Number((Number(value || 0) * (isAXERateStat(key) ? rarityScale : statScale)).toFixed(
         Math.abs(Number(value || 0)) < 2 ? 2 : 0,
       )),
     ]),

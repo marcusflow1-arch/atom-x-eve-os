@@ -1,6 +1,7 @@
-# Game 3D stat system: audit and proposed structure
+# Game 3D stat system: audit, structure and rebalance
 
-**Date:** 2026-10-15.
+**Date:** 2026-10-15 (audit), 2026-10-16 (rebalance, §6).
+**Status:** the owner chose all four recommended options (§5), and they are built (§6). §1–§3 describe the game *before* the change.
 **Branch:** `game3d/stat-system-coherence`, stacked on `game3d/wuxia-blueprint`, so the numbers include slices A–D.
 **Author:** Claude, for the owner and PM.
 
@@ -14,7 +15,7 @@
 
 Adding a system must never break the game.
 
-**How it was measured:** `node tools/game3d/stat-report.mjs` builds one character system by system through the real stores. That is the same code the game runs. The tool prints the live stats after each step and compares the result with the enemies the world spawns. All the numbers below come from that run.
+**How it was measured:** heroes are built system by system through the real stores, the same code the game runs, and their live stats are compared with the enemies the world spawns. §2 comes from the first version of that tool. The current `node tools/game3d/stat-report.mjs` (built on `tools/game3d/powerBuild.mjs`) measures each group's share and the par curve (§6).
 
 ## 1. How the stat sheet works today
 
@@ -97,9 +98,19 @@ The fully built hero hits every tier for about 16,000, one hit each, and every t
    - **Fix:** `playerHUDStore.jsx` reads each system's value under either name and counts it once.
    - **Evidence:** gear +10 Vitality now gives +200 HP. The title now gives +5,600 HP instead of +5,000. Elixirs give +1,000 HP and +766 chi instead of 0.
    - **Test:** `tests/game3d/stat-routing.test.mjs`. It fails on the old code (3 of 4) and passes with the fix.
-2. **Boss minions used an enemy template that doesn't exist** (`common`). They fell back to the player's default stats. They now use `normal`.
+2. **Boss minions used an enemy template that doesn't exist** (`common`). They fell back to the player's default stats. They now use the enemy curve.
+3. **Switching characters overwrote the next character's progression.**
+   - **Cause:** on a switch, every progression store reloads and notifies the HUD store before the HUD's own reload runs. The HUD recomputed with the *previous* character's state and saved it under the *new* character's key.
+   - **Effect:** an alt at level 5 became a copy of the main at level 50 (level, XP, stat points, attributes, HP), and a brand-new character inherited them too. This happened on every `setActiveCharacter` and account switch.
+   - **Fix:** the HUD records which character its state belongs to. It never saves into another character's slot, and a mid-switch recompute loads the new character's own save instead.
+   - **Test:** `stat-routing.test.mjs`, "switching characters never copies…".
+4. **Crit damage and crit defense used two different units.**
+   - Capes, cores, costumes and gear wrote them in percentage points (6 = 6%). The halo, wings and titles wrote ratios (0.06), and combat reads ratios.
+   - Effect: the God's cape alone made crits hit ×9.2 and made the wearer crit-immune. A 0.5% gear crit-defense roll gave 50%.
+   - Fix: one unit per stat (crit chance in percentage points; crit damage and crit defense as ratios). Each percent-unit source converts where it enters the sheet.
+5. **Percentage stats scaled like flat stats.** A ring's +0.5% crit grew with item level, quality and every upgrade, until one level-100 ring gave about 50% crit. Rate stats now grow with rarity only (`isAXERateStat`).
 
-### Structural problems (they need the owner's decisions; see §5)
+### Structural problems (decided in §5, built in §6)
 
 - **S1. Flat defense subtraction makes either side immune.**
   - Any defense at or above the attacker's attack means 1 damage.
@@ -193,12 +204,108 @@ Enemy stats would come from a level curve tied to a "par" hero of the same level
 | 3 | Rebalance each system to its budget band | Yes: the stats each level gives. Saved levels stay; no save migration | **Yes**. It lowers maxed characters |
 | 4 | Guard test in the suite | No | Merge only |
 
-**Decisions needed:**
+**Owner decisions (2026-10-15), each the recommended option:**
 
-1. The defense model (§4.3).
-2. Enemy scaling and a level cap (§4.4; `normalLevelCap` is unset today).
-3. The budget shares (§4.2).
-4. What Halo, Aura and Wings should each be for (S4).
-5. Whether Accuracy and Block should become a real hit roll (S5).
+1. Defense: a percentage reduction with diminishing returns.
+2. Enemies: a level curve, with zones setting levels and a level cap.
+3. Budget: gear-led, with the shares in §4.2.
+4. Hit roll: Accuracy against Block decides hits.
+
+Halo, Aura and Wings took the roles in §4.2. The level cap is 100 (provisional; Ascension also opens at 100).
 
 **Not covered here:** the backend systems (chat, party, trade, guild, duels). They are a separate audit.
+
+## 6. Built (phases 2–4)
+
+### 6.1 The rules
+
+- **One config:** `axe/balance/AXEPowerBudget.js` holds the level cap (100), the combat rules, the budget bands, the par-hero table and the enemy curve.
+- **Combat** (`AXECombatMath.js`, `statsSystem.jsx`):
+  - **Defense:** reduction = DEF ÷ (DEF + 1.5 × the par hero's defense at the attacker's level), capped at 75%. A par defender takes 40% less.
+  - **Attribute attack:** extra damage that only attribute defense reduces, by the same curve.
+  - **Crits:** ×2 plus crit damage, up to 50%. A forced critical (Critical Focus) never misses.
+  - **Hit roll:** hit chance = 85% + 50% × (ACC − BLK) ÷ (ACC + BLK), clamped to 50–98%. A miss shows MISS and spends no damage buff or skill multiplier.
+  - **Level gap:** ±8% per level, both ways, clamped to ×0.5–×1.5. This replaces the old one-way +25% / −15% in GameWorld3D.
+- **The stat sheet** (`playerHUDStore.jsx`, `AXEStatPool.js`):
+  - Every percentage bonus (vanity activation, gear %, advanced class, weapon affinity) adds into one pool per stat and is applied once.
+  - The Ascension Nature is the only true multiplier.
+  - The hero's level is on the derived stats. Hit % and Evasion % are shown against an even-level enemy.
+- **Enemies:**
+  - Stats come from the enemy's level and tier (`getAXEEnemyStats`). An even-level normal enemy takes a par hero 5 average swings and kills one in 17. Champions, elites and bosses scale from there.
+  - Zones set levels: Starter Spirits 1–4, Bamboo Raiders 6–10, Bamboo Elites 10–14, Cave Guardian 15.
+  - The world boss is level 25 on the world-boss tier. Dungeon bosses scale a normal enemy of their level by their own HP, damage and defense scales. Quest targets match the hero's level.
+- **Level cap:** at 100 no amount of XP is enough to level, and the XP bars show MAX LEVEL.
+
+### 6.2 The numbers that changed
+
+| System | Before | After |
+|---|---|---|
+| Halo (role: the critical strike) | +1 to every attribute per level (+200), +40% crit, +60% crit defense | +0.15 per level (+30), +15% crit, +30% crit defense |
+| Aura (role: attribute power) | the Halo's bonuses again | +0.1 per level (+20), +300 attribute attack and +300 attribute defense |
+| Wing level | the Halo's bonuses again | +0.1 per level (+20) |
+| Wing paths at 200 | Strength +6,000 damage; Endurance +16,000 HP | Strength +140 damage; Endurance +1,100 HP (all four rescaled) |
+| Title paths at 15 | Vitality +5,000 HP; Strength +350 damage | Vitality +450 HP; Strength +60 damage |
+| Pets at 200 | the strongest +230 attack | +100 (every pet stat about half) |
+| Vanity activation | +10% | +5% |
+| Natures | Destroyer ×1.5 skills; Balanced ×1.2; Defensive ×1.5 defense and a 30% shield | ×1.25; ×1.06; ×1.25 and 20% |
+| Weapon Affinity (blueprint values) | +20% damage; +10% crit dodge; +15% dodge and movement; +50% defense | +5%; +5%; +5% dodge and +8% movement; +10% (doubled when specialized). Dodge now raises Block |
+| Gear | best starter sword +3 attack, little armour HP; drops +2.5% per level | sword +6, armour carries HP; drops +6% per level |
+
+### 6.3 Results (`node tools/game3d/stat-report.mjs`)
+
+A fully built level-100 hero now has 3,175 damage, 14,618 HP, 1,564 defense and 50% crit. Before, it was 16,095 damage and 39,115 HP.
+
+Each group's share is what the hero loses without it, divided by the sum of those losses. The losses overlap, because removing a group also removes its part of the % pool.
+
+| Group | Damage | HP | Band (target) |
+|---|---|---|---|
+| Character | 21.6% | 18.2% | 13–28% (20%) |
+| Gear | 33.7% | 34.3% | 27–43% (35%) |
+| Prestige | 21.2% | 22.9% | 13–27% (20%) |
+| Companions | 14.3% | 11.6% | 6–18% (12%) |
+| Appearance | 4.4% | 4.5% | 2–9% (5%) |
+| Ascension | 4.8% | 8.5% | 4–12% (8%) |
+
+- **Par hero against an even-level normal enemy:** 5 swings to kill and 17 swings to fall, at every level from 1 to 100. The hero hits 74% of swings at level 1 and about 79–85% after.
+- **Fully built level-100 hero against level-100 enemies:**
+
+  | Tier | Hero's swings to kill | Enemy's swings to kill the hero |
+  |---|---|---|
+  | Normal | 5 | 17 |
+  | Elite | 25 | 11 |
+  | World boss | 600 | 5 |
+
+  A level-1 enemy dies in one swing.
+
+**Checked live** in the local GameView (Dev Test character, level 1):
+
+- Enemies spawn with their zone's levels and curve stats.
+- In 2,000 simulated swings with the game's own modules, the hero kills a level-1 spirit in 5.7 swings and misses 27% (the stat screen shows 74.1% hit).
+- The spirit kills the hero in 16.8 swings.
+- In the running game, real swings took a spirit 84 → 66 → 46 → 26 → 0, the spirit's hits took the hero 193 → 163, and MISS floats appeared.
+
+### 6.4 The guard
+
+`tests/game3d/power-budget.test.mjs` builds heroes through the real stores and fails when:
+
+- a group leaves its band, for any of the four wing paths;
+- the par table drifts from the systems;
+- a par hero is off its time-to-kill targets;
+- the game's combat differs from the budget's maths;
+- defense makes anyone immune;
+- the level cap stops working;
+- loot rate stats scale with level.
+
+With the old +6,000 wing damage put back, it fails 3 of its 7 checks and names the cause.
+
+**After a deliberate balance change:** run `node tools/game3d/stat-report.mjs --write-par` to regenerate the par table, then the test.
+
+### 6.5 Limits and risks
+
+- **Existing characters change.** Their saved levels, items and progress stay; no save is migrated. But each level and item now gives the new numbers, so maxed characters lose most of their power. That was approved with the budget.
+- **Content stops at about level 15.** Zones go to level 15 and the world boss is 25, so the level 16–100 curve has no zones yet.
+- **Pacing is untouched.** XP per level is still flat at 160 from level 11, and enemy XP rewards are unchanged.
+- **Mount Soul Fusion** is a timed pill buff (+25–39% of gear) and sits outside the budget.
+- **Raid bosses** keep their own phase and tank HP pipeline (`BossPhaseController`).
+- **Not tested:** PvP (it uses the same rules) and remote players.
+

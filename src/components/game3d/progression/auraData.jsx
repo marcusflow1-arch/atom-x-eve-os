@@ -11,7 +11,6 @@ import {
   MAX_HALO_LEVEL,
   HALO_ATTEMPT_COST,
   getSuccessChanceForLevel,
-  getHaloBonusesForLevel,
 } from './haloData';
 
 export const MAX_AURA_LEVEL = MAX_HALO_LEVEL;        // same cap as Halo
@@ -20,10 +19,22 @@ export const AURA_ATTEMPT_COST = HALO_ATTEMPT_COST;  // same cost as Halo
 // Reuse Halo's success bands — "same multiplier as the halo system".
 export const getAuraSuccessChance = getSuccessChanceForLevel;
 
-// Aura grants the SAME per-level bonuses as Halo (virtual attribute points
-// that pass through the statsSystem formulas).
+// The aura's role is attribute (elemental) power: attribute attack is extra damage that
+// only attribute defense reduces (AXECombatMath). It used to grant the Halo's bonuses, the
+// same curve as the Halo and the wing level (docs/game3d/STAT_SYSTEM_AUDIT.md).
+export const PER_LEVEL_AURA_BONUSES = Object.freeze({
+  attribute: 0.1, // +0.1 to each attribute per level: 20 at level 200
+  attributionAttack: 1.5,
+  attributionDefense: 1.5,
+});
 export function getAuraBonusesForLevel(level) {
-  return getHaloBonusesForLevel(level);
+  const lvl = Math.max(0, Math.min(MAX_AURA_LEVEL, Number(level) || 0));
+  const a = PER_LEVEL_AURA_BONUSES.attribute * lvl;
+  return {
+    strength: a, constitution: a, vitality: a, dexterity: a, focus: a, spirit: a,
+    attributionAttack: PER_LEVEL_AURA_BONUSES.attributionAttack * lvl,
+    attributionDefense: PER_LEVEL_AURA_BONUSES.attributionDefense * lvl,
+  };
 }
 
 // Aura visual tiers — describe the body outline / aura intensity.
