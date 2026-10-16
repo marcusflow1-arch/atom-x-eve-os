@@ -1,3 +1,4 @@
+import CompanionSaveStatus from './CompanionSaveStatus';
 import React, { useEffect, useState } from 'react';
 import { GEAR_CATEGORIES, setSelected } from './equipmentStore';
 import { equipAXEInventoryItem, getEquippedAXEItemInCategory, getAXEInventoryItemsByCategory, subscribeAXEEquipmentInventory, unequipAXEInventoryItem } from '../axe/equipment/AXEEquipmentInventoryStore';
@@ -284,6 +285,7 @@ export default function GearTab({ state }) {
       <div className="absolute left-6 top-24 bottom-20 w-[380px] pointer-events-auto">
         {isCompanionMode ? (
           <>
+            <CompanionSaveStatus />
             <CompanionGearSlotsPanel
               selectedSlotId={companionSlotId}
               equippedGear={fusion.equippedGear}
