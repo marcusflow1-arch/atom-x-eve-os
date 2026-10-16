@@ -7,6 +7,7 @@ import {
   activateAndSyncToHUD,
   getCharacterState,
 } from './characterStore';
+import { subscribeCharacterChange, userScopedKey } from './characterStorage';
 import CharacterCreationModal from './CharacterCreationModal';
 
 const ARCHER_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
@@ -30,13 +31,16 @@ export default function CharacterLoginScreen({ onPlay }) {
     const idx = s.roster.findIndex((c) => c.id === s.activeId);
     if (idx >= 0) setSelectedCharIdx(idx);
   }), []);
+  // a save that arrives from the server (character/CharacterVaultSync) shows its level here
+  const [, setSaveTick] = useState(0);
+  useEffect(() => subscribeCharacterChange(() => setSaveTick((t) => t + 1)), []);
 
   // Decorate each roster entry with its OWN saved level (read directly
-  // from that character's namespaced progression slot).
+  // from that character's namespaced progression slot: <key>::<user>::<character>).
   const characters = roster.map((c) => {
     let level = 1;
     try {
-      const raw = localStorage.getItem(`wwm_player_progression_v1::${c.id}`);
+      const raw = localStorage.getItem(`${userScopedKey('wwm_player_progression_v1')}::${c.id}`);
       if (raw) level = JSON.parse(raw).level || 1;
     } catch {}
     return { ...c, level };
