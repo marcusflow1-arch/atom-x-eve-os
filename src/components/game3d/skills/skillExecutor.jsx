@@ -8,6 +8,9 @@ import { reportSkillCast } from '../progression/weaponMastery/WeaponMasteryEngin
 import { primeCriticalFocus, consumeCriticalFocusForSingleHit } from './twelveSkyFocusState';
 import { armForcedCriticalHit } from '../combat/forcedCriticalBridge';
 import { setCombatFlag } from '../talents/advancedClassStore';
+import { getAXEMountFusionState } from '../axe/progression/AXEMountStore';
+import { planAXEMountSoulEchoes } from '../axe/progression/AXEMountFusionSystem';
+import { getAXEAscensionSkillMultiplier, hasAXEAscensionShockwave } from '../axe/progression/AXEAscensionStore';
 import {
   onTripleSlashCast,
   onTripleSlashFinalHit,
@@ -40,12 +43,14 @@ function toast(text) {
   window.dispatchEvent(new CustomEvent('skillActivatedToast', { detail: { text } }));
 }
 
-function dispatchStrike(skill, hitIndex, level) {
+// echo: an extra strike from an absorbed mount's soul (Mount Soul Fusion), never the skill's own hit
+function dispatchStrike(skill, hitIndex, level, echo = null) {
   if (typeof window === 'undefined') return;
   const baseMult = scaleStat(skill, 'damage_pct', level || 1) || 1;
-  const multiplier = applyMasteryToSkillMultiplier(baseMult);
+  // Destroyer Nature (Taurus Chosen Ascension): skill damage x1.5, echoes included
+  const multiplier = applyMasteryToSkillMultiplier(baseMult) * (echo?.multiplierScale ?? 1) * getAXEAscensionSkillMultiplier();
   const criticalAllowed = skill.critical_allowed !== false;
-  const forceCritical = criticalAllowed && skill.cast_type === CAST_TYPE.SINGLE_HIT
+  const forceCritical = !echo && criticalAllowed && skill.cast_type === CAST_TYPE.SINGLE_HIT
     ? consumeCriticalFocusForSingleHit()
     : false;
   if (forceCritical) armForcedCriticalHit(1);
@@ -55,7 +60,7 @@ function dispatchStrike(skill, hitIndex, level) {
       skillId: skill.skill_id,
       multiplier,
       hitIndex,
-      hitsTotal: skill.hit_count,
+      hitsTotal: echo?.total ?? skill.hit_count + (getAXEMountFusionState().active ? planAXEMountSoulEchoes(skill).length : 0), // the fused count on every strike of the cast
       castType: skill.cast_type,
       weaponType: skill.weapon_type,
       forceCritical,
@@ -63,7 +68,10 @@ function dispatchStrike(skill, hitIndex, level) {
       axeSkillNumber: skill.axe_skill_number || null,
       axeRole: skill.axe_role || null,
       axePattern: skill.axe_pattern || null,
-      aoeRadius: Number(skill.aoe_radius || 0),
+      aoeRadius: echo?.aoeRadius ?? Number(skill.aoe_radius || 0),
+      soulEcho: echo?.kind || null, // 'spectral' | 'elemental' | 'spectral_aoe'
+      soulPalette: echo?.palette || null,
+      ascensionShockwave: !echo && skill.cast_type === CAST_TYPE.SINGLE_HIT && hasAXEAscensionShockwave(),
       divine: Boolean(skill.divine),
       aerial: Boolean(skill.aerial),
     },
@@ -192,6 +200,14 @@ export function castSkill(skillId, ctx = {}) {
       break;
     default:
       return { ok: false, reason: 'unsupported_cast_type' };
+  }
+
+  // Mount Soul Fusion: the absorbed mount's soul adds its own strikes after the skill's
+  const fusion = getAXEMountFusionState();
+  if (fusion.active) {
+    const echoes = planAXEMountSoulEchoes(skill);
+    echoes.forEach((echo, i) => setTimeout(() => dispatchStrike(skill, skill.hit_count + i, level,
+      { ...echo, palette: fusion.palette?.id || null, total: skill.hit_count + echoes.length }), echo.atMs));
   }
 
   reportSkillCast(getActiveWeaponId());

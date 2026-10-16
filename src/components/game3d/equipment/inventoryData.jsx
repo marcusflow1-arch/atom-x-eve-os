@@ -36,29 +36,29 @@ const gear = (item) => ({
 
 export const INVENTORY = {
   weapon: [
-    gear({ id: 'wp_truesword', name: 'True Heart — Sword', type: 'Weapon — Sword', slot: 'weapon', masteryWeaponId: 'sword', axeWeaponRole: 'offensive', mastery: 7, tier: 1, atk: '2-3', durability: '99/100', level: 1, equipped: true, locked: false, rarity: 'rare', qualityBand: 10, baseStats: { attack: 3 } }),
-    gear({ id: 'wp_dagger', name: 'Whisper Dagger', type: 'Weapon — Dagger', slot: 'weapon', masteryWeaponId: 'dual_blades', axeWeaponRole: 'defensive', mastery: 3, tier: 1, atk: '1-2', durability: '88/100', level: 1, equipped: false, locked: false, baseStats: { attack: 2 } }),
-    gear({ id: 'wp_fan', name: 'Painted Fan', type: 'Weapon — Fan', slot: 'weapon', masteryWeaponId: 'sky', axeWeaponRole: 'offensive', mastery: 2, tier: 1, atk: '1-2', durability: '92/100', level: 1, equipped: false, locked: false, baseStats: { attack: 2, spirit: 1 } }),
+    gear({ id: 'wp_truesword', name: 'True Heart — Sword', type: 'Weapon — Sword', slot: 'weapon', masteryWeaponId: 'sword', axeWeaponRole: 'offensive', mastery: 7, tier: 1, atk: '2-3', durability: '99/100', level: 1, equipped: true, locked: false, rarity: 'rare', qualityBand: 10, baseStats: { attack: 6 } }),
+    gear({ id: 'wp_dagger', name: 'Whisper Dagger', type: 'Weapon — Dagger', slot: 'weapon', masteryWeaponId: 'dual_blades', axeWeaponRole: 'defensive', mastery: 3, tier: 1, atk: '1-2', durability: '88/100', level: 1, equipped: false, locked: false, baseStats: { attack: 6 } }),
+    gear({ id: 'wp_fan', name: 'Painted Fan', type: 'Weapon — Fan', slot: 'weapon', masteryWeaponId: 'sky', axeWeaponRole: 'offensive', mastery: 2, tier: 1, atk: '1-2', durability: '92/100', level: 1, equipped: false, locked: false, baseStats: { attack: 6, spirit: 2 } }),
   ],
   helm: [
-    gear({ id: 'hl_hood', name: "Wanderer's Hood", type: 'Helm', slot: 'helm', mastery: 1, tier: 1, atk: '—', durability: '70/100', level: 1, equipped: true, locked: false, baseStats: { defense: 1 } }),
+    gear({ id: 'hl_hood', name: "Wanderer's Hood", type: 'Helm', slot: 'helm', mastery: 1, tier: 1, atk: '—', durability: '70/100', level: 1, equipped: true, locked: false, baseStats: { defense: 1, maxHP: 8 } }),
   ],
   chest: [
-    gear({ id: 'ch_robe', name: 'Linen Robe', type: 'Chest', slot: 'chest', mastery: 1, tier: 1, atk: '—', durability: '95/100', level: 1, equipped: true, locked: false, baseStats: { defense: 2, maxHP: 10 } }),
+    gear({ id: 'ch_robe', name: 'Linen Robe', type: 'Chest', slot: 'chest', mastery: 1, tier: 1, atk: '—', durability: '95/100', level: 1, equipped: true, locked: false, baseStats: { defense: 3, maxHP: 20 } }),
   ],
   gloves: [
-    gear({ id: 'gl_wraps', name: 'Cloth Wraps', type: 'Gloves', slot: 'gloves', mastery: 1, tier: 1, atk: '—', durability: '80/100', level: 1, equipped: true, locked: false, baseStats: { attack: 1 } }),
+    gear({ id: 'gl_wraps', name: 'Cloth Wraps', type: 'Gloves', slot: 'gloves', mastery: 1, tier: 1, atk: '—', durability: '80/100', level: 1, equipped: true, locked: false, baseStats: { attack: 2 } }),
   ],
   legs: [
-    gear({ id: 'lg_pants', name: 'Travel Pants', type: 'Legs', slot: 'legs', mastery: 1, tier: 1, atk: '—', durability: '78/100', level: 1, equipped: true, locked: false, baseStats: { defense: 1, maxHP: 5 } }),
+    gear({ id: 'lg_pants', name: 'Travel Pants', type: 'Legs', slot: 'legs', mastery: 1, tier: 1, atk: '—', durability: '78/100', level: 1, equipped: true, locked: false, baseStats: { defense: 2, maxHP: 12 } }),
   ],
   boots: [
-    gear({ id: 'bt_boots', name: 'Soft Boots', type: 'Boots', slot: 'boots', mastery: 1, tier: 1, atk: '—', durability: '82/100', level: 1, equipped: true, locked: false, baseStats: { evasion: 1 } }),
+    gear({ id: 'bt_boots', name: 'Soft Boots', type: 'Boots', slot: 'boots', mastery: 1, tier: 1, atk: '—', durability: '82/100', level: 1, equipped: true, locked: false, baseStats: { evasion: 2, maxHP: 6 } }),
   ],
   accessory: [
     gear({ id: 'ac_ring1', name: 'Brass Ring', type: 'Ring', slot: 'ring', mastery: 1, tier: 1, atk: '—', durability: '100/100', level: 1, equipped: true, locked: false, baseStats: { critChance: 0.5 } }),
     gear({ id: 'ac_ring2', name: 'Silver Ring', type: 'Ring', slot: 'ring', mastery: 2, tier: 1, atk: '—', durability: '100/100', level: 1, equipped: false, locked: false, rarity: 'uncommon', qualityBand: 5, baseStats: { critChance: 0.75 } }),
-    gear({ id: 'ac_neck', name: 'Jade Necklace', type: 'Necklace', slot: 'necklace', mastery: 1, tier: 1, atk: '—', durability: '100/100', level: 1, equipped: false, locked: false, baseStats: { spirit: 1, maxChi: 5 } }),
+    gear({ id: 'ac_neck', name: 'Jade Necklace', type: 'Necklace', slot: 'necklace', mastery: 1, tier: 1, atk: '—', durability: '100/100', level: 1, equipped: false, locked: false, baseStats: { spirit: 1, maxChi: 5, maxHP: 6 } }),
   ],
   trinket: [
     gear({ id: 'tr_coin', name: 'Lucky Coin', type: 'Trinket', slot: 'trinket', mastery: 1, tier: 1, atk: '—', durability: '—', level: 1, equipped: true, locked: false, baseStats: { luck: 1 } }),

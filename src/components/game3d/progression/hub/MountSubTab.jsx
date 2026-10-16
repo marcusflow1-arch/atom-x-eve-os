@@ -2,6 +2,7 @@ import CompanionSaveStatus from '../../equipment/CompanionSaveStatus';
 import { useEffect, useState } from 'react';
 import { subscribeCharacterChange } from '../../characterStorage';
 import ProgressionReview from './ProgressionReview';
+import MountSoulFusionPanel from './MountSoulFusionPanel';
 import {
   activateAXEMount,
   addLegendaryAXEMountAbility,
@@ -100,6 +101,8 @@ export default function MountSubTab() {
               : lastResult.message || lastResult.reason?.replaceAll('_', ' ')}
           </div>
         )}
+
+        <MountSoulFusionPanel state={state} />
 
         <div className="mt-5 grid grid-cols-1 gap-4">
           {state.mounts.map((mount) => {

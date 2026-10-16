@@ -11,7 +11,7 @@ export default function CompanionMountHUD({ nearby, mounted, companionName }) {
     <div
       className="absolute left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full pointer-events-none"
       style={{
-        bottom: mounted ? 80 : 128,
+        bottom: 128, // above the hotbar either way (80 put the Dismount prompt behind it)
         background: 'rgba(15, 20, 30, 0.7)',
         backdropFilter: 'blur(14px) saturate(160%)',
         WebkitBackdropFilter: 'blur(14px) saturate(160%)',

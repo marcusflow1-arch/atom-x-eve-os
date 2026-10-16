@@ -18,9 +18,14 @@ import {
   getAXEControlResistance,
   rollAXEControlProtection,
 } from './buffEngine';
+import { absorbAXEAscensionShield } from '../axe/progression/AXEAscensionStore';
 
-// Damage absorption — old name: absorbShield. New impl: AEGIS only.
-export function absorbShield(incoming) { return absorbAegis(incoming); }
+// Damage absorption — old name: absorbShield. Aegis first, then the Defensive Nature's shield (Ascension).
+export function absorbShield(incoming) {
+  const aegis = absorbAegis(incoming);
+  const rest = Math.max(0, (Number(incoming) || 0) - aegis);
+  return aegis + (rest > 0 ? absorbAXEAscensionShield(rest) : 0);
+}
 
 // Reflect roll — old name: rollReflect. New impl: Heaven's Riposte.
 export function rollReflect() { return rollRiposte(); }

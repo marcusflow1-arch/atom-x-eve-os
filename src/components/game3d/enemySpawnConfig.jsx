@@ -3,11 +3,13 @@
 // the same world. Use this module instead of Math.random() in GameWorld3D.
 
 // AXE Prompt 016 — deterministic first-region PvE populations.
+// `levels` is the zone's enemy level range: enemy stats come from their level (the power
+// budget's enemy curve, docs/game3d/STAT_SYSTEM_AUDIT.md), so a zone's range is its difficulty.
 export const ENEMY_ZONES = [
-  { id: 'axe_starter_spirits', center: [40, 0, -150], radius: 90, count: 8 },
-  { id: 'axe_bamboo_raiders', center: [-560, 0, -250], radius: 150, count: 10, fixedTier: 'champion' },
-  { id: 'axe_bamboo_elites', center: [-700, 0, -350], radius: 90, count: 3, fixedTier: 'elite' },
-  { id: 'axe_cave_guardian', center: [620, 0, -520], radius: 8, count: 1, fixedTier: 'miniBoss' },
+  { id: 'axe_starter_spirits', center: [40, 0, -150], radius: 90, count: 8, levels: [1, 4] },
+  { id: 'axe_bamboo_raiders', center: [-560, 0, -250], radius: 150, count: 10, fixedTier: 'champion', levels: [6, 10] },
+  { id: 'axe_bamboo_elites', center: [-700, 0, -350], radius: 90, count: 3, fixedTier: 'elite', levels: [10, 14] },
+  { id: 'axe_cave_guardian', center: [620, 0, -520], radius: 8, count: 1, fixedTier: 'miniBoss', levels: [15, 15] },
 ];
 
 // 10 seconds after death, the enemy respawns at its home position with full HP.
@@ -47,6 +49,7 @@ export const ENEMY_SPAWNS = ENEMY_ZONES.flatMap((zone) =>
         zone.center[2] + Math.sin(angle) * dist,
       ],
       tierRoll, // deterministic tier pick (replaces Math.random in pickTier)
+      level: zone.levels ? zone.levels[0] + Math.floor(tierRoll * (zone.levels[1] - zone.levels[0] + 1)) : null,
       fixedTier: zone.fixedTier || null,
       aiProfile: zone.fixedTier === 'miniBoss' ? 'boss' : zone.fixedTier === 'elite' ? 'aggressive' : 'standard',
     };

@@ -10,6 +10,10 @@
       "type": "string",
       "description": "ID of the user who sent the message"
     },
+    "sender_name": {
+      "type": "string",
+      "description": "Display name of the sender when the message was sent (Game 3D world and party chat)"
+    },
     "sender_role": {
       "type": "string",
       "description": "Role of the sender at the time of messaging (e.g., member, officer, leader)",

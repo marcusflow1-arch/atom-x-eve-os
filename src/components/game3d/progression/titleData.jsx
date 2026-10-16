@@ -61,8 +61,8 @@ export const TITLE_PATHS = Object.freeze([
     color: '#ef4444',
     attrLv1: Object.freeze({ strength: 1 }),
     attrLv15: Object.freeze({ strength: 30 }),
-    flatLv1: Object.freeze({ damage: 10 }),
-    flatLv15: Object.freeze({ damage: 350, critDamage: 0.20 }),
+    flatLv1: Object.freeze({ damage: 4 }),
+    flatLv15: Object.freeze({ damage: 60, critDamage: 0.10 }),
   }),
   Object.freeze({
     id: 'vitality',
@@ -73,8 +73,8 @@ export const TITLE_PATHS = Object.freeze([
     color: '#22c55e',
     attrLv1: Object.freeze({ constitution: 1 }),
     attrLv15: Object.freeze({ constitution: 30 }),
-    flatLv1: Object.freeze({ hp: 100, defense: 8 }),
-    flatLv15: Object.freeze({ hp: 5000, defense: 500, criticalDefense: 0.25 }),
+    flatLv1: Object.freeze({ hp: 30, defense: 2 }),
+    flatLv15: Object.freeze({ hp: 450, defense: 35, criticalDefense: 0.10 }),
   }),
   Object.freeze({
     id: 'dexterity',
@@ -86,7 +86,7 @@ export const TITLE_PATHS = Object.freeze([
     attrLv1: Object.freeze({ dexterity: 1 }),
     attrLv15: Object.freeze({ dexterity: 30 }),
     flatLv1: Object.freeze({ critChance: 0.5 }),
-    flatLv15: Object.freeze({ critChance: 15, critDamage: 0.30 }),
+    flatLv15: Object.freeze({ critChance: 6, critDamage: 0.12 }),
   }),
   Object.freeze({
     id: 'spirit',
@@ -98,7 +98,7 @@ export const TITLE_PATHS = Object.freeze([
     attrLv1: Object.freeze({ focus: 1 }),
     attrLv15: Object.freeze({ focus: 30 }),
     flatLv1: Object.freeze({ chi: 15 }),
-    flatLv15: Object.freeze({ chi: 750, critDamage: 0.40 }),
+    flatLv15: Object.freeze({ chi: 300, critDamage: 0.15 }),
   }),
   Object.freeze({
     id: 'harmony',
@@ -109,8 +109,8 @@ export const TITLE_PATHS = Object.freeze([
     color: '#f6c453',
     attrLv1: Object.freeze({ strength: 1, constitution: 1, dexterity: 1, focus: 1 }),
     attrLv15: Object.freeze({ strength: 15, constitution: 15, dexterity: 15, focus: 15 }),
-    flatLv1: Object.freeze({ hp: 40, damage: 4, defense: 4 }),
-    flatLv15: Object.freeze({ hp: 2200, damage: 180, defense: 180, critChance: 5, criticalDefense: 0.12 }),
+    flatLv1: Object.freeze({ hp: 15, damage: 2, defense: 2 }),
+    flatLv15: Object.freeze({ hp: 220, damage: 30, defense: 20, critChance: 2, criticalDefense: 0.05 }),
   }),
 ]);
 

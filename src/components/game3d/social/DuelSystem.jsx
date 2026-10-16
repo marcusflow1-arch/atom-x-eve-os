@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Swords, Trophy, Skull } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import toast from 'react-hot-toast';
 import { getPvpAttackRange } from '../pvpCombatRules';
 import { setCombatFlag } from '../talents/advancedClassStore';
+import { strikeInDuel } from './duelChallenge';
 
-const DUEL_MAX_HP = 100;
-const DUEL_DAMAGE = 10;
+// Legacy abilities send a fixed damage figure that was measured against the old flat
+// 10-point duel hit; it now becomes the swing's skill multiplier (the server caps it at 3).
+const LEGACY_DUEL_HIT = 10;
 
 /**
  * DuelSystem — global handler for the active duel between two players.
@@ -14,8 +17,10 @@ const DUEL_DAMAGE = 10;
  * - Listens to DuelSession entity changes for the local user.
  * - Renders a red ring under both duelers via dispatching `duelMarker` events
  *   that GameWorld3D picks up (renders the red circle in-world).
- * - On middle-click of the opponent within range, applies damage by updating
- *   the DuelSession row. Win/lose screen shows when status flips to finished.
+ * - Each attack on the locked opponent within range goes to the duel server
+ *   (duelSystem), which rolls and resolves it with the game's combat rules
+ *   against both duelists' stats and decides the result. Win/lose screen shows
+ *   when status flips to finished.
  */
 export default function DuelSystem({ userId }) {
   const [duel, setDuel] = useState(null); // active DuelSession row
@@ -108,23 +113,16 @@ export default function DuelSystem({ userId }) {
       const maxRange = getPvpAttackRange(weaponPath);
       if (!Number.isFinite(distance) || distance > maxRange) return;
 
-      const multiplier = Math.max(0.1, Math.min(3, Number(e.detail?.skillMultiplier || 1)));
       const override = Number(e.detail?.damageOverride || 0);
-      const hitDamage = override > 0 ? Math.round(override) : Math.max(1, Math.round(DUEL_DAMAGE * multiplier));
-
-      // Apply damage to the one locked target only.
-      const isOpponent = otherId === d.opponent_id;
-      const newHP = Math.max(0, (isOpponent ? d.opponent_hp : d.challenger_hp) - hitDamage);
-      const patch = isOpponent ? { opponent_hp: newHP } : { challenger_hp: newHP };
-
-      if (newHP <= 0) {
-        patch.status = 'finished';
-        patch.winner_id = userId;
-        patch.loser_id = otherId;
-      }
+      const skillMultiplier = override > 0 ? override / LEGACY_DUEL_HIT : Number(e.detail?.skillMultiplier || 1);
       try {
-        await base44.entities.DuelSession.update(d.id, patch);
-      } catch (err) { console.warn('[Duel] damage update failed', err); }
+        const { hit, duel: next } = await strikeInDuel(d.id, { distance, weaponPath, skillMultiplier });
+        if (next?.status === 'active') { setDuel(next); duelRef.current = next; }
+        if (hit?.missed) toast('Miss', { id: 'duel-swing', icon: '💨', duration: 700 });
+        else if (hit?.critical) toast(`Critical! ${hit.damage}`, { id: 'duel-swing', icon: '💥', duration: 900 });
+      } catch (err) {
+        if (err?.code !== 'too_fast') console.warn('[Duel] hit refused', err?.code, err?.message);
+      }
     };
     window.addEventListener('duelAttack', onDuelAttack);
     return () => window.removeEventListener('duelAttack', onDuelAttack);
@@ -133,6 +131,11 @@ export default function DuelSystem({ userId }) {
   const myHP = duel ? (duel.challenger_id === userId ? duel.challenger_hp : duel.opponent_hp) : 0;
   const theirHP = duel ? (duel.challenger_id === userId ? duel.opponent_hp : duel.challenger_hp) : 0;
   const theirName = duel ? (duel.challenger_id === userId ? duel.opponent_name : duel.challenger_name) : '';
+  // each duelist fights with their own max HP (older rows have one shared max_hp)
+  const mine = duel?.challenger_id === userId ? 'challenger' : 'opponent';
+  const theirs = mine === 'challenger' ? 'opponent' : 'challenger';
+  const myMaxHP = duel ? (duel[`${mine}_max_hp`] || duel.max_hp || 100) : 100;
+  const theirMaxHP = duel ? (duel[`${theirs}_max_hp`] || duel.max_hp || 100) : 100;
 
   return (
     <>
@@ -155,9 +158,9 @@ export default function DuelSystem({ userId }) {
               <Swords className="w-5 h-5 text-red-300" />
               <span className="text-xs uppercase tracking-[0.25em] font-bold text-red-200">Duel</span>
             </div>
-            <HPBar label="You" hp={myHP} maxHp={duel.max_hp || DUEL_MAX_HP} color="#22d3ee" />
+            <HPBar label="You" hp={myHP} maxHp={myMaxHP} color="#22d3ee" />
             <div className="text-red-300 text-xs font-mono">VS</div>
-            <HPBar label={theirName || 'Opponent'} hp={theirHP} maxHp={duel.max_hp || DUEL_MAX_HP} color="#ef4444" />
+            <HPBar label={theirName || 'Opponent'} hp={theirHP} maxHp={theirMaxHP} color="#ef4444" />
             <div className="text-[10px] text-white/50 font-mono ml-2">Middle-click to lock · Left-click / skills to attack</div>
           </motion.div>
         )}

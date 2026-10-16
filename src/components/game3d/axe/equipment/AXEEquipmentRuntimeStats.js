@@ -101,14 +101,15 @@ function addStat(out, key, rawValue, scale = 1) {
     case 'critChance':
     case 'criticalChance':
       out.flat.critChance += scaled; break;
+    // Equipment data (items, sets, auxiliary gear, item auras) writes crit damage and crit
+    // defense in percentage points; the stat sheet uses ratios (0.10 = +10%). Values below 1
+    // were read as ratios before, so a 0.5% item gave 50% crit defense.
     case 'critDamage':
     case 'criticalDamage':
-      out.flat.critDamage += scaled; break;
+      out.flat.critDamage += scaled / 100; break;
     case 'critDefense':
     case 'criticalDefense':
-      // Legacy equipment data often stores whole percentage points; combat
-      // uses a ratio for criticalDefense. Normalize values > 1 as percentages.
-      out.flat.criticalDefense += Math.abs(scaled) > 1 ? scaled / 100 : scaled;
+      out.flat.criticalDefense += scaled / 100;
       break;
     case 'attributeAttack':
     case 'attributionAttack':
@@ -139,8 +140,17 @@ function addStat(out, key, rawValue, scale = 1) {
   }
 }
 
+// Percentage stats (crit chance, crit damage, crit defense, +x% stats) are rates: item level,
+// rarity rolls and upgrades scale flat stats, never these. A ring's 0.5% crit used to grow
+// with every upgrade until one ring gave about half a hero's crit chance.
+export const AXE_RATE_STATS = Object.freeze(new Set([
+  'critChance', 'criticalChance', 'critDamage', 'criticalDamage', 'critDefense', 'criticalDefense',
+  'attackPct', 'damagePct', 'defensePct', 'hpPct', 'maxHPPct', 'chiPct', 'maxChiPct',
+]));
+export const isAXERateStat = (key) => AXE_RATE_STATS.has(key);
+
 function addStats(out, stats = {}, scale = 1) {
-  for (const [key, value] of Object.entries(stats || {})) addStat(out, key, value, scale);
+  for (const [key, value] of Object.entries(stats || {})) addStat(out, key, value, isAXERateStat(key) ? 1 : scale);
 }
 
 export function getAXEEquipmentRuntimeBonuses() {

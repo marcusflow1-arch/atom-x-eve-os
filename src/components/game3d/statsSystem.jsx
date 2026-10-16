@@ -1,5 +1,6 @@
 import { consumeForcedCriticalHit } from './combat/forcedCriticalBridge';
-import { resolveAXEHit, AXE_COMBAT_MODE } from './axe/combat/AXECombatMath';
+import { resolveAXEHit, AXE_COMBAT_MODE, getAXECriticalChance } from './axe/combat/AXECombatMath';
+import { AXE_COMBAT_RULES, getAXEHitChancePct } from './axe/balance/AXEPowerBudget';
 
 // TwelveSky-style combat stat model for Mines.
 // Canonical player attributes are Strength, Agility, Vitality and Spirit.
@@ -134,7 +135,7 @@ export function computeDerivedStats(baseStats, equipment = [], attributeBonuses 
   const attackBlock = agility * STAT_RATES.agilityEvasion + vitality * STAT_RATES.vitalityEvasion + gear.block + (flat.attackBlock || 0);
   const hitChance = Math.max(5, Math.min(98, 75 + (attackSuccess - attackBlock) * 0.12));
   const evasionPct = Math.max(0, Math.min(70, attackBlock * 0.08));
-  const critChance = Math.max(0, Math.min(75,
+  const critChance = Math.max(0, Math.min(AXE_COMBAT_RULES.critChanceCapPct,
     5 + agility * SECONDARY_RATES.critPerAgility + gear.critical + bonus.critChance + (flat.critChance || 0)));
   const criticalDefense = Math.max(0,
     bonus.criticalDefense + (flat.criticalDefense || 0) + vitality * SECONDARY_RATES.criticalDefensePerVitality);
@@ -186,40 +187,27 @@ export function computeDerivedStats(baseStats, equipment = [], attributeBonuses 
   };
 }
 
-export const CRIT_MULTIPLIER = 3;
+export const CRIT_MULTIPLIER = AXE_COMBAT_RULES.critMultiplier;
 
-function mitigate(raw, defenderStats) {
-  const defense = defenderStats?.defense || 0;
-  return Math.max(1, Math.round(raw - defense));
+// A forced critical (Critical Focus) always lands; otherwise crit chance is capped and the
+// defender's crit dodge applies (getAXECriticalChance).
+function rollCrit(attackerStats, defenderStats = {}) {
+  if (consumeForcedCriticalHit()) return { critical: true, forced: true };
+  return { critical: Math.random() * 100 < getAXECriticalChance(attackerStats, defenderStats), forced: false };
 }
 
-function rollCrit(attackerStats) {
-  if (consumeForcedCriticalHit()) return true;
-  return Math.random() * 100 < (attackerStats.critChance || 0);
+// The hit roll: the attacker's Accuracy against the defender's Block (getAXEHitChancePct).
+export function rollAXEHit(attackerStats = {}, defenderStats = {}) {
+  return Math.random() * 100 < getAXEHitChancePct(attackerStats.attackSuccess, defenderStats.attackBlock);
 }
 
-export function calculateHit(attackerStats, defenderStats, context = {}) {
-  const crit = rollCrit(attackerStats);
-  return resolveAXEHit({
-    attackerStats,
-    defenderStats,
-    mode: context.mode || AXE_COMBAT_MODE.PVE,
-    baseDamage: context.baseDamage,
-    skillCoefficient: context.skillCoefficient ?? 1,
-    weaponCoefficient: context.weaponCoefficient ?? 1,
-    outgoingMultiplier: context.outgoingMultiplier ?? 1,
-    critical: crit,
-    criticalAllowed: context.criticalAllowed !== false,
-    flatMitigation: context.flatMitigation || 0,
-    percentMitigation: context.percentMitigation,
-    shield: context.shield || 0,
-    reflected: context.reflected || false,
-    reflectedDamageMultiplier: context.reflectedDamageMultiplier || 0,
-  }).damage;
-}
-
-export function calculateHitWithCrit(attackerStats, defenderStats, context = {}) {
-  const crit = rollCrit(attackerStats);
+// One swing: rolls the hit (unless context.hitRoll === false) and the crit, then resolves it.
+// A forced critical never misses.
+export function calculateAXEHitOutcome(attackerStats, defenderStats, context = {}) {
+  const crit = context.critical != null ? { critical: !!context.critical, forced: false } : rollCrit(attackerStats, defenderStats);
+  if (context.hitRoll !== false && !crit.forced && !rollAXEHit(attackerStats, defenderStats)) {
+    return { damage: 0, critical: false, missed: true };
+  }
   const result = resolveAXEHit({
     attackerStats,
     defenderStats,
@@ -228,7 +216,7 @@ export function calculateHitWithCrit(attackerStats, defenderStats, context = {})
     skillCoefficient: context.skillCoefficient ?? 1,
     weaponCoefficient: context.weaponCoefficient ?? 1,
     outgoingMultiplier: context.outgoingMultiplier ?? 1,
-    critical: crit,
+    critical: crit.critical,
     criticalAllowed: context.criticalAllowed !== false,
     flatMitigation: context.flatMitigation || 0,
     percentMitigation: context.percentMitigation,
@@ -236,27 +224,22 @@ export function calculateHitWithCrit(attackerStats, defenderStats, context = {})
     reflected: context.reflected || false,
     reflectedDamageMultiplier: context.reflectedDamageMultiplier || 0,
   });
-  return { damage: result.damage, crit: result.critical };
+  return { ...result, missed: false };
 }
 
+// Damage of one swing; 0 when it misses.
+export function calculateHit(attackerStats, defenderStats, context = {}) {
+  return calculateAXEHitOutcome(attackerStats, defenderStats, context).damage;
+}
+
+export function calculateHitWithCrit(attackerStats, defenderStats, context = {}) {
+  const result = calculateAXEHitOutcome(attackerStats, defenderStats, context);
+  return { damage: result.damage, crit: result.critical, missed: result.missed };
+}
+
+// The full breakdown without the hit roll (callers that show a breakdown decide hits themselves).
 export function calculateAXEHitDetailed(attackerStats, defenderStats, context = {}) {
-  const crit = context.critical ?? rollCrit(attackerStats);
-  return resolveAXEHit({
-    attackerStats,
-    defenderStats,
-    mode: context.mode || AXE_COMBAT_MODE.PVE,
-    baseDamage: context.baseDamage,
-    skillCoefficient: context.skillCoefficient ?? 1,
-    weaponCoefficient: context.weaponCoefficient ?? 1,
-    outgoingMultiplier: context.outgoingMultiplier ?? 1,
-    critical: crit,
-    criticalAllowed: context.criticalAllowed !== false,
-    flatMitigation: context.flatMitigation || 0,
-    percentMitigation: context.percentMitigation,
-    shield: context.shield || 0,
-    reflected: context.reflected || false,
-    reflectedDamageMultiplier: context.reflectedDamageMultiplier || 0,
-  });
+  return calculateAXEHitOutcome(attackerStats, defenderStats, { ...context, hitRoll: false });
 }
 
 export function applySpellScaling(baseDamage, attackerDerived) {

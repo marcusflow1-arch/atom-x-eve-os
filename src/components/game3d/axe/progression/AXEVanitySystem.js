@@ -9,7 +9,7 @@
 // Silver/Gold Card catalyst names and +10% activation are the user's locked
 // remaster requirement.
 
-export const AXE_VANITY_ACTIVATION_PERCENT = 10;
+export const AXE_VANITY_ACTIVATION_PERCENT = 5; // was 10: appearance is 5% of the power budget (docs/game3d/STAT_SYSTEM_AUDIT.md)
 
 export const AXE_VANITY_CARD_TYPES = Object.freeze({
   silver: Object.freeze({

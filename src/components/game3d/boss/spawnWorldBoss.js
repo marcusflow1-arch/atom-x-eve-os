@@ -7,7 +7,9 @@
 import * as THREE from 'three';
 import { BOSSES, BOSS_SCALE_MULT } from '../bossData';
 import { CREATURE_MODEL_URL, CREATURE_ANIMATION_URLS } from '../creatureAssets';
-import { ENEMY_STAT_TEMPLATES, computeDerivedStats } from '../statsSystem';
+import { getAXEEnemyStats } from '../axe/balance/AXEPowerBudget';
+
+const WORLD_BOSS_LEVEL = 25; // the world-boss tier's level (gameWorldConfig ENEMY_TIERS)
 
 export function spawnWorldBoss({
   loader,
@@ -47,10 +49,11 @@ export function spawnWorldBoss({
     CREATURE_MODEL_URL,
     (fbx) => {
       const bossModel = fbx;
-      const bossBaseStats =
-        ENEMY_STAT_TEMPLATES.champion ||
-        ENEMY_STAT_TEMPLATES[Object.keys(ENEMY_STAT_TEMPLATES)[0]];
-      const bossDerived = computeDerivedStats(bossBaseStats, []);
+      // Stats from the boss's level on the power budget's enemy curve. A dungeon boss scales a
+      // normal enemy of its level by its own hp / damage / defense scales; the world boss is the
+      // curve's world-boss tier.
+      const bossLevel = Math.max(1, Number(bossDef.level || (bossDefOverride ? 1 : WORLD_BOSS_LEVEL)));
+      const bossDerived = getAXEEnemyStats(bossLevel, bossDefOverride ? 'normal' : 'worldBoss');
       const damageScale = bossDefOverride ? Math.max(0.1, Number(bossDef.damageScale || 1)) : 1;
       const defenseScale = bossDefOverride ? Math.max(0.1, Number(bossDef.defenseScale || 1)) : 1;
       const scaledDamage = Math.max(1, Math.round(Number(bossDerived.damage || bossDerived.totalDamage || 1) * damageScale));
@@ -113,7 +116,7 @@ export function spawnWorldBoss({
       const bossMixer = new THREE.AnimationMixer(bossModel);
       const hpMultiplier = bossDefOverride
         ? Math.max(1, Number(bossDef.hpScale || 8))
-        : 1000;
+        : 1; // the world-boss tier already carries its HP
       const bossHp = Math.round(scaledBossDerived.maxHP * hpMultiplier);
       const bossEntry = {
         id: resolvedId,
@@ -136,7 +139,7 @@ export function spawnWorldBoss({
         hp: bossHp,
         maxHp: bossHp,
         derived: scaledBossDerived,
-        level: Math.max(1, Number(bossDef.level || 1)),
+        level: bossLevel,
         xpReward: Math.max(0, Number(bossDef.xpReward || 0)),
         tintMaterials: bossTintMaterials,
         fadeMaterials: [...bossTintMaterials, ringMat],
