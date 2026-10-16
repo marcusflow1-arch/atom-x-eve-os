@@ -76,7 +76,15 @@
    - **Fixed on the way:**
      - the login screen showed Level 1 for every character (it read a key from before accounts);
      - the HUD store could save a stale level over a newly arrived save.
-   - **Still client-reported:** the server checks saves; it doesn't decide each kill, drop or upgrade. That is phase 2b (§4).
+   - **Still client-reported:** the server checks saves; it doesn't decide each kill or drop. That is phase 2b (§4); upgrades are the first part of it (§2.10).
+10. **Server-rolled item upgrades: phase 2b, first part.** Full contract: [SERVER_UPGRADES.md](SERVER_UPGRADES.md).
+    - **The rolls:** reinforcement, over-enchant, refine and ultimate are rolled by a new `itemUpgrade` function.
+      - It uses the game's own rules, moved into `base44/shared` so there is one copy.
+      - It rolls on the server's record of the item (`Game3DItemUpgrade`).
+      - The game applies the server's roll through its usual handler, so costs and messages are unchanged.
+    - **Every save is corrected to the server's results** by the Character Vault. That covers a reloaded save undoing a bad roll, edited levels, deleted fractures or seals, and destroyed items. Each attempt is flagged for review.
+    - **Upgrades need the server;** offline they are refused, and nothing is paid.
+    - **Still on the device:** costs (materials); combine, sockets and aura; and the Halo, wing, pet and cape rolls.
 
 **Tests:**
 
@@ -87,7 +95,8 @@
   - The party reaches the shared session, and a party switches voice only, never the world channel.
   - The chat shows history, opens on Enter, keeps typed keys out of the game, sends world and party lines through `worldChat`, and shows live messages from its own channels only.
 - `tests/game3d/power-budget.test.mjs` adds a check that the server's swing equals the game's.
-- Character Vault: `tests/character-vault-backend.test.mjs` (9), `tests/game3d/character-vault-sync.test.mjs` (9), `tests/game3d/silver-per-character.test.mjs` (2) and `tests/game3d/vault-apply-stores.test.mjs` (1), plus a live check in GameView. See [CHARACTER_VAULT.md](CHARACTER_VAULT.md#tests).
+- Server upgrades: `tests/item-upgrade-backend.test.mjs` (8) and `tests/game3d/server-rolled-upgrades.test.mjs` (7), plus a live check in GameView. See [SERVER_UPGRADES.md](SERVER_UPGRADES.md#tests).
+- Character Vault: `tests/character-vault-backend.test.mjs` (9), `tests/game3d/character-vault-sync.test.mjs` (10), `tests/game3d/silver-per-character.test.mjs` (2) and `tests/game3d/vault-apply-stores.test.mjs` (1), plus a live check in GameView. See [CHARACTER_VAULT.md](CHARACTER_VAULT.md#tests).
 
 ## 3. Open problems, most important first
 
@@ -119,14 +128,14 @@ These need the owner's decisions or larger work.
 |---|---|---|
 | 1 (this branch) | Social actions through the server; server-resolved duels; scoped queries; party voice without leaving the world; world and party chat | merge (deploys `duelSystem`, `worldChat`, the `DuelSession` rules and the `ChatMessage` field with the client change) |
 | 2a (this branch) | **Characters on the server.** `characterVault`: a checked copy of every character, revisions, conflict choice, backups and restore. Each character uploads itself on first open (the migration, backed up). Silver per character | merge (deploys `characterVault`, `Game3DCharacterSave` and `Game3DCharacterSaveBackup` with the client change); owner-approved with backup and rollback |
-| 2b | **Server authority per action.** XP from validated kills, upgrades with server dice, Silver and inventory changes decided by the server, on top of the 2a save. Then item trade through server escrow | owner decision; builds on 2a and on the realtime decision (phase 4) |
+| 2b (begun) | **Server authority per action.** Built: the four risky item upgrades with server dice (§2.10). Next: materials and Silver on the server (so costs are real), the other rolled systems, XP from validated kills. Then item trade through server escrow | builds on 2a; kills depend on the realtime decision (phase 4) |
 | 3 | **More chat and party play.** Local (proximity), zone and guild channels in the world; moderation (mutes, reports, deletions) and `ChatMessage` access rules; shared party XP in range | owner decision on channels, moderation and party rules |
 | 4 | **Realtime authority.** Either keep peer-to-peer movement and have the server validate rewards, or move to a dedicated realtime server with zones and area-of-interest (C) | **infrastructure decision**: Base44 functions are request/response, not long-lived game servers |
 
 ## 5. Decisions for the owner
 
 1. ~~Move characters to the server~~: decided, and phase 2a is built (§2.9).
-   - **Next decision:** server authority per action (phase 2b), the foundation for a fair economy and item trading.
+   - **Phase 2b has begun** with server-rolled upgrades (§2.10). Its next part is materials and Silver on the server, which makes upgrade costs real; the realtime decision affects validated kills.
    - **Also open:** how long backups are kept (they are never pruned today; see [CHARACTER_VAULT.md](CHARACTER_VAULT.md#limits-what-this-does-not-do-yet)).
 2. Realtime architecture (§4 phase 4): peer-to-peer plus server validation, or a dedicated game server?
 3. Which further chat channels, and the moderation rules (§3.E).

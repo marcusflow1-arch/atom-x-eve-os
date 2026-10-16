@@ -4,7 +4,7 @@
 **Branch:** `game3d/stat-system-coherence`.
 **Owner decision:** "Do the backend: characters to server". Levels, items and Silver move to the server so they follow the player and can't simply be edited. The move is careful: at first the server keeps a checked copy next to the browser save, and every change to a save is backed up and can be rolled back.
 
-This is phase 2a of the [backend audit](BACKEND_AUDIT.md) (§4). The game still plays from browser storage. The server holds the copy that counts across devices, refuses impossible saves and flags suspicious ones. Phase 2b, server authority over every action, is not built yet (see Limits).
+This is phase 2a of the [backend audit](BACKEND_AUDIT.md) (§4). The game still plays from browser storage. The server holds the copy that counts across devices, refuses impossible saves and flags suspicious ones. Phase 2b, server authority over every action, has begun: reinforcement, over-enchant, refine and ultimate are rolled by the server, and every save keeps the server's results ([SERVER_UPGRADES.md](SERVER_UPGRADES.md)). The rest is not built yet (see Limits).
 
 ## What it does for a player
 
@@ -134,7 +134,9 @@ Nothing is migrated in bulk. Each character uploads itself the first time its pl
 
 - **Saves are still reported by the browser.**
   - They are checked against hard caps and flagged on fast growth, but the server doesn't see each kill, drop or upgrade. A player can still edit their save within the caps, gradually.
-  - Server authority over each action (XP from validated kills, upgrades with server dice, Silver changes) is phase 2b. It is also what item trading needs.
+  - Server authority over each action is phase 2b. It is also what item trading needs.
+    - **Built:** the four risky upgrades are rolled by the server, and each save is put right to the server's results ([SERVER_UPGRADES.md](SERVER_UPGRADES.md)).
+    - **Not built:** XP from validated kills, materials, Silver changes and the other rolled systems.
 - **There are no transactions.** Base44 has none, so two saves building on the same revision in the same instant could both pass the revision check, and the later one wins. This needs two devices saving within milliseconds of each other. Duplicate first saves are detected and reported.
 - **Backups are never pruned.** Each one is at most 1 MB. A retention rule is an owner decision; a suggestion is to keep `first_upload` forever and the latest 50 others.
 - **The companion loadout keeps its own server save** (`Game3DCompanionLoadout`, coordinated separately; see `CLAUDE_HANDOFF.md`). The vault copies the companion's browser keys with the rest of the save but does not replace that system.
@@ -156,14 +158,15 @@ All run locally against an in-memory stand-in for the Base44 tables:
   - restore and undo;
   - privacy;
   - duplicate first saves.
-- `tests/game3d/character-vault-sync.test.mjs` (9): the engine against the real function, across two simulated devices:
+- `tests/game3d/character-vault-sync.test.mjs` (10): the engine against the real function, across two simulated devices:
   - the migration upload;
   - a new device takes the server copy and learns the roster, even before a character is picked;
   - quiet takeover of a newer save;
   - both conflict choices;
   - refused saves;
   - offline;
-  - local-only slots.
+  - local-only slots;
+  - a save the server corrects (server-rolled upgrades) is taken by the device.
 - `tests/game3d/silver-per-character.test.mjs` (2): the old balance is claimed once; characters and accounts are separate.
 - `tests/game3d/vault-apply-stores.test.mjs` (1): the real stores take a server copy without writing the old level back.
 - **Live, in GameView,** against a local stand-in running the real `characterVault` function:

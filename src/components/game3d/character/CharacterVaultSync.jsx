@@ -4,7 +4,8 @@ import { callGameServer } from '../social/socialServer';
 import { getActiveId, getStorageUser, notifyCharacterChange, subscribeCharacterChange } from '../characterStorage';
 import { getCharacterState, mergeCharactersFromServer } from '../characterStore';
 import { reloadPlayerHUDFromSave } from '../playerHUDStore';
-import { createCharacterVaultSync } from './characterVault';
+import { setAXEServiceDiceSource } from '../axe/services/AXEServiceTransactionGateway';
+import { createCharacterVaultSync, createServerDice } from './characterVault';
 
 /**
  * CharacterVaultSync — keeps the server's copy of the active character in step
@@ -32,6 +33,11 @@ export default function CharacterVaultSync() {
   }), []);
   const [vault, setVault] = useState(engine.get());
   useEffect(() => engine.subscribe(setVault), [engine]);
+  // reinforcement, over-enchant, refine and ultimate are rolled by the server for this character
+  useEffect(() => setAXEServiceDiceSource(createServerDice(engine, {
+    call: (fn, action, data) => callGameServer(fn, action, data),
+    getIdentity: () => ({ userId: getStorageUser(), characterId: getActiveId() }),
+  })), [engine]);
   useEffect(() => {
     let pending = null;
     // another account or character; the vault's own reload of the same character is not a restart

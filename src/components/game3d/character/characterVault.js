@@ -34,6 +34,42 @@ const isFresh = (data) => {
   return !hero || (Number(hero.level) <= 1 && !Number(hero.xp));
 };
 
+// what the Services panel shows when the server can't roll ("Not completed — …")
+const ROLL_REFUSALS = {
+  not_synced: 'saving_your_character_try_again',
+  item_destroyed: 'item_destroyed',
+  too_fast: 'too_fast',
+  invalid: 'upgrade_not_available',
+};
+
+// Server-rolled upgrades (docs/game3d/SERVER_UPGRADES.md): for a character the server keeps,
+// reinforcement, over-enchant, refine and ultimate are rolled by itemUpgrade, never here.
+// Registered with the Services gateway (setAXEServiceDiceSource) by CharacterVaultSync.
+export function createServerDice(engine, {
+  call, // (fn, action, data) => Promise<body>; throws Error { code }
+  getIdentity,
+  wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+}) {
+  return async ({ serviceId, itemId, protectedAttempt, transactionId }) => {
+    const status = engine.get().status;
+    if (status === 'local_only') return { local: true };
+    if (status === 'conflict') return { ok: false, reason: 'choose_which_save_to_keep_first' };
+    const { characterId } = getIdentity();
+    const ask = async () => ({ ok: true, result: (await call('itemUpgrade', 'roll', { characterId, serviceId, itemId, protectedAttempt, transactionId })).result });
+    // the server rolls on its copy of the character, so it gets this device's latest first
+    await engine.flush();
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await ask();
+      } catch (e) {
+        if (e.code === 'local_only') return { local: true };
+        if (e.code === 'not_synced' && attempt === 0) { await wait(800); await engine.flush(); continue; }
+        return { ok: false, reason: ROLL_REFUSALS[e.code] || 'upgrades_need_a_server_connection' };
+      }
+    }
+  };
+}
+
 export function createCharacterVaultSync({
   call, // (action, data) => Promise<body>; throws Error { code, status, body }
   storage = globalThis.localStorage,
@@ -89,6 +125,13 @@ export function createCharacterVaultSync({
     try {
       const body = await call('put', { characterId: id.characterId, data, expectedRevision, rosterEntry: getRosterEntry(id.characterId), ...(overwrite ? { overwrite: true } : {}) });
       if (gen !== generation) return;
+      // the server put back item upgrades it rolled (itemUpgrade): this device takes the save as kept
+      if (body.corrected && body.data) {
+        rejectedFingerprint = null;
+        apply(id, { revision: body.save.revision, data: body.data });
+        set({ corrections: body.corrections || [], errors: null });
+        return;
+      }
       writeMeta(id, body.save.revision, fingerprint);
       rejectedFingerprint = null;
       set({ status: 'saved', revision: body.save.revision, savedAt: Date.now(), errors: null });
@@ -169,6 +212,18 @@ export function createCharacterVaultSync({
     if (gen === generation) timer = setTimer(tick, VAULT_SYNC.intervalMs);
   }
 
+  // send this device's save now if it changed (before a server-rolled upgrade); true when the
+  // server holds this device's latest save
+  async function flush() {
+    const id = identity;
+    if (!id || ['conflict', 'error', 'local_only', 'syncing'].includes(state.status)) return false;
+    retryAt = 0;
+    if (busy) return false;
+    await tick();
+    const meta = readMeta(id);
+    return Boolean(meta && fingerprintCharacterSave(collect(id)) === meta.fingerprint);
+  }
+
   // the account or character may have changed; the same one (this engine's own reload) carries on
   function refresh() {
     const id = getIdentity();
@@ -197,7 +252,7 @@ export function createCharacterVaultSync({
   }
 
   return {
-    start, refresh, stop, resolve, tick,
+    start, refresh, stop, resolve, tick, flush,
     get: () => state,
     subscribe: (fn) => { listeners.add(fn); fn(state); return () => listeners.delete(fn); },
   };

@@ -4,9 +4,15 @@
 // preserves the same inventory/resource semantics for local development.
 
 import {
+  canAffordMaterials,
   enchantSlot,
+  getItemOverEnchant,
+  getItemReinforcement,
+  getOverEnchantCost,
+  getReinforcementCost,
   overEnchantItem,
   reinforceItem,
+  setServerUpgradeRecord,
 } from '../../equipment/enchantmentStore';
 import {
   applyAXECombine,
@@ -14,7 +20,10 @@ import {
   applyAXEStage,
   applyAXEUltimate,
   getAXEAdvancementState,
+  setAXEAdvancementRecord,
 } from '../equipment/AXEItemAdvancementStore';
+import { AXE_OVER_ENCHANT_CONFIG, AXE_REINFORCEMENT_CONFIG } from '../equipment/AXEItemEnhancementSystem';
+import { SERVER_ROLLED_UPGRADES } from '../../../../../base44/shared/itemUpgradeLedger.ts';
 import {
   drillAXESocket,
   getAXESocketState,
@@ -26,6 +35,7 @@ import {
   consumeAXEEquipmentItem,
   destroyAXEEquipmentItem,
   getAXEEquipmentItem,
+  persistAXEEquipmentInventory,
 } from '../equipment/AXEEquipmentInventoryStore';
 import {
   consumeLootItemById,
@@ -184,6 +194,96 @@ const localHandlers = {
   }, 'equipment_aura'),
 };
 
+// ---- server-rolled upgrades (docs/game3d/SERVER_UPGRADES.md) ----
+// Reinforcement, over-enchant, refine and ultimate are rolled by the server when the
+// Character Vault registers its dice here (character/CharacterVaultSync). The server's
+// record for the item is the one rolled on, the game's own handler then applies the
+// server's roll (costs, messages, destruction as before), and the server's result is kept.
+let diceSource = null;
+
+export function setAXEServiceDiceSource(fn) {
+  diceSource = typeof fn === 'function' ? fn : null;
+  return () => { if (diceSource === fn) diceSource = null; };
+}
+
+const setUpgradeRecord = (serviceId, itemId, record) => (
+  serviceId === 'reinforcement' || serviceId === 'over_enchant'
+    ? setServerUpgradeRecord(serviceId, itemId, record)
+    : setAXEAdvancementRecord(itemId, serviceId, record)
+);
+
+// what the game refuses anyway, checked before a roll is spent on it
+function checkBeforeServerRoll(serviceId, payload) {
+  const check = requireOwned(payload.itemId || payload.item?.instanceId || payload.item?.id);
+  if (!check.ok) return check;
+  const eligible = getAXEServiceEligibility(serviceId, check.item);
+  if (!eligible.eligible) return { ok: false, reason: eligible.reason };
+  const id = check.item.instanceId;
+  const protectedAttempt = !!payload.options?.protectedAttempt;
+  const advancement = getAXEAdvancementState(id);
+  let cost = null;
+  let affordable = true;
+  if (serviceId === 'reinforcement') {
+    if (Number(getItemReinforcement(id).percent || 0) >= AXE_REINFORCEMENT_CONFIG.maxPercent) return { ok: false, reason: 'max_reinforcement' };
+    cost = getReinforcementCost(id, { protectedAttempt });
+    affordable = canAffordMaterials(cost);
+  } else if (serviceId === 'over_enchant') {
+    if (Number(getItemOverEnchant(id).level || 0) >= AXE_OVER_ENCHANT_CONFIG.maxLevel) return { ok: false, reason: 'max_over_enchant' };
+    cost = getOverEnchantCost(id, { protectedAttempt });
+    affordable = canAffordMaterials(cost);
+  } else if (serviceId === 'refine') {
+    if (Number(advancement.refine?.level || 0) >= AXE_REFINE_CONFIG.maxLevel) return { ok: false, reason: 'MAX_REFINE' };
+    cost = getAXEServiceInventoryCost('refine', { advancement, protectedAttempt });
+    affordable = canAfford(cost);
+  } else if (serviceId === 'ultimate') {
+    if (Number(advancement.ultimate?.level || 0) >= AXE_ULTIMATE_CONFIG.maxLevel) return { ok: false, reason: 'MAX_ULTIMATE' };
+    if (!AXE_ULTIMATE_CONFIG.eligibleRarities.includes(String(check.item.rarity || '').toLowerCase())) return { ok: false, reason: 'RARITY_NOT_ELIGIBLE' };
+    cost = getAXEServiceInventoryCost('ultimate', { advancement, protectedAttempt });
+    affordable = canAfford(cost);
+  }
+  if (!affordable) return { ok: false, reason: 'insufficient_materials', cost };
+  return { ok: true, item: check.item };
+}
+
+// null: this character rolls on this device (anonymous play, the pre-character slot)
+async function runServerRolledUpgrade(serviceId, payload) {
+  const ready = checkBeforeServerRoll(serviceId, payload);
+  if (!ready.ok) return ready;
+  const itemId = ready.item.instanceId;
+  // the server rolls on its copy of the save, which must hold this item (starter items may
+  // still be only in memory)
+  persistAXEEquipmentInventory();
+  const dice = await diceSource({
+    serviceId,
+    itemId,
+    protectedAttempt: !!payload.options?.protectedAttempt,
+    transactionId: payload.transactionId,
+  });
+  if (dice?.local) return null;
+  if (!dice?.ok || !dice.result) return { ok: false, reason: dice?.reason || 'upgrades_need_a_server_connection' };
+  const rolled = dice.result;
+  if (rolled.reason) return { ok: false, reason: rolled.reason }; // the server rolled nothing
+
+  setUpgradeRecord(serviceId, itemId, rolled.before);
+  const local = await localHandlers[serviceId]({
+    ...payload,
+    options: { ...(payload.options || {}), roll: rolled.roll },
+  });
+  // the server's result is the item's, whatever happened here
+  if (rolled.destroyed) {
+    if (getOwned(itemId)) destroyAXEEquipmentItem(itemId, 'refine_failure');
+  } else {
+    setUpgradeRecord(serviceId, itemId, rolled.after);
+  }
+  return {
+    ...(local || {}),
+    ok: !!rolled.ok,
+    outcome: rolled.outcome || local?.outcome || null,
+    ...(rolled.destroyed ? { destroyed: true } : {}),
+    serverRolled: true,
+  };
+}
+
 const inFlight = new Set();
 
 export async function executeAXEServiceTransaction(serviceId, payload = {}) {
@@ -214,10 +314,16 @@ export async function executeAXEServiceTransaction(serviceId, payload = {}) {
         requestedAt,
       });
     } else {
-      const handler = localHandlers[serviceId];
-      result = handler
-        ? await handler({ ...payload, transactionId })
-        : { ok: false, reason: 'SERVICE_TRANSACTION_NOT_AVAILABLE' };
+      if (diceSource && SERVER_ROLLED_UPGRADES.includes(serviceId)) {
+        result = await runServerRolledUpgrade(serviceId, { ...payload, transactionId });
+        authoritative = !!result?.serverRolled;
+      }
+      if (result === undefined || result === null) {
+        const handler = localHandlers[serviceId];
+        result = handler
+          ? await handler({ ...payload, transactionId })
+          : { ok: false, reason: 'SERVICE_TRANSACTION_NOT_AVAILABLE' };
+      }
     }
 
     const normalized = result || { ok: false, reason: 'EMPTY_TRANSACTION_RESULT' };

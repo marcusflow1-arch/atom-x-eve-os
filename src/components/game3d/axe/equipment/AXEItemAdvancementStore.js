@@ -150,6 +150,16 @@ export function applyAXEUltimate(item, options = {}) {
 }
 
 
+// The server's record for an item's refine or ultimate (itemUpgrade,
+// docs/game3d/SERVER_UPGRADES.md): the game rolls on it and keeps the server's result.
+export function setAXEAdvancementRecord(itemId, field, record) {
+  if (!itemId || !record || !['refine', 'ultimate'].includes(field)) return false;
+  const current = getAXEAdvancementState(itemId);
+  state = { ...state, [itemId]: { ...current, [field]: { ...record } } };
+  emit();
+  return true;
+}
+
 export function purgeAXEAdvancementState(itemId) {
   if (!itemId || !state[itemId]) return false;
   const next = { ...state };

@@ -195,6 +195,29 @@ test('offline: play goes on, the save waits; this device only, for anonymous pla
   assert.equal(tables.Game3DCharacterSave.length, 0);
 });
 
+test('a save the server corrects (an upgrade it rolled differently) is taken by the device', async () => {
+  reset();
+  tables.Game3DItemUpgrade = [];
+  const pc = device();
+  const inventory = JSON.stringify({ items: [{ instanceId: 'sword_1', id: 'sword', rarity: 'legendary', category: 'weapon' }], activeWeaponInstanceId: 'sword_1' });
+  put(pc.storage, 'wwm_player_progression_v1', hero(30));
+  put(pc.storage, 'axe_equipment_inventory_v2', inventory);
+  put(pc.storage, 'axe_reinforcement_v1', JSON.stringify({ sword_1: { percent: 75 } }));
+  await pc.engine.start();
+  // the server rolled a downgrade to 70; this device's save still says 75 (reloaded from before)
+  tables.Game3DItemUpgrade.push({ id: 'u1', owner_id: U, character_id: C, item_id: 'sword_1', service: 'reinforcement', record: { percent: 70 } });
+  put(pc.storage, 'wwm_player_progression_v1', hero(31));
+  const reloads = pc.reloads;
+  await pc.engine.tick();
+  assert.equal(JSON.parse(pc.storage.getItem(`axe_reinforcement_v1::${U}::${C}`)).sword_1.percent, 70);
+  assert.equal(levelOn(pc.storage), 31, 'the rest of the save is kept');
+  assert.equal(pc.reloads, reloads + 1, 'the stores re-read the corrected save');
+  assert.equal(pc.engine.get().status, 'saved');
+  assert.equal(pc.engine.get().corrections.length, 1);
+  await pc.engine.tick();
+  assert.equal(tables.Game3DCharacterSave[0].revision, 2, 'settled: nothing more to send');
+});
+
 test('summaries name the level, Silver and items', () => {
   assert.deepEqual(summarizeCharacterSave({ wwm_player_progression_v1: hero(7), axe_shop_state_v1: JSON.stringify({ gold: 123 }), axe_equipment_inventory_v2: JSON.stringify({ items: [{}, {}] }) }), { level: 7, silver: 123, items: 2 });
 });
