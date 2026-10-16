@@ -30,6 +30,7 @@ import PartyPanel from '../components/game3d/social/PartyPanel';
 import TradePanel from '../components/game3d/social/TradePanel';
 import TradeSessionWatcher from '../components/game3d/social/TradeSessionWatcher';
 import IncomingRequestToast from '../components/game3d/social/IncomingRequestToast';
+import WorldChatPanel from '../components/game3d/social/WorldChatPanel';
 import DuelSystem from '../components/game3d/social/DuelSystem';
 import DuelMarkers from '../components/game3d/social/DuelMarkers';
 import NetworkBridgeMount from '../components/network/NetworkBridgeMount';
@@ -402,6 +403,7 @@ export default function GameView() {
       <TradePanel />
       <TradeSessionWatcher userId={user?.id} />
       <IncomingRequestToast userId={user?.id} />
+      <WorldChatPanel userId={user?.id} />
       <DuelSystem userId={user?.id} />
       <DuelMarkers localUserId={user?.id} />
 

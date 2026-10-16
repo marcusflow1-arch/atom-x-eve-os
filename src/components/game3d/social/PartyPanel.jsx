@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Users, X, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -26,21 +26,15 @@ export default function PartyPanel() {
     }
   };
 
-  // When party forms or changes, switch voice chat to the party-specific channel
-  // so party members hear only each other, no matter where they are on the map.
+  // In a party, voice switches to the party's own voice room (party members hear each
+  // other wherever they are) while the hero stays in the world channel and still sees
+  // everyone. This used to switch the whole world channel to the party, so party members
+  // stopped seeing other players. The toggle sends voice back to the world.
+  const [voiceScope, setVoiceScope] = useState('party');
+  const inParty = !!partyId && members.length > 1;
   useEffect(() => {
-    if (partyId && members.length > 1) {
-      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: `party_${partyId}`, hostId: `party_${partyId}` },
-      }));
-    }
-    // When party dissolves, rejoin the world channel
-    if (members.length === 0) {
-      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: 'game_world_main', hostId: 'game_world_main' },
-      }));
-    }
-  }, [partyId, members.length]);
+    window.dispatchEvent(new CustomEvent('lunaVoiceScope', { detail: { scope: inParty && voiceScope === 'party' ? 'party' : 'dashboard' } }));
+  }, [inParty, voiceScope]);
 
   if (members.length === 0) return null; // hidden when empty
 
@@ -59,7 +53,19 @@ export default function PartyPanel() {
           <Users className="w-3.5 h-3.5 text-cyan-300" />
           <div className="text-[11px] font-bold text-cyan-200 tracking-[0.15em] uppercase">Party</div>
         </div>
-        <div className="text-[10px] font-mono text-white/50">{members.length}/{PARTY_MAX}</div>
+        <div className="flex items-center gap-2">
+          {inParty && (
+            <button
+              type="button"
+              title={voiceScope === 'party' ? 'Voice: party only — switch to world voice' : 'Voice: world — switch to party voice'}
+              onClick={() => setVoiceScope((s) => (s === 'party' ? 'world' : 'party'))}
+              className="rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-cyan-200/80 hover:bg-cyan-500/15"
+            >
+              {voiceScope === 'party' ? 'Party voice' : 'World voice'}
+            </button>
+          )}
+          <div className="text-[10px] font-mono text-white/50">{members.length}/{PARTY_MAX}</div>
+        </div>
       </div>
       <div className="p-2 space-y-1">
         {members.map((m) => (

@@ -48,11 +48,30 @@
 6. **Dead code removed:**
    - The duel accept called `aiBattleHub` `snapshotDuel`, a function that doesn't exist, so it always failed silently.
    - `socialRequestHygiene.jsx`'s browser-side request creation and deletion was refused by the access rules.
+7. **Joining a party no longer takes the player out of the world** (was §3.D).
+   - **Before:** `PartyPanel` switched the multiplayer channel to `party_<id>` to make voice party-only, and that channel also carries world presence, so party members stopped seeing everyone else.
+   - **Now:** the panel switches only the *voice* scope (`lunaVoiceScope`). The game publishes its `partySystem` party into `partySession`, the same way the dashboard does, so `MultiplayerSystem` opens the party's voice-only room (`voiceRoomId`, no data channel) while the world channel and movement stay as they are.
+   - A **Party voice / World voice** toggle on the panel lets the player choose.
+8. **World and party chat** (was §3.E).
+   - **Server:** a new `worldChat` function is the game's only way to write chat.
+     - Messages are cleaned (control characters stripped, whitespace folded) and capped at 200 characters.
+     - Rate limits: one message per second, six per 20 s, and the same line twice in 15 s is refused.
+     - Party chat is checked against the `partySystem` party.
+     - Messages are `ChatMessage` rows on `game3d_world` and `game3d_party_<id>`. `ChatMessage` gains an optional `sender_name` field.
+   - **In the game:** `WorldChatPanel`, bottom-left above the hotbar.
+     - World and Party tabs; the Party tab shows only in a party.
+     - Enter opens and sends, Esc closes, and new messages arrive live.
+     - While typing, keys never reach the game, so WASD, skill numbers and F do nothing.
+   - **Not yet:** local (proximity), zone, guild and whisper channels, or moderation tools. Friend DMs and clan chat already exist elsewhere.
 
 **Tests:**
 
 - `tests/duel-system-backend.test.mjs` (8): who may challenge and answer; stat clamping; server dice and combat rules; range and rate limits; knockout, forfeit and timeout; state.
-- `tests/game3d/social-routing.test.mjs` (3): every in-game social action calls its server function, refusals become the codes the game shows, and the request popup gathers all four kinds and answers each through its server. In none of them does the game write the tables itself.
+- `tests/world-chat-backend.test.mjs` (4): sign-in, cleaning and the length cap; history order without deleted messages; party-only party chat; the three rate limits.
+- `tests/game3d/social-routing.test.mjs` (7):
+  - Every in-game social action calls its server function, refusals become the codes the game shows, and the request popup gathers all four kinds and answers each through its server. The game never writes the tables itself.
+  - The party reaches the shared session, and a party switches voice only, never the world channel.
+  - The chat shows history, opens on Enter, keeps typed keys out of the game, sends world and party lines through `worldChat`, and shows live messages from its own channels only.
 - `tests/game3d/power-budget.test.mjs` adds a check that the server's swing equals the game's.
 
 ## 3. Open problems, most important first
@@ -70,8 +89,11 @@ These need the owner's decisions or larger work.
   - Every client subscribes to *every* `PlayerState` change in the whole app, dashboard users included.
   - Movement is a full WebRTC mesh: each player connects to every other, which is 190 connections at 20 players.
   - Every player writes presence every 2 s.
-- **D. Joining a party takes the player out of the world.** `PartyPanel` switches the multiplayer channel to `party_<id>` so voice is party-only. Voice and world presence are the same channel in `MultiplayerSystem`, so party members stop seeing everyone else.
-- **E. There is no world chat.** The 3D world has friend DMs and clan chat only: no local (proximity), zone, party or system channel, and no server-side rate limits or moderation for those. A `ChatMessage` entity exists but the world doesn't use it.
+- **D. Fixed** (§2.7).
+- **E. World and party chat are fixed** (§2.8).
+  - **Still missing:** local (proximity), zone and guild channels in the world, plus moderation (mutes, reports, deleting lines).
+  - **Remaining gap:** `ChatMessage` has no access rules, and other surfaces (streams, the library) write it directly from the browser. A tampered client could therefore write into a game channel directly, past `worldChat`'s limits. Explicit rules (`sender_id` must be the signed-in user) need a check of those surfaces first.
+  - **Scaling:** every client receives every `ChatMessage` event and filters by channel itself.
 - **F. A party has no gameplay effect.** There's no shared XP or loot rules; it's a list and a voice room.
 - **G. Entities the game relies on have no access rules:** `TradeSession`, `Party`, `PartyInvite`, `PartyMember`. The platform default applies.
 
@@ -79,14 +101,14 @@ These need the owner's decisions or larger work.
 
 | Phase | What | Needs |
 |---|---|---|
-| 1 (this branch) | Social actions through the server; server-resolved duels; scoped queries | merge (deploys `duelSystem` and the `DuelSession` rules with the client change) |
+| 1 (this branch) | Social actions through the server; server-resolved duels; scoped queries; party voice without leaving the world; world and party chat | merge (deploys `duelSystem`, `worldChat`, the `DuelSession` rules and the `ChatMessage` field with the client change) |
 | 2 | **Server-owned characters.** A `Character` record per character and a `characterSystem` function for every progression and economy action: XP from validated kills, upgrades with server dice, gold, inventory. A one-time move of each character's local save, then item trade through server escrow | **owner decision** and a migration and rollback plan (save migration is owner-gated) |
-| 3 | **World chat and party play.** Local, zone, party, guild, whisper and system channels with server rate limits and moderation; shared party XP in range; voice separated from world presence (D) | owner decision on channels and party rules |
+| 3 | **More chat and party play.** Local (proximity), zone and guild channels in the world; moderation (mutes, reports, deletions) and `ChatMessage` access rules; shared party XP in range | owner decision on channels, moderation and party rules |
 | 4 | **Realtime authority.** Either keep peer-to-peer movement and have the server validate rewards, or move to a dedicated realtime server with zones and area-of-interest (C) | **infrastructure decision**: Base44 functions are request/response, not long-lived game servers |
 
 ## 5. Decisions for the owner
 
 1. Move characters to the server (§4 phase 2)? This is the foundation for a fair economy, item trading and cross-device play.
 2. Realtime architecture (§4 phase 4): peer-to-peer plus server validation, or a dedicated game server?
-3. The chat channels and their moderation rules (§3.E).
+3. Which further chat channels, and the moderation rules (§3.E).
 4. Party rules: shared XP and loot, and range (§3.F).

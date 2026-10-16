@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, Users, ArrowLeftRight, Swords, Check, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -11,6 +11,7 @@ import { acceptFriendRequest, declineFriendRequest } from './friendRequest';
 import { acceptPartyInvite, declinePartyInvite, fetchPartyState } from './partyInvite';
 import { acceptTradeRequest, declineTradeRequest } from './tradeRequest';
 import { acceptDuelChallenge, declineDuelChallenge, fetchDuelState } from './duelChallenge';
+import { partySession } from '@/components/social/partySession';
 
 /**
  * IncomingRequestToast — global subscriber for the real-time social system.
@@ -63,6 +64,8 @@ export default function IncomingRequestToast({ userId }) {
     if (party.status === 'fulfilled') {
       const { party: p, members = [] } = party.value || {};
       partyIdRef.current = p?.id || null;
+      // the same party the dashboard shows; MultiplayerSystem takes the party voice room from here
+      partySession.publish({ ...(party.value || {}), party: p || null, members });
       setPartyState({
         members: p ? members.map((m) => ({ id: m.user_id, name: m.user_name || 'Player' })) : [],
         partyId: p?.id || null,
