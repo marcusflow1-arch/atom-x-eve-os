@@ -1,6 +1,7 @@
 // Wuxia blueprint §3 — choose the one archetype to specialize in (its passive
 // doubles) and the two weapons drawn with Shift+1 / Shift+2.
 import { useEffect, useState } from 'react';
+import { subscribeCharacterChange } from '../../characterStorage';
 import {
   getActiveEquippedAXEWeapon,
   getAXEInventoryItemsByCategory,
@@ -81,6 +82,8 @@ export default function WeaponAffinityPanel() {
     setInHand(getActiveEquippedAXEWeapon());
   }), []);
 
+  useEffect(() => subscribeCharacterChange(() => setMessage('')), []);
+
   if (!affinity) return null;
   const handArchetype = inferAXEWeaponArchetype(inHand);
 
@@ -103,7 +106,10 @@ export default function WeaponAffinityPanel() {
             id={id}
             specialized={affinity.specialized}
             inHand={handArchetype === id}
-            onSpecialize={(next) => setAXESpecializedArchetype(next)}
+            onSpecialize={(next) => {
+              const result = setAXESpecializedArchetype(next);
+              setMessage(result.ok ? '' : result.message || 'Could not change your specialty');
+            }}
           />
         ))}
       </div>
@@ -124,7 +130,7 @@ export default function WeaponAffinityPanel() {
                 value={id || ''}
                 onChange={(e) => {
                   const r = assignAXEQuickWeapon(slot, e.target.value || null);
-                  setMessage(r.ok ? '' : 'Could not assign that weapon');
+                  setMessage(r.ok ? '' : r.message || 'Could not assign that weapon');
                 }}
                 className="mt-2 w-full rounded-lg border border-white/10 bg-black/40 px-2 py-2 text-xs text-white/85"
               >
@@ -139,7 +145,7 @@ export default function WeaponAffinityPanel() {
             </label>
           ))}
         </div>
-        {message && <div className="mt-2 text-xs text-rose-200/80">{message}</div>}
+        {message && <div role="status" className="mt-2 text-xs text-rose-200/80">{message}</div>}
       </div>
     </div>
   );

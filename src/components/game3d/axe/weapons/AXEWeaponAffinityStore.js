@@ -9,12 +9,10 @@
 
 import { characterScopedStorage, subscribeCharacterChange } from '../../characterStorage';
 import {
-  equipAXEInventoryItem,
   getActiveEquippedAXEWeapon,
   getAXEEquipmentItem,
-  getEquippedAXEItemsByCategory,
-  setActiveAXEWeapon,
-  unequipAXEInventoryItem,
+  getPreviousAXEWeaponInstanceId,
+  switchAXEInventoryWeapon,
 } from '../equipment/AXEEquipmentInventoryStore';
 import {
   AXE_QUICK_WEAPON_SLOTS,
@@ -46,13 +44,17 @@ let state = load();
 const listeners = new Set();
 
 export function getAXEWeaponAffinityState() {
-  return { ...state, quickSlots: [...state.quickSlots] };
+  return { ...state, quickSlots: [...state.quickSlots], previousInstanceId: getPreviousAXEWeaponInstanceId() === undefined ? state.previousInstanceId : getPreviousAXEWeaponInstanceId() };
 }
 
-const emit = () => {
-  storage.set(JSON.stringify(state));
-  const snapshot = getAXEWeaponAffinityState();
-  listeners.forEach((fn) => fn(snapshot));
+const publish = () => listeners.forEach(fn => fn(getAXEWeaponAffinityState()));
+const commit = (next) => {
+  if (!storage.setChecked(JSON.stringify(next))) {
+    return { ok: false, reason: 'SAVE_FAILED', message: 'Could not save weapon preferences. Your selection is unchanged. Free device storage and retry.' };
+  }
+  state = next;
+  publish();
+  return { ok: true };
 };
 
 subscribeCharacterChange(() => {
@@ -70,9 +72,7 @@ export function subscribeAXEWeaponAffinity(fn) {
 export function setAXESpecializedArchetype(archetype) {
   if (archetype !== null && !isAXEWeaponArchetype(archetype)) return { ok: false, reason: 'UNKNOWN_ARCHETYPE' };
   if (state.specialized === archetype) return { ok: true, reason: 'UNCHANGED' };
-  state = { ...state, specialized: archetype };
-  emit();
-  return { ok: true };
+  return commit({ ...state, specialized: archetype });
 }
 
 // The passive of the weapon in hand (null archetype when unarmed).
@@ -94,44 +94,31 @@ export function assignAXEQuickWeapon(slot, instanceId) {
     if (!item || item.category !== 'weapon') return { ok: false, reason: 'WEAPON_NOT_OWNED' };
   }
   const quickSlots = state.quickSlots.map((id, i) => (i === slot ? instanceId : id === instanceId ? null : id));
-  state = { ...state, quickSlots };
-  emit();
-  return { ok: true };
+  return commit({ ...state, quickSlots });
 }
 
 // Shift+1 / Shift+2: draw that slot's weapon at once (no cast time, allowed
 // during the global cooldown). Pressing the key of the weapon already in hand
 // returns to the weapon held before it.
-export function quickSwitchAXEWeapon(slot) {
+export function quickSwitchAXEWeapon(slot, context = {}) {
   if (!Number.isInteger(slot) || slot < 0 || slot >= AXE_QUICK_WEAPON_SLOTS) return { ok: false, reason: 'INVALID_SLOT' };
   let targetId = state.quickSlots[slot];
   if (!targetId) return { ok: false, reason: 'EMPTY_SLOT' };
   if (!getAXEEquipmentItem(targetId)) {
-    assignAXEQuickWeapon(slot, null);
-    return { ok: false, reason: 'WEAPON_NOT_OWNED' };
+    const cleared = assignAXEQuickWeapon(slot, null);
+    return cleared.ok ? { ok: false, reason: 'WEAPON_NOT_OWNED' } : cleared;
   }
   const current = getActiveEquippedAXEWeapon();
   if (current?.instanceId === targetId) {
-    const back = state.previousInstanceId;
-    if (!back || back === targetId || !getAXEEquipmentItem(back)) return { ok: true, reason: 'ALREADY_ACTIVE', weapon: current };
+    const back = getAXEWeaponAffinityState().previousInstanceId;
+    if (!back || back === targetId || !getAXEEquipmentItem(back)) return { ok: true, reason: 'ALREADY_ACTIVE', weapon: current, archetype: inferAXEWeaponArchetype(current) };
     targetId = back;
   }
-  const target = getAXEEquipmentItem(targetId);
-  if (!target.equipped) {
-    // make room by dropping an inactive equipped weapon, never the one in hand
-    const inactive = getEquippedAXEItemsByCategory('weapon').filter((w) => w.instanceId !== current?.instanceId);
-    for (const w of inactive) unequipAXEInventoryItem(w.instanceId);
-    const equipped = equipAXEInventoryItem(targetId);
-    if (!equipped.ok) {
-      for (const w of inactive) equipAXEInventoryItem(w.instanceId); // put things back as they were
-      if (current) setActiveAXEWeapon(current.instanceId);
-      return equipped;
-    }
-  }
-  const active = setActiveAXEWeapon(targetId);
-  if (!active.ok) return active;
-  state = { ...state, previousInstanceId: current?.instanceId || null };
-  emit();
-  const weapon = getActiveEquippedAXEWeapon();
+  const result = switchAXEInventoryWeapon(targetId, context);
+  if (!result.ok) return result;
+  // History was saved together with the inventory, so this notification needs
+  // no second localStorage write and cannot leave a half-saved switch.
+  publish();
+  const weapon = result.item;
   return { ok: true, weapon, archetype: inferAXEWeaponArchetype(weapon), returned: targetId !== state.quickSlots[slot] };
 }

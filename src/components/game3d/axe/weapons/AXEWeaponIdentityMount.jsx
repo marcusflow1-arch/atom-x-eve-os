@@ -53,11 +53,13 @@ function syncFromEquipment() {
   }
 }
 
+export function bindAXEWeaponIdentity() {
+  // subscribeAXEEquipmentInventory already delivers the initial snapshot.
+  return subscribeAXEEquipmentInventory(syncFromEquipment);
+}
+
 export default function AXEWeaponIdentityMount() {
-  useEffect(() => {
-    syncFromEquipment();
-    return subscribeAXEEquipmentInventory(syncFromEquipment);
-  }, []);
+  useEffect(bindAXEWeaponIdentity, []);
 
   return null;
 }

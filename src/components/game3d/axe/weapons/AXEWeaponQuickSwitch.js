@@ -1,8 +1,7 @@
 import {
-  equipAXEInventoryItem,
   getAXEInventoryItemsByCategory,
   getActiveEquippedAXEWeapon,
-  setActiveAXEWeapon,
+  switchAXEInventoryWeapon,
 } from '../equipment/AXEEquipmentInventoryStore';
 import { resolveAXEWeaponIdentity } from './AXEWeaponIdentity';
 
@@ -14,7 +13,7 @@ export function getCurrentAXEWeapon() {
   return getActiveEquippedAXEWeapon();
 }
 
-export function cycleAXEEquippedWeapon(direction = 1) {
+export function cycleAXEEquippedWeapon(direction = 1, context = {}) {
   const weapons = getOwnedAXEWeapons();
   if (!weapons.length) return { ok: false, reason: 'NO_WEAPONS_OWNED' };
 
@@ -27,9 +26,8 @@ export function cycleAXEEquippedWeapon(direction = 1) {
   const nextIndex = (currentIndex + step + weapons.length) % weapons.length;
   const next = weapons[nextIndex];
 
-  const equippedResult = equipAXEInventoryItem(next.instanceId);
-  if (!equippedResult.ok) return equippedResult;
-  const result = setActiveAXEWeapon(next.instanceId);
+  const result = switchAXEInventoryWeapon(next.instanceId, context);
+  if (!result.ok) return result;
   return {
     ...result,
     weapon: next,
