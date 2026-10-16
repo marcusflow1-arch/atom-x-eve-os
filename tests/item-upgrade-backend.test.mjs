@@ -38,7 +38,13 @@ const ageRolls = () => tables.Game3DItemUpgrade.forEach((r) => { r.rolled_at = n
 
 const hero = (level) => JSON.stringify({ level, xp: 0, baseStats: { strength: 3 + 3 * (level - 1), dexterity: 2, constitution: 5, focus: 2 }, unspentPoints: 0 });
 const ADV = { combine: { count: 0 }, stage: { rank: 0, id: 'stage_0', label: 'Base' }, refine: { level: 0 }, ultimate: { level: 0, sealed: false } };
-const saveOf = ({ reinforcement = { sword_1: { percent: 75 } }, overEnchant = {}, advancement = { sword_1: { ...ADV, refine: { level: 12 } } }, items } = {}) => ({
+// material units, each with its own dropId, as the loot store keeps them
+const units = (id, n, tag = id) => Array.from({ length: n }, (_, i) => ({ id, category: 'material', dropId: `${tag}_${i + 1}` }));
+const STOCK = { mat_reinforce: 20, mat_over_enchant: 10, mat_protection: 3, mat_divine_essence: 5, mat_heroic_core: 5 };
+const lootOf = (stock = STOCK) => JSON.stringify({ material: Object.entries(stock).flatMap(([id, n]) => units(id, n)) });
+const countIn = (data, id) => JSON.parse(data.game_loot_inventory_v2).material.filter((u) => u.id === id).length;
+const saveOf = ({ reinforcement = { sword_1: { percent: 75 } }, overEnchant = {}, advancement = { sword_1: { ...ADV, refine: { level: 12 } } }, items, stock } = {}) => ({
+  game_loot_inventory_v2: lootOf(stock),
   wwm_player_progression_v1: hero(20),
   axe_equipment_inventory_v2: JSON.stringify({ items: items || [{ instanceId: 'sword_1', id: 'sword', rarity: 'legendary', category: 'weapon' }, { instanceId: 'ring_1', id: 'ring', rarity: 'rare', category: 'ring' }], activeWeaponInstanceId: 'sword_1' }),
   axe_reinforcement_v1: JSON.stringify(reinforcement),
@@ -87,7 +93,8 @@ test('a save that undoes a bad roll, or adds levels, keeps the server result ins
   assert.equal(recordIn(undone.data, 'axe_reinforcement_v1', 'sword_1').percent, 70);
   assert.equal(recordIn(saved().data, 'axe_reinforcement_v1', 'sword_1').percent, 70, 'the server keeps the corrected save');
   assert.equal(recordIn(undone.data, 'axe_over_enchant_v1', 'ring_1').level, 0, 'an over-enchant no server rolled is not kept either');
-  assert.ok(saved().flags.some((f) => /^upgrade_corrected: 2/.test(f)));
+  assert.ok(saved().flags.some((f) => /^upgrade_corrected: 3/.test(f)), 'the two records and the 4 stones the roll spent');
+  assert.equal(countIn(undone.data, 'mat_reinforce'), 16, 'the reloaded save gave the stones back; they are spent');
   // the device then sends the save as kept: nothing more to correct
   const settled = await put(undone.data);
   assert.equal(settled.corrected, undefined);
@@ -152,4 +159,58 @@ test('restoring a backup brings the items back as they were, and the server keep
   const body = await put({ ...saveOf(), wwm_player_progression_v1: hero(21) });
   assert.equal(body.corrected, undefined, 'the restored sword and its refine 12 stand');
   assert.equal(JSON.parse(saved().data.axe_equipment_inventory_v2).items.length, 2);
+});
+
+test('each attempt is paid on the server from its copy of the save, and spent materials stay spent', async () => {
+  await fresh();
+  nextRoll = 0.01;
+  const first = (await roll({ serviceId: 'reinforcement', itemId: 'sword_1' })).result;
+  assert.deepEqual(first.cost, { mat_reinforce: 4 }, "the game's cost at 75%");
+  assert.equal(first.spent.length, 4);
+  assert.ok(first.spent.every((id) => id.startsWith('mat_reinforce_')));
+  ageRolls();
+  // the server never takes a unit twice, even before the device's next save arrives
+  const second = (await roll({ serviceId: 'reinforcement', itemId: 'sword_1' })).result;
+  assert.deepEqual(second.cost, { mat_reinforce: 5 }, 'at 80%');
+  assert.equal(new Set([...first.spent, ...second.spent]).size, 9);
+  // a device that kept all 20 stones (it never applied the costs, or reloaded) loses the 9
+  const body = await put(saveOf({ reinforcement: { sword_1: { percent: 85 } } }));
+  assert.equal(countIn(body.data, 'mat_reinforce'), 11);
+  assert.ok(body.corrections.includes('9 spent material(s) removed'));
+});
+
+test('without the materials on the server, nothing is rolled; protection costs a Stabilizer', async () => {
+  await fresh(saveOf({ stock: { mat_reinforce: 2, mat_protection: 0 } }));
+  const short = (await roll({ serviceId: 'reinforcement', itemId: 'sword_1' })).result;
+  assert.deepEqual([short.ok, short.reason, short.missing], [false, 'insufficient_materials', { mat_reinforce: 2 }]);
+  assert.equal(tables.Game3DItemUpgrade.length, 0, 'no roll, no record');
+  await fresh(saveOf({ reinforcement: {}, stock: { mat_reinforce: 5, mat_protection: 0 } }));
+  assert.equal((await roll({ serviceId: 'reinforcement', itemId: 'sword_1', protectedAttempt: true })).result.reason, 'insufficient_materials', 'a protected attempt needs a Stabilizer');
+  await fresh(saveOf({ reinforcement: {}, stock: { mat_reinforce: 5, mat_protection: 1 } }));
+  const safe = (await roll({ serviceId: 'reinforcement', itemId: 'sword_1', protectedAttempt: true })).result;
+  assert.deepEqual(safe.cost, { mat_reinforce: 1, mat_protection: 1 });
+  assert.ok(safe.spent.includes('mat_protection_1'));
+});
+
+test('a retried attempt is not paid twice', async () => {
+  await fresh();
+  nextRoll = 0.01;
+  const first = (await roll({ serviceId: 'refine', itemId: 'sword_1', transactionId: 'tx-pay' })).result;
+  const again = (await roll({ serviceId: 'refine', itemId: 'sword_1', transactionId: 'tx-pay' })).result;
+  assert.deepEqual(again.spent, first.spent);
+  assert.equal(tables.Game3DItemUpgrade.find((r) => r.service === 'refine').spent.length, first.spent.length);
+});
+
+test('a restore gives back the materials as they were', async () => {
+  await fresh();
+  nextRoll = 0.01;
+  await roll({ serviceId: 'refine', itemId: 'sword_1' }); // 5 stones
+  await put(saveOf({ advancement: { sword_1: { ...ADV, refine: { level: 13 } } } })); // the stones are removed
+  assert.equal(countIn(saved().data, 'mat_reinforce'), 15);
+  const first = tables.Game3DCharacterSaveBackup.find((b) => b.reason === 'first_upload');
+  revision = (await call('characterVault', 'alice', 'restore', { characterId: 'char_1', backupId: first.id })).save.revision;
+  assert.deepEqual(tables.Game3DItemUpgrade.find((r) => r.service === 'refine').spent, [], 'the restored stones are no longer spent');
+  const body = await put({ ...saveOf(), wwm_player_progression_v1: hero(21) });
+  assert.equal(body.corrected, undefined);
+  assert.equal(countIn(saved().data, 'mat_reinforce'), 20);
 });

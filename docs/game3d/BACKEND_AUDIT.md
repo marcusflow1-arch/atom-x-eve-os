@@ -84,7 +84,8 @@
       - The game applies the server's roll through its usual handler, so costs and messages are unchanged.
     - **Every save is corrected to the server's results** by the Character Vault. That covers a reloaded save undoing a bad roll, edited levels, deleted fractures or seals, and destroyed items. Each attempt is flagged for review.
     - **Upgrades need the server;** offline they are refused, and nothing is paid.
-    - **Still on the device:** costs (materials); combine, sockets and aura; and the Halo, wing, pet and cape rolls.
+    - **Each attempt is paid on the server** (branch `game3d/server-upgrade-costs`). The cost is taken, unit by unit, from the server's copy of the materials, and those units stay spent; a reloaded save that gives them back loses them. Upgrade materials gained too fast are flagged (`material_rate`).
+    - **Still on the device:** earning materials (drops, shop); combine, sockets and aura; and the Halo, wing, pet and cape rolls.
 
 **Tests:**
 
@@ -128,14 +129,16 @@ These need the owner's decisions or larger work.
 |---|---|---|
 | 1 (this branch) | Social actions through the server; server-resolved duels; scoped queries; party voice without leaving the world; world and party chat | merge (deploys `duelSystem`, `worldChat`, the `DuelSession` rules and the `ChatMessage` field with the client change) |
 | 2a (this branch) | **Characters on the server.** `characterVault`: a checked copy of every character, revisions, conflict choice, backups and restore. Each character uploads itself on first open (the migration, backed up). Silver per character | merge (deploys `characterVault`, `Game3DCharacterSave` and `Game3DCharacterSaveBackup` with the client change); owner-approved with backup and rollback |
-| 2b (begun) | **Server authority per action.** Built: the four risky item upgrades with server dice (§2.10). Next: materials and Silver on the server (so costs are real), the other rolled systems, XP from validated kills. Then item trade through server escrow | builds on 2a; kills depend on the realtime decision (phase 4) |
+| 2b (begun) | **Server authority per action.** Built: the four risky item upgrades with server dice, paid from the server's copy of the materials (§2.10). Next: a server-side shop (Silver spends), the other rolled systems, validated drops and XP from validated kills. Then item trade through server escrow | builds on 2a; kills depend on the realtime decision (phase 4) |
 | 3 | **More chat and party play.** Local (proximity), zone and guild channels in the world; moderation (mutes, reports, deletions) and `ChatMessage` access rules; shared party XP in range | owner decision on channels, moderation and party rules |
 | 4 | **Realtime authority.** Either keep peer-to-peer movement and have the server validate rewards, or move to a dedicated realtime server with zones and area-of-interest (C) | **infrastructure decision**: Base44 functions are request/response, not long-lived game servers |
 
 ## 5. Decisions for the owner
 
 1. ~~Move characters to the server~~: decided, and phase 2a is built (§2.9).
-   - **Phase 2b has begun** with server-rolled upgrades (§2.10). Its next part is materials and Silver on the server, which makes upgrade costs real; the realtime decision affects validated kills.
+   - **Phase 2b has begun:** server-rolled upgrades, paid on the server (§2.10).
+   - **Next parts:** a server-side shop for Silver spends, and the remaining rolled systems.
+   - **Validated drops and kills** (the earning side) depend on the realtime decision (§5.2).
    - **Also open:** how long backups are kept (they are never pruned today; see [CHARACTER_VAULT.md](CHARACTER_VAULT.md#limits-what-this-does-not-do-yet)).
 2. Realtime architecture (§4 phase 4): peer-to-peer plus server validation, or a dedicated game server?
 3. Which further chat channels, and the moderation rules (§3.E).

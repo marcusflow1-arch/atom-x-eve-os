@@ -115,6 +115,16 @@ test('progress faster than play allows is kept but flagged for review', async ()
   assert.deepEqual((await call('alice', 'put', { characterId: 'char_1', data: saveOf({ level: 62, silver: 910000 }), expectedRevision: 2 })).flags, [], 'normal pace, no flags');
 });
 
+test('upgrade materials gained faster than play allows are flagged (they pay server-rolled upgrades)', async () => {
+  reset();
+  const stones = (n) => JSON.stringify({ material: Array.from({ length: n }, (_, i) => ({ id: 'mat_reinforce', category: 'material', dropId: `s${i}` })) });
+  await call('alice', 'put', { characterId: 'char_1', data: saveOf({ more: { game_loot_inventory_v2: stones(10) } }), expectedRevision: 0 });
+  const fast = await call('alice', 'put', { characterId: 'char_1', data: saveOf({ more: { game_loot_inventory_v2: stones(500) } }), expectedRevision: 1 });
+  assert.ok(fast.flags.some((f) => /^material_rate: \+490/.test(f)), JSON.stringify(fast.flags));
+  ageSave(10 * 60 * 1000);
+  assert.deepEqual((await call('alice', 'put', { characterId: 'char_1', data: saveOf({ more: { game_loot_inventory_v2: stones(540) } }), expectedRevision: 2 })).flags, []);
+});
+
 test('rollback: restore any backup, and the restore itself can be undone', async () => {
   reset();
   await call('alice', 'put', { characterId: 'char_1', data: saveOf({ level: 10 }), expectedRevision: 0 });

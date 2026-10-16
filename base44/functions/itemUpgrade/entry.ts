@@ -1,12 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
-import { SERVER_ROLLED_UPGRADES, findItem, readUpgrade, rollUpgrade, upgradeBase } from '../../shared/itemUpgradeLedger.ts';
+import { SERVER_ROLLED_UPGRADES, findItem, pickCostUnits, readUpgrade, rollUpgrade, spentCounts, upgradeBase, upgradeCost } from '../../shared/itemUpgradeLedger.ts';
 
 // The server rolls Game 3D's risky item upgrades (docs/game3d/SERVER_UPGRADES.md):
 // reinforcement, over-enchant, refine and ultimate. It rolls with the game's own rules
 // (base44/shared/axeItemEnhancement.ts, axeItemAdvancement.ts) on the record it holds for
 // the item, keeps the result (Game3DItemUpgrade), and the Character Vault puts that result
-// back into any save that says otherwise. The game then applies the same roll locally, so
-// costs, messages and item destruction work as before.
+// back into any save that says otherwise. Each attempt is paid on the server: the cost is
+// taken, unit by unit, from the server's copy of the save, and those units stay spent.
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,18 +58,17 @@ Deno.serve(async (req) => {
 
       const [saves, rows] = await Promise.all([
         svc.Game3DCharacterSave.filter({ owner_id: ownerId, character_id: characterId }, '-created_date', 1),
-        svc.Game3DItemUpgrade.filter({ owner_id: ownerId, character_id: characterId, item_id: itemId, service: serviceId }, '-created_date', 1),
+        svc.Game3DItemUpgrade.filter({ owner_id: ownerId, character_id: characterId }, '-created_date', 1000),
       ]);
       const save = (saves || [])[0];
-      const row = (rows || [])[0] || null;
+      const rowOf = (service: string) => (rows || []).find((r: any) => r.item_id === itemId && r.service === service) || null;
+      const row = rowOf(serviceId);
       // the same attempt again (a lost answer): the same result, never a second roll
       if (row && transactionId && row.last_transaction_id === transactionId && row.last_result) {
         return json({ success: true, result: row.last_result, repeated: true });
       }
       // a refine can destroy the item; the server's copy of the save may not know it yet
-      const refineRow = serviceId === 'refine' ? row
-        : ((await svc.Game3DItemUpgrade.filter({ owner_id: ownerId, character_id: characterId, item_id: itemId, service: 'refine' }, '-created_date', 1)) || [])[0];
-      if (refineRow?.record?.destroyed) return json({ error: 'This item was destroyed', code: 'item_destroyed' }, 409);
+      if (rowOf('refine')?.record?.destroyed) return json({ error: 'This item was destroyed', code: 'item_destroyed' }, 409);
       // the server rolls on what it knows: the character's save must be on the server, item included
       const item = save ? findItem(save.data, itemId) : null;
       if (!item) return json({ error: 'Saving your character first; try again in a moment', code: 'not_synced' }, 409);
@@ -79,16 +78,22 @@ Deno.serve(async (req) => {
       }
 
       const before = row ? { ...upgradeBase(serviceId), ...(row.record || {}) } : { ...upgradeBase(serviceId), ...(readUpgrade(save.data, serviceId, itemId) || {}) };
+      const protectedAttempt = data.protectedAttempt === true;
       const roll = serverRoll();
-      const rolled = rollUpgrade(serviceId, before, { roll, protectedAttempt: data.protectedAttempt === true, item });
+      const rolled = rollUpgrade(serviceId, before, { roll, protectedAttempt, item });
       // at the cap, or an item that can't take this upgrade: nothing was rolled
       if (rolled.reason) return json({ success: true, result: { ok: false, reason: rolled.reason, serviceId, itemId } });
+      // paid from the server's copy of the save; without the materials, nothing is rolled
+      const cost = upgradeCost(serviceId, before, { protectedAttempt });
+      const paid = pickCostUnits(save.data, cost, spentCounts(rows || []));
+      if (!paid.ok) return json({ success: true, result: { ok: false, reason: 'insufficient_materials', cost, missing: paid.missing, serviceId, itemId } });
 
-      const result = { ok: rolled.ok, outcome: rolled.outcome, chance: rolled.chance, destroyed: rolled.destroyed, roll, before: rolled.before, after: rolled.after, serviceId, itemId };
+      const result = { ok: rolled.ok, outcome: rolled.outcome, chance: rolled.chance, destroyed: rolled.destroyed, roll, before: rolled.before, after: rolled.after, cost, spent: paid.dropIds, serviceId, itemId };
       const iso = new Date(now).toISOString();
       const patch = {
         record: rolled.after, attempts: Number(row?.attempts || 0) + 1, last_outcome: String(rolled.outcome || ''), last_roll: roll,
         last_transaction_id: transactionId, last_result: result, rolled_at: iso,
+        spent: [...(row?.spent || []), ...paid.dropIds],
       };
       if (row) await svc.Game3DItemUpgrade.update(row.id, patch);
       else await svc.Game3DItemUpgrade.create({ owner_id: ownerId, character_id: characterId, item_id: itemId, service: serviceId, ...patch });

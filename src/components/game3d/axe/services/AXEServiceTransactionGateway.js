@@ -39,6 +39,7 @@ import {
 } from '../equipment/AXEEquipmentInventoryStore';
 import {
   consumeLootItemById,
+  consumeLootUnits,
   getLootItemCount,
 } from '../../lootStore';
 import { getAXEServiceInventoryCost } from './AXEServiceEconomy';
@@ -195,10 +196,9 @@ const localHandlers = {
 };
 
 // ---- server-rolled upgrades (docs/game3d/SERVER_UPGRADES.md) ----
-// Reinforcement, over-enchant, refine and ultimate are rolled by the server when the
-// Character Vault registers its dice here (character/CharacterVaultSync). The server's
-// record for the item is the one rolled on, the game's own handler then applies the
-// server's roll (costs, messages, destruction as before), and the server's result is kept.
+// Reinforcement, over-enchant, refine and ultimate are rolled and paid by the server when
+// the Character Vault registers its dice here (character/CharacterVaultSync). This device
+// then pays the same units the server spent and keeps the server's result for the item.
 let diceSource = null;
 
 export function setAXEServiceDiceSource(fn) {
@@ -264,21 +264,18 @@ async function runServerRolledUpgrade(serviceId, payload) {
   const rolled = dice.result;
   if (rolled.reason) return { ok: false, reason: rolled.reason }; // the server rolled nothing
 
-  setUpgradeRecord(serviceId, itemId, rolled.before);
-  const local = await localHandlers[serviceId]({
-    ...payload,
-    options: { ...(payload.options || {}), roll: rolled.roll },
-  });
-  // the server's result is the item's, whatever happened here
+  // the server paid with these units from its copy of the save; this device pays the same
+  consumeLootUnits(rolled.spent || [], rolled.cost || {});
+  // the server's result is the item's
   if (rolled.destroyed) {
     if (getOwned(itemId)) destroyAXEEquipmentItem(itemId, 'refine_failure');
   } else {
     setUpgradeRecord(serviceId, itemId, rolled.after);
   }
   return {
-    ...(local || {}),
     ok: !!rolled.ok,
-    outcome: rolled.outcome || local?.outcome || null,
+    outcome: rolled.outcome || null,
+    cost: rolled.cost || null,
     ...(rolled.destroyed ? { destroyed: true } : {}),
     serverRolled: true,
   };

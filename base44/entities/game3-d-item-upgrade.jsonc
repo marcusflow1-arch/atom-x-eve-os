@@ -14,7 +14,8 @@
     "last_transaction_id": { "type": "string", "description": "A retry of this transaction gets last_result again instead of a new roll" },
     "last_result": { "type": "object" },
     "rolled_at": { "type": "string", "format": "date-time" },
-    "restored_at": { "type": "string", "format": "date-time", "description": "Set when a save restore put this record back" }
+    "restored_at": { "type": "string", "format": "date-time", "description": "Set when a save restore put this record back" },
+    "spent": { "type": "array", "items": { "type": "string" }, "description": "The loot units (dropIds) the server took to pay for rolls on this item and upgrade; a save that still holds them loses them" }
   },
   "required": ["owner_id", "character_id", "item_id", "service", "record"],
   "rls": {

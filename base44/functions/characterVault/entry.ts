@@ -163,8 +163,8 @@ Deno.serve(async (req) => {
       const updated = { ...row, ...patch, ...((await svc.Game3DCharacterSave.update(row.id, patch)) || {}) };
       // the restored items keep their restored upgrades: the ledger follows the restore
       const ledger = await svc.Game3DItemUpgrade.filter({ owner_id: ownerId, character_id: characterId }, '-created_date', 1000);
-      for (const { row: upgrade, record } of ledgerRecordsFor(chosen.data, ledger || [])) {
-        await svc.Game3DItemUpgrade.update((upgrade as any).id, { record, restored_at: iso });
+      for (const { row: upgrade, record, spent } of ledgerRecordsFor(chosen.data, ledger || [])) {
+        await svc.Game3DItemUpgrade.update((upgrade as any).id, { record, spent, restored_at: iso });
       }
       return json({ success: true, save: meta(updated), restored_revision: chosen.save_revision });
     }

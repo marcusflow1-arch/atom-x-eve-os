@@ -115,6 +115,11 @@ export function checkCharacterSave(data: unknown, previous: Save | null = null, 
     const haloBefore = num(parse(previous.halo_progression_v3)?.level);
     const haloNow = num(parse(s.halo_progression_v3)?.level);
     if (Number.isFinite(haloBefore) && haloNow - haloBefore > 5 + 20 * minutes) flags.push(`halo_rate: ${haloBefore} -> ${haloNow} in ${minutes.toFixed(1)} min`);
+    // upgrade materials: the server pays rolls with them (itemUpgrade), so new ones are watched
+    const materials = (save: any) => Object.values(parse(save?.game_loot_inventory_v2) || {})
+      .reduce((n: number, list: any) => n + (Array.isArray(list) ? list.filter((u: any) => String(u?.id || '').startsWith('mat_')).length : 0), 0);
+    const gained = materials(s) - materials(previous);
+    if (gained > 30 + 120 * minutes) flags.push(`material_rate: +${gained} in ${minutes.toFixed(1)} min`);
   }
   return { ok: errors.length === 0, errors: errors.slice(0, 20), flags, bytes };
 }

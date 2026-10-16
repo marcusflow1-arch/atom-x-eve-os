@@ -46,6 +46,8 @@ const sword = () => {
   return instanceId;
 };
 const materials = (id) => loot.getLootItemCount(id, 'material');
+// the units the server would pick (the first of that material in the save)
+const unitsOf = (id, n) => (loot.getLootInventory().material || []).filter((u) => u.id === id).slice(0, n).map((u) => u.dropId);
 const serverAnswers = (answer) => { const asked = []; gateway.setAXEServiceDiceSource(async (req) => { asked.push(req); return typeof answer === 'function' ? answer(req) : answer; }); return asked; };
 
 test("reinforcement rolls on the server's record with the server's roll, and pays as before", async () => {
@@ -53,11 +55,13 @@ test("reinforcement rolls on the server's record with the server's roll, and pay
   loot.grantLootItemById('mat_reinforce', 10);
   const stones = materials('mat_reinforce');
   // the server holds 40% for this sword (another device upgraded it); the browser shows 0%
-  const asked = serverAnswers({ ok: true, result: { ok: true, outcome: 'success', roll: 0.01, before: { percent: 40 }, after: { percent: 45 } } });
+  let spent = [];
+  const asked = serverAnswers(() => { spent = unitsOf('mat_reinforce', 3); return { ok: true, result: { ok: true, outcome: 'success', roll: 0.01, before: { percent: 40 }, after: { percent: 45 }, cost: { mat_reinforce: 3 }, spent } }; });
   const result = await gateway.executeAXEServiceTransaction('reinforcement', { itemId: id });
   assert.deepEqual([result.ok, result.outcome, result.serverRolled], [true, 'success', true]);
   assert.equal(ench.getItemReinforcement(id).percent, 45);
-  assert.equal(materials('mat_reinforce'), stones - 3, 'the cost of an attempt at 40%');
+  assert.equal(materials('mat_reinforce'), stones - 3, 'the cost the server charged (an attempt at 40%)');
+  assert.ok(spent.every((dropId) => !(loot.getLootInventory().material || []).some((u) => u.dropId === dropId)), 'the very units the server spent');
   assert.equal(asked.length, 1);
   assert.equal(asked[0].serviceId, 'reinforcement');
   assert.ok(asked[0].transactionId, 'each attempt has its own id, so a retry is never a second roll');
@@ -67,7 +71,7 @@ test("the server's result is the item's, whatever the game computes here", async
   const id = sword();
   loot.grantLootItemById('mat_over_enchant', 10);
   // with roll 0.01 the game alone would succeed (level 7); the server's record says fracture
-  serverAnswers({ ok: true, result: { ok: false, outcome: 'fracture', roll: 0.01, before: { level: 6, fractured: false }, after: { level: 5, fractured: true } } });
+  serverAnswers(() => ({ ok: true, result: { ok: false, outcome: 'fracture', roll: 0.01, before: { level: 6, fractured: false }, after: { level: 5, fractured: true }, cost: { mat_over_enchant: 4 }, spent: unitsOf('mat_over_enchant', 4) } }));
   const result = await gateway.executeAXEServiceTransaction('over_enchant', { itemId: id });
   assert.deepEqual([result.ok, result.outcome], [false, 'fracture']);
   assert.deepEqual(ench.getItemOverEnchant(id), { level: 5, fractured: true });
@@ -76,10 +80,19 @@ test("the server's result is the item's, whatever the game computes here", async
 test('a refine the server says destroyed the item removes it here too', async () => {
   const id = sword();
   loot.grantLootItemById('mat_reinforce', 20);
-  serverAnswers({ ok: true, result: { ok: false, outcome: 'destroyed', destroyed: true, roll: 0.999, before: { level: 12 }, after: { level: 12, destroyed: true } } });
+  serverAnswers(() => ({ ok: true, result: { ok: false, outcome: 'destroyed', destroyed: true, roll: 0.999, before: { level: 12 }, after: { level: 12, destroyed: true }, cost: { mat_reinforce: 5 }, spent: unitsOf('mat_reinforce', 5) } }));
   const result = await gateway.executeAXEServiceTransaction('refine', { itemId: id });
   assert.equal(result.destroyed, true);
   assert.equal(inv.getAXEEquipmentItem(id), null);
+});
+
+test('a unit the server spent that this device already used is replaced by another of the same material', async () => {
+  const id = sword();
+  loot.grantLootItemById('mat_reinforce', 4);
+  const stones = materials('mat_reinforce');
+  serverAnswers(() => ({ ok: true, result: { ok: true, outcome: 'success', roll: 0.01, before: { percent: 0 }, after: { percent: 5 }, cost: { mat_reinforce: 2 }, spent: [unitsOf('mat_reinforce', 1)[0], 'used_elsewhere_1'] } }));
+  await gateway.executeAXEServiceTransaction('reinforcement', { itemId: id });
+  assert.equal(materials('mat_reinforce'), stones - 2, 'the full cost, never more');
 });
 
 test('starter items that live only in memory are written before the server is asked', async () => {

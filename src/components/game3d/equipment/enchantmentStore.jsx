@@ -8,6 +8,7 @@ import {
   resolveReinforcement,
   getAXEEnhancementStatMultiplier,
 } from '../axe/equipment/AXEItemEnhancementSystem';
+import { getAXEOverEnchantCost, getAXEReinforcementCost } from '../axe/services/AXEServiceEconomy';
 import { characterScopedStorage, subscribeCharacterChange } from '../characterStorage';
 import {
   getLootItemCount,
@@ -205,15 +206,11 @@ export const enchantSlot = (itemId, slotIndex) => {
 };
 
 // What the next attempt costs; the Services gateway checks it before asking the server to roll.
-export const getReinforcementCost = (itemId, { protectedAttempt = false } = {}) => ({
-  mat_reinforce: 1 + Math.floor((getItemReinforcement(itemId).percent || 0) / 20),
-  ...(protectedAttempt ? { mat_protection: 1 } : {}),
-});
+export const getReinforcementCost = (itemId, { protectedAttempt = false } = {}) =>
+  getAXEReinforcementCost(getItemReinforcement(itemId).percent, { protectedAttempt });
 
-export const getOverEnchantCost = (itemId, { protectedAttempt = false } = {}) => ({
-  mat_over_enchant: 1 + Math.floor((getItemOverEnchant(itemId).level || 0) / 2),
-  ...(protectedAttempt ? { mat_protection: 1 } : {}),
-});
+export const getOverEnchantCost = (itemId, { protectedAttempt = false } = {}) =>
+  getAXEOverEnchantCost(getItemOverEnchant(itemId).level, { protectedAttempt });
 
 export const canAffordMaterials = (cost) => canAfford(cost);
 
