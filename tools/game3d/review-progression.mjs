@@ -80,7 +80,7 @@ try {
  await rejectSave('axe_mount_progression_v1');
  await page.getByRole('button',{name:/Strengthen ·/}).click();
  await page.getByRole('button',{name:'Confirm upgrade',exact:true}).click();
- assert.match(await page.getByRole('status').innerText(),/Could not save your changes/);
+ assert.match(await page.getByRole('status').filter({hasText:/Could not save your changes|removed/}).innerText(),/Could not save your changes/);
  assert.equal(await rank(),0);
  assert.equal(await page.evaluate(()=>qa.mounts.getAXEMountState().mounts[0].spiritualProfile.availableXp),10000);
  await page.screenshot({path:path.join(output,'mount-save-failure-desktop.png')});
@@ -105,14 +105,14 @@ try {
  await rejectSave('axe_vanity_custom_pieces_v1');
  await page.getByRole('button',{name:'Activate with Silver Card'}).first().click();
  await page.getByRole('button',{name:'Confirm upgrade',exact:true}).click();
- assert.match(await page.getByRole('status').innerText(),/Could not save your changes/);
+ assert.match(await page.getByRole('status').filter({hasText:/Could not save your changes|removed/}).innerText(),/Could not save your changes/);
  assert.equal(await page.evaluate(()=>qa.vanity.getAXEVanityState().cards.silver),4);
  await restoreSave();
  await page.getByRole('button',{name:'Activate with Silver Card'}).first().click();
  await page.getByRole('button',{name:'Confirm upgrade',exact:true}).click();
  assert.equal(await page.evaluate(()=>qa.vanity.getAXEVanityState().cards.silver),3);
  await page.getByRole('button',{name:'Remove Overlay'}).first().click();
- assert.match(await page.getByRole('status').innerText(),/removed/);
+ assert.match(await page.getByRole('status').filter({hasText:/Could not save your changes|removed/}).innerText(),/removed/);
  await page.reload();
  await page.getByRole('navigation',{name:'Review panels'}).getByRole('button',{name:'Vanity',exact:true}).click();
  await page.getByText('Empty Vanity Slot',{exact:true}).waitFor();

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import CompanionSaveStatus from './CompanionSaveStatus';
+import { useEffect, useState } from 'react';
 import { COMPANION_DEFINITIONS, COMPANION_GEAR, getCompanionById } from '../companionData';
 import {
   subscribeCompanion,
@@ -74,6 +75,8 @@ export default function CompanionTab() {
             );
           })}
         </div>
+
+        <CompanionSaveStatus />
 
         {/* Active companion stats */}
         <div className="mt-6 px-4 py-3 rounded-lg bg-black/30 border border-white/10">

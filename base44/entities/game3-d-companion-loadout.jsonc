@@ -1,0 +1,21 @@
+{
+  "name": "Game3DCompanionLoadout",
+  "type": "object",
+  "description": "Per-account, per-character companion preferences. Not authoritative inventory, currency, or combat state.",
+  "properties": {
+    "owner_id": { "type": "string", "rls": { "update": false } },
+    "character_id": { "type": "string", "maxLength": 128, "rls": { "update": false } },
+    "revision": { "type": "integer", "minimum": 1 },
+    "loadout": { "type": "object", "properties": {
+      "activeCompanionId": { "type": "string" },
+      "gear": { "type": "object" }
+    }, "required": ["activeCompanionId", "gear"] }
+  },
+  "required": ["owner_id", "character_id", "revision", "loadout"],
+  "rls": {
+    "create": { "data.owner_id": "{{user.id}}" },
+    "read": { "data.owner_id": "{{user.id}}" },
+    "update": { "data.owner_id": "{{user.id}}" },
+    "delete": false
+  }
+}

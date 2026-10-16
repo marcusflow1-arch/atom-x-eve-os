@@ -1,3 +1,4 @@
+import CompanionSaveStatus from '../../equipment/CompanionSaveStatus';
 import { useEffect, useState } from 'react';
 import { subscribeCharacterChange } from '../../characterStorage';
 import ProgressionReview from './ProgressionReview';
@@ -85,6 +86,8 @@ export default function MountSubTab() {
             </span>
           ))}
         </div>
+
+        <CompanionSaveStatus />
 
         <ProgressionReview review={review} onCancel={() => setReview(null)} onConfirm={confirmReview} />
 
