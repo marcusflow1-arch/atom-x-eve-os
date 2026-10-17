@@ -79,7 +79,7 @@ export const PER_LEVEL_HALO_BONUSES = {
   dexterity:        0.15,
   intelligence:     0,     // Intelligence is not a Game 3D attribute
   focus:            0.15,
-  criticalChance:   0.075, // +0.075% per Halo level (additive crit chance)
+  criticalChance:   0.04,  // +0.04% per Halo level, +8% at 200 (was 0.075: with every other free source it put every build at the crit cap; docs/game3d/BUILD_BALANCE.md)
   criticalDefense:  0.0015, // +0.15% per Halo level (stored as 0..1 multiplier)
   criticalDamage:   0.001, // +0.1% per Halo level (stored as 0..1 multiplier added to crit)
 };

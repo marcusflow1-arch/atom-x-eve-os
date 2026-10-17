@@ -7,10 +7,12 @@
 // is extra damage only attribute defense reduces, crits are x2 (+ crit damage) up to 50%,
 // and the level gap counts both ways. The hit roll itself lives with the RNG (statsSystem).
 import {
+  AXE_BUILD_CAPS,
   AXE_COMBAT_RULES,
   getAXEAttributeReduction,
-  getAXEDamageReduction,
   getAXELevelGapMultiplier,
+  getAXEStrikeCritChance,
+  getAXETotalMitigation,
 } from '../balance/AXEPowerBudget';
 
 export const AXE_COMBAT_MODE = Object.freeze({
@@ -31,14 +33,9 @@ export const AXE_COMBAT_CONFIG = Object.freeze({
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, Number(value) || 0));
 
+// the budget's: the crit cap and the defender's crit dodge (capped) in one place
 export function getAXECriticalChance(attackerStats = {}, defenderStats = {}) {
-  const attacker = clamp(attackerStats.critChance || 0, 0, AXE_COMBAT_CONFIG.criticalChanceCapPct);
-  const defensePct = clamp(
-    (defenderStats.critChanceReductionPct || defenderStats.criticalChanceDefensePct || 0),
-    0,
-    100,
-  );
-  return clamp(attacker * (1 - defensePct / 100), 0, AXE_COMBAT_CONFIG.criticalChanceCapPct);
+  return getAXEStrikeCritChance(attackerStats, defenderStats);
 }
 
 export function resolveAXEHit({
@@ -89,9 +86,9 @@ export function resolveAXEHit({
   if (didCrit) {
     const critMultiplier = Math.max(
       1,
-      AXE_COMBAT_CONFIG.defaultCriticalMultiplier + Number(attackerStats.criticalDamage || 0),
+      AXE_COMBAT_CONFIG.defaultCriticalMultiplier + clamp(attackerStats.criticalDamage || 0, 0, AXE_BUILD_CAPS.critDamage),
     );
-    const criticalDefense = clamp(defenderStats.criticalDefense || 0, 0, 1);
+    const criticalDefense = clamp(defenderStats.criticalDefense || 0, 0, AXE_BUILD_CAPS.criticalDefense);
     const critScale = 1 + (critMultiplier - 1) * (1 - criticalDefense);
     damage *= critScale;
     attributeDamage *= critScale;
@@ -106,7 +103,8 @@ export function resolveAXEHit({
   const attackerLevel = Number(attackerStats.level) || 1;
   const defenderLevel = Number(defenderStats.level) || 1;
   const defense = Math.max(0, Number(defenderStats.defense || 0));
-  const reduction = getAXEDamageReduction(defense, attackerLevel);
+  // defense (less armor penetration) and every damage reduction together, under one cap
+  const reduction = getAXETotalMitigation(attackerStats, defenderStats);
   damage *= 1 - reduction;
   breakdown.push({ stage: 'defense', value: damage, defense, reductionPct: reduction * 100 });
 
@@ -125,8 +123,9 @@ export function resolveAXEHit({
   damage = Math.max(AXE_COMBAT_CONFIG.minimumDamage, damage - resolvedFlatMitigation);
   breakdown.push({ stage: 'flat-mitigation', value: damage, flatMitigation: resolvedFlatMitigation });
 
+  // an explicit extra reduction from the caller only; the defender's own is in the total above
   const mitigationPct = clamp(
-    percentMitigation ?? defenderStats.damageReductionPct ?? 0,
+    percentMitigation ?? 0,
     0,
     AXE_COMBAT_CONFIG.maximumMitigationPct,
   );

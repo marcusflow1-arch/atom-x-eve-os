@@ -8,9 +8,9 @@
 
 import * as THREE from 'three';
 import { getPlayerHUD } from './playerHUDStore';
-import { calculateHit } from './statsSystem';
-import { getWeaponDamageMult, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
 import { getActiveWeaponPath } from './weaponClassBuffStore';
+import { computeAXESwing, getAXEEnemyStats } from './axe/balance/AXEPowerBudget';
+import { AXE_TEMPORARY_BONUS_CAP, resolveAXEHeroStrike } from './axe/combat/AXEStrikeRuntime';
 import { getAbilityState, updateTargetHP } from './abilityStore';
 import { updateBoss } from './bossStore';
 
@@ -21,16 +21,23 @@ const bossAimCenter = new THREE.Vector3();
 const cameraDirection = new THREE.Vector3();
 const toBossDirection = new THREE.Vector3();
 
-function calculateOutgoingDamage(playerDerivedRef, skillStrikeMult = 1.0) {
-  const liveDerived = getPlayerHUD().derived || playerDerivedRef?.current || {};
-  const boosted = {
-    ...liveDerived,
-    critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct(),
-  };
-  const lockedTarget = getAbilityState().target;
-  const combatMode = lockedTarget?.kind === 'rogue' ? 'pvp' : 'pve';
-  const raw = calculateHit(boosted, { defense: 0 }, { mode: combatMode }) * getWeaponDamageMult() * skillStrikeMult;
-  return Number.isFinite(raw) ? Math.max(1, Math.round(raw)) : 1;
+// Hits on world bosses and rogues go through the same resolution as every other hit
+// (AXEStrikeRuntime): the target's own defense, level, block and avoidance. They used to be
+// computed against defense 0, before the target was even known.
+const heroOf = (playerDerivedRef) => getPlayerHUD().derived || playerDerivedRef?.current || {};
+const statsOf = (foe, hero, tier) => foe?.derived || getAXEEnemyStats(hero.level || 1, tier === 'boss' ? 'worldBoss' : 'champion');
+
+function heroStrike(playerDerivedRef, foe, skillMultiplier, tier) {
+  const hero = heroOf(playerDerivedRef);
+  return resolveAXEHeroStrike(hero, statsOf(foe, hero, tier), {
+    skillMultiplier, targetHp: foe?.hp, targetMaxHp: foe?.maxHp, tier,
+  });
+}
+
+// an ordinary landed swing, for the bow's charge bonus (no roll, nothing consumed)
+function estimateSwing(playerDerivedRef, foe, skillMultiplier, tier) {
+  const hero = heroOf(playerDerivedRef);
+  return computeAXESwing(hero, statsOf(foe, hero, tier), { skillMultiplier });
 }
 
 function getLiveBosses() {
@@ -313,10 +320,12 @@ function installBossAndBowBridge() {
     const heldSeconds = Math.max(0, (performance.now() - rangedChargeStartedAt) / 1000);
     rangedChargeActive = false;
 
-    const baseDamage = lastRangedBaseDamage || calculateOutgoingDamage(null, lastRangedSkillMultiplier);
+    const aimed = resolveArrowBoss(event || lastPointerEvent);
+    const baseDamage = lastRangedBaseDamage || estimateSwing(null, aimed, lastRangedSkillMultiplier, 'boss');
     const fullCharge = Math.min(1, heldSeconds / 1.3);
     const overcharge = Math.max(0, heldSeconds - 1.3) * 0.25;
-    const chargeMultiplier = 1 + fullCharge + overcharge;
+    // holding longer used to grow the shot without limit; the charge is a temporary bonus, capped
+    const chargeMultiplier = Math.min(AXE_TEMPORARY_BONUS_CAP, 1 + fullCharge + overcharge);
 
     // dispatchRogueAttack applies the base hit immediately. On release only the
     // charge bonus is added, which avoids double-counting a normal arrow.
@@ -327,7 +336,7 @@ function installBossAndBowBridge() {
       return;
     }
 
-    const boss = resolveArrowBoss(event || lastPointerEvent);
+    const boss = aimed;
     if (boss) {
       applyBossDamage(boss.id, baseDamage * chargeMultiplier, 'charged_bow');
       return;
@@ -389,23 +398,32 @@ installBossAndBowBridge();
  * Otherwise preserve the existing rogue-AI event path and normal enemy combat.
  */
 export function dispatchRogueAttack(playerDerivedRef, skillStrikeMult = 1.0) {
-  const dmg = calculateOutgoingDamage(playerDerivedRef, skillStrikeMult);
-  lastRangedBaseDamage = dmg;
   lastRangedSkillMultiplier = skillStrikeMult;
 
   const boss = resolveArrowBoss(lastPointerEvent);
   if (boss) {
+    const strike = heroStrike(playerDerivedRef, boss, skillStrikeMult, 'boss');
+    lastRangedBaseDamage = strike.kind === 'hit' ? strike.damage : 0;
     bossDamagedThisPressId = boss.id;
-    applyBossDamage(boss.id, dmg, 'arrow');
+    if (strike.kind === 'hit') applyBossDamage(boss.id, strike.damage, 'arrow');
     return true;
   }
 
   const target = getAbilityState().target;
-  if (target?.kind === 'rogue') {
-    applyLockedRogueDamage(target.id, dmg, 'player_attack');
+  const rogue = target?.kind === 'rogue' ? findLiveRogue(target.id) : null;
+  if (rogue) {
+    const strike = heroStrike(playerDerivedRef, rogue, skillStrikeMult, 'rogue');
+    lastRangedBaseDamage = strike.kind === 'hit' ? strike.damage : 0;
+    if (strike.kind === 'hit') applyLockedRogueDamage(target.id, strike.damage, 'player_attack');
     return true;
   }
 
-  window.dispatchEvent(new CustomEvent('rogueAITakeDamage', { detail: { damage: dmg } }));
+  // a nearby rogue (EnemyPlayerSpawner) resolves the swing against its own stats; the
+  // estimate is for listeners that only need a size (the bow's charge, combat music)
+  const estimate = estimateSwing(playerDerivedRef, null, skillStrikeMult, 'rogue');
+  lastRangedBaseDamage = estimate;
+  window.dispatchEvent(new CustomEvent('rogueAITakeDamage', {
+    detail: { damage: estimate, skillMultiplier: skillStrikeMult, hero: heroOf(playerDerivedRef) },
+  }));
   return false;
 }

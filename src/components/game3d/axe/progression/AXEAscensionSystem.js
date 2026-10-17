@@ -23,8 +23,8 @@ export const AXE_ASCENSION_NATURES = Object.freeze({
   destroyer: Object.freeze({
     id: 'destroyer',
     label: 'Path of the Destroyer',
-    summary: 'Unrelenting power: skill damage ×1.25, and single-hit skills unleash a shockwave.',
-    skillDamageMult: 1.25,
+    summary: 'Unrelenting power: skill damage ×1.35, and single-hit skills unleash a shockwave.',
+    skillDamageMult: 1.35, // was 1.25 (docs/game3d/BUILD_BALANCE.md)
     shockwave: true,
   }),
   balanced: Object.freeze({
@@ -36,10 +36,10 @@ export const AXE_ASCENSION_NATURES = Object.freeze({
   defensive: Object.freeze({
     id: 'defensive',
     label: 'Path of the Defensive',
-    summary: 'Guardian of allies and strongholds: defense ×1.25, and 20% of the damage you deal becomes a protective shield.',
-    defenseMult: 1.25,
-    shieldFromDamage: 0.2,
-    shieldCapOfMaxHp: 0.4, // the shield never holds more than 40% of max HP
+    summary: 'Guardian of allies and strongholds: defense ×1.15, and 10% of the damage you deal becomes a protective shield.',
+    defenseMult: 1.15, // was 1.25 (docs/game3d/BUILD_BALANCE.md)
+    shieldFromDamage: 0.1, // was 0.2
+    shieldCapOfMaxHp: 0.25, // the shield never holds more than 25% of max HP (was 40%)
     shieldLifeMs: 8000, // and fades 8 s after the last blow that fed it
   }),
 });

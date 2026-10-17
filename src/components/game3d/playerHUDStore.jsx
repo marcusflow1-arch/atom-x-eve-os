@@ -39,6 +39,11 @@ import { getAXEWeaponAffinityProfile, subscribeAXEWeaponAffinity } from './axe/w
 import { applyAXEWeaponAffinityToDerived } from './axe/weapons/AXEWeaponArchetypes';
 import { getAXEAscensionFlatBonuses, getAXEAscensionProfile, subscribeAXEAscension } from './axe/progression/AXEAscensionStore';
 import { applyAXEAscensionToDerived } from './axe/progression/AXEAscensionSystem';
+import { applyAXEBuildEffectsToDerived, getAXEBuildCombatEffects } from './axe/balance/AXEBuildEffects';
+import { AXE_BUILD_CAPS } from './axe/balance/AXEPowerBudget';
+import { subscribeMastery } from './progression/weaponMasteryStore';
+import { subscribeWeaponBuffs } from './weaponClassBuffStore';
+import { subscribeMasteryTree } from './progression/weaponMastery/weaponMasteryTreeStore';
 
 const storage = characterScopedStorage('wwm_player_progression_v1');
 const STAT_POINTS_PER_LEVEL = 3;
@@ -158,6 +163,7 @@ const getBonuses = () => {
     advancedClassMultipliers: advancedClass.multipliers,
     advancedClassCombat: advancedClass.combat,
     weaponAffinity: getAXEWeaponAffinityProfile(),
+    build: getAXEBuildCombatEffects(), // weapon class, weapon mastery, advanced class combat (docs/game3d/BUILD_BALANCE.md)
     mountFusion: { active: fusion.active, share: fusion.share },
     ascension: getAXEAscensionProfile(),
     equipmentDebug: equipment,
@@ -185,11 +191,14 @@ const computeDerivedWithVanity = (baseStats, bonuses) => {
   const em = bonuses.equipmentMultipliers || {};
   const cm = bonuses.advancedClassMultipliers || {};
   const aff = bonuses.weaponAffinity || {};
+  const build = bonuses.build || {};
   const pool = sumAXEPercentPools(
     { damagePct: va.damagePct, defensePct: va.defensePct, hpPct: va.hpPct },
     em,
     { hpPct: cm.hpPct, defensePct: cm.defensePct },
     { damagePct: (aff.damagePct || 0) * 100, defensePct: (aff.defensePct || 0) * 100 },
+    // the weapon's class passive and mastery, capped
+    { damagePct: Math.min(AXE_BUILD_CAPS.damagePct, build.damagePct || 0), defensePct: Math.min(AXE_BUILD_CAPS.defensePct, build.defensePct || 0) },
   );
   // the stages below only add what is not a percentage of the sheet, and the labels the hub shows
   const withPool = {
@@ -207,7 +216,9 @@ const computeDerivedWithVanity = (baseStats, bonuses) => {
   // the weapon in hand's archetype passive: its damage and defense are in the pool, dodge and crit dodge apply here
   const withAffinity = applyAXEWeaponAffinityToDerived(withClass, aff.archetype ? { ...aff, damagePct: 0, defensePct: 0 } : aff);
   const withAscension = applyAXEAscensionToDerived(withAffinity, bonuses.ascension); // the Nature: the one true multiplier
-  return bonuses.mountFusion ? { ...withAscension, mountFusion: bonuses.mountFusion } : withAscension;
+  // crit, avoidance, block, reduction, reflect, life steal, execute: on the sheet, each capped
+  const withBuild = applyAXEBuildEffectsToDerived(withAscension, build);
+  return bonuses.mountFusion ? { ...withBuild, mountFusion: bonuses.mountFusion } : withBuild;
 };
 
 // The hero's level rides on the derived stats (the combat maths reads both sides' levels),
@@ -517,6 +528,9 @@ subscribeAXEAura(recomputeFromBonuses);
 subscribeAdvancedClass(recomputeFromBonuses);
 subscribeAXEWeaponAffinity(recomputeFromBonuses);
 subscribeAXEAscension(recomputeFromBonuses);
+subscribeMastery(recomputeFromBonuses);
+subscribeWeaponBuffs(recomputeFromBonuses);
+subscribeMasteryTree(recomputeFromBonuses);
 
 // World pushes live HP (e.g. when player takes damage in the future).
 export function setHP(hp) {

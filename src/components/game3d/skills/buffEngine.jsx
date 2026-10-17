@@ -153,12 +153,6 @@ export function rollAXEControlProtection() {
   return Math.random() < getAXEControlResistance();
 }
 
-/** Roll Heaven's Riposte reflect on incoming damage. */
-export function rollRiposte() {
-  const b = _state.buffs.heavens_riposte;
-  if (!b || b.expiresAt < now()) return false;
-  return Math.random() < (b.values.reflect_chance || 0);
-}
 
 /** Returns the Aegis Shield's current absorb pool, or 0. */
 export function getAegisShield() {
@@ -187,23 +181,10 @@ export function absorbAegis(incoming) {
   return absorbed;
 }
 
-/** Flat crit chance bonus from Decisive Blow (0 if inactive). */
-export function getCritBonus() {
-  const b = _state.buffs.decisive_blow;
-  if (!b || b.expiresAt < now()) return 0;
-  return b.values.crit_chance_flat || 0;
-}
-
-/** Apply God's Deflection to an incoming crit. Returns { negated, mitigatedDmg }. */
-export function applyDeflectionToCrit(incomingDmg) {
-  const b = _state.buffs.gods_deflection;
-  if (!b || b.expiresAt < now()) return { negated: false, mitigatedDmg: incomingDmg };
-  if (Math.random() < (b.values.crit_resist_pct || 0)) {
-    return { negated: true, mitigatedDmg: 0 };
-  }
-  const reduced = incomingDmg * (1 - (b.values.crit_damage_reduction_pct || 0));
-  return { negated: false, mitigatedDmg: Math.round(reduced) };
-}
+// Decisive Blow (crit chance), God's Deflection (crit resist and crit damage reduction) and
+// Heaven's Riposte (turning hits back) act in the one hit resolution, axe/combat/AXEStrikeRuntime.js.
+// The old Decisive Blow and God's Deflection helpers here were never called, so those two
+// skills did nothing; Riposte's roll was folded into the capped deflect.
 
 /** Tick — drop expired buffs. Call every frame. */
 export function tickBuffEngine() {

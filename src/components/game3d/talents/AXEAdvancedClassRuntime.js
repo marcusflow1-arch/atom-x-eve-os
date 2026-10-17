@@ -24,6 +24,7 @@ const empty = () => ({
     elementalDamagePct: 0,
   },
   combat: {
+    hitBonusPct: 0,
     attackSpeedPct: 0,
     cooldownReductionPct: 0,
     lifeStealPct: 0,
@@ -38,6 +39,8 @@ const empty = () => ({
     stealthDamagePct: 0,
     bleedChancePct: 0,
     reflectDamagePct: 0,
+    explosiveDamagePct: 0,
+    comboPct: 0,
   },
   skillModifiers: {},
 });
@@ -62,11 +65,13 @@ export function getActiveAXEAdvancedClassRuntime() {
   out.identity = identity;
   out.skillModifiers = skillModifiers;
 
-  // Derived character stats.
+  // Derived character stats. Crit chance is in percentage points; crit damage is a ratio on the
+  // sheet (0.5 = +50%): sent as points it made a Berserker's crits hit x52. Hit chance joins the
+  // hit roll; dodge and block are their own rolls (getAXEBuildCombatEffects), not Block points
+  // as well, so each counts once.
   out.flat.critChance += pct(passives.crit_chance);
-  out.flat.critDamage += pct(passives.crit_damage);
-  out.flat.attackSuccess += pct(passives.hit_chance);
-  out.flat.attackBlock += pct(passives.dodge_chance) + pct(passives.block_chance);
+  out.flat.critDamage += Number(passives.crit_damage || 0);
+  out.combat.hitBonusPct += pct(passives.hit_chance);
 
   out.multipliers.hpPct += pct(passives.hp_scaling);
   out.multipliers.defensePct += pct(passives.defense);
@@ -87,6 +92,8 @@ export function getActiveAXEAdvancedClassRuntime() {
   out.combat.stealthDamagePct += pct(passives.stealth_damage_bonus);
   out.combat.bleedChancePct += pct(passives.bleed_chance);
   out.combat.reflectDamagePct += pct(passives.reflect_damage);
+  out.combat.explosiveDamagePct += pct(passives.explosive_damage);
+  out.combat.comboPct += pct(passives.combo_multiplier);
 
   return out;
 }
@@ -102,6 +109,9 @@ export function applyAXEAdvancedClassDerivedMultipliers(derived, multipliers = {
     0,
     Math.round(Number(derived.elementalDamage || 0) * Math.max(0.05, elementalMult)),
   );
+  // heroes' elemental power is their attribute attack (elementalDamage is always 0 on heroes),
+  // so elemental scaling raises that
+  const attributionAttack = Math.max(0, Number(derived.attributionAttack || 0) * Math.max(0.05, elementalMult));
   const physicalDamage = Math.max(1, Number(derived.physicalDamage || 1));
   const totalDamage = Math.max(1, Math.round(physicalDamage + elementalDamage));
 
@@ -110,6 +120,7 @@ export function applyAXEAdvancedClassDerivedMultipliers(derived, multipliers = {
     maxHP: Math.max(1, Math.round(Number(derived.maxHP || 1) * Math.max(0.05, hpMult))),
     defense: Math.max(0, Number(derived.defense || 0) * Math.max(0.05, defenseMult)),
     elementalDamage,
+    attributionAttack,
     totalDamage,
     damage: totalDamage,
     advancedClass: {

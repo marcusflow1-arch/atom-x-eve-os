@@ -2,6 +2,7 @@
 
 **Date:** 2026-10-15 (audit), 2026-10-16 (rebalance, §6).
 **Status:** the owner chose all four recommended options (§5), and they are built (§6). §1–§3 describe the game *before* the change.
+**Since:** build against build, the hit pipelines and the numbers of §6.2 were redone in [BUILD_BALANCE.md](BUILD_BALANCE.md) (2026-10-16). The budget bands and the enemy targets of §6 still hold; the per-system numbers there are superseded.
 **Branch:** `game3d/stat-system-coherence`, stacked on `game3d/wuxia-blueprint`, so the numbers include slices A–D.
 **Author:** Claude, for the owner and PM.
 
@@ -307,5 +308,5 @@ With the old +6,000 wing damage put back, it fails 3 of its 7 checks and names t
 - **Pacing is untouched.** XP per level is still flat at 160 from level 11, and enemy XP rewards are unchanged.
 - **Mount Soul Fusion** is a timed pill buff (+25–39% of gear) and sits outside the budget.
 - **Raid bosses** keep their own phase and tank HP pipeline (`BossPhaseController`).
-- **Not tested:** PvP (it uses the same rules) and remote players.
+- **Not tested:** PvP (it uses the same rules) and remote players. *Since tested build against build, and found to be broken by systems outside the budget: see [BUILD_BALANCE.md](BUILD_BALANCE.md).*
 

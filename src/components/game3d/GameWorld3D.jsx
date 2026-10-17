@@ -11,7 +11,7 @@ import QuestFloatingLabel from './QuestFloatingLabel';
 import QuestDialogueBox from './QuestDialogueBox';
 import FloatingDamageNumbers from './FloatingDamageNumbers';
 import { setPlayerHUD, awardXP, getPlayerHUD, setHP, tickRegen } from './playerHUDStore';
-import { DEFAULT_PLAYER_STATS, computeDerivedStats, calculateHit, rollAXEHit } from './statsSystem';
+import { DEFAULT_PLAYER_STATS, computeDerivedStats, calculateHit } from './statsSystem';
 import { getAXEEnemyStats } from './axe/balance/AXEPowerBudget';
 import { QUEST_NPCS, QUESTS, getAvailableQuestForNPC } from './questData';
 import { acceptQuest, completeQuest, isQuestComplete, reportEnemyKill, subscribeQuests, getQuestState } from './useQuestStore';
@@ -60,23 +60,19 @@ import VoiceMicIndicator from './VoiceMicIndicator';
 import { useProximityVoiceController } from './useProximityVoiceController';
 import { handleVoiceToggle, attachMicErrorListener } from './handleVoiceToggle';
 import { getRunMultiplier } from './runSkillStore';
-import { tickBuffs, absorbShield, rollReflect, consumeDamageBuffMultiplier, consumePowerChargeMultiplier, rollDodgeBuff } from './skills/buffCompat';
-import { getWeaponMoveSpeedMult, getWeaponDamageMult, rollLethalBlow, rollDodge, rollGuard, rollRangedEvade, getWeaponCritChanceBonusPct } from './weaponClassCombatHelpers';
+import { tickBuffs, absorbShield } from './skills/buffCompat';
+import { getWeaponMoveSpeedMult } from './weaponClassCombatHelpers';
+import { getAXEAttackSpeedMult, resolveAXEHeroStrike, resolveAXEStrikeOnHero } from './axe/combat/AXEStrikeRuntime';
 import { getActiveWeaponPath } from './weaponClassBuffStore';
 import { pvpFailureMessage, validateLockedPvpTarget } from './pvpCombatRules';
-import {
-  applyMasteryToHit,
-  applyMasteryToIncomingDamage,
-  getActiveWeaponId,
-  getMasteryAttackSpeedMult,
-} from './progression/weaponMastery/WeaponScalingPipeline';
+import { getActiveWeaponId } from './progression/weaponMastery/WeaponScalingPipeline';
 import { reportWeaponHit, reportWeaponKill } from './progression/weaponMastery/WeaponMasteryEngine';
 import { getTitleState, recordTitleKill, subscribeTitles } from './progression/titleStore';
 import { getHaloState } from './progression/haloStore';
 import { createAXEMountFusionVisualRuntime } from './axe/progression/AXEMountFusionVisualRuntime';
 import { createAXEAscensionVisualRuntime } from './axe/progression/AXEAscensionVisualRuntime';
 import { bankAXEAscensionDamage, getAXEAscensionProfile } from './axe/progression/AXEAscensionStore';
-import { createAXEHaloVisualRuntime } from './axe/progression/AXEHaloVisualRuntime'; import { consumeShopDamageBuff, consumeShopCritBuff } from './shop/shopEffectsBridge'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
+import { createAXEHaloVisualRuntime } from './axe/progression/AXEHaloVisualRuntime'; import { addGold } from './shop/shopStore'; import { dispatchRogueAttack } from './rogueAttackBridge';
 
 // GameWorld3D — constants & enemy tier table live in ./gameWorldConfig.js.
 import { xpForLevel, pickTier, getEnemyTierByName,
@@ -1734,39 +1730,25 @@ export default function GameWorld3D() {
             enemy.attackWindupTimer -= delta;
             if (enemy.attackWindupTimer <= 0) {
               // Damage lands — only if player still in range and not invulnerable
-              if (playerInRange && playerInvulTimer.current <= 0 && !rollDodge() && !rollGuard() && !rollRangedEvade() && !rollDodgeBuff()) {
+              if (playerInRange && playerInvulTimer.current <= 0) {
                 const playerDerived = getPlayerHUD().derived || playerDerivedRef.current;
-                // 0 when the enemy's Accuracy loses to the hero's Block; the level gap is in the combat maths
-                let dmg = calculateHit(enemy.derived, playerDerived);
-                // God's Deflection keeps priority. Otherwise, weapon mastery and
-                // the active Advanced Class resolve dodge/block/reflect/mitigation
-                // through the same incoming-damage backend.
-                if (dmg > 0 && rollReflect()) {
-                  enemy.hp -= dmg;
-                  spawnDamageFloat(enemy.id, dmg);
+                // One resolution (AXEStrikeRuntime): the enemy's Accuracy against the hero's Block,
+                // then the hero's avoidance and deflect (every dodge, guard and Heaven's Riposte, one
+                // capped roll), crit, block, and defense with every reduction under one cap.
+                const strike = resolveAXEStrikeOnHero(enemy.derived, playerDerived, { fromBoss: !!enemy.isBoss });
+                if (strike.reflected > 0) {
+                  enemy.hp -= strike.reflected;
+                  spawnDamageFloat(enemy.id, strike.reflected);
                   playActionSound('enemy_hit');
-                } else {
-                  const defenseResult = applyMasteryToIncomingDamage(dmg, {
-                    weaponId: getActiveWeaponId(),
-                    isCrit: false,
-                    fromBoss: !!enemy.isBoss,
-                  });
-                  dmg = defenseResult.damage;
-
-                  if (defenseResult.reflectedDamage > 0) {
-                    enemy.hp -= defenseResult.reflectedDamage;
-                    spawnDamageFloat(enemy.id, defenseResult.reflectedDamage);
-                    playActionSound('enemy_hit');
-                  }
-
+                }
+                let dmg = strike.kind === 'hit' ? strike.damage : 0;
+                if (dmg > 0) {
+                  const absorbed = absorbShield(dmg);
+                  dmg = Math.max(0, dmg - absorbed);
                   if (dmg > 0) {
-                    const absorbed = absorbShield(dmg);
-                    dmg = Math.max(0, dmg - absorbed);
-                    if (dmg > 0) {
-                      setHP(Math.max(0, getPlayerHUD().hp - dmg));
-                      playerAnim?.requestHitReact();
-                      playActionSound('player_hit');
-                    }
+                    setHP(Math.max(0, getPlayerHUD().hp - dmg));
+                    playerAnim?.requestHitReact();
+                    playActionSound('player_hit');
                   }
                 }
                 playerInvulTimer.current = PLAYER_INVUL_AFTER_HIT;
@@ -1851,7 +1833,7 @@ export default function GameWorld3D() {
             } else {
               // PvP is strictly one locked target. No cones, cleaves, nearest-target
               // fallback, or collateral hits are allowed.
-              playerAttackCooldown.current = Math.max(0.06, 0.2 / Math.max(0.25, getMasteryAttackSpeedMult()));
+              playerAttackCooldown.current = Math.max(0.06, 0.2 / getAXEAttackSpeedMult(getPlayerHUD().derived));
               if (!playerAnim?.HandleCombat?.(activeWeaponPath === 'ranged' ? 'attack' : 'kick')) {
                 playOneShot(activeWeaponPath === 'ranged' ? 'attack' : 'kick', 1.4);
               }
@@ -1871,7 +1853,7 @@ export default function GameWorld3D() {
           } else {
             const attackConsumedByPriorityTarget = dispatchRogueAttack(playerDerivedRef, skillStrikeMultRef.current);
             // 0.2 second delay between attacks.
-            playerAttackCooldown.current = Math.max(0.06, 0.2 / Math.max(0.25, getMasteryAttackSpeedMult()));
+            playerAttackCooldown.current = Math.max(0.06, 0.2 / getAXEAttackSpeedMult(getPlayerHUD().derived));
             // Attack montage is manually gated by the animation state machine.
             if (!playerAnim?.HandleCombat?.(isRangedClickAttack || activeWeaponPath === 'ranged' ? 'attack' : 'kick')) {
               playOneShot(isRangedClickAttack || activeWeaponPath === 'ranged' ? 'attack' : 'kick', 1.4);
@@ -1888,47 +1870,30 @@ export default function GameWorld3D() {
               if (d < closestEnemyDist) { closestEnemyDist = d; closestEnemy = enemy; }
             });
           }
-          // The hit roll: the hero's Accuracy against the enemy's Block. A miss shows MISS and spends
-          // no damage buff, charge or skill multiplier.
-          const swingMissed = !!closestEnemy && !rollAXEHit(getPlayerHUD().derived || playerDerivedRef.current, closestEnemy.derived);
-          if (swingMissed) { spawnDamageFloat(closestEnemy.id, 'MISS'); skillStrikeMultRef.current = 1.0; }
-          if (closestEnemy && !swingMissed) {
-            // Pull live derived stats from store so stat allocations actually affect damage.
-            const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
-            const boosted = { ...liveDerived, critChance: (liveDerived.critChance || 0) + getWeaponCritChanceBonusPct() };
-            const powerChargeMult = consumePowerChargeMultiplier();
-            let dmg = Math.round(calculateHit(boosted, closestEnemy.derived, { hitRoll: false }) * consumeDamageBuffMultiplier() * powerChargeMult * getWeaponDamageMult() * skillStrikeMultRef.current * consumeShopDamageBuff()); skillStrikeMultRef.current = 1.0; const _sc = consumeShopCritBuff(); if (_sc > 0 && Math.random() * 100 < _sc) dmg = Math.round(dmg * 1.5);
-            if (rollLethalBlow()) { dmg = closestEnemy.hp; spawnDamageFloat(closestEnemy.id, 9999); }
-
-            // Weapon Mastery — adjust damage, apply identity/milestone passives.
-            const dxM = closestEnemy.group.position.x - model.position.x;
-            const dzM = closestEnemy.group.position.z - model.position.z;
-            const distM = Math.sqrt(dxM * dxM + dzM * dzM);
-            const masteryRes = applyMasteryToHit(dmg, {
-              targetHPPct: closestEnemy.hp / closestEnemy.maxHp,
-              playerHPPct: (getPlayerHUD().hp || 0) / (getPlayerHUD().maxHP || 1),
-              distance: distM,
-              isCrit: false,
-              isCharged: powerChargeMult > 1,
-            });
-            dmg = masteryRes.damage;
-            if (masteryRes.armorPenPct > 0) {
-              const pen = Math.round((closestEnemy.derived?.defense || 0) * (masteryRes.armorPenPct / 100));
-              dmg = Math.max(1, dmg + pen);
-            }
+          // One swing, one resolution (AXEStrikeRuntime; docs/game3d/BUILD_BALANCE.md): the hit roll,
+          // the enemy's avoidance, crit, block, defense, and every build effect from the sheet. A
+          // miss or a dodge shows MISS and spends no buff, charge or forced critical.
+          const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
+          const strike = closestEnemy ? resolveAXEHeroStrike(liveDerived, closestEnemy.derived, {
+            skillMultiplier: skillStrikeMultRef.current, targetHp: closestEnemy.hp, targetMaxHp: closestEnemy.maxHp,
+            tier: closestEnemy.isBoss ? 'boss' : closestEnemy.derived?.tier, distance: closestEnemyDist,
+          }) : null;
+          if (closestEnemy) skillStrikeMultRef.current = 1.0;
+          if (strike && strike.kind !== 'hit') spawnDamageFloat(closestEnemy.id, 'MISS');
+          if (strike && strike.kind === 'hit') {
+            const dmg = strike.damage;
+            if (strike.lethal) spawnDamageFloat(closestEnemy.id, 'LETHAL');
 
             const activeWeaponId = getActiveWeaponId();
-            reportWeaponHit({ weaponId: activeWeaponId, damage: dmg, isCrit: masteryRes.isCrit, isBoss: !!closestEnemy.isBoss });
-            bankAXEAscensionDamage(dmg, { maxHP: liveDerived?.maxHP || 0 }); // Defensive Nature: 30% of the blow becomes a shield
+            reportWeaponHit({ weaponId: activeWeaponId, damage: dmg, isCrit: strike.critical, isBoss: !!closestEnemy.isBoss });
+            bankAXEAscensionDamage(dmg, { maxHP: liveDerived?.maxHP || 0 }); // Defensive Nature: 20% of the blow becomes a shield
 
             combatSystem.applyDamage(closestEnemy, dmg, { sourceId: closestEnemy.id, sound: 'enemy_hit' });
 
-            // Advanced-class life steal is resolved by the same weapon/mastery
-            // pipeline. It heals from real post-scaling damage, never from UI text.
-            if (masteryRes.lifeStealPct > 0 && dmg > 0) {
+            // life steal (the advanced class), capped on the sheet; heals from the damage dealt
+            if (strike.lifeSteal > 0) {
               const hudNow = getPlayerHUD();
-              const heal = Math.max(1, Math.round(dmg * masteryRes.lifeStealPct / 100));
-              setHP(Math.min(hudNow.maxHP || 1, (hudNow.hp || 0) + heal));
+              setHP(Math.min(hudNow.maxHP || 1, (hudNow.hp || 0) + strike.lifeSteal));
             }
 
             // Boss threat credit — feeds the boss brain's aggro table.

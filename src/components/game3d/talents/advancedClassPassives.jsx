@@ -4,51 +4,9 @@
 
 import { getActivePassiveBonuses } from './advancedClassStore';
 
-/**
- * Apply advanced class passive bonuses on top of base stats.
- * @param {string} weaponType - Active weapon type key
- * @param {object} baseStats  - Base stats from weapon mastery / equipment
- * @returns {object} - Final stats after class modifiers
- */
-export const applyClassPassives = (weaponType, baseStats = {}) => {
-  const bonuses = getActivePassiveBonuses(weaponType);
-  if (!bonuses || Object.keys(bonuses).length === 0) return baseStats;
-
-  const out = { ...baseStats };
-
-  // Additive bonuses
-  const additive = [
-    'crit_chance', 'crit_damage', 'dodge_chance', 'block_chance',
-    'attack_speed', 'projectile_speed', 'hit_chance', 'cooldown_reduction',
-    'defense', 'life_steal', 'bleed_chance', 'elemental_scaling',
-    'explosive_damage', 'trap_damage', 'summon_strength', 'hp_scaling',
-    'shield_scaling', 'stamina_regen', 'range_bonus', 'knockback_power',
-    'utility_range', 'cc_resistance', 'combo_multiplier',
-    'charge_damage', 'counter_damage', 'stealth_damage_bonus',
-    'weakspot_damage', 'reflect_damage', 'aoe_radius',
-  ];
-
-  additive.forEach((key) => {
-    if (bonuses[key] !== undefined) {
-      out[key] = (out[key] || 0) + bonuses[key];
-    }
-  });
-
-  // Negative modifiers (penalties)
-  const penalties = ['stamina_cost', 'stamina_use', 'defense'];
-  penalties.forEach((key) => {
-    if (bonuses[key] !== undefined && bonuses[key] < 0) {
-      out[key] = (out[key] || 0) + bonuses[key]; // Already negative, adds as reduction
-    }
-  });
-
-  // Clamp common values
-  out.crit_chance  = Math.min(0.95, Math.max(0, out.crit_chance  || 0));
-  out.dodge_chance = Math.min(0.90, Math.max(0, out.dodge_chance || 0));
-  out.block_chance = Math.min(0.90, Math.max(0, out.block_chance || 0));
-
-  return out;
-};
+// (removed) applyClassPassives: an unused second resolver with its own caps (crit 95%, dodge and
+// block 90%, and a negative defense counted twice). Class passives reach combat through
+// AXEAdvancedClassRuntime and AXEBuildEffects, capped in AXE_BUILD_CAPS (docs/game3d/BUILD_BALANCE.md).
 
 /**
  * Get a human-readable summary of active passive bonuses for a weapon type.

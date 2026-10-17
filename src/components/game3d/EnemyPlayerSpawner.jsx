@@ -17,6 +17,9 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { ARCHER_URL, ANIMATION_URLS } from './gameWorldConfig';
 import { ENEMY_PLAYER_SPAWNS, ENEMY_PLAYER_STATS, ENEMY_PLAYER_RESPAWN_SECONDS, getRandomRogueName } from './enemyPlayerSpawnConfig';
 import { getPlayerHUD, setHP, awardXP } from './playerHUDStore';
+import { getAXEEnemyStats } from './axe/balance/AXEPowerBudget';
+import { resolveAXEHeroStrike, resolveAXEStrikeOnHero } from './axe/combat/AXEStrikeRuntime';
+import { absorbShield } from './skills/buffCompat';
 import { xpForLevel } from './gameWorldConfig';
 import { addGold } from './shop/shopStore';
 import { addSouls } from './progression/weaponMastery/soulEssenceStore';
@@ -105,10 +108,14 @@ export default function EnemyPlayerSpawner() {
 
           scene.add(fbx);
           const mixer = new THREE.AnimationMixer(fbx);
-          const baseHp = ENEMY_PLAYER_STATS.hp + def.level * 20;
+          // rogues are on the enemy curve (champion tier), like every enemy of their level
+          // (docs/game3d/BUILD_BALANCE.md); they had flat HP and hits that skipped defense
+          const derived = { ...getAXEEnemyStats(def.level || 1, 'champion'), tier: 'rogue' };
+          const baseHp = derived.maxHP;
           const hpTanks = def.hpTanks || 1;
           const entry = {
             ...def,
+            derived,
             name: def.name || getRandomRogueName(),
             group: fbx,
             mixer,
@@ -168,7 +175,18 @@ export default function EnemyPlayerSpawner() {
           if (d < closestDist) { closestDist = d; closest = r; }
         });
         if (!closest) return;
-        closest.hp -= dmg;
+        // the swing against this rogue's own stats (the bridge's number is only an estimate)
+        const strike = closest.derived
+          ? resolveAXEHeroStrike(detail.hero || getPlayerHUD().derived, closest.derived, {
+            skillMultiplier: detail.skillMultiplier || 1, targetHp: closest.hp, targetMaxHp: closest.maxHp, tier: 'rogue',
+          })
+          : { kind: 'hit', damage: dmg, lifeSteal: 0 };
+        if (strike.kind !== 'hit') return;
+        closest.hp -= strike.damage;
+        if (strike.lifeSteal > 0) {
+          const hudNow = getPlayerHUD();
+          setHP(Math.min(hudNow.maxHP || 1, (hudNow.hp || 0) + strike.lifeSteal));
+        }
         closest.tintMats.forEach((m) => { m.emissive.setHex(0xffffff); });
         setTimeout(() => closest.tintMats.forEach((m) => { m.emissive.setHex(closest.color); }), 100);
         if (closest.hp <= 0) killRogue(closest);
@@ -195,8 +213,10 @@ export default function EnemyPlayerSpawner() {
         // XP rewards benefit from the same multiplier (resets on death).
         const streakMult = registerStreakKill();
 
-        const TEST_KILL_MULTIPLIER = 100; // ⚠ remove for live release
-        const basePoints = (r.level || 1) * TEST_KILL_MULTIPLIER;
+        // the live value (kills == the rogue's level); the x100 test multiplier was still on,
+        // which gave title kills far faster than any other source
+        const KILL_MULTIPLIER = 1;
+        const basePoints = (r.level || 1) * KILL_MULTIPLIER;
         const killReward = Math.round(basePoints * streakMult);
         addGold(r.goldReward || 75);
         recordTitleKill('pvp', killReward);
@@ -312,9 +332,16 @@ export default function EnemyPlayerSpawner() {
                 r.kickAction.reset().fadeIn(0.1).play();
                 r.currentAnim = 'kick';
               }
-              const hud = getPlayerHUD();
-              const dmg = ENEMY_PLAYER_STATS.attack + r.level * 2;
-              setHP(Math.max(0, (hud.hp || 0) - dmg));
+              // the same resolution as every enemy's swing: Accuracy against Block, avoidance,
+              // crit, block, defense; reflect turns part of it back on the rogue
+              const strike = resolveAXEStrikeOnHero(r.derived || getAXEEnemyStats(r.level || 1, 'champion'), getPlayerHUD().derived || {});
+              if (strike.reflected > 0) {
+                r.hp = Math.max(0, r.hp - strike.reflected);
+                if (r.hp <= 0) killRogue(r);
+              }
+              let dmg = strike.kind === 'hit' ? strike.damage : 0;
+              if (dmg > 0) dmg = Math.max(0, dmg - absorbShield(dmg));
+              if (dmg > 0) setHP(Math.max(0, (getPlayerHUD().hp || 0) - dmg));
             }
           } else {
             playAnim(r, 'idle');

@@ -60,7 +60,10 @@ test('the combat the game runs is the combat the budget assumes', () => {
   const hero = buildAXEHero(m, { level: 50, progress: progressAt(50) });
   const enemy = B.getAXEEnemyStats(50, 'elite');
   const plain = m.combat.resolveAXEHit({ attackerStats: hero, defenderStats: enemy, critical: false }).damage;
-  const expectedPlain = B.getAXEExpectedHit({ ...hero, critChance: 0 }, enemy) / (B.getAXEHitChancePct(hero.attackSuccess, enemy.attackBlock) / 100);
+  // the hit roll includes the hero's accuracy bonus (capped) within the roll's clamp
+  const R = B.AXE_COMBAT_RULES;
+  const hitPct = Math.min(R.hitMaxPct, Math.max(R.hitMinPct, B.getAXEHitChancePct(hero.attackSuccess, enemy.attackBlock) + Math.min(B.AXE_BUILD_CAPS.hitBonusPct, hero.hitBonusPct || 0)));
+  const expectedPlain = B.getAXEExpectedHit({ ...hero, critChance: 0 }, enemy) / (hitPct / 100);
   assert.ok(Math.abs(plain - expectedPlain) <= 1, `a plain hit: game ${plain}, budget ${expectedPlain.toFixed(1)}`);
   const crit = m.combat.resolveAXEHit({ attackerStats: hero, defenderStats: enemy, critical: true }).damage;
   const critMultiplier = B.AXE_COMBAT_RULES.critMultiplier + (hero.criticalDamage || 0);

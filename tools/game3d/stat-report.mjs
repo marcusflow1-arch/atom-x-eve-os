@@ -21,8 +21,9 @@ if (process.argv.includes('--par') || process.argv.includes('--write-par')) {
   const lines = [TABLE_START];
   for (const level of PAR_LEVELS) {
     const h = buildAXEHero(m, { level, progress: progressAt(level) });
-    const row = [level, h.damage, h.maxHP, h.defense, h.attackSuccess, h.attackBlock, h.critChance, h.attributionAttack || 0, h.attributionDefense || 0]
-      .map((v, i) => (i === 0 ? v : Math.round(v * 10) / 10));
+    const row = [level, h.damage, h.maxHP, h.defense, h.attackSuccess, h.attackBlock, h.critChance, h.attributionAttack || 0, h.attributionDefense || 0,
+      h.criticalDamage || 0, h.criticalDefense || 0, h.armorPenPct || 0, h.hitBonusPct || 0, h.avoidPct || 0, h.blockPct || 0, h.damageReductionPct || 0]
+      .map((v, i) => (i === 0 ? v : i >= 9 && i <= 10 ? Math.round(v * 1000) / 1000 : Math.round(v * 10) / 10));
     lines.push(`  [${row.join(', ')}],`);
   }
   lines.push(']);');

@@ -104,23 +104,46 @@ test('declined and expired challenges cannot be accepted', async () => {
 test('the server rolls each hit and resolves it with the game\'s combat rules', async () => {
   reset();
   const duel = await startDuel();
-  // hit roll 0 (lands), crit roll 0.99 (no crit)
-  rolls.push(0, 0.99);
+  // the same outcomes as every hit in the game (axeStrikeOutcomes), hero against hero; one roll picks one
+  const A = shared.clampAXEDuelStats(HERO), D = shared.clampAXEDuelStats(HERO);
+  const outcomes = (skill = 1, hpPct = 1) => shared.axeStrikeOutcomes(A, D, { skillMultiplier: skill, isSkill: skill !== 1, pvp: true, targetHpPct: hpPct });
+  // a roll near 1 lands the last outcome: a plain hit
+  rolls.push(0.999999);
   const plain = await call('alice', 'hit', { duelId: duel.id, distance: 2, weaponPath: 'damage', skillMultiplier: 1 });
-  const expected = shared.computeAXESwing(shared.clampAXEDuelStats(HERO), shared.clampAXEDuelStats(HERO), { critical: false, skillMultiplier: 1 });
-  assert.deepEqual(plain.hit, { missed: false, critical: false, damage: expected });
-  assert.equal(stored(duel.id).opponent_hp, HERO.maxHP - expected);
+  const expected = shared.rollAXEStrike(outcomes(), 0.999999);
+  assert.deepEqual([expected.kind, expected.critical], ['hit', false]);
+  assert.deepEqual([plain.hit.missed, plain.hit.critical, plain.hit.damage], [false, false, expected.damage]);
+  assert.equal(stored(duel.id).opponent_hp, HERO.maxHP - expected.damage);
+  assert.ok(expected.damage < shared.computeAXESwing(A, D, {}), 'hero against hero is scaled down');
   // a miss: the hit roll fails, nothing changes but the clock
   stored(duel.id).last_hit_at = {};
-  rolls.push(0.999);
-  assert.deepEqual((await call('alice', 'hit', { duelId: duel.id, distance: 2, weaponPath: 'damage' })).hit, { missed: true, critical: false, damage: 0 });
-  assert.equal(stored(duel.id).opponent_hp, HERO.maxHP - expected);
+  rolls.push(0);
+  assert.deepEqual((await call('alice', 'hit', { duelId: duel.id, distance: 2, weaponPath: 'damage' })).hit, { missed: true, kind: 'miss', critical: false, blocked: false, damage: 0, reflected: 0, lifeSteal: 0 });
+  assert.equal(stored(duel.id).opponent_hp, HERO.maxHP - expected.damage);
   // a crit with a skill: x2 + crit damage, crit defense applied, skill multiplier capped at 3
   stored(duel.id).last_hit_at = {};
-  rolls.push(0, 0);
+  const table = outcomes(3, (HERO.maxHP - expected.damage) / HERO.maxHP);
+  const at = table.findIndex((o) => o.kind === 'hit' && o.critical && !o.blocked);
+  rolls.push(table.slice(0, at).reduce((sum, o) => sum + o.p, 0) + 1e-9);
   const crit = await call('alice', 'hit', { duelId: duel.id, distance: 2, weaponPath: 'damage', skillMultiplier: 99 });
   assert.equal(crit.hit.critical, true);
-  assert.equal(crit.hit.damage, shared.computeAXESwing(shared.clampAXEDuelStats(HERO), shared.clampAXEDuelStats(HERO), { critical: true, skillMultiplier: 3 }));
+  assert.equal(crit.hit.damage, table[at].damage);
+});
+
+test('a duelist\'s build counts: block halves, reflect hurts the attacker and can knock it out', async () => {
+  reset();
+  const tank = { ...HERO, blockPct: 25, reflectPct: 10, avoidPct: 99 }; // avoidance is clamped to its cap
+  const duel = await startDuel(HERO, tank);
+  assert.equal(stored(duel.id).opponent_stats.avoidPct, shared.AXE_DUEL_STAT_LIMITS.avoidPct);
+  const A = shared.clampAXEDuelStats(HERO), D = shared.clampAXEDuelStats(tank);
+  const table = shared.axeStrikeOutcomes(A, D, { skillMultiplier: 1, isSkill: false, pvp: true, targetHpPct: 1 });
+  const at = table.findIndex((o) => o.kind === 'hit' && !o.critical && o.blocked);
+  stored(duel.id).challenger_hp = 1; // one reflected point from falling
+  rolls.push(table.slice(0, at).reduce((sum, o) => sum + o.p, 0) + 1e-9);
+  const hit = await call('alice', 'hit', { duelId: duel.id, distance: 2, weaponPath: 'damage' });
+  assert.equal(hit.hit.blocked, true);
+  assert.ok(hit.hit.reflected >= 1);
+  assert.deepEqual([hit.duel.status, hit.duel.winner_id, hit.duel.loser_id], ['finished', 'bob', 'alice'], 'the attacker fell to its own reflected blow');
 });
 
 test('hits must be in range and no faster than the server allows', async () => {
@@ -136,7 +159,7 @@ test('a knockout, a forfeit or two idle minutes end the duel', async () => {
   reset();
   let duel = await startDuel();
   stored(duel.id).opponent_hp = 1;
-  rolls.push(0, 0.99);
+  rolls.push(0.999999); // one roll per hit: near 1 is a plain hit
   const ko = await call('alice', 'hit', { duelId: duel.id, distance: 1 });
   assert.deepEqual([ko.duel.status, ko.duel.finish_reason, ko.duel.winner_id, ko.duel.loser_id, ko.duel.opponent_hp], ['finished', 'knockout', 'alice', 'bob', 0]);
   assert.equal((await call('bob', 'hit', { duelId: duel.id, distance: 1 }, 409)).code, 'not_active');

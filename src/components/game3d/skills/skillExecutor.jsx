@@ -3,7 +3,7 @@ import { canCastWithEquippedWeapon, describeWeaponMismatch } from './weaponValid
 import { activateBuff } from './buffEngine';
 import { SKILL_TYPE, CAST_TYPE } from './skillTypes';
 import { getLoadout } from './loadoutStore';
-import { applyMasteryToSkillMultiplier, getActiveWeaponId } from '../progression/weaponMastery/WeaponScalingPipeline';
+import { getActiveWeaponId } from '../progression/weaponMastery/WeaponScalingPipeline';
 import { reportSkillCast } from '../progression/weaponMastery/WeaponMasteryEngine';
 import { primeCriticalFocus, consumeCriticalFocusForSingleHit } from './twelveSkyFocusState';
 import { armForcedCriticalHit } from '../combat/forcedCriticalBridge';
@@ -48,7 +48,9 @@ function dispatchStrike(skill, hitIndex, level, echo = null) {
   if (typeof window === 'undefined') return;
   const baseMult = scaleStat(skill, 'damage_pct', level || 1) || 1;
   // Destroyer Nature (Taurus Chosen Ascension): skill damage x1.5, echoes included
-  const multiplier = applyMasteryToSkillMultiplier(baseMult) * (echo?.multiplierScale ?? 1) * getAXEAscensionSkillMultiplier();
+  // weapon mastery's damage and ability bonuses are on the sheet (damage pool, skillDamagePct),
+  // applied once by the hit resolution, not here as well
+  const multiplier = baseMult * (echo?.multiplierScale ?? 1) * getAXEAscensionSkillMultiplier();
   const criticalAllowed = skill.critical_allowed !== false;
   const forceCritical = !echo && criticalAllowed && skill.cast_type === CAST_TYPE.SINGLE_HIT
     ? consumeCriticalFocusForSingleHit()

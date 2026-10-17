@@ -36,5 +36,10 @@ export function myDuelStats() {
     attackSuccess: d.attackSuccess, attackBlock: d.attackBlock, critChance: d.critChance,
     attributionAttack: d.attributionAttack, attributionDefense: d.attributionDefense,
     criticalDamage: d.criticalDamage, criticalDefense: d.criticalDefense,
+    // the build effects (docs/game3d/BUILD_BALANCE.md); the server clamps each to its cap
+    avoidPct: d.avoidPct, deflectPct: d.deflectPct, blockPct: d.blockPct, damageReductionPct: d.damageReductionPct,
+    reflectPct: d.reflectPct, lifeStealPct: d.lifeStealPct, armorPenPct: d.armorPenPct, hitBonusPct: d.hitBonusPct,
+    critChanceReductionPct: d.critChanceReductionPct, skillDamagePct: d.skillDamagePct,
+    executeThresholdPct: d.executeThresholdPct, executeDamagePct: d.executeDamagePct,
   };
 }

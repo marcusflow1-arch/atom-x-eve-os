@@ -1,9 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import {
+  axeStrikeOutcomes,
   clampAXEDuelStats,
-  computeAXESwing,
-  getAXEHitChancePct,
-  AXE_COMBAT_RULES,
+  rollAXEStrike,
 } from '../../shared/axePowerBudget.ts';
 
 // Game 3D duels, resolved by the server (docs/game3d/BACKEND_AUDIT.md).
@@ -162,21 +161,32 @@ Deno.serve(async (req) => {
       const attacker = clampAXEDuelStats(duel[`${side}_stats`]);
       const defender = clampAXEDuelStats(duel[`${other(side)}_stats`]);
       const skillMultiplier = Math.max(0.1, Math.min(DUEL_RULES.maxSkillMultiplier, Number(data.skillMultiplier) || 1));
-      // the server rolls the dice: Accuracy against Block, then the capped crit chance
-      const landed = Math.random() * 100 < getAXEHitChancePct(attacker.attackSuccess, defender.attackBlock);
-      const critical = landed && Math.random() * 100 < Math.min(AXE_COMBAT_RULES.critChanceCapPct, attacker.critChance);
-      const damage = landed ? computeAXESwing(attacker, defender, { critical, skillMultiplier }) : 0;
-
+      // the server rolls the dice, the same outcomes as every hit in the game: Accuracy against
+      // Block, the defender's avoidance and deflect, crit, block, defense and every reduction under
+      // one cap, hero-against-hero scale, execute; reflect hurts the attacker, life steal heals it
       const hpKey = `${other(side)}_hp`;
-      const hp = Math.max(0, Number(duel[hpKey] ?? defender.maxHP) - damage);
+      const myHpKey = `${side}_hp`;
+      const defenderHp = Number(duel[hpKey] ?? defender.maxHP);
+      const strike = rollAXEStrike(axeStrikeOutcomes(attacker, defender, {
+        skillMultiplier, isSkill: skillMultiplier !== 1, pvp: true, targetHpPct: defenderHp / Math.max(1, defender.maxHP),
+      }), Math.random());
+      const damage = strike.kind === 'hit' ? strike.damage : 0;
+      const hp = Math.max(0, defenderHp - damage);
+      const myHp = Math.max(0, Math.min(attacker.maxHP, Number(duel[myHpKey] ?? attacker.maxHP) - strike.reflected + strike.lifeSteal));
       const patch: Record<string, unknown> = {
         [hpKey]: hp,
+        [myHpKey]: myHp,
         last_hit_at: { ...(duel.last_hit_at || {}), [me]: now },
         last_action_at: new Date(now).toISOString(),
       };
       if (hp <= 0) Object.assign(patch, { status: 'finished', finish_reason: 'knockout', winner_id: me, loser_id: duel[`${other(side)}_id`] });
+      else if (myHp <= 0) Object.assign(patch, { status: 'finished', finish_reason: 'knockout', winner_id: duel[`${other(side)}_id`], loser_id: me });
       const updated = await save(duel, patch);
-      return json({ success: true, hit: { missed: !landed, critical, damage }, duel: updated });
+      return json({
+        success: true,
+        hit: { missed: strike.kind !== 'hit', kind: strike.kind, critical: strike.critical, blocked: strike.blocked, damage, reflected: strike.reflected, lifeSteal: strike.lifeSteal },
+        duel: updated,
+      });
     }
 
     if (action === 'forfeit') {

@@ -44,7 +44,7 @@ const fresh = () => storage.setStorageUser(`ascension-qa-${++user}`);
 const HOUR = 3_600_000, T = 1_700_000_000_000;
 const NATURES = sys.AXE_ASCENSION_NATURES; // the Natures' numbers are power-budget balance (AXEAscensionSystem)
 const BAL = NATURES.balanced.allStatsMult, DEF = NATURES.defensive.defenseMult, DES = NATURES.destroyer.skillDamageMult;
-const SHARE = NATURES.defensive.shieldFromDamage;
+const SHARE = NATURES.defensive.shieldFromDamage, CAP = NATURES.defensive.shieldCapOfMaxHp;
 const ascend = () => assert.ok(asc.ascendAXECharacter({ level: 100, confirmed: true }).ok);
 const near = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-6, `${msg}: ${a} vs ${b}`);
 
@@ -130,19 +130,20 @@ test('Destroyer: a real cast deals its skill-damage multiplier, and only single-
   } finally { mock.timers.reset(); window.removeEventListener('playerSkillStrike', on); }
 });
 
-test('Defensive: a share of damage dealt banks a shield (capped at 40% max HP) that absorbs incoming damage after Aegis', () => {
+test('Defensive: a share of damage dealt banks a shield (capped at a share of max HP) that absorbs incoming damage after Aegis', () => {
   fresh(); ascend();
   assert.equal(asc.bankAXEAscensionDamage(1000, { maxHP: 2000 }), 0, 'no Nature: no shield');
   assert.ok(asc.setAXEAscensionNature('defensive', { now: T }).ok);
   const shieldEvents = []; const on = (e) => shieldEvents.push(e.detail.amount); window.addEventListener('axeAscensionShield', on);
   try {
     assert.equal(asc.bankAXEAscensionDamage(1000, { maxHP: 2000 }), 1000 * SHARE);
-    assert.equal(asc.bankAXEAscensionDamage(10_000, { maxHP: 2000 }), 800, 'capped at 40% of max HP');
+    const full = 2000 * CAP;
+    assert.equal(asc.bankAXEAscensionDamage(10_000, { maxHP: 2000 }), full, 'capped at its share of max HP');
     assert.equal(buffs.absorbShield(200), 200, 'the world absorb path drains it');
-    assert.equal(asc.getAXEAscensionShield(), 600);
-    assert.equal(buffs.absorbShield(1000), 600, 'it absorbs no more than it holds');
+    assert.equal(asc.getAXEAscensionShield(), full - 200);
+    assert.equal(buffs.absorbShield(1000), full - 200, 'it absorbs no more than it holds');
     assert.equal(asc.getAXEAscensionShield(), 0);
-    assert.deepEqual(shieldEvents, [1000 * SHARE, 800, 600, 0]);
+    assert.deepEqual(shieldEvents, [1000 * SHARE, full, full - 200, 0]);
   } finally { window.removeEventListener('axeAscensionShield', on); }
   const now = Date.now();
   asc.bankAXEAscensionDamage(1000, { maxHP: 2000, now });

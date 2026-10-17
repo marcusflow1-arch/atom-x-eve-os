@@ -6,14 +6,9 @@
 
 import {
   absorbAegis,
-  rollRiposte,
-  consumeFocusHit,
-  applyDeflectionToCrit,
-  getCritBonus,
   tickBuffEngine,
   getBuffs,
   subscribeBuffs as subscribeBuffEngine,
-  consumeAXEPowerCharge,
   applyAXEReflectionProtection,
   getAXEControlResistance,
   rollAXEControlProtection,
@@ -27,23 +22,8 @@ export function absorbShield(incoming) {
   return aegis + (rest > 0 ? absorbAXEAscensionShield(rest) : 0);
 }
 
-// Reflect roll — old name: rollReflect. New impl: Heaven's Riposte.
-export function rollReflect() { return rollRiposte(); }
-
-// Damage buff consumer — old name: consumeDamageBuffMultiplier. New impl: Focus.
-export function consumeDamageBuffMultiplier() { return consumeFocusHit(); }
-
-// AXE Power Charge — consumed by the next eligible outgoing hit.
-export function consumePowerChargeMultiplier() { return consumeAXEPowerCharge(); }
-
-// Attack speed — DEPRECATED in new system. Returns 1 (no-op).
-export function getAttackSpeedMultiplier() { return 1; }
-
-// Dodge buff — DEPRECATED in new system. Returns false (no-op).
-export function rollDodgeBuff() { return false; }
-
-// God's Deflection helpers — new public API.
-export { applyDeflectionToCrit, getCritBonus };
+// Focus, Power Charge, Decisive Blow, God's Deflection and Heaven's Riposte act inside the one
+// hit resolution (axe/combat/AXEStrikeRuntime.js), under the same caps as every other source.
 
 // Per-frame tick — replaces the old tickBuffs export.
 export function tickBuffs() { tickBuffEngine(); }

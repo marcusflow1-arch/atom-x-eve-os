@@ -75,7 +75,7 @@ const SKILLS = [
     cooldown: 4.0,
     duration: 0,
     max_level: 10,
-    scaling: { damage_pct: { min: 1.20, max: 1.70 }, defense_scale: { min: 0.30, max: 0.60 } },
+    scaling: { damage_pct: { min: 1.20, max: 1.70 } }, // its defense_scale was never applied (a defense build doesn't gain damage from defense)
     icon: '🛡️',
     description: 'A defense-scaled crushing strike — bonus damage from your defense stat.',
     animation_ref: 'guardian_heavy',

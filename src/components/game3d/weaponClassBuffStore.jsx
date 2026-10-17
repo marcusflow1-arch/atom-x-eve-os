@@ -24,7 +24,7 @@ export const WEAPON_CLASS_BUFFS = {
     maxLevel: 20,
     description: 'Native passive of offensive weapons. Increases damage and grants a chance for Lethal Blow.',
     curves: {
-      damageBonusPct:  { min: 0, max: 0.35 },
+      damageBonusPct:  { min: 0, max: 0.12 }, // docs/game3d/BUILD_BALANCE.md (was 0.35)
       lethalBlowPct:   { min: 0, max: 0.02 },
     },
   },
@@ -39,8 +39,8 @@ export const WEAPON_CLASS_BUFFS = {
     description: 'Native passive of ranged weapons. Increases mobility, accuracy, damage and critical strike.',
     curves: {
       moveSpeedBonusPct: { min: 0, max: 0.25 },
-      damageBonusPct:    { min: 0, max: 0.10 },
-      hitChanceBonusPct: { min: 0, max: 0.15 },
+      damageBonusPct:    { min: 0, max: 0.05 }, // was 0.10
+      hitChanceBonusPct: { min: 0, max: 0.10 }, // accuracy (was 0.15, and worked as evasion)
       critChanceBonusPct:{ min: 0, max: 0.05 },
     },
   },
@@ -54,10 +54,10 @@ export const WEAPON_CLASS_BUFFS = {
     maxLevel: 20,
     description: 'Native passive of defensive weapons. Bolsters defense, damage, evasion and guard.',
     curves: {
-      defenseBonusPct: { min: 0, max: 0.40 },
-      damageBonusPct:  { min: 0, max: 0.20 },
-      dodgeChancePct:  { min: 0, max: 0.07 },
-      guardChancePct:  { min: 0, max: 0.07 },
+      defenseBonusPct: { min: 0, max: 0.15 }, // was 0.40 (and never applied)
+      damageBonusPct:  { min: 0, max: 0.05 }, // was 0.20
+      dodgeChancePct:  { min: 0, max: 0.04 }, // was 0.07
+      guardChancePct:  { min: 0, max: 0.04 }, // was 0.07
     },
   },
 };

@@ -139,7 +139,7 @@ const RANGED_CLASSES = [
     color: '#8b5cf6',
     icon: '🌑',
     passive_bonuses: {
-      dodge_chance: 0.20,
+      dodge_chance: 0.12, // was 0.10 (docs/game3d/BUILD_BALANCE.md)
       bleed_chance: 0.15,
       hit_chance: 0.10,
       stealth_damage_bonus: 0.50,
@@ -174,11 +174,11 @@ const SWORD_CLASSES = [
     color: '#ef4444',
     icon: '🔥',
     passive_bonuses: {
-      crit_chance: 0.20,
-      crit_damage: 0.50,
-      life_steal: 0.15,
+      crit_chance: 0.12, // was 0.20 (docs/game3d/BUILD_BALANCE.md)
+      crit_damage: 0.30, // docs/game3d/BUILD_BALANCE.md (was 0.50)
+      life_steal: 0.08, // was 0.15
       defense: -0.20,
-      attack_speed: 0.20,
+      attack_speed: 0.10, // was 0.20 (docs/game3d/BUILD_BALANCE.md)
       rage_gain: 0.25,
     },
     skill_modifiers: {
@@ -205,9 +205,9 @@ const SWORD_CLASSES = [
     color: '#06b6d4',
     icon: '💫',
     passive_bonuses: {
-      dodge_chance: 0.25,
-      attack_speed: 0.25,
-      combo_multiplier: 0.30,
+      dodge_chance: 0.08, // was 0.25 (docs/game3d/BUILD_BALANCE.md)
+      attack_speed: 0.10, // was 0.25 (docs/game3d/BUILD_BALANCE.md)
+      combo_multiplier: 0.10, // was 0.30 (docs/game3d/BUILD_BALANCE.md)
       stamina_use: -0.15,
       crit_chance: 0.10,
     },
@@ -236,8 +236,8 @@ const SWORD_CLASSES = [
     icon: '⚖️',
     passive_bonuses: {
       execute_threshold: 0.30,
-      execute_damage: 0.80,
-      crit_damage: 0.35,
+      execute_damage: 0.50, // was 0.80 (docs/game3d/BUILD_BALANCE.md)
+      crit_damage: 0.50, // was 0.35 (docs/game3d/BUILD_BALANCE.md)
       cooldown_reduction: 0.10,
       bleed_chance: 0.20,
     },
@@ -264,7 +264,7 @@ const SWORD_CLASSES = [
     color: '#dc2626',
     icon: '🩸',
     passive_bonuses: {
-      life_steal: 0.25,
+      life_steal: 0.10, // was 0.25 (docs/game3d/BUILD_BALANCE.md)
       hp_to_damage_ratio: 0.20,
       bleed_chance: 0.30,
       elemental_scaling: 0.20,
@@ -300,11 +300,11 @@ const GUARDIAN_CLASSES = [
     color: '#f59e0b',
     icon: '🏰',
     passive_bonuses: {
-      defense: 0.40,
-      hp_scaling: 0.30,
+      defense: 0.12, // was 0.20 (docs/game3d/BUILD_BALANCE.md)
+      hp_scaling: 0.08, // was 0.15 (docs/game3d/BUILD_BALANCE.md)
       shield_scaling: 0.35,
-      block_chance: 0.25,
-      reflect_damage: 0.15,
+      block_chance: 0.15, // was 0.25 (docs/game3d/BUILD_BALANCE.md)
+      reflect_damage: 0.10, // was 0.15
       cc_resistance: 0.50,
     },
     skill_modifiers: {
@@ -331,10 +331,10 @@ const GUARDIAN_CLASSES = [
     color: '#6366f1',
     icon: '🥊',
     passive_bonuses: {
-      block_chance: 0.20,
+      block_chance: 0.12, // was 0.20 (docs/game3d/BUILD_BALANCE.md)
       counter_damage: 0.50,
-      dodge_chance: 0.15,
-      attack_speed: 0.15,
+      dodge_chance: 0.06, // was 0.15 (docs/game3d/BUILD_BALANCE.md)
+      attack_speed: 0.10, // was 0.15 (docs/game3d/BUILD_BALANCE.md)
       stamina_regen: 0.20,
     },
     skill_modifiers: {
@@ -361,8 +361,8 @@ const GUARDIAN_CLASSES = [
     color: '#78716c',
     icon: '🦏',
     passive_bonuses: {
-      defense: 0.25,
-      hp_scaling: 0.20,
+      defense: 0.12, // was 0.25 (docs/game3d/BUILD_BALANCE.md)
+      hp_scaling: 0.08, // was 0.20 (docs/game3d/BUILD_BALANCE.md)
       charge_damage: 0.45,
       cc_resistance: 0.60,
       stamina_use: 0.15,
@@ -392,10 +392,10 @@ const GUARDIAN_CLASSES = [
     color: '#fbbf24',
     icon: '⛪',
     passive_bonuses: {
-      defense: 0.20,
-      hp_scaling: 0.15,
+      defense: 0.10, // was 0.20 (docs/game3d/BUILD_BALANCE.md)
+      hp_scaling: 0.08, // was 0.15 (docs/game3d/BUILD_BALANCE.md)
       elemental_scaling: 0.35,
-      block_chance: 0.15,
+      block_chance: 0.10, // was 0.15 (docs/game3d/BUILD_BALANCE.md)
       cooldown_reduction: 0.15,
       summon_strength: 0.20,
     },

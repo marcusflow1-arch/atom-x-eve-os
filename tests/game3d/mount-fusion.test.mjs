@@ -133,8 +133,12 @@ test('while absorbed, the equipment stats are multiplied by (1 + share / 100) in
   mounts.awardAXEMountXP(id, 5000); // full growth: 25%
   inv.resetAXEEquipmentInventoryToStarter();
   for (const item of inv.getEquippedAXEItems()) inv.unequipAXEInventoryItem(item.instanceId);
+  // the baseline holds the same kind of weapon without its damage: the weapon in hand sets the
+  // weapon-class passive, which is on the sheet (docs/game3d/BUILD_BALANCE.md), so only the
+  // gear part may differ. A ranged archetype has no damage passive, so Weapon Affinity leaves damage alone.
+  assert.ok(inv.addAXEEquipmentItem({ id: 'fusion_bare_bow', name: 'Fusion Bare Bow', archetype: 'ranged', slot: 'weapon', category: 'weapon', rarity: 'common', baseStats: { damage: 0 } }, { equipped: true }).ok);
   const bare = hud.getPlayerHUD().derived.damage;
-  // a ranged archetype has no damage passive, so Weapon Affinity leaves damage alone
+  for (const item of inv.getEquippedAXEItems()) inv.unequipAXEInventoryItem(item.instanceId);
   assert.ok(inv.addAXEEquipmentItem({ id: 'fusion_test_bow', name: 'Fusion Test Bow', archetype: 'ranged', slot: 'weapon', category: 'weapon', rarity: 'common', baseStats: { damage: 100 } }, { equipped: true }).ok);
   const geared = hud.getPlayerHUD().derived.damage, fromGear = geared - bare;
   assert.ok(fromGear > 0, 'the bow adds damage');
@@ -142,7 +146,8 @@ test('while absorbed, the equipment stats are multiplied by (1 + share / 100) in
   const share = mounts.getAXEMountFusionState().share;
   assert.equal(share, 25);
   const fused = hud.getPlayerHUD().derived;
-  assert.ok(Math.abs((fused.damage - bare) - fromGear * 1.25) < 1e-6, `gear part ${(fused.damage - bare).toFixed(3)} = ${fromGear} x 1.25`);
+  // within a point: the weapon-class passive puts a percentage on the sheet, and damage is rounded after it
+  assert.ok(Math.abs((fused.damage - bare) - fromGear * 1.25) <= 1, `gear part ${(fused.damage - bare).toFixed(3)} = ${fromGear} x 1.25`);
   assert.deepEqual(fused.mountFusion, { active: true, share: 25 });
   mounts.releaseAXEMountFusion();
   assert.ok(Math.abs(hud.getPlayerHUD().derived.damage - geared) < 1e-9, 'back to normal');

@@ -9,7 +9,18 @@ import * as THREE from 'three';
 import { createLightningStrike } from './LightningStrikeEffect';
 import { createShadowTeleport } from './ShadowTeleportEffect';
 import { createFrostTornado } from './FrostTornadoEffect';
-import { applySpellScaling } from './statsSystem';
+import { computeAXESwing } from './axe/balance/AXEPowerBudget';
+
+// The two damage spells are skill hits on the same swing maths as every other hit (the target's
+// defense and level count; docs/game3d/BUILD_BALANCE.md), raised by Spirit's skill power (skill damage). They
+// used to deal a fixed number plus a little elemental damage, ignoring the target entirely:
+// far too strong at level 1 and nothing at level 100.
+const LIGHTNING_MULT = 1.6; // one strike
+const FROST_TICK_MULT = 0.6; // three ticks, every enemy in the radius
+function spellDamage(hero, enemy, mult) {
+  // a skill hit: Spirit's skill power is in the hero's skill damage, applied once
+  return computeAXESwing(hero || {}, enemy?.derived || { level: hero?.level || 1 }, { skillMultiplier: mult, isSkill: true });
+}
 
 /**
  * Handle a legacy targeted ability cast.
@@ -74,10 +85,6 @@ export function castLegacyTargetedAbility(args) {
     playActionSound('player_attack');
     const radius = ab.radius || 4.5;
     const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
-    const baseDmg = applySpellScaling(
-      ab.damage + (liveDerived.elementalDamage || 0) * 0.4,
-      liveDerived, { isDoT: true },
-    );
     [400, 1000, 1700].forEach((ms) => {
       setTimeout(() => {
         enemies.forEach((en) => {
@@ -85,6 +92,7 @@ export function castLegacyTargetedAbility(args) {
           const dx = en.group.position.x - tx;
           const dz = en.group.position.z - tz;
           if (dx * dx + dz * dz > radius * radius) return;
+          const baseDmg = spellDamage(liveDerived, en, FROST_TICK_MULT);
           en.hp -= baseDmg;
           en.hitCooldown = 0.2;
           spawnDamageFloat(en.id, baseDmg);
@@ -105,10 +113,7 @@ export function castLegacyTargetedAbility(args) {
     setTimeout(() => {
       if (!targetEnemy.alive || targetEnemy.dying) return;
       const liveDerived = getPlayerHUD().derived || playerDerivedRef.current;
-      const dmg = applySpellScaling(
-        ab.damage + (liveDerived.elementalDamage || 0) * 0.5,
-        liveDerived, { isElemental: true },
-      );
+      const dmg = spellDamage(liveDerived, targetEnemy, LIGHTNING_MULT);
       targetEnemy.hp -= dmg;
       spawnDamageFloat(targetEnemy.id, dmg);
       updateTargetHP(targetEnemy.id, Math.max(0, targetEnemy.hp));

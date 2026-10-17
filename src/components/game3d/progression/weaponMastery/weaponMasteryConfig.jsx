@@ -43,14 +43,14 @@ export function resolveWeaponType(weaponInstanceId) {
 // At max mastery a player gets these max values; scaled linearly before that.
 export const GLOBAL_PASSIVE_CURVES = {
   // Each value is the BONUS at max mastery. Level 1 begins at baseline and scales to the configured mastery cap.
-  attackSpeedPct:      15,   // +15% atk speed (moderate, capped via CombatBalanceConfig)
+  attackSpeedPct:      10,   // +10% atk speed (was 15; every source capped together in AXE_BUILD_CAPS)
   cdrPct:              10,   // +10% cooldown reduction (replaces "critical thinking")
   ccResistancePct:     15,   // +15% CC/crowd-control resistance
   damageReductionPct:   5,   // +5% resilience (small damage taken reduction)
   skillTierBonus:       2,   // +2 to all skills, soft-capped (never exceeds max skill limit)
   // Carry-over utility stats (unchanged role)
-  critChancePct:       10,   // +10 crit% at max mastery (soft-capped separately)
-  critDamagePct:       30,   // +30% crit damage (down from 50 to avoid stacking bloat)
+  critChancePct:       5,    // +5 crit% at max mastery (was 10; docs/game3d/BUILD_BALANCE.md)
+  critDamagePct:       20,   // +20% crit damage (was 30; every crit damage source is capped together, docs/game3d/BUILD_BALANCE.md)
   hitChancePct:        10,   // +10 hit chance
   armorPenPct:         10,   // +10% armor pen (late-game)
   armorPenUnlockLevel: 7,   // armor pen starts contributing at lvl 35
@@ -72,7 +72,7 @@ export const WEAPON_IDENTITY_AT_MAX = {
     skillEffectPct:         20,   // +20% skill effectiveness (AoE size, duration, etc.)
     cdrPct:                 10,   // -10% cooldown reduction (small utility)
     executeThresholdPct:    20,   // enemies under 20% HP take execute bonus
-    executeBonusPct:        50,   // +50% damage in execute window
+    executeBonusPct:        20,   // +20% damage in execute window (was 50: it filled the execute cap alone; docs/game3d/BUILD_BALANCE.md)
     comboDamagePct:         15,   // +15% on chained hits (secondary)
   },
 

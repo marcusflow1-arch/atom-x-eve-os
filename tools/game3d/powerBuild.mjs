@@ -14,7 +14,7 @@ import { pathToFileURL } from 'node:url';
 
 export const AXE_POWER_GROUPS = Object.freeze({
   character: 'Level, stat points, elixirs, weapon affinity',
-  gear: 'Gear and every upgrade',
+  gear: 'Gear and every upgrade, weapon mastery and its class passive',
   prestige: 'Halo, aura, wings, titles',
   companions: 'Pet, mount, cores, cape',
   appearance: 'Costume, vanity',
@@ -37,8 +37,10 @@ const MODULES = {
   enhance: 'axe/equipment/AXEItemEnhancementSystem.js', advance: 'axe/equipment/AXEItemAdvancementSystem.js',
   runtimeStats: 'axe/equipment/AXEEquipmentRuntimeStats.js', loot: 'axe/loot/AXEEquipmentLootSystem.js',
   affinity: 'axe/weapons/AXEWeaponAffinityStore.js', archetypes: 'axe/weapons/AXEWeaponArchetypes.js',
-  asc: 'axe/progression/AXEAscensionStore.js', world: 'gameWorldConfig.jsx',
+  asc: 'axe/progression/AXEAscensionStore.js', ascSys: 'axe/progression/AXEAscensionSystem.js', world: 'gameWorldConfig.jsx',
   budget: 'axe/balance/AXEPowerBudget.js', combat: 'axe/combat/AXECombatMath.js',
+  mastery: 'progression/weaponMasteryStore.jsx', weaponClass: 'weaponClassBuffStore.jsx',
+  advClass: 'talents/advancedClassStore.jsx',
 };
 
 // Bundles the stores once with a browser stand-in; returns their modules.
@@ -63,11 +65,20 @@ export async function loadAXEStores(root = process.cwd()) {
 const RARITY_BY_PROGRESS = ['common', 'uncommon', 'rare', 'elite', 'legendary', 'heroic'];
 const RARITY_SCALE = { common: 1, uncommon: 1.08, rare: 1.18, elite: 1.32, legendary: 1.52, heroic: 1.8 }; // AXEEquipmentLootSystem
 const BUILD_SPLIT = { strength: 0.4, dexterity: 0.2, constitution: 0.27, focus: 0.13 }; // a balanced melee build
+// the par hero's weapon: a sword whose mastery (and its class passive) advances with the hero
+export const PAR_WEAPON = Object.freeze({ name: 'Par Sword', masteryWeaponId: 'sword', path: 'damage', advancedClass: null });
 const GEAR_SLOTS = ['weapon', 'helm', 'chest', 'gloves', 'legs', 'boots', 'ring', 'ring', 'necklace', 'trinket'];
 let heroCount = 0;
 
-const score = (o = {}) => (o.damage || o.attack || 0) * 3 + (o.defense || 0) * 2 + (o.hp || o.maxHP || 0) * 0.2
-  + ['strength', 'dexterity', 'constitution', 'focus', 'vitality', 'spirit'].reduce((s, k) => s + (o[k] || 0) * 5, 0);
+// how a build values a system's bonuses when it picks one (cape, cores, pet, wing and title paths)
+const ROLE_WEIGHTS = {
+  balanced: { damage: 3, defense: 2, hp: 0.2, strength: 5, dexterity: 5, constitution: 5, focus: 5, vitality: 5, spirit: 5 },
+  offense: { damage: 4, defense: 0.5, hp: 0.05, strength: 6, dexterity: 3, constitution: 1, focus: 2, vitality: 1, spirit: 2, critChance: 20 },
+  defense: { damage: 0.5, defense: 3, hp: 0.4, strength: 1, dexterity: 3, constitution: 7, focus: 1, vitality: 7, spirit: 1 },
+};
+const scoreFor = (role) => (o = {}) => Object.entries(ROLE_WEIGHTS[role] || ROLE_WEIGHTS.balanced).reduce((s, [k, w]) =>
+  s + (k === 'damage' ? (o.damage || o.attack || 0) : k === 'hp' ? (o.hp || o.maxHP || 0) : (o[k] || 0)) * w, 0);
+let score = scoreFor('balanced');
 const ranked = (defs, bonusOf) => Object.values(defs).map((d) => ({ d, s: score(bonusOf(d)) })).sort((a, b) => a.s - b.s).map((x) => x.d);
 const pick = (list, p) => list[Math.min(list.length - 1, Math.floor(p * list.length * 0.999))];
 
@@ -85,21 +96,30 @@ export function gearUpgradeMultiplier(m, p) {
   return enhancement * advancement;
 }
 
-export function buildAXEHero(m, { level = 100, progress = 1, skip = new Set(), nature = 'balanced', fusion = false, wingPath = null } = {}) {
+// Options for archetypes (tools/game3d/build-matchups.mjs): `split` spends stat points and
+// elixirs, `role` picks capes, cores, pets, wing and title paths, `titlePath` forces a title,
+// and `weapon` = { name, masteryWeaponId, path, advancedClass } sets the weapon in hand, its
+// class passive (weapon mastery advances with the hero) and an advanced class.
+export function buildAXEHero(m, { level = 100, progress = 1, skip = new Set(), nature = 'balanced', fusion = false, wingPath = null,
+  split = BUILD_SPLIT, role = 'balanced', titlePath = null, weapon = PAR_WEAPON } = {}) {
   const p = Math.max(0, Math.min(1, progress));
   const on = (group) => !skip.has(group);
+  score = scoreFor(role);
   m.storage.setStorageUser(`power-hero-${++heroCount}-${Date.now()}`);
   for (const it of m.inv.getEquippedAXEItems()) m.inv.unequipAXEInventoryItem(it.instanceId); // gear is the gear group's
   m.hud.setPlayerHUD({ level });
 
   if (on('character')) {
     const points = 3 * (level - 1);
-    const plan = Object.fromEntries(Object.entries(BUILD_SPLIT).map(([k, f]) => [k, Math.floor(points * f)]));
-    plan.strength += points - Object.values(plan).reduce((a, b) => a + b, 0);
+    const plan = Object.fromEntries(Object.entries(split).map(([k, f]) => [k, Math.floor(points * f)]));
+    const main = Object.entries(split).sort((a, b) => b[1] - a[1])[0][0];
+    plan[main] += points - Object.values(plan).reduce((a, b) => a + b, 0);
     if (points > 0) { m.hud.setPlayerHUD({ unspentPoints: (m.hud.getPlayerHUD().unspentPoints || 0) + points }); m.hud.applyAttributeAllocationPlan(plan); }
+    // elixirs follow the split (the even split for the balanced build, as before)
     const types = Object.keys(m.elixirSys.AXE_ELIXIR_TYPES);
-    const each = Math.floor((m.elixirSys.AXE_ELIXIR_CONFIG.baseCapacity * p) / types.length);
-    if (each > 0) for (const t of types) { m.elixir.grantAXEElixirs(t, each); m.elixir.useAXEElixir(t, each); }
+    const capacity = Math.floor(m.elixirSys.AXE_ELIXIR_CONFIG.baseCapacity * p);
+    const share = (t) => split === BUILD_SPLIT ? 1 / types.length : (split[t] ?? split[{ vitality: 'constitution', spirit: 'focus', agility: 'dexterity' }[t]] ?? 0);
+    for (const t of types) { const k = Math.floor(capacity * share(t)); if (k > 0) { m.elixir.grantAXEElixirs(t, k); m.elixir.useAXEElixir(t, k); } }
   }
   if (on('prestige') && p > 0) {
     m.halo.setHaloLevel(Math.round(200 * p));
@@ -109,7 +129,8 @@ export function buildAXEHero(m, { level = 100, progress = 1, skip = new Set(), n
     m.wings.grantWingMaterials({ wing_feather: 1e6, wing_essence: 1e6, wing_stabilizer: 1e6 });
     const reinforce = Math.round((120 * p) / 5) * 5;
     for (let i = 0; i < 200 && (m.wings.getWingsState().paths[wing.id]?.reinforcementPercent || 0) < reinforce; i++) m.wings.attemptWingReinforcement(wing.id, { roll: 0 });
-    const title = ranked(m.titleData.TITLE_PATHS, (t) => ({ ...m.titleData.getTitleBonusesForLevel(t.id, 15), ...m.titleData.getTitleAttributeBonusesForLevel(t.id, 15) })).at(-1);
+    const title = (titlePath && Object.values(m.titleData.TITLE_PATHS).find((t) => t.id === titlePath))
+      || ranked(m.titleData.TITLE_PATHS, (t) => ({ ...m.titleData.getTitleBonusesForLevel(t.id, 15), ...m.titleData.getTitleAttributeBonusesForLevel(t.id, 15) })).at(-1);
     const tl = Math.round(15 * p); if (tl > 0) { m.titles.setTitleLevel(title.id, tl); m.titles.equipTitle(title.id); }
   }
   if (on('companions') && p > 0) {
@@ -148,8 +169,10 @@ export function buildAXEHero(m, { level = 100, progress = 1, skip = new Set(), n
     const scale = RARITY_SCALE[rarity] * m.loot.getAXELootLevelScale(level) * 1.1 * gearUpgradeMultiplier(m, p); // quality 10
     const used = new Set();
     for (const slot of GEAR_SLOTS) {
-      const tpl = Object.values(m.invData.INVENTORY).flat().find((t) => t.slot === slot && !used.has(t.id) && Object.keys(t.baseStats || {}).length);
-      if (!tpl) continue; used.add(tpl.id);
+      const found = Object.values(m.invData.INVENTORY).flat().find((t) => t.slot === slot && !used.has(t.id) && Object.keys(t.baseStats || {}).length);
+      if (!found) continue; used.add(found.id);
+      // the archetype's weapon type: same stats, its own identity (mastery, class, affinity)
+      const tpl = slot === 'weapon' && weapon ? { ...found, name: weapon.name, masteryWeaponId: weapon.masteryWeaponId } : found;
       // as a real drop and its upgrades would: flat stats scale with everything, rate stats with rarity only
       const baseStats = Object.fromEntries(Object.entries(tpl.baseStats).map(([k, v]) => [k, v * (m.runtimeStats.isAXERateStat(k) ? RARITY_SCALE[rarity] : scale)]));
       m.inv.addAXEEquipmentItem({ ...tpl, instanceId: undefined, id: `${tpl.id}_par`, category: tpl.category || slot, rarity, baseStats }, { equipped: true });
@@ -159,6 +182,13 @@ export function buildAXEHero(m, { level = 100, progress = 1, skip = new Set(), n
       const arch = weapon && m.archetypes.inferAXEWeaponArchetype(weapon);
       if (arch) m.affinity.setAXESpecializedArchetype(arch);
     }
+  }
+  // weapon mastery advances with the hero (to 20); its class passive follows the mastery level.
+  // It belongs to the weapon, so it counts in the gear group (docs/game3d/BUILD_BALANCE.md).
+  if (weapon && on('gear')) {
+    m.mastery.setMasteryLevel(weapon.masteryWeaponId, Math.max(1, Math.round(20 * p)));
+    if (weapon.path) m.weaponClass.setActiveWeaponPath(weapon.path);
+    if (weapon.advancedClass && p >= 0.5) { m.advClass.unlockClass(weapon.advancedClass); m.advClass.selectAdvancedClass(weapon.advancedClass); }
   }
   if (on('ascension') && level >= 100 && p >= 1) { m.asc.ascendAXECharacter({ level, confirmed: true }); m.asc.setAXEAscensionNature(nature); }
   if (fusion) m.mount.absorbAXEMount('absorption_pill_s');

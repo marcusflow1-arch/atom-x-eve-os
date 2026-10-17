@@ -8,21 +8,21 @@ import { AXE_COMBAT_RULES, getAXEHitChancePct } from './axe/balance/AXEPowerBudg
 // the migration.
 
 export const STAT_RATES = Object.freeze({
-  strengthAttack: 2.65,
+  strengthAttack: 3.5, // a point of Strength is worth about a point of Vitality (docs/game3d/BUILD_BALANCE.md; was 2.65)
   strengthAttackSuccess: 1.71,
   agilityDefense: 1.63,
   agilityEvasion: 1.67,
-  vitalityHP: 20,
+  vitalityHP: 15, // was 20
   vitalityEvasion: 0.90,
-  spiritAttack: 1.43,
+  spiritAttack: 2.2, // was 1.43
   spiritChi: 15.31,
 });
 
 export const SECONDARY_RATES = Object.freeze({
   hpRegenPerVitality: 0.12,
   chiRegenPerSpirit: 0.22,
-  critPerAgility: 0.08,
-  attackSpeedPerAgility: 0.10,
+  critPerAgility: 0.05, // was 0.08
+  attackSpeedPerAgility: 0.05, // was 0.10: speed was nearly free for every build
   criticalDefensePerVitality: 0.0007,
 });
 
@@ -162,7 +162,7 @@ export function computeDerivedStats(baseStats, equipment = [], attributeBonuses 
     evasionPct,
     hpRegen,
     manaRegen,
-    skillPowerPct: spirit * 0.35,
+    skillPowerPct: spirit * 0.05, // every skill's damage, about +14% at level 100 (in skillDamagePct; was 0.35, and only two legacy spells read it)
     cooldownReductionPct: 0,
     spellDamagePct: spirit * 0.35,
     dotDamagePct: 0,
@@ -197,7 +197,7 @@ function rollCrit(attackerStats, defenderStats = {}) {
 }
 
 // The hit roll: the attacker's Accuracy against the defender's Block (getAXEHitChancePct).
-export function rollAXEHit(attackerStats = {}, defenderStats = {}) {
+function rollAXEHit(attackerStats = {}, defenderStats = {}) {
   return Math.random() * 100 < getAXEHitChancePct(attackerStats.attackSuccess, defenderStats.attackBlock);
 }
 
@@ -232,27 +232,6 @@ export function calculateHit(attackerStats, defenderStats, context = {}) {
   return calculateAXEHitOutcome(attackerStats, defenderStats, context).damage;
 }
 
-export function calculateHitWithCrit(attackerStats, defenderStats, context = {}) {
-  const result = calculateAXEHitOutcome(attackerStats, defenderStats, context);
-  return { damage: result.damage, crit: result.critical, missed: result.missed };
-}
 
-// The full breakdown without the hit roll (callers that show a breakdown decide hits themselves).
-export function calculateAXEHitDetailed(attackerStats, defenderStats, context = {}) {
-  return calculateAXEHitOutcome(attackerStats, defenderStats, { ...context, hitRoll: false });
-}
-
-export function applySpellScaling(baseDamage, attackerDerived) {
-  const spiritPct = attackerDerived?.skillPowerPct || attackerDerived?.spellDamagePct || 0;
-  return Math.max(1, Math.round(baseDamage * (1 + spiritPct / 100)));
-}
-
-export const ENEMY_STAT_TEMPLATES = Object.freeze({
-  normal:    { strength: 2,  dexterity: 1,  constitution: 2,  focus: 1 },
-  champion:  { strength: 4,  dexterity: 2,  constitution: 5,  focus: 2 },
-  elite:     { strength: 7,  dexterity: 4,  constitution: 9,  focus: 4 },
-  miniBoss:  { strength: 12, dexterity: 6,  constitution: 22, focus: 7 },
-  caveBoss:  { strength: 20, dexterity: 9,  constitution: 48, focus: 12 },
-  gateBoss:  { strength: 30, dexterity: 13, constitution: 80, focus: 18 },
-  worldBoss: { strength: 45, dexterity: 18, constitution: 160, focus: 28 },
-});
+// (removed) ENEMY_STAT_TEMPLATES: seven fixed enemy stat blocks from before the enemy curve
+// (getAXEEnemyStats in AXEPowerBudget); nothing read them.
