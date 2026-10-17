@@ -58,6 +58,9 @@ const commit = (next) => {
 };
 
 subscribeCharacterChange(() => {
+  if (masteryTransitionTimer) clearTimeout(masteryTransitionTimer);
+  masteryTransitionTimer = null;
+  masteryTransition = null;
   state = load();
   listeners.forEach((fn) => fn(getAXEWeaponAffinityState()));
 });
@@ -75,10 +78,37 @@ export function setAXESpecializedArchetype(archetype) {
   return commit({ ...state, specialized: archetype });
 }
 
+// A mastered stance change briefly reinforces the NEW weapon's native passive.
+// This is runtime-only: no saved power, no stacking across repeated casts,
+// no healing/HP modification, and no lingering bonuses after changing weapons.
+let masteryTransition = null;
+let masteryTransitionTimer = null;
+export function activateAXEMasteryTransition({ weaponInstanceId, weaponType, durationMs = 4000 } = {}) {
+  const current = getActiveEquippedAXEWeapon();
+  if (!current || current.instanceId !== weaponInstanceId) return false;
+  if (!['sword', 'guardian', 'ranged'].includes(weaponType)) return false;
+  if (masteryTransitionTimer) clearTimeout(masteryTransitionTimer);
+  const duration = Math.max(250, Math.min(4000, Number(durationMs) || 4000));
+  masteryTransition = { weaponInstanceId, weaponType, until: Date.now() + duration };
+  masteryTransitionTimer = setTimeout(() => {
+    masteryTransitionTimer = null;
+    masteryTransition = null;
+    publish();
+  }, duration);
+  masteryTransitionTimer?.unref?.();
+  publish();
+  return true;
+}
+
 // The passive of the weapon in hand (null archetype when unarmed).
 export function getAXEWeaponAffinityProfile() {
   const weapon = getActiveEquippedAXEWeapon();
-  return getAXEArchetypePassive(inferAXEWeaponArchetype(weapon), state.specialized);
+  const profile = getAXEArchetypePassive(inferAXEWeaponArchetype(weapon), state.specialized);
+  const transition = masteryTransition;
+  if (!weapon || !transition || transition.weaponInstanceId !== weapon.instanceId || Date.now() >= transition.until) return profile;
+  if (transition.weaponType === 'guardian') return { ...profile, defensePct: (profile.defensePct || 0) + 0.05 };
+  if (transition.weaponType === 'ranged') return { ...profile, dodgePct: (profile.dodgePct || 0) + 0.03 };
+  return { ...profile, damagePct: (profile.damagePct || 0) + 0.03 };
 }
 
 export function getAXEAffinityMoveSpeedMult() {

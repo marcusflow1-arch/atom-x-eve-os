@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { activateAXEMasteryTransition } from './AXEWeaponAffinityStore';
 import {
   getActiveEquippedAXEWeapon,
   subscribeAXEEquipmentInventory,
@@ -59,7 +60,12 @@ export function bindAXEWeaponIdentity() {
 }
 
 export default function AXEWeaponIdentityMount() {
-  useEffect(bindAXEWeaponIdentity, []);
+  useEffect(() => {
+    const unbind = bindAXEWeaponIdentity();
+    const onTransition = (event) => activateAXEMasteryTransition(event.detail);
+    window.addEventListener('axeMasteryWeaponTransition', onTransition);
+    return () => { window.removeEventListener('axeMasteryWeaponTransition', onTransition); unbind(); };
+  }, []);
 
   return null;
 }
