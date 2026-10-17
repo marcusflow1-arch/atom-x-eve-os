@@ -7,6 +7,7 @@ import { appParams } from '@/lib/app-params';
 import { game2RailwayUrl } from './net/railway.js';
 import Game2Lobby from './Game2Lobby';
 import Game2Menu from './Game2Menu';
+import Game2FleetAssault from './fleetAssault/Game2FleetAssault';
 import Game2TutorialOverlay from './Game2TutorialOverlay';
 import { Game2TutorialDirector } from './engine/tutorial.js';
 import { GAME2_AUTHORED_MAPS } from './engine/arenaMaps.js';
@@ -66,6 +67,7 @@ export default function Game2Duel() {
   const [online, setOnline] = useState(null); // lobby result: { name, side, selfId, local }
   const fromMenu = (r) => { setMapId(r.mapId || 'training'); setSaber(r.saber || 'single'); setChoice(r.choice); };
   if (!choice) return <Game2Menu onStart={fromMenu} />;
+  if (choice === 'fleet_assault') return <Game2FleetAssault onExit={() => setChoice(null)} />;
   if (choice === 'online' && !online) return <Game2Lobby onBack={() => setChoice(null)} onStart={setOnline} onPractice={() => setChoice('multi')} />;
   const exit = () => { if (choice === 'online') setOnline(null); else setChoice(null); }; // online goes back to the lobby, everything else to the menu
   return <Game2Session key={choice + mapId + saber + (online ? online.selfId : '')} choice={choice} online={online} mapId={mapId} saber={saber} onExit={exit} />;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, ChevronRight, DoorOpen, Gamepad2, GraduationCap, Keyboard, Settings2, Swords, Trophy, Users } from 'lucide-react';
+import { BookOpen, ChevronRight, DoorOpen, Gamepad2, GraduationCap, Keyboard, Settings2, Ship, Swords, Trophy, Users } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { GAME2_SKIRMISH_MAPS } from './engine/arenaMaps.js';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings } from './settings.js';
@@ -14,6 +14,7 @@ const ASSET_BASE = `${BASE}game2/`;
 const MENU_ITEMS = [
   { id: 'story', label: 'Story Mode', icon: BookOpen },
   { id: 'multiplayer', label: 'Multiplayer', icon: Users },
+  { id: 'fleet_assault', label: 'Fleet Assault', icon: Ship },
   { id: 'skirmish', label: 'Skirmish', icon: Trophy },
   { id: 'practice', label: 'Duel Practice', icon: Swords },
   { id: 'tutorial', label: 'Arena Tutorial', icon: GraduationCap },
@@ -269,6 +270,13 @@ export default function Game2Menu({ onStart }) {
       <p className="text-sm leading-relaxed text-white/70">Real-time free-for-all with players from anywhere, Jedi or Dark Jedi, with no player limit. Pick the map in the lobby: each map is its own arena. Join or leave at any time; defeated fighters are back in 3 s with 3 s of immunity. Needs a signed-in Atom XE account.</p>
       <SaberPicker saber={saber} setSaber={setSaber} />
       <PlayButton onClick={() => start('online')}>Find the arena</PlayButton>
+    </Panel>
+  );
+  else if (item === 'fleet_assault') panel = (
+    <Panel kicker="New mode · combined-arms prototype" title="Fleet Assault">
+      <p className="text-sm leading-relaxed text-white/70">Fight across orbital space, the enemy flagship interior, and a contested planet. Launch a boarding party, defeat Jedi defenders and the commander, sabotage the reactor, or capture a planetary communications relay to strengthen your fleet.</p>
+      <p className="mt-3 text-xs leading-relaxed text-amber-200/75">Playable offline vertical slice with simulated command radio and objective state. The planned live 50v50 server, true proximity voice, and full character animation integration are not yet available.</p>
+      <PlayButton onClick={() => start('fleet_assault')}>Launch Fleet Assault</PlayButton>
     </Panel>
   );
   else if (item === 'skirmish') panel = (
