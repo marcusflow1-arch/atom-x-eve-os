@@ -1,31 +1,43 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { subscribeBuffs, isPowerChargeActive, isRepulsionActive, isBarrierActive, isDestructionActive } from './activeBuffsStore.jsx';
+import { subscribeBuffs } from './skills/buffEngine';
 
 /**
  * PassiveSkillAuraEffects
  * Renders CSS/canvas-based visual aura effects on the player character.
  *
- * Two categories:
- *   1. ALWAYS-ON passives (learned skills always show): repulsion, barrier, destruction.
- *   2. BUFF-BASED skills — only visible while their timer is active:
- *      - power_charge → hand glow, lasts ~90s OR until 5 hits consumed
+ * Each aura shows while one of its buffs is live in the buff engine
+ * (skills/buffEngine.jsx, records keyed by skill_id), the store the skills
+ * write when cast:
+ *   - axe_power_charge → hand glow, 20s OR until the charged hit lands
+ *   - aegis_shield     → barrier, 180s OR until the shield is used up
+ *
+ * Repulsion and Heaven's Destruction have no skill that can cast them: their
+ * ids live only in the legacy loot / equipment skill lists, which the skill
+ * registry does not hold. They stay off until a live skill is chosen for
+ * them; their looks are kept below.
  */
+export const AURA_TRIGGERS = {
+  powerCharge: ['axe_power_charge'],
+  barrier:     ['aegis_shield'],
+  repulsion:   [],
+  destruction: [],
+};
+
+function auraState(buffs, now = performance.now()) {
+  const live = (ids) => ids.some((id) => buffs?.[id]?.expiresAt > now);
+  return {
+    hasRepulsion:   live(AURA_TRIGGERS.repulsion),
+    hasBarrier:     live(AURA_TRIGGERS.barrier),
+    hasDestruction: live(AURA_TRIGGERS.destruction),
+    hasPowerCharge: live(AURA_TRIGGERS.powerCharge),
+  };
+}
 
 export default function PassiveSkillAuraEffects() {
-  const [buffState, setBuffState] = useState({
-    hasRepulsion: false,
-    hasBarrier: false,
-    hasDestruction: false,
-    hasPowerCharge: false,
-  });
+  const [buffState, setBuffState] = useState(() => auraState({}));
 
-  useEffect(() => subscribeBuffs(() => setBuffState({
-    hasRepulsion: isRepulsionActive(),
-    hasBarrier: isBarrierActive(),
-    hasDestruction: isDestructionActive(),
-    hasPowerCharge: isPowerChargeActive(),
-  })), []);
+  useEffect(() => subscribeBuffs((s) => setBuffState(auraState(s.buffs))), []);
 
   const { hasRepulsion, hasBarrier, hasDestruction, hasPowerCharge } = buffState;
 
@@ -148,6 +160,7 @@ function RepulsionAura() {
 
   return (
     <motion.canvas
+      data-aura="repulsion"
       ref={canvasRef}
       width={360}
       height={320}
@@ -172,6 +185,7 @@ function RepulsionAura() {
 function BarrierAura() {
   return (
     <motion.div
+      data-aura="barrier"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
@@ -309,6 +323,7 @@ function HeavensDestructionAura() {
 
   return (
     <motion.canvas
+      data-aura="destruction"
       ref={canvasRef}
       width={360}
       height={320}
@@ -333,6 +348,7 @@ function HeavensDestructionAura() {
 function PowerChargeAura() {
   return (
     <motion.div
+      data-aura="power-charge"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

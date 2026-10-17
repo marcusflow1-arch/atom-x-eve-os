@@ -303,7 +303,7 @@ Weapon mastery and its class passive count in the gear group: they belong to the
 - Bleed chance and trap damage (no bleed or trap systems exist).
 - Summon strength and HP-to-damage.
 - Rage gain, shield scaling and crowd-control resistance from classes.
-- The player aura effects (`PassiveSkillAuraEffects.jsx`: Power Charge hand glow, barrier, repulsion, destruction) still read the old buff store (`activeBuffsStore.jsx`) that nothing writes, so they never show. The two HUD buff strips now read the buff engine.
+- The repulsion and Heaven's Destruction player auras (`PassiveSkillAuraEffects.jsx`) never show: no skill can cast them. Their ids (`repulsion`, `heavens_destruction`, and `barrier_aura`, `guardian_wall`, `iron_fortress`, `counter_pulse` for the old barrier) are only in the legacy loot and equipment skill lists, not in the skill registry. Turning one on needs a live skill chosen for it (one id in `AURA_TRIGGERS`). The other two auras now read the buff engine, like the two HUD buff strips: Power Charge (`axe_power_charge`) lights the hand glow and Aegis Shield (`aegis_shield`) the barrier while the buff lasts. The old buff store (`activeBuffsStore.jsx`) is deleted.
 - Positioning and range are not in the races: a ranged build's real advantage of hitting from distance is on top of the numbers above.
 
 **Not run:** live multiplayer (two players in one world) and the deployed duel server.
