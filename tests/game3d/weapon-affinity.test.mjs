@@ -22,6 +22,8 @@ const modules = {
   arche: 'axe/weapons/AXEWeaponArchetypes.js', affinity: 'axe/weapons/AXEWeaponAffinityStore.js',
   inv: 'axe/equipment/AXEEquipmentInventoryStore.js', storage: 'characterStorage.jsx',
   hud: 'playerHUDStore.jsx', helpers: 'weaponClassCombatHelpers.jsx',
+  identity: 'axe/weapons/AXEWeaponIdentityMount.jsx', mastery: 'progression/weaponMasteryStore.jsx',
+  buffs: 'weaponClassBuffStore.jsx', abilities: 'abilityStore.jsx', cycle: 'axe/weapons/AXEWeaponQuickSwitch.js',
 };
 await build({ stdin: { contents: Object.entries(modules).map(([name, file]) =>
   `export * as ${name} from './src/components/game3d/${file}';`).join('\n'), resolveDir: root },
@@ -33,7 +35,7 @@ await build({ stdin: { contents: Object.entries(modules).map(([name, file]) =>
       'export const base44 = { auth: { updateMe: async () => ({}), me: async () => ({}) } };' }));
   } }], logLevel: 'silent',
 });
-const { arche, affinity, inv, storage, hud, helpers } = await import(pathToFileURL(path.join(temp, 'stores.mjs')));
+const { arche, affinity, inv, storage, hud, helpers, identity, mastery, buffs, abilities, cycle } = await import(pathToFileURL(path.join(temp, 'stores.mjs')));
 after(async () => { intervals.forEach(clearInterval); globalThis.setInterval = nativeSetInterval; dom.window.close(); await rm(temp, { recursive: true, force: true }); });
 
 let user = 0;
@@ -144,4 +146,131 @@ test('a quick-slot weapon that is gone clears its slot', () => {
   assert.equal(affinity.quickSwitchAXEWeapon(0).reason, 'WEAPON_NOT_OWNED');
   assert.equal(affinity.getAXEWeaponAffinityState().quickSlots[0], null);
   assert.equal(affinity.assignAXEQuickWeapon(0, 'not-a-weapon').reason, 'WEAPON_NOT_OWNED');
+});
+
+function switchingFixture({ requiredLevel = 1 } = {}) {
+  const sword = fresh('Test Sword');
+  const old = inv.addAXEEquipmentItem(weapon('Old Health Bow', { baseStats: { damage: 10, hp: 100 } }), { equipped: true }).item;
+  inv.setActiveAXEWeapon(sword.instanceId);
+  const next = inv.addAXEEquipmentItem(weapon('Next Health Longbow', { baseStats: { damage: 10, hp: 100 }, itemLevel: requiredLevel })).item;
+  affinity.assignAXEQuickWeapon(0, next.instanceId);
+  hud.setHP(25);
+  return { sword, old, next };
+}
+
+test('one quick-switch publishes one complete loadout without granting free healing', () => {
+  const { sword, old, next } = switchingFixture();
+  const beforeHP = hud.getPlayerHUD().hp, beforeMax = hud.getPlayerHUD().maxHP;
+  const seen = []; const off = inv.subscribeAXEEquipmentInventory(s => seen.push(s)); seen.length = 0;
+  const result = affinity.quickSwitchAXEWeapon(0); off();
+  assert.equal(result.ok, true);
+  assert.equal(hud.getPlayerHUD().maxHP, beforeMax);
+  assert.equal(hud.getPlayerHUD().hp, beforeHP, 'equivalent HP weapons must not heal between unequip/equip');
+  assert.equal(seen.length, 1, 'subscribers receive one complete loadout');
+  assert.equal(seen[0].activeWeaponInstanceId, next.instanceId);
+  assert.deepEqual(seen[0].items.filter(i => i.category === 'weapon' && i.equipped).map(i => i.instanceId).sort(), [sword.instanceId, next.instanceId].sort());
+  assert.equal(inv.getAXEEquipmentItem(old.instanceId).equipped, false);
+});
+
+test('an invalid quick-switch cannot temporarily unequip equipment or change health', () => {
+  switchingFixture({ requiredLevel: 2 });
+  const before = inv.getAXEEquipmentInventoryState(), beforeHP = hud.getPlayerHUD().hp;
+  let emissions = 0; const off = inv.subscribeAXEEquipmentInventory(() => emissions++); emissions = 0;
+  const result = affinity.quickSwitchAXEWeapon(0); off();
+  assert.equal(result.reason, 'LEVEL_REQUIRED');
+  assert.deepEqual(inv.getAXEEquipmentInventoryState(), before);
+  assert.equal(hud.getPlayerHUD().hp, beforeHP, 'a denied switch must not heal');
+  assert.equal(emissions, 0);
+});
+
+test('blocked storage cannot publish a weapon switch or change derived combat stats', () => {
+  switchingFixture();
+  const before = inv.getAXEEquipmentInventoryState(), derived = structuredClone(hud.getPlayerHUD().derived);
+  const original = dom.window.Storage.prototype.setItem;
+  let result, emissions = 0;
+  const off = inv.subscribeAXEEquipmentInventory(() => emissions++); emissions = 0;
+  try {
+    dom.window.Storage.prototype.setItem = function(key, value) {
+      if (String(key).startsWith('axe_equipment_inventory_v2')) throw new dom.window.DOMException('Full', 'QuotaExceededError');
+      return original.call(this, key, value);
+    };
+    result = affinity.quickSwitchAXEWeapon(0);
+  } finally { dom.window.Storage.prototype.setItem = original; off(); }
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, 'SAVE_FAILED');
+  assert.deepEqual(inv.getAXEEquipmentInventoryState(), before);
+  assert.deepEqual(hud.getPlayerHUD().derived, derived);
+  assert.equal(emissions, 0);
+});
+
+
+function withBlockedStorage(prefix, fn) {
+  const original = dom.window.Storage.prototype.setItem;
+  try {
+    dom.window.Storage.prototype.setItem = function(key, value) {
+      if (String(key).startsWith(prefix)) throw new dom.window.DOMException('Full', 'QuotaExceededError');
+      return original.call(this, key, value);
+    };
+    return fn();
+  } finally { dom.window.Storage.prototype.setItem = original; }
+}
+
+test('failed specialty/slot preference saves do not change affinity bonuses or selections', () => {
+  const { sword } = switchingFixture();
+  const before = affinity.getAXEWeaponAffinityState(), derived = structuredClone(hud.getPlayerHUD().derived);
+  let emissions=0;const off=affinity.subscribeAXEWeaponAffinity(()=>emissions++);emissions=0;
+  withBlockedStorage('axe_weapon_affinity_v1',()=>{
+    assert.equal(affinity.setAXESpecializedArchetype('close_combat').reason,'SAVE_FAILED');
+    assert.equal(affinity.assignAXEQuickWeapon(1,sword.instanceId).reason,'SAVE_FAILED');
+  });off();
+  assert.deepEqual(affinity.getAXEWeaponAffinityState(),before);assert.deepEqual(hud.getPlayerHUD().derived,derived);assert.equal(emissions,0);
+  assert.equal(affinity.setAXESpecializedArchetype('close_combat').ok,true);
+});
+
+test('draw and return history persist together even if the separate preference key is blocked', () => {
+  const { sword, next } = switchingFixture();
+  const r=withBlockedStorage('axe_weapon_affinity_v1',()=>affinity.quickSwitchAXEWeapon(0));assert.equal(r.ok,true);
+  const key=`axe_equipment_inventory_v2::${storage.getStorageUser()}::${storage.getActiveId()}`;
+  const saved=JSON.parse(localStorage.getItem(key));
+  assert.equal(saved.activeWeaponInstanceId,next.instanceId);assert.equal(saved.previousWeaponInstanceId,sword.instanceId);
+  storage.notifyCharacterChange();assert.equal(affinity.getAXEWeaponAffinityState().previousInstanceId,sword.instanceId);
+  assert.equal(affinity.quickSwitchAXEWeapon(0).returned,true);assert.equal(inv.getActiveEquippedAXEWeapon().instanceId,sword.instanceId);
+});
+
+test('the real identity binding updates mastery, role and legacy hotbar only after a committed draw', () => {
+  const { sword, next } = switchingFixture();
+  const unbind=identity.bindAXEWeaponIdentity();
+  try {
+    abilities.equipAbility(0,'shadow_teleport');abilities.startCooldown(0);
+    const cooldown=abilities.getAbilityState().cooldowns[0];
+    assert.equal(buffs.getActiveWeaponPath(),'damage');assert.equal(mastery.getMasteryState().activeWeaponId,'sword');
+    let changes=0;const off=identity.subscribeAXEWeaponIdentity(()=>changes++);changes=0;
+    withBlockedStorage('axe_equipment_inventory_v2',()=>assert.equal(affinity.quickSwitchAXEWeapon(0).ok,false));
+    assert.equal(changes,0);assert.equal(abilities.getAbilityState().equipped[0],'shadow_teleport');
+    assert.equal(abilities.getAbilityState().cooldowns[0],cooldown);
+    assert.equal(affinity.quickSwitchAXEWeapon(0).ok,true);assert.equal(changes,1);
+    assert.equal(identity.getActiveAXEWeaponIdentity().itemId,next.instanceId);
+    assert.equal(mastery.getMasteryState().activeWeaponId,'bow');assert.equal(buffs.getActiveWeaponPath(),'ranged');
+    abilities.equipAbility(0,'lightning_strike');
+    affinity.quickSwitchAXEWeapon(0);
+    assert.equal(identity.getActiveAXEWeaponIdentity().itemId,sword.instanceId);assert.equal(abilities.getAbilityState().equipped[0],'shadow_teleport');off();
+  } finally { unbind(); }
+});
+
+test('a permitted higher-level weapon uses the provided live character level', () => {
+  switchingFixture({requiredLevel:12});
+  assert.equal(affinity.quickSwitchAXEWeapon(0,{level:11}).reason,'LEVEL_REQUIRED');
+  assert.equal(affinity.quickSwitchAXEWeapon(0,{level:12}).ok,true);
+});
+
+test('legacy cycle path also publishes a complete loadout and retains the held weapon', () => {
+  const held=fresh('Cycle Sword');
+  const old=inv.addAXEEquipmentItem(weapon('Cycle Old Bow'),{equipped:true}).item;
+  inv.setActiveAXEWeapon(held.instanceId);
+  const before=[];const off=inv.subscribeAXEEquipmentInventory(s=>before.push(s));before.length=0;
+  const r=cycle.cycleAXEEquippedWeapon(1);off();
+  assert.equal(r.ok,true);assert.equal(before.length,1);
+  assert.equal(inv.getAXEEquipmentItem(held.instanceId).equipped,true);
+  assert.ok(inv.getEquippedAXEItemsByCategory('weapon').length<=2);
+  assert.ok(inv.getAXEEquipmentItem(old.instanceId),'inactive weapon still owned');
 });

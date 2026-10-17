@@ -4,11 +4,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { quickSwitchAXEWeapon } from './AXEWeaponAffinityStore';
 import { AXE_WEAPON_ARCHETYPES } from './AXEWeaponArchetypes';
+import { getPlayerHUD } from '../../playerHUDStore';
 
 const KEYS = Object.freeze({ Digit1: 0, Digit2: 1 });
 const REASONS = Object.freeze({
   EMPTY_SLOT: 'Quick slot empty: assign a weapon in the Character Hub (Weapon Mastery, Affinity)',
   WEAPON_NOT_OWNED: 'That weapon is no longer in your inventory',
+  LEVEL_REQUIRED: 'Your level is too low to use that weapon',
+  SAVE_FAILED: 'Weapon unchanged: free device storage and try again',
 });
 
 const typing = (el) => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
@@ -23,7 +26,7 @@ export default function AXEWeaponQuickSwitchMount() {
       const slot = KEYS[e.code];
       if (slot === undefined) return;
       e.preventDefault();
-      const r = quickSwitchAXEWeapon(slot);
+      const r = quickSwitchAXEWeapon(slot, { level: getPlayerHUD().level || 1 });
       const text = r.ok
         ? `${r.weapon?.name || 'Weapon'} · ${AXE_WEAPON_ARCHETYPES[r.archetype]?.label || ''}`
         : REASONS[r.reason] || 'Cannot switch weapons right now';

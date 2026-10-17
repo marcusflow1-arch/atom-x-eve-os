@@ -110,6 +110,9 @@ function load() {
         items,
         parsed.activeWeaponInstanceId || null,
       ),
+      // Undefined preserves the old affinity-store history until the first draw.
+      previousWeaponInstanceId: typeof parsed.previousWeaponInstanceId === 'string'
+        ? parsed.previousWeaponInstanceId : parsed.previousWeaponInstanceId === null ? null : undefined,
       starterCatalogVersion: CURRENT_STARTER_CATALOG_VERSION,
     };
   } catch {
@@ -129,12 +132,12 @@ function snapshot() {
       sockets: Array.isArray(item.sockets) ? item.sockets.map((s) => ({ ...s })) : [],
     })),
     activeWeaponInstanceId: state.activeWeaponInstanceId || null,
+    previousWeaponInstanceId: state.previousWeaponInstanceId,
     starterCatalogVersion: Number(state.starterCatalogVersion || CURRENT_STARTER_CATALOG_VERSION),
   };
 }
 
-function emit() {
-  storage.set(JSON.stringify(state));
+function publish() {
   const snap = snapshot();
   listeners.forEach((fn) => fn(snap));
   if (typeof window !== 'undefined') {
@@ -142,9 +145,49 @@ function emit() {
   }
 }
 
-// Writes the inventory as shown. A new character's starter items live only in memory until
-// something changes, and the server rolls upgrades on its copy of the save, so the Services
-// gateway writes them before asking (docs/game3d/SERVER_UPGRADES.md).
+function emit() {
+  storage.set(JSON.stringify(state));
+  publish();
+}
+
+// Read-only compatibility bridge for saves created before switch history moved
+// into the same document as the equipped and active weapon.
+export function getPreviousAXEWeaponInstanceId() {
+  return state.previousWeaponInstanceId;
+}
+
+// A weapon draw is one inventory transaction. No subscriber sees an intermediate
+// unequip (which used to heal the player through max-HP recalculation).
+export function switchAXEInventoryWeapon(instanceId, context = {}) {
+  const target = state.items.find(item => item.instanceId === instanceId || item.id === instanceId);
+  if (!target || target.category !== 'weapon') return { ok: false, reason: 'WEAPON_NOT_OWNED' };
+  const current = getActiveEquippedAXEWeapon();
+  if (current?.instanceId === target.instanceId) {
+    return { ok: true, reason: 'ALREADY_ACTIVE', item: structuredClone(current) };
+  }
+  const validation = validateAXEEquip(target, context);
+  if (!validation.ok) return validation;
+  if (target.slot !== 'weapon') return { ok: false, reason: 'INVALID_SLOT' };
+
+  const removed = state.items.filter(item => item.category === 'weapon' && item.equipped &&
+    item.instanceId !== target.instanceId && item.instanceId !== current?.instanceId);
+  const removeIds = new Set(removed.map(item => item.instanceId));
+  const next = { ...state,
+    items: state.items.map(item => item.instanceId === target.instanceId ? { ...item, equipped: true }
+      : removeIds.has(item.instanceId) ? { ...item, equipped: false } : item),
+    activeWeaponInstanceId: target.instanceId,
+    previousWeaponInstanceId: current?.instanceId || null,
+  };
+  if (!storage.setChecked(JSON.stringify(next))) {
+    return { ok: false, reason: 'SAVE_FAILED', message: 'Could not save the weapon switch. Your equipment is unchanged. Free device storage and retry.' };
+  }
+  state = next;
+  publish();
+  return { ok: true, item: structuredClone(getActiveEquippedAXEWeapon()), autoUnequippedIds: [...removeIds] };
+}
+
+// Preserve main's explicit save entrypoint for server-side upgrade requests.
+// It serializes the same state as the atomic weapon transaction.
 export function persistAXEEquipmentInventory() {
   storage.set(JSON.stringify(state));
 }
