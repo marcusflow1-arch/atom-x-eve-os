@@ -193,7 +193,10 @@ export class Combat {
   tryDodge(A, B) {
     const g = this.g, F = g.forceOf && g.forceOf(B);
     if (g.net || A.remote || B.remote || !F || F.fp < DODGE_COST || F.holding || B.status !== 'normal' || !B.onGround || B.kata || B.kicking || B.dodge || B.executing) return false;
-    if ((B.dodgeReadyAt ?? 0) > g.t || B.saber.isActiveSwing() || Math.random() >= this.dodgeChance(B)) return false;
+    // Holding Q makes the player's existing Force Dodge deterministic when a hit is incoming.
+    // Without Q the original passive dodge chance is unchanged; no Force drains merely from holding the key.
+    const heldEvade = B.isPlayer && !g.hud?.help && g.input?.held('KeyQ');
+    if ((B.dodgeReadyAt ?? 0) > g.t || B.saber.isActiveSwing() || (!heldEvade && Math.random() >= this.dodgeChance(B))) return false;
     const away = v3.norm([B.pos[0] - A.pos[0], 0, B.pos[2] - A.pos[2]]), lat = [away[2], 0, -away[0]], right = [-Math.cos(B.yaw), 0, Math.sin(B.yaw)];
     for (const s of Math.random() < 0.5 ? [1, -1] : [-1, 1]) { // whichever side has floor and no wall
       const d = v3.norm([lat[0] * s + away[0] * 0.3, 0, lat[2] * s + away[2] * 0.3]), to = v3.addS(B.pos, d, DODGE_DIST), mid = v3.addS(B.pos, d, DODGE_DIST / 2);
@@ -204,7 +207,7 @@ export class Combat {
       B.startDodge(v3.dot(d, right) >= 0 ? 1 : -1, [to[0], fl, to[2]]);
       g.sfxAt('swing2', B.pos, 0.9); g.sfxAt('swing1', to, 0.5);
       g.fx.ring({ p: [B.pos[0], B.pos[1] + 0.05, B.pos[2]], n: [0, 1, 0], r0: 0.25, r1: 1.1, life: 0.3, w: 0.06, c: [0.7, 0.85, 1, 0.7] });
-      if (B.isPlayer) g.hud.msg('Force Dodge'); else if (A.isPlayer) g.hud.msg(B.label + ' dodged');
+      if (B.isPlayer) g.hud.msg(heldEvade ? 'Force Evade' : 'Force Dodge'); else if (A.isPlayer) g.hud.msg(B.label + ' dodged');
       return true;
     }
     return false;
