@@ -169,9 +169,38 @@ export class MissionDirector {
     }
     return null;
   }
+  // Subtle golden breadcrumb trail toward the accepted/current objective.
+  // Samples the existing floor so it floats just above terrain; only draws
+  // traversable-looking short segments (no line across gaps/steep cliffs).
+  // Objectives already switch through start(), so the trail follows them.
+  drawQuestTrail(R, target) {
+    const player = this.g.player;
+    if (!target || this.state !== 'play' || player.status === 'dead') return;
+    const dx = target[0] - player.pos[0], dz = target[2] - player.pos[2];
+    const distance = Math.hypot(dx, dz);
+    if (distance < 2.5) return;
+    const ux = dx / distance, uz = dz / distance;
+    const length = Math.min(distance - 1.2, 26);
+    const step = 0.7, phase = this.g.t * 3.6;
+    let previous = null;
+    for (let t = 0.9; t <= length + 0.001; t += step) {
+      const x = player.pos[0] + ux * t, z = player.pos[2] + uz * t;
+      const floor = this.g.world.floorAt(x, z, player.pos[1] + 5);
+      if (floor == null) { previous = null; continue; }
+      const point = [x, floor + 0.11, z];
+      if (previous && Math.abs(point[1] - previous[1]) < 0.75) {
+        const wave = 0.62 + 0.38 * Math.sin(phase - t * 1.15);
+        const alpha = Math.max(0.08, Math.min(0.74, wave * (1 - t / (length + 5))));
+        R.beam(previous, point, 0.065, [1, 0.72, 0.12, alpha], [1, 0.93, 0.42, alpha * 0.5], 0);
+      }
+      previous = point;
+    }
+  }
   // ---------------- 3D: a soft light beam over the objective
   draw(R) {
-    const m = this.marker(), P = this.g.player; if (!m || Math.hypot(m[0] - P.pos[0], m[2] - P.pos[2]) < 4) return;
+    const m = this.marker(), P = this.g.player;
+    if (m) this.drawQuestTrail(R, m);
+    if (!m || Math.hypot(m[0] - P.pos[0], m[2] - P.pos[2]) < 4) return;
     const o = this.objective; if (o.until.cleared) return; // enemies get the HUD marker only
     const pulse = 0.75 + 0.25 * Math.sin(this.g.t * 3);
     R.beam([m[0], m[1] - 1.2, m[2]], [m[0], m[1] + 7, m[2]], 0.22, [0.35 * pulse, 0.75 * pulse, 1 * pulse, 0.5], [0.2, 0.5, 1, 0], 0);
