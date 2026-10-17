@@ -34,7 +34,7 @@ export const CRACK_LIFE = 14;    // seconds a wall crack from a wall slam stays
 export const KATA_CHORD = 0.1;   // s the right button waits for the left one (both = saber kata) before it throws the saber
 const rnd = (a, b) => a + Math.random() * (b - a);
 const SPAWN = [0, 0, -9];
-const clearCmd = c => { c.fwd = c.right = c.up = 0; c.walk = c.crouch = c.attack = c.alt = c.jump = c.jumpPressed = c.crouchPressed = false; };
+const clearCmd = c => { c.fwd = c.right = c.up = 0; c.walk = c.crouch = c.attack = c.alt = c.jump = c.jumpPressed = c.jumpReleased = c.crouchPressed = false; };
 // the menu background has no player: nothing is read from (or swallowed on) the keyboard and mouse
 class NullInput {
   constructor() { this.down = new Set(); this.pressedSet = new Set(); this.releasedSet = new Set(); this.btn = [false, false, false]; this.btnPressed = [false, false, false]; this.dx = this.dy = this.wheel = this.zoom = 0; this.locked = false; this.sens = 0.0022; this.onFirstGesture = null; }
@@ -138,7 +138,7 @@ export class Game {
     const I = this.input;
     // Presses read inside the fixed 60 Hz simulation (jump, roll, Force keys, a quick click) are latched until a step
     // consumes them: on fast displays many rendered frames run no step, and those presses used to be dropped.
-    this.stepPresses = new Set(); this.pendingMouse = [0, 0];
+    this.stepPresses = new Set(); this.stepReleases = new Set(); this.pendingMouse = [0, 0];
     this.inp = { pressed: c => this.stepPressed(c), held: c => I.held(c), released: c => I.released(c) };
     this.fireT = 0;
   }
@@ -513,11 +513,12 @@ export class Game {
   }
   // ---------------- player input
   stepPressed(code) { return this.firstSub && (this.stepPresses ? this.stepPresses.has(code) : this.input.pressed(code)); }
+  stepReleased(code) { return this.firstSub && (this.stepReleases ? this.stepReleases.has(code) : this.input.released(code)); }
   buildPlayerCmd() {
-    const i = this.input, p = this.player, c = p.cmd; if (this.hud.help || (this.tutorialMode && this.tutorialPhase === 'demo')) { c.fwd = c.right = 0; c.attack = c.alt = c.jump = c.crouch = c.walk = false; c.jumpPressed = c.crouchPressed = false; return; }
+    const i = this.input, p = this.player, c = p.cmd; if (this.hud.help || (this.tutorialMode && this.tutorialPhase === 'demo')) { c.fwd = c.right = 0; c.attack = c.alt = c.jump = c.crouch = c.walk = false; c.jumpPressed = c.jumpReleased = c.crouchPressed = false; return; }
     c.fwd = (i.held('KeyW') ? 1 : 0) - (i.held('KeyS') ? 1 : 0); c.right = (i.held('KeyD') ? 1 : 0) - (i.held('KeyA') ? 1 : 0);
     c.aimPitch = this.cam.pitch; c.walk = i.held('ShiftLeft') || i.held('ShiftRight'); c.crouch = i.held('KeyC'); c.attack = !!i.btn[0] || this.stepPressed('Mouse0'); c.alt = !!i.btn[2]; c.jump = i.held('Space');
-    c.up = c.jump ? 1 : c.crouch ? -1 : 0; c.jumpPressed = this.stepPressed('Space'); c.crouchPressed = this.stepPressed('KeyC');
+    c.up = c.jump ? 1 : c.crouch ? -1 : 0; c.jumpPressed = this.stepPressed('Space'); c.jumpReleased = this.stepReleased('Space'); c.crouchPressed = this.stepPressed('KeyC');
     const pm = this.pendingMouse ??= [0, 0]; c.mouseDX = this.firstSub ? pm[0] : 0; c.mouseDY = this.firstSub ? pm[1] : 0; if (this.firstSub) pm[0] = pm[1] = 0; // mouse flick for the swing wind-up
     if (this.playerWeapon === 'bryar') { c.attack = false; c.alt = false; } // the mouse buttons fire the pistol instead (updatePistol)
     if ((p.status === 'normal' || p.status === 'roll') && !p.swingLocked()) p.targetYaw = this.cam.yaw; // a committed strike keeps its facing until it ends
@@ -631,7 +632,7 @@ export class Game {
     if (!this.teamMatch?.ended) this.combat.step(dt);
     this.world.update(dt); this.fx.update(dt);
     if (this.teamMatch) this.teamMatch.update(dt);
-    if (this.director) this.director.update(dt); this.firstSub = false; if (this.stepPresses) this.stepPresses.clear();
+    if (this.director) this.director.update(dt); this.firstSub = false; if (this.stepPresses) this.stepPresses.clear(); if (this.stepReleases) this.stepReleases.clear();
     for (const f of this.fighters()) if (!f.remote && f.spawnShield && f.spawnShield <= this.t) { f.spawnShield = 0; if (f.shieldGlow) { f.glow = 0; f.shieldGlow = false; } }
     for (const f of this.flashes) f.t -= dt; this.flashes = this.flashes.filter(f => f.t > 0); if (this.cracks) { for (const c of this.cracks) c.t += dt; this.cracks = this.cracks.filter(c => c.t < CRACK_LIFE); } if (this.scorches) { for (const m of this.scorches) m.t += dt; this.scorches = this.scorches.filter(m => m.t < 8); } this.lightFlash = Math.max(0, this.lightFlash - dt * 3);
     if (p.healFlash > 0 && this.force.holding !== 'heal') p.healFlash = Math.max(0, p.healFlash - dt);
@@ -645,7 +646,7 @@ export class Game {
     dt = Math.min(dt, 0.1); this.fps += (1 / Math.max(dt, 1e-3) - this.fps) * 0.08;
     if (this.slowMo) { if (this.t < this.slowMo.until) dt *= this.slowMo.scale; else this.slowMo = null; } // the execution cut, offline
     this.frameNo++; if (!this.attract) this.frameInput(dt); this.acc += dt; let n = 0; this.firstSub = true;
-    if (this.hud.help) this.stepPresses.clear(); else for (const c of this.input.pressedSet) this.stepPresses.add(c); if (!this.hud.help && this.input.btnPressed[0]) this.stepPresses.add('Mouse0');
+    if (this.hud.help) { this.stepPresses.clear(); this.stepReleases.clear(); } else { for (const c of this.input.pressedSet) this.stepPresses.add(c); for (const c of this.input.releasedSet) this.stepReleases.add(c); } if (!this.hud.help && this.input.btnPressed[0]) this.stepPresses.add('Mouse0');
     if (this.duel && this.hud.help) this.acc = 0; // controls panel open: the duel waits
     while (this.acc >= STEP && n++ < 6) { this.step(STEP); this.acc -= STEP; }
     if (n >= 6) this.acc = 0;

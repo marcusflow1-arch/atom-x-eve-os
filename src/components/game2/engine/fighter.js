@@ -44,7 +44,7 @@ export const STAFF_TWIRL = 15; // rad/s: the saberstaff without Jedi Academy's s
 export const PULL_HANG = 0.45;
 const FLIP_X = Q.axisAngle([1, 0, 0], Math.PI);
 const FORCE_JUMP_HEIGHT = [0.8, 3.3, 5.7, 10.4]; // JO forceJumpHeight[] in metres
-export const emptyCmd = () => ({ fwd: 0, right: 0, up: 0, walk: false, crouch: false, attack: false, alt: false, jump: false, jumpPressed: false, crouchPressed: false });
+export const emptyCmd = () => ({ fwd: 0, right: 0, up: 0, walk: false, crouch: false, attack: false, alt: false, jump: false, jumpPressed: false, jumpReleased: false, crouchPressed: false });
 const DEATHS = ['BOTH_DEATH1', 'BOTH_DEATH2', 'BOTH_DEATH3', 'BOTH_DEATH4', 'BOTH_DEATH5', 'BOTH_DEATH6', 'BOTH_DEATH7', 'BOTH_DEATH8', 'BOTH_DEATH9'];
 const PAINS = ['BOTH_PAIN2', 'BOTH_PAIN3', 'BOTH_PAIN1', 'BOTH_PAIN4', 'BOTH_PAIN5', 'BOTH_PAIN6'];
 const animLen = (a) => a.n / Math.abs(a.fps);
@@ -66,7 +66,7 @@ export class Fighter {
     this.hiltMat = new Float32Array(16); this.timers = []; this.forceUntil = 0; this.legsLockUntil = 0; this.landUntil = 0;
     this.speedMul = 1; this.damageMul = 1; this.takeMul = 1; this.radius = 0.38; this.thrown = null; this.airAnim = null; this.fjUsed = false; this.jumpAt = -9; this.rollDir = [0, 0, 1];
     this.hitSet = new Set(); this.hitMove = -1; this.idleSince = 0; this.alpha = 1; this.flash = 0; this.deadAt = 0; this.glow = 0; this.glowCol = [1, 0.2, 0.1]; this.dmgFlash = 0; this.lastHurt = -9; this.distracted = 0;
-    this.jumpLevel = 3; this.facingLock = false;
+    this.jumpLevel = 3; this.jumpCharge = 0; this.jumpCharging = false; this.facingLock = false;
     this.force = null; this.reaction = o.reaction ?? 0.8;               // Force instance (dark Jedi) + chance to react to a push/pull in time
     this.shoveV = [0, 0, 0]; this.elecUntil = 0; this.elecTick = 0;      // decaying slide from a weak push, lightning 'electrified' state
     this.gripCarry = null; this.gripCripple = -9; this.counterUntil = 0;  // level-3 grip carries the victim, brief immunity after a grip, counter-throw lockout
@@ -474,8 +474,35 @@ export class Fighter {
     if (this.tauntUntil > now && (c.fwd || c.right || c.attack || c.jumpPressed || c.crouchPressed)) this.endTaunt(); // any action cuts a taunt short
     const special = this.specialLocked();
     if (this.trySpecialJumpAttack()) { c.jumpPressed = false; }
-    if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) this.startJump();
-    if (!special && !this.onGround && c.jump && !this.fjUsed && this.now - this.jumpAt >= 0.05 && this.now - this.jumpAt < 0.6 && this.vel[1] > 0.5 && this.canForceJump()) this.startForceJump();
+    // Game 2 only: charge while Space is held on the ground, and jump when
+    // released. Holding longer upgrades the launch from level 1 to 2 to 3.
+    // NPCs retain their original immediate-jump controls.
+    if (this.isPlayer) {
+      if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) {
+        this.jumpCharging = true;
+        this.jumpCharge = 0;
+      }
+      if (this.jumpCharging) {
+        if (!this.onGround || this.ducked || frozen || special || this.status !== 'normal') {
+          this.jumpCharging = false;
+          this.jumpCharge = 0;
+        } else if (c.jump) {
+          this.jumpCharge = Math.min(1.2, this.jumpCharge + dt);
+        } else if (c.jumpReleased) {
+          const chargeLevel = this.jumpCharge >= 0.85 ? 3 : this.jumpCharge >= 0.35 ? 2 : 1;
+          this.jumpCharging = false;
+          this.jumpCharge = 0;
+          if (chargeLevel === 1 || !this.canForceJump()) this.startJump();
+          else this.startForceJump(chargeLevel);
+        } else {
+          // Focus loss/paused input: never leave a charged jump pending.
+          this.jumpCharging = false;
+          this.jumpCharge = 0;
+        }
+      }
+    } else if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) {
+      this.startJump();
+    }
     // wish velocity
     const sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); const fwd = [sinY, 0, cosY], right = [-cosY, 0, sinY];
     let f = special ? 0 : c.fwd, r = special ? 0 : c.right; const l = Math.hypot(f, r); if (l > 1) { f /= l; r /= l; }
@@ -514,8 +541,8 @@ export class Fighter {
     this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.06, loop: false }); this.actor.followLegs(); if (!this.saber.holstered && !this.saber.isActiveSwing()) { }
     this.g.sfxAt && this.g.sfxAt('jump', this.pos, 0.0);
   }
-  startForceJump() {
-    const c = this.cmd; this.fjUsed = true; const h = FORCE_JUMP_HEIGHT[this.jumpLevel]; const v = Math.sqrt(2 * G * h); this.vel[1] = Math.max(this.vel[1], v);
+  startForceJump(chargeLevel = this.jumpLevel) {
+    const c = this.cmd; this.fjUsed = true; this.onGround = false; this.jumpAt = this.now; const h = FORCE_JUMP_HEIGHT[Math.min(this.jumpLevel, Math.max(1, chargeLevel))]; const v = Math.sqrt(2 * G * h); this.vel[1] = Math.max(this.vel[1], v);
     // JO: FORCEJUMP1/BACK/LEFT/RIGHT anim chosen by movement direction
     let an = 'BOTH_FORCEJUMP1'; if (c.fwd < 0) an = 'BOTH_FORCEJUMPBACK1'; else if (c.fwd === 0 && c.right > 0) an = 'BOTH_FORCEJUMPRIGHT1'; else if (c.fwd === 0 && c.right < 0) an = 'BOTH_FORCEJUMPLEFT1';
     this.airAnim = an; this.actor.setLegs(an, { restart: true, blend: 0.05, loop: false }); this.fjStart = this.now; this.g.onForceJump && this.g.onForceJump(this);
