@@ -116,7 +116,7 @@ long it takes.
 | Vision v4 | Game 3D today | Status |
 |---|---|---|
 | Skills start at level 1 and evolve to the next level by being used, up to the highest; single hit, multi-hit, AoE and buffs alike | Slice E (below): `skills/skillMasteryStore.jsx`. Before it, every skill was cast at level 1 forever | **Done** (branch `game3d/skill-mastery`) |
-| WASD movement, with click-to-move as an option the player can switch on | WASD, camera-relative, in `GameWorld3D.jsx`; no click-to-move; boss AI has its own move targets | Partial, additive |
+| WASD movement, with click-to-move as an option the player can switch on | WASD unchanged and the default. Settings (Esc) → **Click to move**, off by default, saved per user (`axe/player/AXEControlSettingsStore.js`). On: a left click on walkable ground sets a move target with a ground marker; the hero walks there through the WASD movement vector (same speed, Shift run / Ctrl sprint, animation, collision). Any WASD key cancels it; arrival, unwalkable ground, a blocked step or a 15 s timeout stops it. A click on an enemy, NPC or player stays the click attack (D9). Logic `axe/player/AXEClickToMove.js`, ray and marker `AXEClickToMoveScene.js`; `tests/game3d/click-to-move.test.mjs` | **Done** (branch `game3d/click-to-move`; no pathfinding: straight line) |
 | Realistic skill effects, so it reads as a new game | A cast light beam (`createPlayerCastLightBeam`), the soul-fusion and Ascension effect runtimes; skill strikes reuse the basic attack swing | Partial (rendering branch) |
 | AAA graphics; shrink the world if needed, with the camera set so a player sees no difference | `axe/core/axeWorldScaleConfig.js` (meters, a 1.8 m hero), region streaming (`axe/world/AXEWorldStreamingSystem.js`); no quality tiers, LOD budget or renderer benchmark | **Missing** (rendering, benchmarked; see D12) |
 | Realistic flowing water; swimming | No water surface or swim state anywhere in Game 3D | **Missing** |
@@ -171,8 +171,10 @@ benchmarked rendering branch (`.claude/skills/game2-renderer-benchmark/SKILL.md`
 - **D8 (skill mastery):** about 20 hours to master a skill: keep? Should the ranks change the skill itself (bigger
   effect, an extra hit, a new visual) and should mastery shorten cooldowns? Keep, merge or remove the old skill book
   points? ([SKILL_MASTERY.md](SKILL_MASTERY.md))
-- **D9 (click-to-move):** owner's answer: WASD by default, click-to-move as a switchable option. Open: should a click
-  on an enemy also lock on and attack?
+- **D9 (click-to-move):** owner's answer: WASD by default, click-to-move as a switchable option (built, build order
+  8). Open: should a click on an enemy also lock on and attack? Today, with the option on, a click on an enemy, NPC or
+  player keeps the existing click attack (the nearest enemy in range) and does not lock on; middle click still locks
+  on. Also open: should click-to-move run by default, or walk unless Shift is held as it does now?
 - **D10 (water and flight):** where can heroes swim, and does it cost stamina? Who can fly and from when (the Chosen
   Ascension at level 100, wings, or both)? Can flying heroes fight?
 - **D11 (the Chosen's base):** who are "the Chosen": heroes who took the Taurus Chosen Ascension, or the Chosen
@@ -194,8 +196,12 @@ Additive slices first; none of them changes an existing save.
 v4, mechanics and back end first, each on its own branch:
 
 7. **Skill mastery** (slice E, done on its branch).
-8. **Click-to-move option** (movement): a settings switch, ground click to move, WASD cancels the move; it never
-   changes WASD play.
+8. **Click-to-move option** (movement; done on branch `game3d/click-to-move`, 2026-10-17): Settings (Esc) → Click to
+   move, off by default and saved per user; a ground click moves the hero along the WASD movement path, with a ground
+   marker; WASD cancels the move; arrival, unwalkable ground, a blocked step or the timeout stops it. With the option
+   off, WASD play is unchanged. `tests/game3d/click-to-move.test.mjs`: 14 tests. All Game 3D tests: 143/143. `npm run
+   build` exits 0 with a fresh `dist/`. Not run: play in a browser and multiplayer. No navmesh, so the hero goes
+   straight and stops at a blocked step.
 9. **Swimming** (movement): a swim state, buoyancy, surface and underwater movement, and a water volume in the world
    data. **Flowing water** (rendering, benchmarked) is a separate branch.
 10. **Flight** (movement): take-off, hover, glide and landing, built on the existing levitation and wings. Then **the

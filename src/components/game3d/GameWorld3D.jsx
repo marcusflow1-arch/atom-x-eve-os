@@ -91,6 +91,9 @@ import { PlayerCameraSystem } from './player/PlayerCameraSystem';
 import { createWorldEnvironmentSystem } from './WorldEnvironmentSystem';
 import { createCharacterReadabilityLights } from './CharacterReadabilityLights';
 import { getCharacterDodge, getPlanarBasisFromYaw } from './player/characterDodgeVector';
+import { AXE_CLICK_TO_MOVE_CONFIG, classifyAXEClick, createAXEClickToMove, directionRelativeToFacing } from './axe/player/AXEClickToMove';
+import { createAXEClickToMoveMarker, pickAXEClickToMoveGround } from './axe/player/AXEClickToMoveScene';
+import { isAXEClickToMoveEnabled } from './axe/player/AXEControlSettingsStore';
 import WorldEnvironmentHUD from './WorldEnvironmentHUD';
 import { getDetroitWeather } from '@/functions/getDetroitWeather';
 import { createPlayerCastLightBeam } from './vfx/playerCastLightBeam';
@@ -1035,10 +1038,42 @@ export default function GameWorld3D() {
       model.visible = false;
     };
 
+    // Click-to-move: a Settings option, off by default (axe/player/AXEClickToMove.js). With it off,
+    // nothing below changes WASD play. Walkable = terrain under the point, inside the arena clamp.
+    const arenaRadius = 36.5; // the hero's movement clamp (movement loop below)
+    const isClickMoveWalkable = (x, z) => Math.hypot(x, z) <= arenaRadius && sampleGroundY(x, z) !== null;
+    const clickMoveMarker = createAXEClickToMoveMarker(scene);
+    const clickToMove = createAXEClickToMove({
+      isEnabled: isAXEClickToMoveEnabled,
+      isWalkable: isClickMoveWalkable,
+      onChange: (target) => {
+        if (target) clickMoveMarker.show(target, sampleGroundY(target.x, target.z));
+        else clickMoveMarker.hide();
+      },
+    });
+    const getClickEntityRoots = () => [
+      ...[...enemies, ...bossEntities, ...(window.__gw3dRogues || [])].filter((en) => en?.alive && !en.dying).map((en) => en.group),
+      ...questNPCs.map((qn) => qn.group),
+      livingQuestEntity?.group,
+      isMountedRef.current ? null : companionGroupRef.current,
+      ...(remoteManagerRef.current?.getMeshes?.() || []),
+    ];
+    // A left click on walkable ground nearer than any enemy, NPC or player sets the move target.
+    // Anything else (an enemy, the sky, a click while a WASD key is held) stays the click attack.
+    // Whether clicking an enemy should also lock on and attack is owner decision D9 (not built).
+    const tryClickToMove = (e) => {
+      if (!model || AXE_CLICK_TO_MOVE_CONFIG.movementKeys.some((k) => keys.current[k])) return false;
+      const pick = pickAXEClickToMoveGround({ event: e, element: renderer.domElement, camera, groundMeshes, entityRoots: getClickEntityRoots() });
+      const walkable = !!pick.point && isClickMoveWalkable(pick.point.x, pick.point.z);
+      if (classifyAXEClick({ enabled: true, ...pick, walkable }) !== 'move') return false;
+      return clickToMove.setTarget(pick.point);
+    };
+
     const onKeyDown = (e) => {
       if (e.target?.matches?.('input, textarea')) return;
       const k = e.key.toLowerCase();
       keys.current[k] = true;
+      clickToMove.noteKey(k); // any WASD key cancels a click move
       const dodgeKeys = new Set(['w', 'a', 's', 'd']);
       if (!e.repeat && dodgeKeys.has(k)) {
         const nowMs = performance.now();
@@ -1106,6 +1141,7 @@ export default function GameWorld3D() {
       if (typeof window !== 'undefined' && window.__axeUiModalOpen) return;
       // Left click = attack, middle click = Lock-On, right click = camera drag (+ block if no drag)
       if (e.button === 0) {
+        if (isAXEClickToMoveEnabled() && tryClickToMove(e)) { e.preventDefault(); return; }
         rangedClickAttackPressed.current = true;
         attackPressed.current = true;
         e.preventDefault();
@@ -1167,6 +1203,7 @@ export default function GameWorld3D() {
       const gy = sampleGroundY(target.x, target.z);
       m.position.y = gy ?? 0;
       m.visible = true;
+      clickToMove.cancel('respawn');
       playerInvulTimer.current = PLAYER_INVUL_AFTER_HIT;
       window.__localPlayerPos = { x: m.position.x, y: m.position.y, z: m.position.z };
     };
@@ -1284,6 +1321,7 @@ export default function GameWorld3D() {
           attackPressed.current = false;
           rangedClickAttackPressed.current = false;
           interactPressed.current = false;
+          clickToMove.cancel('ui');
         }
         const move = new THREE.Vector3();
         const combatAxes = getCombatAxes();
@@ -1350,18 +1388,26 @@ export default function GameWorld3D() {
           if (keys.current['a']) move.sub(right);
           if (keys.current['d']) move.add(right);
         }
+        // Click-to-move steers only while no WASD key moves the hero (a key cancels it), through the
+        // same vector, so speed, Shift run / Ctrl sprint, animation and collision match WASD.
+        const clickSteer = clickToMove.steer({ position: model.position, delta, keyMoving: move.lengthSq() > 0 });
+        if (clickSteer) move.set(clickSteer.x, 0, clickSteer.z);
+        const clickMoveFrom = clickSteer ? { x: model.position.x, z: model.position.z } : null;
 
         const isMoving = move.lengthSq() > 0;
         const isRunning = !!keys.current['shift'] && isMoving;
         const isSprinting = !!keys.current['control'] && isMoving;
         const isAiming = !!playerAnim?.getIsAiming?.();
-        const moveDirection = keys.current['s'] ? 'backward' : keys.current['a'] ? 'left' : keys.current['d'] ? 'right' : 'forward';
+        // Locked on, the hero keeps facing the target, so a click move can be a strafe.
+        const moveDirection = clickSteer && combatAxes ? directionRelativeToFacing(clickSteer, combatAxes.forward)
+          : keys.current['s'] ? 'backward' : keys.current['a'] ? 'left' : keys.current['d'] ? 'right' : 'forward';
         const combatLocked = !!combatAxes;
         const isCrouching = !!playerAnim?.getIsCrouching?.();
         const movementOverridden = !!playerAnim?.isMovementOverridden?.();
         const baseMoveSpeed = isSprinting ? RUN_SPEED * 1.35 : isRunning ? RUN_SPEED * getRunMultiplier() : WALK_SPEED;
         const speed = (baseMoveSpeed * (isCrouching ? 0.58 : 1)) * speedMult * getWeaponMoveSpeedMult();
-        if (isMoving && !movementOverridden && !tornadoRes.lockMovement && !bossSpecialLock) {
+        const canMove = isMoving && !movementOverridden && !tornadoRes.lockMovement && !bossSpecialLock;
+        if (canMove) {
           move.normalize();
           model.position.x += move.x * speed * delta;
           model.position.z += move.z * speed * delta;
@@ -1371,7 +1417,6 @@ export default function GameWorld3D() {
               distanceMeters: speed * delta,
             });
           }
-          const arenaRadius = 36.5;
           const distFromCenter = Math.sqrt(model.position.x * model.position.x + model.position.z * model.position.z);
           if (distFromCenter > arenaRadius) {
             const edgeScale = arenaRadius / distFromCenter;
@@ -1398,6 +1443,9 @@ export default function GameWorld3D() {
         if (tornadoRes.liftY > 0 && !bossFallActive) model.position.y += tornadoRes.liftY;
         // Rogue-AI body collision — push player out so they can't walk through hostile player-AIs
         { const _R = window.__gw3dRogues; if (_R) for (let i=0;i<_R.length;i++){ const r=_R[i]; if(!r.alive||r.dying||!r.group?.visible) continue; const dxR=model.position.x-r.group.position.x, dzR=model.position.z-r.group.position.z, dR=Math.sqrt(dxR*dxR+dzR*dzR); if(dR>0&&dR<0.9){ const p=(0.9-dR)/dR; model.position.x+=dxR*p; model.position.z+=dzR*p; } } }
+        // After movement and collision: arrival, or a step that made no headway (blocked).
+        if (clickMoveFrom) clickToMove.noteStep({ from: clickMoveFrom, to: model.position, expectedMeters: canMove ? speed * delta : 0 });
+        clickMoveMarker.update(delta);
 
         // ─── Mount handling: companion follows player while mounted ───
         if (companionMixerRef.current) companionMixerRef.current.update(delta);
@@ -2264,6 +2312,8 @@ export default function GameWorld3D() {
       detachBossBus();
       resetCompanionAutoCombat();
       charLights.dispose();
+      clickToMove.cancel('teardown');
+      clickMoveMarker.dispose();
       tornado.dispose();
       if (window.__tornado === tornado) window.__tornado = null;
       envSystem.dispose();

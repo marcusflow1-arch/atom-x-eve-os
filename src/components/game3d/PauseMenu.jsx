@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, LogOut, Play, Volume2, VolumeX, Monitor, ChevronRight } from 'lucide-react';
+import { X, LogOut, Play, Volume2, VolumeX, Monitor, ChevronRight, MousePointerClick } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { getAXEControlSettings, setAXEClickToMoveEnabled, subscribeAXEControlSettings } from './axe/player/AXEControlSettingsStore';
 
 /**
  * Pause / system menu — toggled by Escape inside the game world.
  * Liquid-glass finish with:
  *  - Game theme volume slider (live)
+ *  - Controls: the click-to-move option (WASD is always on), saved per user
  *  - Graphics settings (quality preset, shadows, fps cap)
  *  - Logout
  */
 export default function PauseMenu({ open, onClose, volume, onVolumeChange }) {
   const [view, setView] = useState('main'); // 'main' | 'graphics'
+  const [controls, setControls] = useState(getAXEControlSettings);
+  React.useEffect(() => subscribeAXEControlSettings(setControls), []);
   const [graphics, setGraphics] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('game_graphics_settings') || 'null') || { quality: 'high', shadows: true, fpsCap: 60 };
@@ -36,6 +40,7 @@ export default function PauseMenu({ open, onClose, volume, onVolumeChange }) {
             <div className="relative p-5 space-y-4">
               {view === 'main' && <>
                 <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', backdropFilter: 'blur(20px)' }}><div className="flex items-center justify-between mb-3"><div className="flex items-center gap-2">{volume > 0 ? <Volume2 className="w-4 h-4 text-cyan-300" /> : <VolumeX className="w-4 h-4 text-white/50" />}<span className="text-white font-semibold text-sm">Game Theme</span></div><span className="text-cyan-300 font-mono text-sm tabular-nums">{Math.round(volume * 100)}%</span></div><input type="range" min={0} max={1} step={0.01} value={volume} onChange={e => onVolumeChange(parseFloat(e.target.value))} className="w-full accent-cyan-400 cursor-pointer" /></div>
+                <ToggleRow icon={MousePointerClick} label="Click to move" hint="Left-click the ground to walk there. WASD cancels it." on={controls.clickToMove} onToggle={() => setAXEClickToMoveEnabled(!controls.clickToMove)} />
                 <MenuButton icon={Play} label="Close Settings" hint="Esc" onClick={onClose} accent="cyan" />
                 <MenuButton icon={Monitor} label="Graphics Settings" hint={`${graphics.quality} · ${graphics.fpsCap}fps`} onClick={() => setView('graphics')} accent="white" chevron />
                 <MenuButton icon={LogOut} label="Logout" hint="Sign out of account" onClick={handleLogout} accent="red" />
@@ -54,6 +59,10 @@ function MenuButton({ icon: Icon, label, hint, onClick, accent = 'white', chevro
   const accents = { cyan: { bg: 'rgba(34,211,238,0.10)', border: 'rgba(34,211,238,0.30)', icon: 'text-cyan-300', glow: '0 0 20px rgba(34,211,238,0.15)' }, red: { bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.30)', icon: 'text-red-300', glow: '0 0 20px rgba(248,113,113,0.15)' }, white: { bg: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.14)', icon: 'text-white/85', glow: 'none' } };
   const a = accents[accent] || accents.white;
   return <button onClick={onClick} className="group w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all hover:scale-[1.02] text-left" style={{ background: a.bg, border: `1px solid ${a.border}`, backdropFilter: 'blur(20px)', boxShadow: a.glow }}><div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.08)' }}><Icon className={`w-5 h-5 ${a.icon}`} /></div><div className="flex-1 min-w-0"><div className="text-white font-semibold text-sm">{label}</div><div className="text-white/50 text-xs">{hint}</div></div>{chevron && <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white/70 transition" />}</button>;
+}
+
+function ToggleRow({ icon: Icon, label, hint, on, onToggle }) {
+  return <div className="rounded-2xl p-4 flex items-center justify-between gap-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', backdropFilter: 'blur(20px)' }}><div className="flex items-center gap-2 min-w-0"><Icon className={`w-4 h-4 shrink-0 ${on ? 'text-cyan-300' : 'text-white/50'}`} /><div className="min-w-0"><div className="text-white font-semibold text-sm">{label}</div><div className="text-white/50 text-xs">{hint}</div></div></div><button type="button" role="switch" aria-checked={on} aria-label={label} onClick={onToggle} className="relative shrink-0 w-12 h-6 rounded-full transition-all" style={{ background: on ? 'rgba(34,211,238,0.40)' : 'rgba(255,255,255,0.10)', border: `1px solid ${on ? 'rgba(34,211,238,0.60)' : 'rgba(255,255,255,0.20)'}` }}><div className="absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all" style={{ left: on ? '26px' : '2px', boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }} /></button></div>;
 }
 
 function GraphicsPanel({ graphics, onChange }) {
