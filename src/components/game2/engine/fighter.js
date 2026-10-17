@@ -474,41 +474,24 @@ export class Fighter {
     if (this.tauntUntil > now && (c.fwd || c.right || c.attack || c.jumpPressed || c.crouchPressed)) this.endTaunt(); // any action cuts a taunt short
     const special = this.specialLocked();
     if (this.trySpecialJumpAttack()) { c.jumpPressed = false; }
-    // Game 2: Space starts rising immediately. Hold for up to two seconds to
-    // progressively extend the climb. Releasing cuts upward thrust now, not
-    // a delayed launch or an instant jump to the maximum Force height.
-    // NPCs retain their original immediate jump behavior.
+    // Original Outcast jump launch/animation speed, now with hold-to-continue:
+    // release Space to cut the ascent immediately and transition to falling.
+    // No artificial 2-second climb and no slow-motion animation playback.
     if (this.isPlayer) {
       if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) {
         this.startJump();
         this.jumpCharging = true;
-        this.jumpCharge = 0;
-        // A mastered Force Jump can climb the full two seconds; base jump
-        // remains smaller when the Force ability is not available.
-        this.jumpHoldLimit = this.canForceJump() ? 2 * (Math.max(1, Math.min(3, this.jumpLevel)) / 3) : 0.33;
       }
-      if (this.jumpCharging) {
-        if (!c.jump || !this.onGround && (this.status !== 'normal' || special || frozen)) {
+      if (this.jumpCharging && !this.onGround) {
+        if (!c.jump || frozen || special || this.status !== 'normal') {
           this.jumpCharging = false;
-          this.jumpCharge = 0;
-          if (this.vel[1] > 0) this.vel[1] = 0; // release immediately ends ascent
-          this.airAnim = 'BOTH_FORCEINAIR1'; this.actor.setLegs(this.airAnim, { blend: 0.08, loop: true });
-        } else if (this.jumpCharge < this.jumpHoldLimit) {
-          this.jumpCharge = Math.min(this.jumpHoldLimit, this.jumpCharge + dt);
-          if (this.jumpCharge > 0.33 && !this.fjUsed && this.canForceJump()) {
-            this.fjUsed = true;
-            this.g.onForceJump?.(this);
-            this.airAnim = 'BOTH_FORCEJUMP1';
-            this.actor.setLegs('BOTH_FORCEJUMP1', { blend: 0.09, loop: false });
-          }
-          // Constant smooth ascent, ~10.4m if Force Jump level 3 is held
-          // for its full 2s. Gravity resumes as soon as Space is released.
-          this.vel[1] = 5.2;
-        } else {
-          this.jumpCharging = false;
-          this.jumpCharge = 0;
           if (this.vel[1] > 0) this.vel[1] = 0;
-          this.airAnim = 'BOTH_FORCEINAIR1'; this.actor.setLegs(this.airAnim, { blend: 0.08, loop: true });
+          this.airAnim = this.fjUsed ? 'BOTH_FORCEINAIR1' : 'BOTH_INAIR1';
+          this.actor.setLegs(this.airAnim, { blend: 0.08, loop: true });
+        } else if (!this.fjUsed && this.canForceJump() && this.now - this.jumpAt >= 0.05 && this.vel[1] > 0.5) {
+          this.startForceJump(); // original Force Jump velocity and playback rate
+        } else if (this.vel[1] <= 0) {
+          this.jumpCharging = false; // natural apex, don't float
         }
       }
     } else if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) {
