@@ -474,30 +474,39 @@ export class Fighter {
     if (this.tauntUntil > now && (c.fwd || c.right || c.attack || c.jumpPressed || c.crouchPressed)) this.endTaunt(); // any action cuts a taunt short
     const special = this.specialLocked();
     if (this.trySpecialJumpAttack()) { c.jumpPressed = false; }
-    // Game 2 only: charge while Space is held on the ground, and jump when
-    // released. Holding longer upgrades the launch from level 1 to 2 to 3.
-    // NPCs retain their original immediate-jump controls.
+    // Game 2: Space starts rising immediately. Hold for up to two seconds to
+    // progressively extend the climb. Releasing cuts upward thrust now, not
+    // a delayed launch or an instant jump to the maximum Force height.
+    // NPCs retain their original immediate jump behavior.
     if (this.isPlayer) {
       if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) {
+        this.startJump();
         this.jumpCharging = true;
         this.jumpCharge = 0;
+        // A mastered Force Jump can climb the full two seconds; base jump
+        // remains smaller when the Force ability is not available.
+        this.jumpHoldLimit = this.canForceJump() ? 2 * (Math.max(1, Math.min(3, this.jumpLevel)) / 3) : 0.33;
       }
       if (this.jumpCharging) {
-        if (!this.onGround || this.ducked || frozen || special || this.status !== 'normal') {
+        if (!c.jump || !this.onGround && (this.status !== 'normal' || special || frozen)) {
           this.jumpCharging = false;
           this.jumpCharge = 0;
-        } else if (c.jump) {
-          this.jumpCharge = Math.min(1.2, this.jumpCharge + dt);
-        } else if (c.jumpReleased) {
-          const chargeLevel = this.jumpCharge >= 0.85 ? 3 : this.jumpCharge >= 0.35 ? 2 : 1;
-          this.jumpCharging = false;
-          this.jumpCharge = 0;
-          if (chargeLevel === 1 || !this.canForceJump()) this.startJump();
-          else this.startForceJump(chargeLevel);
+          if (this.vel[1] > 0) this.vel[1] = 0; // release immediately ends ascent
+        } else if (this.jumpCharge < this.jumpHoldLimit) {
+          this.jumpCharge = Math.min(this.jumpHoldLimit, this.jumpCharge + dt);
+          if (this.jumpCharge > 0.33 && !this.fjUsed && this.canForceJump()) {
+            this.fjUsed = true;
+            this.g.onForceJump?.(this);
+            this.airAnim = 'BOTH_FORCEJUMP1';
+            this.actor.setLegs('BOTH_FORCEJUMP1', { blend: 0.09, loop: false });
+          }
+          // Constant smooth ascent, ~10.4m if Force Jump level 3 is held
+          // for its full 2s. Gravity resumes as soon as Space is released.
+          this.vel[1] = 5.2;
         } else {
-          // Focus loss/paused input: never leave a charged jump pending.
           this.jumpCharging = false;
           this.jumpCharge = 0;
+          if (this.vel[1] > 0) this.vel[1] = 0;
         }
       }
     } else if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) {
