@@ -492,7 +492,7 @@ export class Fighter {
           this.jumpCharging = false;
           this.jumpCharge = 0;
           if (this.vel[1] > 0) this.vel[1] = 0; // release immediately ends ascent
-          this.actor.setLegs('BOTH_INAIR1', { blend: 0.08, loop: true });
+          this.airAnim = 'BOTH_FORCEINAIR1'; this.actor.setLegs(this.airAnim, { blend: 0.08, loop: true });
         } else if (this.jumpCharge < this.jumpHoldLimit) {
           this.jumpCharge = Math.min(this.jumpHoldLimit, this.jumpCharge + dt);
           if (this.jumpCharge > 0.33 && !this.fjUsed && this.canForceJump()) {
@@ -508,7 +508,7 @@ export class Fighter {
           this.jumpCharging = false;
           this.jumpCharge = 0;
           if (this.vel[1] > 0) this.vel[1] = 0;
-          this.actor.setLegs('BOTH_INAIR1', { blend: 0.08, loop: true });
+          this.airAnim = 'BOTH_FORCEINAIR1'; this.actor.setLegs(this.airAnim, { blend: 0.08, loop: true });
         }
       }
     } else if (c.jumpPressed && this.onGround && !this.ducked && !frozen && !special) {
