@@ -14,7 +14,7 @@
 
 | Concern | Where it lives | Who decides |
 |---|---|---|
-| Level, XP, stat points, gear, upgrades, gold, every progression system | the browser's `localStorage`, per character (`characterScopedStorage`) | the player's browser |
+| Level, XP, stat points, gear, upgrades, gold, every progression system | the browser's `localStorage`, per character (`characterScopedStorage`), with a checked copy on the server since this branch (`characterVault`, §2.9) | the player's browser; the server checks each save |
 | Presence (who is in the world) | a `PlayerState` row per player, written every 2 s (`MultiplayerSystem.jsx`) | each client writes its own row |
 | Movement and animation | WebRTC data channels between every pair of players, up to 33 Hz | peer to peer |
 | Enemies | simulated by one elected player's client (`network/hostElectionStore`, `enemySyncBroadcaster`) | the host client |
@@ -63,6 +63,29 @@
      - Enter opens and sends, Esc closes, and new messages arrive live.
      - While typing, keys never reach the game, so WASD, skill numbers and F do nothing.
    - **Not yet:** local (proximity), zone, guild and whisper channels, or moderation tools. Friend DMs and clan chat already exist elsewhere.
+9. **Characters on the server: phase 2a** (was §3.A, in part; owner decision "characters to server"). Full contract: [CHARACTER_VAULT.md](CHARACTER_VAULT.md).
+   - **Server:** a new `characterVault` function keeps a checked copy of every character (`Game3DCharacterSave`; only the server writes it).
+     - Every save is checked against hard caps (level, attributes, Halo, wings, titles, pets, elixirs, Ascension, items, Silver). Impossible saves are refused, and fast or level-lowering ones are flagged.
+     - Every save must build on the revision it names, so a stale device can't overwrite newer progress.
+     - Backups (`Game3DCharacterSaveBackup`) are kept on first upload (the migration's rollback point), hourly, before an overwrite, before a level drop and before a restore. An admin can restore any backup, and a restore can itself be undone.
+   - **In the game:**
+     - characters follow their player to another device or past cleared browser data;
+     - a conflict between two devices is the player's choice, and the other save is kept;
+     - a save chip shows the state.
+   - **Silver is per character now.** It was one balance per browser, shared by every character and account. The old balance goes to the first character once.
+   - **Fixed on the way:**
+     - the login screen showed Level 1 for every character (it read a key from before accounts);
+     - the HUD store could save a stale level over a newly arrived save.
+   - **Still client-reported:** the server checks saves; it doesn't decide each kill or drop. That is phase 2b (§4); upgrades are the first part of it (§2.10).
+10. **Server-rolled item upgrades: phase 2b, first part.** Full contract: [SERVER_UPGRADES.md](SERVER_UPGRADES.md).
+    - **The rolls:** reinforcement, over-enchant, refine and ultimate are rolled by a new `itemUpgrade` function.
+      - It uses the game's own rules, moved into `base44/shared` so there is one copy.
+      - It rolls on the server's record of the item (`Game3DItemUpgrade`).
+      - The game applies the server's roll through its usual handler, so costs and messages are unchanged.
+    - **Every save is corrected to the server's results** by the Character Vault. That covers a reloaded save undoing a bad roll, edited levels, deleted fractures or seals, and destroyed items. Each attempt is flagged for review.
+    - **Upgrades need the server;** offline they are refused, and nothing is paid.
+    - **Each attempt is paid on the server** (branch `game3d/server-upgrade-costs`). The cost is taken, unit by unit, from the server's copy of the materials, and those units stay spent; a reloaded save that gives them back loses them. Upgrade materials gained too fast are flagged (`material_rate`).
+    - **Still on the device:** earning materials (drops, shop); combine, sockets and aura; and the Halo, wing, pet and cape rolls.
 
 **Tests:**
 
@@ -73,16 +96,19 @@
   - The party reaches the shared session, and a party switches voice only, never the world channel.
   - The chat shows history, opens on Enter, keeps typed keys out of the game, sends world and party lines through `worldChat`, and shows live messages from its own channels only.
 - `tests/game3d/power-budget.test.mjs` adds a check that the server's swing equals the game's.
+- Server upgrades: `tests/item-upgrade-backend.test.mjs` (8) and `tests/game3d/server-rolled-upgrades.test.mjs` (7), plus a live check in GameView. See [SERVER_UPGRADES.md](SERVER_UPGRADES.md#tests).
+- Character Vault: `tests/character-vault-backend.test.mjs` (9), `tests/game3d/character-vault-sync.test.mjs` (10), `tests/game3d/silver-per-character.test.mjs` (2) and `tests/game3d/vault-apply-stores.test.mjs` (1), plus a live check in GameView. See [CHARACTER_VAULT.md](CHARACTER_VAULT.md#tests).
 
 ## 3. Open problems, most important first
 
 These need the owner's decisions or larger work.
 
-- **A. Progression, items and gold exist only in each player's browser.**
-  - A player can edit their own level, items or gold in the browser's developer tools.
-  - Clearing browser data loses the character, and a character doesn't follow its player to another device.
-  - Game items can't be traded, because the server doesn't know they exist. That is why the in-world "trade" trades Luna cards.
-  - Nothing in an MMORPG economy can be trusted until characters are server-owned.
+- **A. Progression, items and gold are still decided in each player's browser.** Phase 2a (§2.9) gave every character a checked server copy, with revisions and backups.
+  - **Fixed:** characters follow their player to other devices and survive cleared browser data, and impossible values are refused.
+  - **Still open:**
+    - a player can still edit their save in the browser within the caps, gradually;
+    - game items can't be traded yet, because the server doesn't decide how items are made or moved. That is why the in-world "trade" trades Luna cards.
+    - Nothing in an MMORPG economy can be fully trusted until each action is decided on the server (phase 2b).
 - **B. Combat and rewards are decided by clients.** The player who lands a kill computes the XP, loot and gold, and one elected player's client simulates the enemies. A tampered client can farm rewards, and a host who leaves takes the enemy state with them.
 - **C. Presence won't scale past a handful of players.**
   - There is one world channel, and its 20-player cap is displayed but not enforced: "Server Full" shows while the player stays joined.
@@ -102,13 +128,18 @@ These need the owner's decisions or larger work.
 | Phase | What | Needs |
 |---|---|---|
 | 1 (this branch) | Social actions through the server; server-resolved duels; scoped queries; party voice without leaving the world; world and party chat | merge (deploys `duelSystem`, `worldChat`, the `DuelSession` rules and the `ChatMessage` field with the client change) |
-| 2 | **Server-owned characters.** A `Character` record per character and a `characterSystem` function for every progression and economy action: XP from validated kills, upgrades with server dice, gold, inventory. A one-time move of each character's local save, then item trade through server escrow | **owner decision** and a migration and rollback plan (save migration is owner-gated) |
+| 2a (this branch) | **Characters on the server.** `characterVault`: a checked copy of every character, revisions, conflict choice, backups and restore. Each character uploads itself on first open (the migration, backed up). Silver per character | merge (deploys `characterVault`, `Game3DCharacterSave` and `Game3DCharacterSaveBackup` with the client change); owner-approved with backup and rollback |
+| 2b (begun) | **Server authority per action.** Built: the four risky item upgrades with server dice, paid from the server's copy of the materials (§2.10). Next: a server-side shop (Silver spends), the other rolled systems, validated drops and XP from validated kills. Then item trade through server escrow | builds on 2a; kills depend on the realtime decision (phase 4) |
 | 3 | **More chat and party play.** Local (proximity), zone and guild channels in the world; moderation (mutes, reports, deletions) and `ChatMessage` access rules; shared party XP in range | owner decision on channels, moderation and party rules |
 | 4 | **Realtime authority.** Either keep peer-to-peer movement and have the server validate rewards, or move to a dedicated realtime server with zones and area-of-interest (C) | **infrastructure decision**: Base44 functions are request/response, not long-lived game servers |
 
 ## 5. Decisions for the owner
 
-1. Move characters to the server (§4 phase 2)? This is the foundation for a fair economy, item trading and cross-device play.
+1. ~~Move characters to the server~~: decided, and phase 2a is built (§2.9).
+   - **Phase 2b has begun:** server-rolled upgrades, paid on the server (§2.10).
+   - **Next parts:** a server-side shop for Silver spends, and the remaining rolled systems.
+   - **Validated drops and kills** (the earning side) depend on the realtime decision (§5.2).
+   - **Also open:** how long backups are kept (they are never pruned today; see [CHARACTER_VAULT.md](CHARACTER_VAULT.md#limits-what-this-does-not-do-yet)).
 2. Realtime architecture (§4 phase 4): peer-to-peer plus server validation, or a dedicated game server?
 3. Which further chat channels, and the moderation rules (§3.E).
 4. Party rules: shared XP and loot, and range (§3.F).

@@ -1,0 +1,25 @@
+{
+  "name": "Game3DCharacterSave",
+  "type": "object",
+  "description": "The server's copy of one Game 3D character's save (docs/game3d/CHARACTER_VAULT.md). Written only by the characterVault function, which checks it first.",
+  "properties": {
+    "owner_id": { "type": "string", "description": "The account that owns the character" },
+    "character_id": { "type": "string", "maxLength": 128 },
+    "revision": { "type": "integer", "minimum": 1, "description": "Raised by one on every accepted save; a save must name the revision it builds on" },
+    "data": { "type": "object", "description": "baseKey -> the stored string, as the game keeps it in the browser" },
+    "fingerprint": { "type": "string" },
+    "byte_size": { "type": "integer" },
+    "roster_entry": { "type": "object", "description": "The character's roster card (name, look, faction) so another device can list it" },
+    "flags": { "type": "array", "items": { "type": "string" }, "description": "Suspicious changes in the latest save, for review" },
+    "flag_count": { "type": "integer", "default": 0 },
+    "saved_at": { "type": "string", "format": "date-time" },
+    "last_backup_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["owner_id", "character_id", "revision", "data"],
+  "rls": {
+    "read": { "$or": [{ "data.owner_id": "{{user.id}}" }, { "user_condition": { "role": "admin" } }] },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

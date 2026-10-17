@@ -31,6 +31,7 @@ import TradePanel from '../components/game3d/social/TradePanel';
 import TradeSessionWatcher from '../components/game3d/social/TradeSessionWatcher';
 import IncomingRequestToast from '../components/game3d/social/IncomingRequestToast';
 import WorldChatPanel from '../components/game3d/social/WorldChatPanel';
+import CharacterVaultSync from '../components/game3d/character/CharacterVaultSync';
 import DuelSystem from '../components/game3d/social/DuelSystem';
 import DuelMarkers from '../components/game3d/social/DuelMarkers';
 import NetworkBridgeMount from '../components/network/NetworkBridgeMount';
@@ -313,6 +314,8 @@ export default function GameView() {
     return (
       <div className="fixed inset-0 bg-black">
         <CharacterLoginScreen onPlay={() => setPhase('world')} />
+        {/* characters saved from another device appear here too */}
+        {user?.id && <CharacterVaultSync />}
         <button
           onClick={() => navigate(createPageUrl('LunaTemplate'))}
           className="absolute top-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white/60 hover:text-white text-xs flex items-center gap-1.5 z-20"
@@ -403,6 +406,7 @@ export default function GameView() {
       <TradeSessionWatcher userId={user?.id} />
       <IncomingRequestToast userId={user?.id} />
       <WorldChatPanel userId={user?.id} />
+      {user?.id && <CharacterVaultSync />}
       <DuelSystem userId={user?.id} />
       <DuelMarkers localUserId={user?.id} />
 

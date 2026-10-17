@@ -8,6 +8,7 @@ import {
   resolveReinforcement,
   getAXEEnhancementStatMultiplier,
 } from '../axe/equipment/AXEItemEnhancementSystem';
+import { getAXEOverEnchantCost, getAXEReinforcementCost } from '../axe/services/AXEServiceEconomy';
 import { characterScopedStorage, subscribeCharacterChange } from '../characterStorage';
 import {
   getLootItemCount,
@@ -204,13 +205,30 @@ export const enchantSlot = (itemId, slotIndex) => {
   return { ok: true, outcome: 'success', level: nextArr[slotIndex], cost };
 };
 
+// What the next attempt costs; the Services gateway checks it before asking the server to roll.
+export const getReinforcementCost = (itemId, { protectedAttempt = false } = {}) =>
+  getAXEReinforcementCost(getItemReinforcement(itemId).percent, { protectedAttempt });
+
+export const getOverEnchantCost = (itemId, { protectedAttempt = false } = {}) =>
+  getAXEOverEnchantCost(getItemOverEnchant(itemId).level, { protectedAttempt });
+
+export const canAffordMaterials = (cost) => canAfford(cost);
+
+// The server's record for an item's reinforcement or over-enchant (itemUpgrade,
+// docs/game3d/SERVER_UPGRADES.md): the game rolls on it and keeps the server's result.
+export function setServerUpgradeRecord(service, itemId, record) {
+  if (!itemId || !record) return false;
+  if (service === 'reinforcement') reinforcementState = { ...reinforcementState, [itemId]: { ...record } };
+  else if (service === 'over_enchant') overEnchantState = { ...overEnchantState, [itemId]: { ...record } };
+  else return false;
+  emit();
+  return true;
+}
+
 export const reinforceItem = (itemId, { protectedAttempt = false, roll } = {}) => {
   if (!itemId) return { ok: false, reason: 'no_item' };
 
-  const cost = {
-    mat_reinforce: 1 + Math.floor((getItemReinforcement(itemId).percent || 0) / 20),
-    ...(protectedAttempt ? { mat_protection: 1 } : {}),
-  };
+  const cost = getReinforcementCost(itemId, { protectedAttempt });
   if (!canAfford(cost)) {
     return { ok: false, reason: 'insufficient_materials', cost, materials: getMaterials() };
   }
@@ -233,10 +251,7 @@ export const reinforceItem = (itemId, { protectedAttempt = false, roll } = {}) =
 export const overEnchantItem = (itemId, { protectedAttempt = false, roll } = {}) => {
   if (!itemId) return { ok: false, reason: 'no_item' };
 
-  const cost = {
-    mat_over_enchant: 1 + Math.floor((getItemOverEnchant(itemId).level || 0) / 2),
-    ...(protectedAttempt ? { mat_protection: 1 } : {}),
-  };
+  const cost = getOverEnchantCost(itemId, { protectedAttempt });
   if (!canAfford(cost)) {
     return { ok: false, reason: 'insufficient_materials', cost, materials: getMaterials() };
   }

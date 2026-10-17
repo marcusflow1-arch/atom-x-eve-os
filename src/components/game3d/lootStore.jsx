@@ -221,6 +221,29 @@ export function grantLootItemById(itemId, count = 1) {
   return { ok: true, itemId, count: n };
 }
 
+// Pays a server-rolled upgrade (docs/game3d/SERVER_UPGRADES.md): removes the exact units the
+// server spent. A unit this device already used for something else is replaced by another
+// unit of the same material, so the cost is paid in full either way.
+export function consumeLootUnits(dropIds = [], cost = {}) {
+  const left = new Map();
+  for (const id of dropIds || []) left.set(String(id), (left.get(String(id)) || 0) + 1);
+  const taken = {};
+  _lootInventory = Object.fromEntries(Object.entries(_lootInventory).map(([cat, list]) => [cat, (list || []).filter((unit) => {
+    const n = left.get(String(unit?.dropId)) || 0;
+    if (n <= 0) return true;
+    left.set(String(unit.dropId), n - 1);
+    taken[unit.id] = (taken[unit.id] || 0) + 1;
+    return false;
+  })]));
+  emitLootInventory();
+  for (const [id, count] of Object.entries(cost || {})) {
+    const short = Math.max(0, Math.floor(Number(count) || 0)) - (taken[id] || 0);
+    const have = getLootItemCount(id);
+    if (short > 0 && have > 0) consumeLootItemById(id, Math.min(short, have));
+  }
+  return { ok: true, taken };
+}
+
 export function subscribeLootInventory(fn) {
   _listeners.add(fn);
   fn(_lootInventory);

@@ -1,13 +1,39 @@
 // Persistent Silver + purchased consumables/items.
 // Existing UI may still label this value "gold"; gameplay services treat it as
 // the shared Silver balance during the TwelveSky migration.
+//
+// Each character has its own Silver, shop items and cosmetics (docs/game3d/CHARACTER_VAULT.md).
+// They used to live under one browser-wide key, shared by every character and every
+// account on the computer. That old balance goes, once, to the first signed-in character
+// that loads; everyone else starts with STARTING_GOLD.
+import { characterScopedStorage, getActiveId, getStorageUser, subscribeCharacterChange } from '../characterStorage';
 
-const STORAGE_KEY = 'mmorpg_shop_store_v1';
+const LEGACY_KEY = 'mmorpg_shop_store_v1';
+const LEGACY_CLAIM_KEY = 'mmorpg_shop_store_v1_claimed_by';
+const storage = characterScopedStorage('axe_shop_state_v1');
 const STARTING_GOLD = 5000;
+
+// the browser-wide balance from before Silver was per character, if no one has taken it yet
+const claimLegacy = () => {
+  try {
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (!legacy || localStorage.getItem(LEGACY_CLAIM_KEY)) return null;
+    const user = getStorageUser(), character = getActiveId();
+    if (user === '__anon__' || character === '__default__') return null;
+    localStorage.setItem(LEGACY_CLAIM_KEY, `${user}::${character}`);
+    return legacy;
+  } catch {
+    return null;
+  }
+};
 
 const load = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    let raw = storage.get();
+    if (raw == null) {
+      raw = claimLegacy();
+      if (raw != null) storage.set(raw);
+    }
     if (raw) {
       const p = JSON.parse(raw);
       return {
@@ -22,8 +48,14 @@ const load = () => {
 
 let state = load();
 const listeners = new Set();
-const save = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {} };
+const save = () => storage.set(JSON.stringify(state));
 const emit = () => { save(); listeners.forEach((fn) => fn(state)); };
+
+// another character or account: its own Silver and items
+subscribeCharacterChange(() => {
+  state = load();
+  listeners.forEach((fn) => fn(state));
+});
 
 export function getShopState() { return state; }
 export function subscribeShop(fn) { listeners.add(fn); fn(state); return () => listeners.delete(fn); }
