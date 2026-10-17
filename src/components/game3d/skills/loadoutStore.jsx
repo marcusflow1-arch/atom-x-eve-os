@@ -10,6 +10,8 @@ export const ACTIVE_SLOTS = 10;
 const PASSIVE_SLOTS = 6;
 const LS_KEY = 'game_loadout_v5';
 const LEGACY_KEY = 'game_loadout_v4';
+const PRESET_KEY = 'game_weapon_skill_presets_v1';
+const PRESET_COUNT = 3;
 const listeners = new Set();
 
 function normalize(arr, len) {
@@ -118,3 +120,38 @@ export function tickCooldowns(delta) {
 }
 
 export function isOnCooldown(slotIndex) { return (state.cooldowns[slotIndex] || 0) > 0; }
+
+// Presets intentionally store only skills. Weapon ownership and equipped state
+// stay authoritative in AXEEquipmentInventoryStore; switching presets cannot
+// equip a weapon or bypass a skill's weapon requirement.
+const presetDefault = () => ({ index: 0, sets: Array.from({ length: PRESET_COUNT }, () => new Array(ACTIVE_SLOTS).fill(null)) });
+function loadPresets() {
+  const parsed = read(PRESET_KEY);
+  if (!parsed?.sets) return presetDefault();
+  return { index: Number.isInteger(parsed.index) && parsed.index >= 0 && parsed.index < PRESET_COUNT ? parsed.index : 0,
+    sets: Array.from({ length: PRESET_COUNT }, (_, i) => normalize(parsed.sets[i], ACTIVE_SLOTS)) };
+}
+let presets = loadPresets();
+export function getSkillPresets() { return { index: presets.index, sets: presets.sets.map(set => [...set]) }; }
+export function saveSkillPreset(index = presets.index) {
+  if (!Number.isInteger(index) || index < 0 || index >= PRESET_COUNT) return { ok: false, reason: 'bad_preset' };
+  const next = { ...presets, sets: presets.sets.map((set, i) => i === index ? [...state.activeSlots] : set) };
+  try { localStorage.setItem(PRESET_KEY, JSON.stringify(next)); } catch { return { ok: false, reason: 'save_failed' }; }
+  presets = next;
+  return { ok: true, index };
+}
+export function selectSkillPreset(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= PRESET_COUNT) return { ok: false, reason: 'bad_preset' };
+  // Save the current edits before leaving the preset; preserve all cooldowns.
+  const next = { index, sets: presets.sets.map((set, i) => i === presets.index ? [...state.activeSlots] : set) };
+  const slots = normalize(next.sets[index], ACTIVE_SLOTS);
+  try {
+    localStorage.setItem(PRESET_KEY, JSON.stringify(next));
+    saveToStorage({ ...state, activeSlots: slots });
+  } catch { return { ok: false, reason: 'save_failed' }; }
+  presets = next;
+  state = { ...state, activeSlots: slots };
+  emit();
+  return { ok: true, index };
+}
+export function cycleSkillPreset() { return selectSkillPreset((presets.index + 1) % PRESET_COUNT); }

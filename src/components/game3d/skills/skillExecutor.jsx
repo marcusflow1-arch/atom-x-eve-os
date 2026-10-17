@@ -3,6 +3,9 @@ import { canCastWithEquippedWeapon, describeWeaponMismatch } from './weaponValid
 import { activateBuff } from './buffEngine';
 import { SKILL_TYPE, CAST_TYPE } from './skillTypes';
 import { getLoadout } from './loadoutStore';
+import { getAXEInventoryItemsByCategory, getActiveEquippedAXEWeapon, switchAXEInventoryWeapon } from '../axe/equipment/AXEEquipmentInventoryStore';
+import { resolveAXEWeaponIdentity } from '../axe/weapons/AXEWeaponIdentity';
+import { getWeaponLevel } from '../progression/weaponMasteryStore';
 import { applyMasteryToSkillMultiplier, getActiveWeaponId } from '../progression/weaponMastery/WeaponScalingPipeline';
 import { reportSkillCast } from '../progression/weaponMastery/WeaponMasteryEngine';
 import { primeCriticalFocus, consumeCriticalFocusForSingleHit } from './twelveSkyFocusState';
@@ -127,7 +130,27 @@ export function castSkill(skillId, ctx = {}) {
     return { ok: false, reason: 'passive_cannot_cast' };
   }
 
-  const weaponCheck = canCastWithEquippedWeapon(skillId);
+  let weaponCheck = canCastWithEquippedWeapon(skillId);
+  if (!weaponCheck.ok && skill.weapon_type && ctx.allowMasterySwap === true) {
+    // Mastery (level 10+) unlocks an atomic swap-and-cast for owned weapons.
+    // A skill never fires unarmed or with the wrong weapon. Invalid targets,
+    // unowned weapons, low mastery, and failed saves leave equipment untouched.
+    const candidate = getAXEInventoryItemsByCategory('weapon').find(item => {
+      const identity = resolveAXEWeaponIdentity(item);
+      return identity.advancedWeaponType === skill.weapon_type &&
+        getWeaponLevel(identity.masteryWeaponId) >= 10;
+    });
+    if (candidate) {
+      const swapped = switchAXEInventoryWeapon(candidate.instanceId, { level: ctx.playerLevel || 1 });
+      if (!swapped.ok) return { ok: false, reason: swapped.reason };
+      weaponCheck = canCastWithEquippedWeapon(skillId);
+      if (weaponCheck.ok && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('axeMasteryWeaponTransition', {
+          detail: { weaponInstanceId: candidate.instanceId, weaponType: skill.weapon_type, durationMs: 4000 },
+        }));
+      }
+    }
+  }
   if (!weaponCheck.ok) {
     toast(describeWeaponMismatch(weaponCheck));
     return { ok: false, reason: weaponCheck.reason };

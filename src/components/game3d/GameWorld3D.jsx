@@ -35,7 +35,7 @@ import { getActiveCharacter } from './characterStore';
 import { getCompanionById, createCompanionLoadingManager } from './companionData';
 import { loadCompanionFolderClips } from './companionAnimationLoader';
 import { getAbilityState, tickCooldowns as tickLegacyAbilityCooldowns, startCooldown as startLegacyAbilityCooldown, clearTarget, updateTargetHP, ABILITY_DEFINITIONS } from './abilityStore';
-import { getLoadout, startCooldown as startSkillCooldown, tickCooldowns as tickSkillCooldowns } from './skills/loadoutStore';
+import { getLoadout, cycleSkillPreset, startCooldown as startSkillCooldown, tickCooldowns as tickSkillCooldowns } from './skills/loadoutStore';
 import { castSkill } from './skills/skillExecutor';
 import { getSkillById } from './skills/skillRegistry';
 import { SKILL_TYPE } from './skills/skillTypes';
@@ -1042,6 +1042,14 @@ export default function GameWorld3D() {
     const onKeyDown = (e) => {
       if (e.target?.matches?.('input, textarea')) return;
       const k = e.key.toLowerCase();
+      if (e.code === 'F1') {
+        e.preventDefault();
+        if (!e.repeat) {
+          const result = cycleSkillPreset();
+          if (result.ok) showCombatNotice(`Skill preset ${result.index + 1} ready`);
+        }
+        return;
+      }
       keys.current[k] = true;
       const dodgeKeys = new Set(['w', 'a', 's', 'd']);
       if (!e.repeat && dodgeKeys.has(k)) {
@@ -2058,6 +2066,8 @@ export default function GameWorld3D() {
               maxHP: getHUDForSkill().maxHP || 100,
               slotIndex,
               targetId: lockOnTargetRef.current?.id || null,
+              playerLevel: getHUDForSkill().level || 1,
+              allowMasterySwap: true,
             });
             if (result.ok) startSkillCooldown(slotIndex);
           }
