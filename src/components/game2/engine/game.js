@@ -222,7 +222,7 @@ export class Game {
     }
   }
   setCombatTrackUrl(url) {
-    if (this.disposed || this.attract) return;
+    if (this.disposed || this.attract || this.duel || this.online || this.teamMode) return;
     this.combatTrack.setUrl(url);
   }
   // Settings' Music volume under the master volume; silent while muted (M).
