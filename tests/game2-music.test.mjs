@@ -58,6 +58,6 @@ test('Arena, Free For All and missions stay silent without combat; procedural sc
     g.startMapMusic();
     g.sfx.ctx = fakeCtx(); g.startMapMusic();
     assert.equal(g.score, undefined, 'no synth track at any time');
-    g.stopMapMusic(); assert.equal(g.score, null);
+    g.stopMapMusic(); assert.ok(g.score == null);
   }
 });
