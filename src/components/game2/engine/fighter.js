@@ -196,8 +196,10 @@ export class Fighter {
   // or pitches the body until it ends. The wind-up can still be re-aimed with a mouse flick (SaberLogic.redirectStart).
   swingLocked() { const s = this.saber; return !s.holstered && s.inAttack(s.move) && s.weaponTime > 0; }
   specialLocked() { const s = this.saber, I = s.I, m = s.move; return !s.holstered && s.weaponTime > 0 && (m === I.LS_A_JUMP_T__B_ || m === I.LS_A_BACK || m === I.LS_A_BACK_CR || m === I.LS_A_BACKSTAB || m === I.LS_A_FLIP_STAB || m === I.LS_A_FLIP_SLASH); } // bg_pmove.c: no move / strafe / jump input during these
+  // A full 100-point Force bar sustains a thrown saber for seven seconds.
+  // Releasing the throw returns the blade without extra drain.
   throwSaber(dir) {
-    if (this.thrown || this.saber.holstered || !this.hasSaber) return false;
+    if (this.thrown || this.saber.holstered || !this.hasSaber || (this.force && this.force.fp <= 0)) return false;
     const hp = this.actor.bonePos('rhand'); this.thrown = { pos: hp.slice(), prevPos: hp.slice(), dir: v3.norm(dir), t: 0, phase: 'out', ang: 0, hit: new Map() };
     this.saber.inFlight = true; this.hilt = 'thrown'; this.g.sfxAt('spin', this.pos, 0.8); this.thrownLoop = this.g.sfx.loop && this.g.sfx.loop('spin', { vol: 0.35 }); return true;
   }
@@ -217,6 +219,12 @@ export class Fighter {
     // A held throw flies out, homes in on the nearest foe (else tracks the camera direction while spinning at range) and
     // lodges in whoever it hits. Release sends it home. This also works when either fighter is airborne.
     if (!held) { T.phase = 'back'; T.lodged = null; }
+    // Only the sustained outbound/hover/lodged throw costs Force; the return
+    // flight is free. Zero Force forces recall instead of leaving an infinite blade.
+    if (held && T.phase !== 'back' && this.force) {
+      this.force.fp = Math.max(0, this.force.fp - this.force.max * dt / 7);
+      if (this.force.fp <= 0) { T.phase = 'back'; T.lodged = null; }
+    }
     if (T.phase === 'lodged') {
       const L = T.lodged;
       if (!L || L.status === 'dead' || this.now > T.lodgeUntil || L.spawnShield > this.now) { T.lodged = null; T.phase = 'back'; }

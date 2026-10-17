@@ -47,7 +47,7 @@ export const STORM_CHARGE = 2, STORM_RADIUS = 50, STORM_DMG = 5, STORM_DRAIN = 1
 // defeats (PULSE_PER_KILL). When it is full the caster rises REPULSE_RISE m and curls into a ball while the Force gathers
 // (PULSE_WINDUP s), then bursts open with the arms flung wide: every foe within PULSE_RADIUS m is blasted outward and
 // disintegrates in the air (Game.forcePulse). The arms stay open REPULSE_HOLD s, then the caster comes down.
-export const PULSE_MAX = 100, PULSE_PER_HP = 0.25, PULSE_PER_KILL = 35, PULSE_RADIUS = 7, PULSE_WINDUP = 0.95;
+export const PULSE_MAX = 100, PULSE_PER_HP = 0.25, PULSE_PER_KILL = 8.75, PULSE_RADIUS = 7, PULSE_WINDUP = 0.95;
 // what the specials take from the meter (of PULSE_MAX): Force Repulse 80%, Mind Dominance 55%
 export const REPULSE_COST = 80, DOMINANCE_COST = 55;
 export const REPULSE_RISE = 1.4, REPULSE_HOLD = 0.5, REPULSE_FALL = 0.45;
@@ -160,7 +160,7 @@ export class Force {
     // delayed effects
     for (let i = this.pending.length - 1; i >= 0; i--) if (this.pending[i].t <= now) { const f = this.pending[i].fn; this.pending.splice(i, 1); f(); }
     // regen (none while healing: the heal is paid for in full)
-    const busy = this.holding || Object.keys(this.active).length; this.fp = clamp(this.fp + (this.holding === 'heal' ? 0 : busy ? 2.2 : this.regen) * dt, 0, this.max);
+    const busy = this.holding || Object.keys(this.active).length; const sustainedThrow = !!this.p.thrown && this.p.thrown.phase !== 'back' && !!this.p.cmd.alt; this.fp = clamp(this.fp + (sustainedThrow || this.holding === 'heal' ? 0 : busy ? 2.2 : this.regen) * dt, 0, this.max);
     if (this.fp <= 0 && this.holding) this.release();
     // keep held-anim alive
     if (this.holding && p.forceHold) p.forceUntil = now + 0.25;
