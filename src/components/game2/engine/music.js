@@ -12,10 +12,10 @@ const CHORDS = { // root position triads from the third octave (MIDI); the bass 
 
 // "Skybridge" (D minor, 116 BPM): A A B C, 8 bars each (about 66 s), then again from the top
 export const ARENA_ANTHEM = Object.freeze({
-  name: 'Starlight Reckoning', bpm: 144,
+  name: 'Beyond the Starfire — Ascension', bpm: 152,
   sections: {
-    A: { chords: ['Dm', 'Gm', 'Bb', 'A', 'Dm', 'F', 'Gm', 'A'], drums: 'march', brass: 'stab', choir: true, ostinato: 0 },
-    B: { chords: ['Bb', 'C', 'Dm', 'A', 'Gm', 'Bb', 'A', 'Dm'], drums: 'battle', brass: 'swell', choir: true, ostinato: 4 },
+    A: { chords: ['Dm', 'Gm', 'Bb', 'A', 'Dm', 'F', 'Gm', 'A'], drums: 'battle', brass: 'swell', choir: true, ostinato: 0 },
+    B: { chords: ['Bb', 'C', 'Dm', 'A', 'Gm', 'Bb', 'A', 'Dm'], drums: 'battle', brass: 'stab2', choir: true, ostinato: 0 },
     C: { chords: ['Dm', 'Bb', 'Gm', 'A', 'F', 'Gm', 'A', 'Dm'], drums: 'battle', brass: 'stab2', choir: true, ostinato: 0 },
   },
   melodies: {
@@ -40,7 +40,7 @@ export const ARENA_ANTHEM = Object.freeze({
       [[0, 86, 4]],
     ],
   },
-  form: [{ s: 'A', melody: 'A' }, { s: 'B' }, { s: 'C', melody: 'C' }],
+  form: [{ s: 'A', melody: 'A' }, { s: 'B' }, { s: 'C', melody: 'C' }, { s: 'B' }] ,
 });
 
 export const SCORES = Object.freeze({
@@ -147,7 +147,7 @@ export class Score {
     else if (S.brass === 'swell') for (const m of ch.map(x => x + 12)) this.note(t0, m, this.barLen * 0.9, { bus: 'brass', peak: 0.045, det: [-6, 5], f0: 400, f1: 2200, fT: this.barLen * 0.8, a: this.barLen * 0.7, dec: 0.5, sus: 1, rel: 0.2 });
     // the theme on the horn (the climax: the strings take it up an octave, the horn doubles below)
     if (B.melody) for (const [at, m, len] of B.melody) {
-      const hi = B.sec === 'C'; this.note(t0 + at * b, hi ? m - 12 : m, len * b * 0.95, { bus: 'horn', peak: 0.09, type: 'sawtooth', det: [-4, 4], f0: 700, f1: 1700, fT: 0.12, q: 1.5, a: 0.06, dec: 0.3, sus: 0.85, rel: 0.25 });
+      const hi = B.sec === 'C'; this.note(t0 + at * b, hi ? m - 12 : m, len * b * 0.95, { bus: 'horn', peak: 0.09, type: this.def === ARENA_ANTHEM ? 'triangle' : 'sawtooth', det: [-4, 4], f0: 700, f1: 1700, fT: 0.12, q: 1.5, a: 0.06, dec: 0.3, sus: 0.85, rel: 0.25 });
       if (hi) this.note(t0 + at * b, m, len * b * 0.95, { bus: 'horn', peak: 0.04, det: [-10, 0, 10], f: 3200, a: 0.08, dec: 0.3, sus: 0.9, rel: 0.3 });
     }
     // choir: an open "ah" (formant band) on the chord
