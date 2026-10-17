@@ -9,31 +9,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { subscribeBuffs } from '../activeBuffsStore';
-
-const BUFF_META = {
-  shield:        { icon: '🛡️', label: 'Aegis Shield',      color: '#60a5fa' },
-  focus:         { icon: '🧠', label: 'Focus',             color: '#f59e0b' },
-  crit:          { icon: '🎯', label: 'Decisive Blow',     color: '#ef4444' },
-  haste:         { icon: '⚡', label: 'Haste',             color: '#fbbf24' },
-  reflect:       { icon: '✨', label: "God's Deflection", color: '#a78bfa' },
-  power_charge:  { icon: '🔥', label: 'Power Charge',      color: '#fb923c' },
-  dodge:         { icon: '💨', label: 'Evasion',           color: '#22d3ee' },
-};
+import { subscribeBuffs } from '../skills/buffEngine';
+import { activeBuffList, buffMeta, fmt } from './buffDisplay';
 
 const BUFF_ICON = 22;          // icon size
 const BUFFS_PER_ROW = 5;       // per side before wrapping to next row above
 const ROW_GAP = 4;             // vertical gap between wrapped rows
 
-function fmt(sec) {
-  if (sec <= 0) return '0s';
-  if (sec < 10) return `${sec.toFixed(1)}s`;
-  return `${Math.ceil(sec)}s`;
-}
-
 function BuffIcon({ buffKey, remaining, hits }) {
-  const meta = BUFF_META[buffKey];
-  if (!meta) return null;
+  const meta = buffMeta(buffKey);
   return (
     <motion.div
       layout
@@ -55,9 +39,17 @@ function BuffIcon({ buffKey, remaining, hits }) {
         className="absolute -top-3 left-1/2 -translate-x-1/2 text-[8px] font-black tabular-nums leading-none whitespace-nowrap"
         style={{ color: meta.color, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
       >
-        {remaining !== null && remaining !== undefined ? fmt(remaining) : `×${hits}`}
+        {fmt(remaining)}
       </span>
       <span className="text-[11px] leading-none">{meta.icon}</span>
+      {hits !== undefined && (
+        <span
+          className="absolute -bottom-1 -right-1 text-[8px] font-black tabular-nums leading-none"
+          style={{ color: meta.color, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
+        >
+          ×{hits}
+        </span>
+      )}
     </motion.div>
   );
 }
@@ -112,31 +104,14 @@ export default function BuffDividerLine({ icon: Icon, color = 'rgba(220,200,150,
   const [, force] = useState(0);
   const [buffs, setBuffs] = useState(null);
 
-  useEffect(() => subscribeBuffs(setBuffs), []);
+  useEffect(() => subscribeBuffs((s) => setBuffs(s.buffs || {})), []);
   useEffect(() => {
     const id = setInterval(() => force((n) => n + 1), 200);
     return () => clearInterval(id);
   }, []);
 
   // Collect active buffs
-  const active = [];
-  if (buffs) {
-    const n = performance.now();
-    if (buffs.shield > 0 && buffs.shieldExpiresAt > n)
-      active.push({ key: 'shield', remaining: (buffs.shieldExpiresAt - n) / 1000 });
-    if (buffs.damageBonusHitsLeft > 0)
-      active.push({ key: 'focus', remaining: buffs.damageBonusExpiresAt > n ? (buffs.damageBonusExpiresAt - n) / 1000 : null, hits: buffs.damageBonusHitsLeft });
-    if (buffs.critDamageBonusPct > 0 && buffs.critDamageBonusExpiresAt > n)
-      active.push({ key: 'crit', remaining: (buffs.critDamageBonusExpiresAt - n) / 1000 });
-    if (buffs.attackSpeedBonusPct > 0 && buffs.attackSpeedExpiresAt > n)
-      active.push({ key: 'haste', remaining: (buffs.attackSpeedExpiresAt - n) / 1000 });
-    if (buffs.reflectChancePct > 0 && buffs.reflectExpiresAt > n)
-      active.push({ key: 'reflect', remaining: (buffs.reflectExpiresAt - n) / 1000 });
-    if (buffs.powerChargeHitsLeft > 0 && buffs.powerChargeExpiresAt > n)
-      active.push({ key: 'power_charge', remaining: (buffs.powerChargeExpiresAt - n) / 1000, hits: buffs.powerChargeHitsLeft });
-    if (buffs.dodgeChancePct > 0 && buffs.dodgeExpiresAt > n)
-      active.push({ key: 'dodge', remaining: (buffs.dodgeExpiresAt - n) / 1000 });
-  }
+  const active = activeBuffList(buffs);
 
   // Split alternating: even indexes → left, odd → right
   const leftBuffs  = active.filter((_, i) => i % 2 === 0);

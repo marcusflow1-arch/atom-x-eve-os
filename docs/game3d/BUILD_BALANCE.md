@@ -303,7 +303,7 @@ Weapon mastery and its class passive count in the gear group: they belong to the
 - Bleed chance and trap damage (no bleed or trap systems exist).
 - Summon strength and HP-to-damage.
 - Rage gain, shield scaling and crowd-control resistance from classes.
-- The two HUD buff strips still read an old buff store that nothing writes, so they show nothing.
+- The player aura effects (`PassiveSkillAuraEffects.jsx`: Power Charge hand glow, barrier, repulsion, destruction) still read the old buff store (`activeBuffsStore.jsx`) that nothing writes, so they never show. The two HUD buff strips now read the buff engine.
 - Positioning and range are not in the races: a ranged build's real advantage of hitting from distance is on top of the numbers above.
 
 **Not run:** live multiplayer (two players in one world) and the deployed duel server.
