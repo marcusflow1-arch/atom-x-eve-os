@@ -4,14 +4,9 @@ import { activateBuff } from './buffEngine';
 import { getSkillMasteryLevel, noteBuffCast, noteSkillCharge, noteSkillStrike } from './skillMasteryStore';
 import { SKILL_TYPE, CAST_TYPE } from './skillTypes';
 import { getLoadout } from './loadoutStore';
-import { getAXEInventoryItemsByCategory, getActiveEquippedAXEWeapon, switchAXEInventoryWeapon } from '../axe/equipment/AXEEquipmentInventoryStore';
+import { getAXEInventoryItemsByCategory, switchAXEInventoryWeapon } from '../axe/equipment/AXEEquipmentInventoryStore';
 import { resolveAXEWeaponIdentity } from '../axe/weapons/AXEWeaponIdentity';
 import { getWeaponLevel } from '../progression/weaponMasteryStore';
-import { applyMasteryToSkillMultiplier, getActiveWeaponId } from '../progression/weaponMastery/WeaponScalingPipeline';
-  const multiplier = applyMasteryToSkillMultiplier(baseMult) * (echo?.multiplierScale ?? 1) * getAXEAscensionSkillMultiplier();
-    const candidate = getAXEInventoryItemsByCategory('weapon').find(item => {
-      const identity = resolveAXEWeaponIdentity(item);
-        getWeaponLevel(identity.masteryWeaponId) >= 10;
 import { getActiveWeaponId } from '../progression/weaponMastery/WeaponScalingPipeline';
 import { reportSkillCast } from '../progression/weaponMastery/WeaponMasteryEngine';
 import { primeCriticalFocus, consumeCriticalFocusForSingleHit } from './twelveSkyFocusState';
