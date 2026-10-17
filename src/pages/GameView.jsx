@@ -42,6 +42,7 @@ import NetworkRemotesDebugOverlay from '../components/network/debug/NetworkRemot
 import NetworkValidationTelemetry from '../components/network/debug/NetworkValidationTelemetry';
 import { partyStore } from '../components/game3d/social/socialStores';
 import GameWorldLootLayer from '../components/game3d/GameWorldLootLayer';
+import ExplorationDiscoveryMount from '../components/game3d/exploration/ExplorationDiscoveryMount';
 import EnemyPlayerSpawner from '../components/game3d/EnemyPlayerSpawner';
 import RogueAIHPBarLayer from '../components/game3d/RogueAIHPBarLayer';
 import ShopEffectsBridge from '../components/game3d/shop/shopEffectsBridge';
@@ -421,6 +422,10 @@ export default function GameView() {
 
       {/* Loot drop layer — spawns world items on enemy death, handles E-to-pickup */}
       <GameWorldLootLayer />
+
+      {/* Exploration discoveries — material nodes and elite finds out in the land, E to gather;
+          the server grants the reward for a character it keeps */}
+      <ExplorationDiscoveryMount />
 
       {/* Hostile rogue-player AIs — kill them for gold, XP, loot, and PvP title kills */}
       <EnemyPlayerSpawner />

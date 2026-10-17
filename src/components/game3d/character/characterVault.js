@@ -70,6 +70,45 @@ export function createServerDice(engine, {
   };
 }
 
+// what the discovery prompt shows when the server grants nothing
+const CLAIM_REFUSALS = {
+  not_synced: 'saving_your_character_try_again',
+  too_far: 'too_far',
+  too_fast: 'too_fast',
+  invalid: 'unknown_discovery',
+};
+
+// Exploration discoveries (docs/game3d/EXPLORATION_DISCOVERIES.md): for a character the server
+// keeps, what a hero finds is decided by explorationDiscovery, never here. Registered with the
+// discovery store (setDiscoveryClaimSource) by CharacterVaultSync.
+export function createServerDiscoveryClaims(engine, {
+  call, // (fn, action, data) => Promise<body>; throws Error { code }
+  getIdentity,
+  wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+}) {
+  const claim = async ({ discoveryId, position, transactionId }) => {
+    const status = engine.get().status;
+    if (status === 'local_only') return { local: true };
+    if (status === 'conflict') return { ok: false, reason: 'choose_which_save_to_keep_first' };
+    const { characterId } = getIdentity();
+    const ask = async () => ({ ok: true, result: (await call('explorationDiscovery', 'claim', { characterId, discoveryId, position, transactionId })).result });
+    // the server checks its copy of the character, so it gets this device's latest first
+    await engine.flush();
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await ask();
+      } catch (e) {
+        if (e.code === 'local_only') return { local: true };
+        if (e.code === 'not_synced' && attempt === 0) { await wait(800); await engine.flush(); continue; }
+        return { ok: false, reason: CLAIM_REFUSALS[e.code] || 'discoveries_need_a_server_connection' };
+      }
+    }
+  };
+  // once the reward is in this device's save, send it, so the server holds it as soon as possible
+  claim.afterApply = () => engine.flush();
+  return claim;
+}
+
 export function createCharacterVaultSync({
   call, // (action, data) => Promise<body>; throws Error { code, status, body }
   storage = globalThis.localStorage,

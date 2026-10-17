@@ -135,7 +135,7 @@ Nothing is migrated in bulk. Each character uploads itself the first time its pl
 - **Saves are still reported by the browser.**
   - They are checked against hard caps and flagged on fast growth, but the server doesn't see each kill, drop or upgrade. A player can still edit their save within the caps, gradually.
   - Server authority over each action is phase 2b. It is also what item trading needs.
-    - **Built:** the four risky upgrades are rolled by the server, and each save is put right to the server's results ([SERVER_UPGRADES.md](SERVER_UPGRADES.md)).
+    - **Built:** the four risky upgrades are rolled by the server, and each save is put right to the server's results ([SERVER_UPGRADES.md](SERVER_UPGRADES.md)). Exploration discoveries are granted by the server, and each save keeps its claims, elite skills and discovery units ([EXPLORATION_DISCOVERIES.md](EXPLORATION_DISCOVERIES.md)).
     - **Not built:** XP from validated kills, materials, Silver changes and the other rolled systems.
 - **There are no transactions.** Base44 has none, so two saves building on the same revision in the same instant could both pass the revision check, and the later one wins. This needs two devices saving within milliseconds of each other. Duplicate first saves are detected and reported.
 - **Backups are never pruned.** Each one is at most 1 MB. A retention rule is an owner decision; a suggestion is to keep `first_upload` forever and the latest 50 others.

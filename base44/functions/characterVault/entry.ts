@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import { checkCharacterSave, fingerprintCharacterSave } from '../../shared/characterSaveRules.ts';
 import { enforceUpgradeLedger, ledgerRecordsFor } from '../../shared/itemUpgradeLedger.ts';
+import { enforceDiscoveryLedger, pendingAfterRestore } from '../../shared/explorationDiscoveries.ts';
 
 // The server's copy of every Game 3D character (docs/game3d/CHARACTER_VAULT.md).
 // The browser still plays from its own storage; this keeps a checked copy, so a character
@@ -97,11 +98,30 @@ Deno.serve(async (req) => {
       if (!check.ok) return json({ error: 'The server did not accept this save', code: 'rejected', errors: check.errors }, 422);
       // rolled upgrades are the server's (itemUpgrade): a save that says otherwise is put right,
       // and the device is sent the save as kept
-      const ledger = await svc.Game3DItemUpgrade.filter({ owner_id: ownerId, character_id: characterId }, '-created_date', 1000);
+      const [ledger, finds] = await Promise.all([
+        svc.Game3DItemUpgrade.filter({ owner_id: ownerId, character_id: characterId }, '-created_date', 1000),
+        svc.Game3DDiscoveryClaim.filter({ owner_id: ownerId, character_id: characterId }, '-created_date', 1000),
+      ]);
       const enforced = enforceUpgradeLedger(save, row?.data || null, ledger || []);
-      const kept = enforced.data;
-      const corrected = enforced.corrections.length ? { corrected: true, data: kept, corrections: enforced.corrections } : {};
-      const checkFlags = enforced.corrections.length ? [...check.flags, `upgrade_corrected: ${enforced.corrections.length} item record(s)`] : check.flags;
+      // discoveries are the server's too (explorationDiscovery): claims, elite skills and the
+      // units it granted; granted units this save doesn't hold yet are delivered into it
+      const found = enforceDiscoveryLedger(enforced.data, row?.data || null, finds || []);
+      const kept = found.data;
+      const corrections = [...enforced.corrections, ...found.corrections];
+      const corrected = corrections.length ? { corrected: true, data: kept, corrections } : {};
+      const checkFlags = [...check.flags,
+        ...(enforced.corrections.length ? [`upgrade_corrected: ${enforced.corrections.length} item record(s)`] : []),
+        ...(found.flagged ? [`discovery_corrected: ${found.flagged} unit(s) or skill(s) the server did not grant`] : [])];
+      // once a save holds a row's granted units they are no longer pending (re-read first: a
+      // claim may have added more since)
+      const delivered = async () => {
+        for (const id of found.delivered) {
+          const fresh = await svc.Game3DDiscoveryClaim.get(id).catch(() => null);
+          if (!fresh) continue;
+          const pending = (fresh.pending || []).filter((u: any) => !found.deliveredDropIds.includes(u.dropId));
+          await svc.Game3DDiscoveryClaim.update(id, { pending, delivered_at: iso });
+        }
+      };
       const fingerprint = fingerprintCharacterSave(kept);
       const expected = Number(data.expectedRevision);
 
@@ -116,12 +136,14 @@ Deno.serve(async (req) => {
         // two first uploads at once leave two rows; report it rather than pick one
         const after = await savesOf(characterId);
         if ((after || []).length > 1) return json({ error: 'This character has two first saves; support needs to choose one', code: 'duplicate_saves' }, 409);
+        await delivered();
         return json({ success: true, save: meta(created), flags: checkFlags, ...corrected });
       }
       // the same save again (a lost acknowledgement, a retry): nothing to change
       if (row.fingerprint === fingerprint) {
         // put right to exactly the save already kept: nothing new to store, but the attempt is recorded
-        if (enforced.corrections.length) await svc.Game3DCharacterSave.update(row.id, { flags: checkFlags, flag_count: Number(row.flag_count || 0) + 1 });
+        if (corrections.length) await svc.Game3DCharacterSave.update(row.id, { flags: checkFlags, flag_count: Number(row.flag_count || 0) + 1 });
+        await delivered();
         return json({ success: true, save: meta(row), unchanged: true, ...corrected });
       }
       if (expected !== row.revision) {
@@ -141,6 +163,7 @@ Deno.serve(async (req) => {
         ...(dueBackup ? { last_backup_at: iso } : {}),
       };
       const updated = { ...row, ...patch, ...((await svc.Game3DCharacterSave.update(row.id, patch)) || {}) };
+      await delivered();
       return json({ success: true, save: meta(updated), flags, ...corrected });
     }
 
@@ -165,6 +188,12 @@ Deno.serve(async (req) => {
       const ledger = await svc.Game3DItemUpgrade.filter({ owner_id: ownerId, character_id: characterId }, '-created_date', 1000);
       for (const { row: upgrade, record, spent } of ledgerRecordsFor(chosen.data, ledger || [])) {
         await svc.Game3DItemUpgrade.update((upgrade as any).id, { record, spent, restored_at: iso });
+      }
+      // what the hero found stays found; units granted after this backup are delivered again
+      const finds = await svc.Game3DDiscoveryClaim.filter({ owner_id: ownerId, character_id: characterId }, '-created_date', 1000);
+      for (const { row: find, pending } of pendingAfterRestore(chosen.data, finds || [], chosen.created_date)) {
+        const already = new Set(((find as any).pending || []).map((u: any) => u.dropId));
+        await svc.Game3DDiscoveryClaim.update((find as any).id, { pending: [...((find as any).pending || []), ...pending.filter((u) => !already.has(u.dropId))], restored_at: iso });
       }
       return json({ success: true, save: meta(updated), restored_revision: chosen.save_revision });
     }

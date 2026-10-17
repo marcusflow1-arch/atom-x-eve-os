@@ -1,0 +1,30 @@
+{
+  "name": "Game3DDiscoveryClaim",
+  "type": "object",
+  "description": "The server's record of a Game 3D exploration discovery a character found, one row per character and discovery (docs/game3d/EXPLORATION_DISCOVERIES.md). Written only by the explorationDiscovery and characterVault functions; the Character Vault keeps every save's claims, elite skills and discovery units equal to these.",
+  "properties": {
+    "owner_id": { "type": "string", "description": "The account that owns the character" },
+    "character_id": { "type": "string", "maxLength": 128 },
+    "discovery_id": { "type": "string", "maxLength": 100 },
+    "kind": { "type": "string", "enum": ["material_node", "elite_find"] },
+    "claims": { "type": "integer", "default": 0, "description": "How many times this character took it (a one-time find: 1)" },
+    "first_claimed_at": { "type": "string", "format": "date-time" },
+    "last_claimed_at": { "type": "string", "format": "date-time" },
+    "next_available_at": { "type": "string", "format": "date-time", "description": "When a respawning node can be taken again; absent for a one-time find" },
+    "skills": { "type": "array", "items": { "type": "string" }, "description": "Elite skills this find taught; every save of the character keeps them learned" },
+    "pending": { "type": "array", "items": { "type": "object" }, "description": "Granted units (as the loot inventory keeps them: id, name, rarity, icon, category, dropId, collectedAt) no server save has held yet; the next save receives them" },
+    "granted": { "type": "array", "items": { "type": "object" }, "description": "The latest granted units (collectedAt is when), kept so a restore can deliver the newer ones again" },
+    "granted_count": { "type": "integer", "default": 0 },
+    "last_transaction_id": { "type": "string", "description": "A retry of this transaction gets last_result again instead of a new claim" },
+    "last_result": { "type": "object" },
+    "delivered_at": { "type": "string", "format": "date-time" },
+    "restored_at": { "type": "string", "format": "date-time", "description": "Set when a save restore made the newer grants pending again" }
+  },
+  "required": ["owner_id", "character_id", "discovery_id", "kind", "claims"],
+  "rls": {
+    "read": { "$or": [{ "data.owner_id": "{{user.id}}" }, { "user_condition": { "role": "admin" } }] },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

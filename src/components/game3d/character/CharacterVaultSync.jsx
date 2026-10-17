@@ -5,7 +5,8 @@ import { getActiveId, getStorageUser, notifyCharacterChange, subscribeCharacterC
 import { getCharacterState, mergeCharactersFromServer } from '../characterStore';
 import { reloadPlayerHUDFromSave } from '../playerHUDStore';
 import { setAXEServiceDiceSource } from '../axe/services/AXEServiceTransactionGateway';
-import { createCharacterVaultSync, createServerDice } from './characterVault';
+import { releaseDiscoveryClaimSource, setDiscoveryClaimSource } from '../exploration/explorationDiscoveryStore';
+import { createCharacterVaultSync, createServerDice, createServerDiscoveryClaims } from './characterVault';
 
 /**
  * CharacterVaultSync — keeps the server's copy of the active character in step
@@ -38,6 +39,15 @@ export default function CharacterVaultSync() {
     call: (fn, action, data) => callGameServer(fn, action, data),
     getIdentity: () => ({ userId: getStorageUser(), characterId: getActiveId() }),
   })), [engine]);
+  // what this character finds out in the land is decided by the server
+  useEffect(() => {
+    const source = createServerDiscoveryClaims(engine, {
+      call: (fn, action, data) => callGameServer(fn, action, data),
+      getIdentity: () => ({ userId: getStorageUser(), characterId: getActiveId() }),
+    });
+    setDiscoveryClaimSource(source);
+    return () => releaseDiscoveryClaimSource(source);
+  }, [engine]);
   useEffect(() => {
     let pending = null;
     // another account or character; the vault's own reload of the same character is not a restart

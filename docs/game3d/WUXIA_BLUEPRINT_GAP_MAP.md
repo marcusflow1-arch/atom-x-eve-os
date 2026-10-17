@@ -122,7 +122,7 @@ long it takes.
 | Realistic flowing water; swimming | No water surface or swim state anywhere in Game 3D | **Missing** |
 | Levitation and flight | Ascension levitation only (a 0.15 m hover, movement ×1.12) and the wing meshes (`PlayerAngelWings.jsx`) | Partial |
 | The Chosen's base above the city, visible far up, reachable only by flying | Nothing; the streaming system has a `Divine` region type | **Missing** (needs flight) |
-| Breath of the Wild–style exploration: elite skills and rare materials found out in the land | Region and POI streaming, interaction intents (`Gather`, `Inspect`, `Open`), quest location discovery (`reportLocationDiscovery`); the legacy skill book names drop sources (hidden dungeon, legendary encounter) | Partial (frameworks only; nothing placed) |
+| Breath of the Wild–style exploration: elite skills and rare materials found out in the land | Slice F (below): four material nodes and one elite find in the First Faction Territory, gathered with E; the server grants each reward and keeps a ledger | **First mechanic done** (branch `game3d/exploration-discoveries`); elite skills wait on D13 |
 
 **On shrinking the world:** scaling the world and the camera together renders exactly the same picture, so on its own
 it does not make the game run faster. GPU cost comes from triangles, draw calls, screen pixels, lights and shaders,
@@ -158,6 +158,14 @@ benchmarked rendering branch (`.claude/skills/game2-renderer-benchmark/SKILL.md`
   skill's cooldown in XP, about 20 hours of fighting to master. The level feeds every cast. The level shows on the
   skill slots and a toast announces each level-up. The save is per character, kept by the Character Vault and checked
   by the server. [SKILL_MASTERY.md](SKILL_MASTERY.md).
+- **Slice F, exploration discoveries (2026-10-17):** discoveries placed out in the land, each defined once
+  (`base44/shared/explorationDiscoveries.ts`: region, position, kind, reward table, one-time or respawning). Four
+  material nodes and one elite find stand in the First Faction Territory. A hero walks up, sees the prompt, presses E,
+  gathers for 1.5–3 s and gets the reward. For a character the Vault keeps, the `explorationDiscovery` function decides
+  the reward and records it (`Game3DDiscoveryClaim`). A one-time find can't be claimed twice, a respawning node waits
+  out its cooldown, and the Vault delivers the reward into the save and removes units it did not grant. Local-only
+  characters roll locally with the same table. The elite find teaches one placeholder skill (D13).
+  [EXPLORATION_DISCOVERIES.md](EXPLORATION_DISCOVERIES.md).
 
 ## Decisions the owner must make
 
@@ -179,6 +187,11 @@ benchmarked rendering branch (`.claude/skills/game2-renderer-benchmark/SKILL.md`
   skill rank? What is there (a hub, vendors, a trial)?
 - **D12 (graphics):** the target device and frame rate (for example 60 fps on a mid-range laptop GPU) and the quality
   tiers. These set the rendering budget the benchmark measures against.
+- **D13 (elite skills, exploration):** which elite skills exist, what each does, where each is found, and whether
+  one can be found by every character or only the first. Slice F built and tested the grant path with one
+  placeholder (`elite_placeholder_unwritten`, no effect, no numbers); it must be replaced before the slice ships. The
+  material nodes' quantities, chances and respawn times are first guesses to tune.
+  ([EXPLORATION_DISCOVERIES.md](EXPLORATION_DISCOVERIES.md))
 
 ## Proposed build order
 
@@ -201,6 +214,7 @@ v4, mechanics and back end first, each on its own branch:
 10. **Flight** (movement): take-off, hover, glide and landing, built on the existing levitation and wings. Then **the
     Chosen's sky base** (world content), reachable only by flight.
 11. **Exploration discoveries** (progression and world): elite skill scrolls and rare materials placed in regions
-    through the interaction system, granted by the server so they cannot be faked.
+    through the interaction system, granted by the server so they cannot be faked. The back end and first mechanic
+    are slice F, done on its branch; the elite skills themselves wait on D13, and more regions on content.
 12. **Rendering budget** (rendering, benchmarked): quality tiers, LOD and streaming budgets, then realistic skill
     effects on that budget.
