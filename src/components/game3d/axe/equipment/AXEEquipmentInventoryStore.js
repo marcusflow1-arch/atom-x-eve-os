@@ -142,6 +142,13 @@ function emit() {
   }
 }
 
+// Writes the inventory as shown. A new character's starter items live only in memory until
+// something changes, and the server rolls upgrades on its copy of the save, so the Services
+// gateway writes them before asking (docs/game3d/SERVER_UPGRADES.md).
+export function persistAXEEquipmentInventory() {
+  storage.set(JSON.stringify(state));
+}
+
 function emitItemRemoved(item, reason) {
   if (typeof window === 'undefined' || !item?.instanceId) return;
   window.dispatchEvent(new CustomEvent('axeEquipmentItemRemoved', {

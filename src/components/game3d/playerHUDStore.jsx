@@ -305,11 +305,20 @@ const emit = () => {
 };
 
 // When the active character changes, reload that character's progression.
-subscribeCharacterChange(() => {
+function reloadFromSave() {
   state = loadState();
   stateOwner = characterIdentity();
   listeners.forEach((fn) => fn(state));
-});
+}
+subscribeCharacterChange(reloadFromSave);
+
+// The same character's save was replaced in storage (the server's copy arrived:
+// character/characterVault.js). Call BEFORE notifyCharacterChange(): the other stores
+// reload first and ping this one, and its recompute would otherwise save the old
+// in-memory level over the new save (the identity guard only catches a switch).
+export function reloadPlayerHUDFromSave() {
+  reloadFromSave();
+}
 
 // Used by GameWorld3D to seed/sync hud snapshots. Persists too.
 export function setPlayerHUD(next) {

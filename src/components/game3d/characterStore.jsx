@@ -146,6 +146,21 @@ export function setActiveCharacter(id) {
   notifyCharacterChange();
 }
 
+// Characters the server holds that this device has never seen (played on another device,
+// or browser data cleared) join the roster. Characters already here are left as they are;
+// the Dev Test slot is always local. Returns how many were added. Only the roster is written:
+// which character is active stays as it was (persist() would also store the Dev Test default).
+export function mergeCharactersFromServer(entries = []) {
+  const known = new Set(state.roster.map((c) => c.id));
+  const added = (entries || []).filter((e) => e?.id && e.id !== DEV_TEST_ID && !known.has(e.id))
+    .map((e) => ({ ...e, name: String(e.name || 'Character').slice(0, 40), appearance: e.appearance || { head: 'default', body: 'default', shoulders: 'default' } }));
+  if (!added.length) return 0;
+  state = { ...state, roster: [...state.roster, ...added] };
+  try { localStorage.setItem(rosterKey(), JSON.stringify(state.roster.filter((c) => c.id !== DEV_TEST_ID))); } catch {}
+  listeners.forEach((fn) => fn(state));
+  return added.length;
+}
+
 // Called by the login screen when "PLAY" is pressed for a chosen character.
 // Just switches the active character — every progression store will
 // automatically reload from that character's namespaced slot.
