@@ -42,7 +42,7 @@ export const INTERCEPT_WINDOW = 1.6, INTERCEPT_BONUS = 1.5, SABER_ARC_R = 4, SAB
 // Lightning storm (Atom X Eve): Force Lightning held STORM_CHARGE s (the player) rises into a storm - the hand raised, bolts
 // climbing into the sky and striking down on every foe within STORM_RADIUS m (STORM_DMG each strike, about one a foe
 // every 0.6 s), draining STORM_DRAIN more Force a second on top of the channel's own
-export const STORM_CHARGE = 1.5, STORM_RADIUS = 45, STORM_DMG = 5, STORM_DRAIN = 16, STORM_STRIKES_PER_S = 24, STORM_BOLT_S = 0.22;
+export const STORM_CHARGE = 2, STORM_RADIUS = 50, STORM_DMG = 5, STORM_DRAIN = 16, STORM_STRIKES_PER_S = 24, STORM_BOLT_S = 0.22;
 // Force Repulse (special, X; "pulse" in the code): the meter fills from damage you deal (PULSE_PER_HP per point) and
 // defeats (PULSE_PER_KILL). When it is full the caster rises REPULSE_RISE m and curls into a ball while the Force gathers
 // (PULSE_WINDUP s), then bursts open with the arms flung wide: every foe within PULSE_RADIUS m is blasted outward and
@@ -132,7 +132,15 @@ export class Force {
         if (want && want.id === 'push' && free) this.startCharge(want.code);
         else if (want) this.tryCast(want.id, want.code);
       }
-      if (this.charging) this.tickCharge(input);
+      if (this.charging) {
+        // Press Lightning (4) while still holding Push (1 or the selected F
+        // shortcut) to release an electrified shockwave. It must still pay
+        // both Force costs and honor the Push recovery limit.
+        const lightningShortcut = FORCE_QUICK_BINDINGS.find(({ code, id }) => id === 'lightning' && this.list.includes(id) && input.pressed(code));
+        if (lightningShortcut && this.charging.via && input.held(this.charging.via)) {
+          this.tickCharge(input, true);
+        } else this.tickCharge(input);
+      }
       if (input.pressed('KeyX') && free) this.startPulse();
       if (input.pressed('KeyV') && free) this.startDominance();
       if (input.pressed('KeyJ')) { p.jumpLevel = p.jumpLevel % 3 + 1; g.hud.msg('Force Jump level ' + p.jumpLevel); }
@@ -174,8 +182,18 @@ export class Force {
     this.charging = { via, t0: this.g.t };
   }
   chargeLevel() { return this.charging ? pushCharge(this.g.t - this.charging.t0) : 0; }
-  tickCharge(input) {
+  tickCharge(input, withLightning = false) {
     const g = this.g, p = this.p, C = this.charging, held = g.t - C.t0, c = pushCharge(held);
+    if (withLightning) {
+      this.charging = null;
+      if (p.status !== 'normal' && p.status !== 'roll') return;
+      if (this.fp < POW('push').cost + Math.round(PUSH_CHARGE_COST * c) + POW('lightning').cost) {
+        this.say('Not enough Force for Lightning Push'); return;
+      }
+      this.fp -= POW('lightning').cost; // lightning surcharge paid exactly once
+      this.activate('push', C.via, { charge: c, lightning: true });
+      return;
+    }
     if ((input.held(C.via) && held < PUSH_CHARGE_MAX) && (p.status === 'normal' || p.status === 'roll')) {
       if (c > 0 && Math.random() < 0.3 + c * 0.6) { const h = this.hands(), k = Math.random() < 0.5 ? 0 : 1, a = Math.random() * 6.28; g.fx.emit({ p: v3.addS(h[k], [Math.cos(a), Math.random() - 0.3, Math.sin(a)], 0.35 * (1 - c * 0.5)), v: v3.scale(v3.sub(h[k], v3.addS(h[k], [Math.cos(a), 0, Math.sin(a)], 0.35)), 3), life: 0.25, size: 0.03 + 0.04 * c, c0: [0.6, 0.85, 1, 0.9], c1: [0.4, 0.6, 1, 0] }); }
       return;
@@ -235,7 +253,8 @@ export class Force {
   do_push(o = {}) {
     const g = this.g, p = this.p, ch = clamp(o.charge || 0, 0, 1); this.freeFromGrip('push');
     for (const f of g.fighters()) if (f !== p && f.thrown && v3.dist(f.thrown.pos, p.chest()) < 0.9) f.unlodgeSaber(); // a push knocks a saber spinning in you loose
-    const d = this.aim(); const col = this.npc ? [1, 0.5, 0.45] : [0.7, 0.86, 1];
+    const d = this.aim(); const col = o.lightning ? [0.45, 0.7, 1] : this.npc ? [1, 0.5, 0.45] : [0.7, 0.86, 1];
+    if (o.lightning && p.isPlayer) g.banner('LIGHTNING PUSH', [0.55, 0.82, 1], 1.1);
     const two = ch >= PUSH_TWO_HANDED && p.actor.skel.anims.G2_FORCEPUSH_2H; // charged long enough: both hands
     this.anim(two ? 'G2_FORCEPUSH_2H' : 'BOTH_FORCEPUSH', { durMs: 680 }); g.sfxAt('push', p.pos, 1 + 0.3 * ch); if (two) g.sfxAt('hit3', p.pos, 0.6); this.shake(0.22 + 0.3 * ch);
     if (two && p.isPlayer) g.banner('TWO-HANDED PUSH', [0.7, 0.9, 1], 1.1);
@@ -246,7 +265,16 @@ export class Force {
       this.lastPush = { t: g.t, targets: [] }; // for Push + Speed
       for (const h of this.cone(range, 52)) {
         const t = h.t, fall = clamp(1 - h.L / (15 + 5 * ch), 0.2, 1); const dir = this.flat(h.v); if (t.type === 'npc') this.lastPush.targets.push(t.ref);
-        if (t.type === 'npc') g.applyThrow(this, t.ref, false, { dir, dist: h.L, fall, charge: ch });
+        if (t.type === 'npc') {
+          g.applyThrow(this, t.ref, false, { dir, dist: h.L, fall, charge: ch });
+          if (o.lightning && t.ref.status !== 'dead' && !(t.ref.spawnShield > g.t)) {
+            const mod = lightningMul(this.absorbDef(t.ref), this.lv.lightning, 1);
+            if (mod.mul > 0) { t.ref.electrify(0.65); t.ref.hurt(8 * p.damageMul * this.dmgScale * mod.mul, p, { noFlinch: true }); }
+            else g.forceOf(t.ref)?.addFp(5);
+            const mid = this.hands()[0], end = t.ref.chest();
+            this.stormBolts.push({ pts: bolt(mid, end, 12, 0.25), t: STORM_BOLT_S });
+          }
+        }
         else { g.world.impulse(t.ref, [dir[0] * (9 + 10 * fall) * (1 + ch), 3 + 3 * fall, dir[2] * (9 + 10 * fall) * (1 + ch)]); t.ref.glow = 1; }
       }
       this.dropLevitated('attack'); // a push is an attack: whoever you levitated (and did not just launch) drops
