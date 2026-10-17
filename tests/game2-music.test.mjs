@@ -51,9 +51,9 @@ test('the mix follows the fight: drums and brass come up in battle', () => {
   assert.ok(score.busLevel('drums') > calm.drums * 1.8 && score.busLevel('brass') > calm.brass * 1.8);
 });
 
-test('Skybridge plays its score once audio is open; it follows the Music volume and mute, and stops with the match', () => {
+test('Arena and Free For All play Starlight Reckoning after audio opens; volume, mute, and cleanup work', () => {
   const g = makeMatch('tdm');
-  assert.equal(g.scoreDef, SCORES.skybridge);
+  assert.equal(g.scoreDef, SCORES.arena_anthem);
   g.startMapMusic(); assert.equal(g.score, undefined, 'no audio context yet (browsers need a click first)');
   g.sfx.ctx = fakeCtx(); g.startMapMusic(); assert.ok(g.score && g.score.running, 'playing');
   g.score.manual = true; if (g.score.timer) { clearInterval(g.score.timer); g.score.timer = null; }
