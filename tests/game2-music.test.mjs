@@ -51,13 +51,13 @@ test('the mix follows the fight: drums and brass come up in battle', () => {
   assert.ok(score.busLevel('drums') > calm.drums * 1.8 && score.busLevel('brass') > calm.brass * 1.8);
 });
 
-test('Arena and Free For All play Beyond the Starfire after audio opens; volume, mute, and cleanup work', () => {
-  const g = makeMatch('tdm');
-  assert.equal(g.scoreDef, null, 'No procedural background music outside combat');
-  g.startMapMusic(); assert.equal(g.score, undefined, 'no audio context yet (browsers need a click first)');
-  g.sfx.ctx = fakeCtx(); g.startMapMusic(); assert.ok(g.score && g.score.running, 'playing');
-  g.score.manual = true; if (g.score.timer) { clearInterval(g.score.timer); g.score.timer = null; }
-  g.settings = { musicVolume: 0.8 }; g.sfx.volume = 0.5; g.updateMusic(0.016); assert.ok(Math.abs(g.score.level - 0.4) < 1e-9);
-  g.sfx.muted = true; g.updateMusic(0.016); assert.equal(g.score.level, 0, 'muted');
-  g.stopMapMusic(); assert.equal(g.score, null);
+test('Arena, Free For All and missions stay silent without combat; procedural score cannot overlap the MP3', () => {
+  for (const mode of ['tdm', 'ffa', 'mission']) {
+    const g = makeMatch(mode);
+    assert.equal(g.scoreDef, null, 'no background synth music in '+mode);
+    g.startMapMusic();
+    g.sfx.ctx = fakeCtx(); g.startMapMusic();
+    assert.equal(g.score, undefined, 'no synth track at any time');
+    g.stopMapMusic(); assert.equal(g.score, null);
+  }
 });
