@@ -186,6 +186,12 @@ export function switchAXEInventoryWeapon(instanceId, context = {}) {
   return { ok: true, item: structuredClone(getActiveEquippedAXEWeapon()), autoUnequippedIds: [...removeIds] };
 }
 
+// Preserve main's explicit save entrypoint for server-side upgrade requests.
+// It serializes the same state as the atomic weapon transaction.
+export function persistAXEEquipmentInventory() {
+  storage.set(JSON.stringify(state));
+}
+
 function emitItemRemoved(item, reason) {
   if (typeof window === 'undefined' || !item?.instanceId) return;
   window.dispatchEvent(new CustomEvent('axeEquipmentItemRemoved', {

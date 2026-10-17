@@ -1,0 +1,27 @@
+{
+  "name": "Game3DItemUpgrade",
+  "type": "object",
+  "description": "The server's result of a rolled Game 3D item upgrade, one row per item and kind (docs/game3d/SERVER_UPGRADES.md). Written only by the itemUpgrade and characterVault functions; the Character Vault keeps every save's item records equal to these.",
+  "properties": {
+    "owner_id": { "type": "string", "description": "The account that owns the character" },
+    "character_id": { "type": "string", "maxLength": 128 },
+    "item_id": { "type": "string", "maxLength": 200, "description": "The item instance" },
+    "service": { "type": "string", "enum": ["reinforcement", "over_enchant", "refine", "ultimate"] },
+    "record": { "type": "object", "description": "The record the item keeps, as the game stores it" },
+    "attempts": { "type": "integer", "default": 0 },
+    "last_outcome": { "type": "string" },
+    "last_roll": { "type": "number" },
+    "last_transaction_id": { "type": "string", "description": "A retry of this transaction gets last_result again instead of a new roll" },
+    "last_result": { "type": "object" },
+    "rolled_at": { "type": "string", "format": "date-time" },
+    "restored_at": { "type": "string", "format": "date-time", "description": "Set when a save restore put this record back" },
+    "spent": { "type": "array", "items": { "type": "string" }, "description": "The loot units (dropIds) the server took to pay for rolls on this item and upgrade; a save that still holds them loses them" }
+  },
+  "required": ["owner_id", "character_id", "item_id", "service", "record"],
+  "rls": {
+    "read": { "$or": [{ "data.owner_id": "{{user.id}}" }, { "user_condition": { "role": "admin" } }] },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

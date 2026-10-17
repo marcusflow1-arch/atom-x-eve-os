@@ -1,0 +1,22 @@
+{
+  "name": "Game3DCharacterSaveBackup",
+  "type": "object",
+  "description": "A kept copy of a Game 3D character save, for rollback (docs/game3d/CHARACTER_VAULT.md). Written only by the characterVault function; never changed after it is made.",
+  "properties": {
+    "owner_id": { "type": "string" },
+    "character_id": { "type": "string", "maxLength": 128 },
+    "save_revision": { "type": "integer", "description": "The revision of the save this copies" },
+    "data": { "type": "object" },
+    "fingerprint": { "type": "string" },
+    "byte_size": { "type": "integer" },
+    "roster_entry": { "type": "object" },
+    "reason": { "type": "string", "enum": ["first_upload", "hourly", "before_restore", "before_overwrite", "before_level_drop"] }
+  },
+  "required": ["owner_id", "character_id", "save_revision", "data", "reason"],
+  "rls": {
+    "read": { "$or": [{ "data.owner_id": "{{user.id}}" }, { "user_condition": { "role": "admin" } }] },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}
