@@ -513,7 +513,7 @@ export class Game {
   }
   // ---------------- player input
   stepPressed(code) { return this.firstSub && (this.stepPresses ? this.stepPresses.has(code) : this.input.pressed(code)); }
-  stepReleased(code) { return this.firstSub && (this.stepReleases ? this.stepReleases.has(code) : this.input.released(code)); }
+  stepReleased(code) { return this.firstSub && (this.stepReleases ? this.stepReleases.has(code) : (this.input.released?.(code) ?? false)); }
   buildPlayerCmd() {
     const i = this.input, p = this.player, c = p.cmd; if (this.hud.help || (this.tutorialMode && this.tutorialPhase === 'demo')) { c.fwd = c.right = 0; c.attack = c.alt = c.jump = c.crouch = c.walk = false; c.jumpPressed = c.jumpReleased = c.crouchPressed = false; return; }
     c.fwd = (i.held('KeyW') ? 1 : 0) - (i.held('KeyS') ? 1 : 0); c.right = (i.held('KeyD') ? 1 : 0) - (i.held('KeyA') ? 1 : 0);
@@ -646,7 +646,7 @@ export class Game {
     dt = Math.min(dt, 0.1); this.fps += (1 / Math.max(dt, 1e-3) - this.fps) * 0.08;
     if (this.slowMo) { if (this.t < this.slowMo.until) dt *= this.slowMo.scale; else this.slowMo = null; } // the execution cut, offline
     this.frameNo++; if (!this.attract) this.frameInput(dt); this.acc += dt; let n = 0; this.firstSub = true;
-    if (this.hud.help) { this.stepPresses.clear(); this.stepReleases.clear(); } else { for (const c of this.input.pressedSet) this.stepPresses.add(c); for (const c of this.input.releasedSet) this.stepReleases.add(c); } if (!this.hud.help && this.input.btnPressed[0]) this.stepPresses.add('Mouse0');
+    if (this.hud.help) { this.stepPresses.clear(); this.stepReleases.clear(); } else { for (const c of this.input.pressedSet) this.stepPresses.add(c); for (const c of (this.input.releasedSet || [])) this.stepReleases.add(c); } if (!this.hud.help && this.input.btnPressed[0]) this.stepPresses.add('Mouse0');
     if (this.duel && this.hud.help) this.acc = 0; // controls panel open: the duel waits
     while (this.acc >= STEP && n++ < 6) { this.step(STEP); this.acc -= STEP; }
     if (n >= 6) this.acc = 0;
