@@ -563,7 +563,7 @@ export class Game {
       const kd = i.held('KeyW') ? 'F' : i.held('KeyS') ? 'B' : i.held('KeyA') ? 'L' : i.held('KeyD') ? 'R' : null;
       if (!(kd && p.startKick(kd))) this.throwAt = this.t + KATA_CHORD;
     }
-    if (this.throwAt != null && this.t >= this.throwAt) { this.throwAt = null; if (i.btn[2] && !i.btn[0] && !p.saber.holstered && p.status === 'normal' && !p.kata) { if (p.throwSaber(this.aimDir())) h.msg('Saber throw'); } }
+    if (this.throwAt != null && this.t >= this.throwAt) { this.throwAt = null; if (i.btn[2] && !i.btn[0] && !p.saber.holstered && (p.status === 'normal' || p.status === 'roll') && !p.kata) { if (p.throwSaber(this.aimDir())) h.msg('Saber throw'); } }
     if (p.status === 'normal' && (i.pressed('KeyF') || FORCE_QUICK_BINDINGS.some(({ code }) => i.pressed(code)))) p.yaw = p.targetYaw = c.yaw; // snap to aim on either cast path
   }
   // respawn immunity: no damage, Force or grabs for RESPAWN_SHIELD s (a soft blue glow while it lasts)

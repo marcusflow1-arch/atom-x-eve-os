@@ -423,7 +423,27 @@ export class Fighter {
         this.frictionMove(dt, 10); this.nextPain -= dt; if (this.nextPain <= 0) { this.nextPain = 0.28 + Math.random() * 0.2; const p = PAINS[Math.floor(Math.random() * PAINS.length)]; this.playWhole(p, { blend: 0.04 }); }
         this.pos[0] += (Math.random() - 0.5) * 0.02; this.pos[2] += (Math.random() - 0.5) * 0.02; if (now > this.shockKeep) { this.status = 'normal'; this.actor.followLegs(); this.actor.torso.cur = null; } return this.finish(dt);
       }
-      case 'roll': { this.statusT; const k = clamp(this.statusT / this.rollLen, 0, 1); const sp = lerp(6.8, 2.5, k); this.vel[0] = this.rollDir[0] * sp; this.vel[2] = this.rollDir[2] * sp; this.integrate(dt, false); if (this.statusT >= this.rollLen - 0.02) { this.status = 'normal'; this.vel[0] *= 0.3; this.vel[2] *= 0.3; } return this.finish(dt); }
+      case 'roll': {
+        // Buffer a forward attack during the final portion of a roll. The
+        // authored saber animation blends in immediately on the exit frame.
+        // A throw (right mouse) stays available without cancelling the roll.
+        if (this.isPlayer && this.cmd.attack && this.cmd.fwd > 0.3 && !this.thrown && !this.saber.holstered) this.rollCrossQueued = true;
+        this.statusT; const k = clamp(this.statusT / this.rollLen, 0, 1); const sp = lerp(6.8, 2.5, k); this.vel[0] = this.rollDir[0] * sp; this.vel[2] = this.rollDir[2] * sp; this.integrate(dt, false); if (this.statusT >= this.rollLen - 0.02) {
+          this.status = 'normal'; this.vel[0] *= 0.3; this.vel[2] *= 0.3;
+          if (this.rollCrossQueued && !this.thrown && !this.saber.holstered) {
+            // Travel follows the left-stick/W movement heading, rather than
+            // teleporting through an enemy or snapping to a camera target.
+            const S = this.saber, I = S.I;
+            const cross = this.cmd.right < -0.3 ? I.LS_A_R2L : I.LS_A_L2R;
+            S.weaponTime = 0; S.torsoTimer = 0;
+            S.setMove(cross, this.now, { restart: true });
+            S.weaponTime = S.torsoTimer;
+            S.state = 'firing'; S.attackStartedAt = this.now;
+            const d = this.rollDir;
+            this.vel[0] = d[0] * 6.5; this.vel[2] = d[2] * 6.5;
+          }
+          this.rollCrossQueued = false;
+        } return this.finish(dt); }
       default: break;
     }
     this.normalUpdate(dt); this.finish(dt);
@@ -554,7 +574,7 @@ export class Fighter {
     const c = this.cmd, sinY = Math.sin(this.yaw), cosY = Math.cos(this.yaw); let an, d;
     if (c.fwd) { if (c.fwd < 0) { an = 'BOTH_ROLL_B'; d = [-sinY, 0, -cosY]; } else { an = 'BOTH_ROLL_F'; d = [sinY, 0, cosY]; } }
     else if (c.right > 0) { an = 'BOTH_ROLL_R'; d = [-cosY, 0, sinY]; } else { an = 'BOTH_ROLL_L'; d = [cosY, 0, -sinY]; }
-    this.rollDir = d; this.status = 'roll'; this.statusT = 0; this.ducked = false; this.endForceKeepAnim(); this.cancelSwingForRoll();
+    this.rollDir = d; this.rollCrossQueued = false; this.status = 'roll'; this.statusT = 0; this.ducked = false; this.endForceKeepAnim(); this.cancelSwingForRoll();
     this.rollLen = animLen(this.actor.skel.anims[an]); this.actor.setBoth(an, { restart: true, blend: 0.08, loop: false }); this.g.sfxAt && this.g.sfxAt('jumpbuild', this.pos, 0.0);
   }
   endForceKeepAnim() { this.forceUntil = 0; }
