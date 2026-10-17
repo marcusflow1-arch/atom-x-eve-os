@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { selectGame1CombatTrack, game2CombatActive, Game2CombatTrack } from '../src/components/game2/engine/combatTrack.js';
 
 test('Game 1 Combat 2 title wins over Combat, matching its original selector', () => {
@@ -19,7 +19,7 @@ function scene(overrides={}) {
   foesOf:()=>[{pos:[0,0,5],status:'normal'}], ...overrides };
 }
 
-test('Combat 2 only triggers for Game 2 live fighting: enemy proximity or recent hits', () => {
+test('Game 2 battle MP3 only triggers for live fighting: enemy proximity or recent hits', () => {
  assert.equal(game2CombatActive(scene()), true);
  assert.equal(game2CombatActive(scene({ foesOf:()=>[{pos:[0,0,26],status:'normal'}] })), false);
  assert.equal(game2CombatActive(scene({ foesOf:()=>[], player:{pos:[0,0,0],status:'normal',lastHurt:18} })), true);
@@ -66,7 +66,7 @@ test('Game 2 soundtrack starts in combat, fades out of combat and releases audio
  music.update({fighting:false,volume:0.5,dt:0.05});
  time+=5*60*1000+1;
  music.update({fighting:true,volume:0.5,dt:0.05});
- assert.equal(a.currentTime,0,'restart if idle for more than 5 minutes');
+ assert.equal(a.currentTime,13,'resume the same point after a long break, not restart from zero');
  music.dispose();
  assert.equal(a.paused,true);
  assert.equal(a.src,'');
@@ -94,14 +94,20 @@ test('Mute, browser autoplay rejection, and missing URL never block fighting', a
  await new Promise(resolve=>setImmediate(resolve)); // rejection is handled
 });
 
-test('Game 2 session loads HeroBackground Combat 2 and engine owns cleanup', () => {
+test('Game 2 uses its recorded MP3 in all fight modes and owns audio cleanup', () => {
  const session=readFileSync(new URL('../src/components/game2/Game2Duel.jsx',import.meta.url),'utf8');
  const engine=readFileSync(new URL('../src/components/game2/engine/game.js',import.meta.url),'utf8');
- assert.match(session,/base44\.entities\.HeroBackground\.list\(\)/);
- assert.match(session,/\.then\(selectGame1CombatTrack\)/);
- assert.match(session,/game\.setCombatTrackUrl\(url\)/);
+ assert.match(session,/Game2_Battle_Theme\.mp3/);
+ assert.doesNotMatch(session,/HeroBackground\.list\(/);
  assert.match(engine,/game2CombatActive\(this\)/);
  assert.match(engine,/this\.combatTrack\?\.update\(/);
  assert.match(engine,/this\.combatTrack\?\.dispose\(\)/);
+ assert.match(engine,/this\.scoreDef = null/);
  assert.doesNotMatch(engine,/this\.battleMusic\s*=\s*new Audio\(/);
+});
+
+
+test('Recorded battle theme is packaged in Game 2 public assets', () => {
+ const path = new URL('../public/game2/audio/Game2_Battle_Theme.mp3', import.meta.url);
+ assert.ok(statSync(path).size > 3000000, 'full-length 256kbps battle theme exists');
 });

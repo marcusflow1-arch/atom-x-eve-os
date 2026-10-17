@@ -13,7 +13,6 @@ export function selectGame1CombatTrack(backgrounds = []) {
 }
 
 const clamp01 = v => Math.max(0, Math.min(1, Number.isFinite(v) ? v : 0));
-const RESUME_WINDOW_MS = 5 * 60 * 1000;
 
 /** Game 1's attack/HP trigger semantics, adapted to actual Game 2 fighter state. */
 export function game2CombatActive(game) {
@@ -31,7 +30,7 @@ export function game2CombatActive(game) {
 
 /**
  * One HTMLAudioElement per Game 2 match. Fades are frame-driven; no fade timers
- * survive unmount. Re-enter combat within 5 minutes resumes its prior position.
+ * survive unmount. Re-enter combat resumes exactly where playback paused.
  */
 export class Game2CombatTrack {
   constructor({ AudioCtor = globalThis.Audio, now = () => Date.now() } = {}) {
@@ -77,14 +76,15 @@ export class Game2CombatTrack {
     if (!a || this.disposed) return false;
     const desired = Boolean(fighting);
     if (desired && !this.active) {
-      if (this.lastExitAt === null || this.now() - this.lastExitAt >= RESUME_WINDOW_MS) {
-        try { a.currentTime = 0; } catch { /* unsupported media seek */ }
-      } else {
-        try { a.currentTime = this.savedTime; } catch { /* unsupported media seek */ }
+      // If combat returns mid fade-out, leave the audio playing at its
+      // current position. Otherwise resume from the last paused timestamp.
+      if (a.paused) {
+        if (this.lastExitAt !== null) {
+          try { a.currentTime = this.savedTime; } catch { /* unsupported media seek */ }
+        }
+        this.play();
       }
-      this.play();
     } else if (!desired && this.active) {
-      this.savedTime = Number.isFinite(a.currentTime) ? a.currentTime : 0;
       this.lastExitAt = this.now();
     }
     this.active = desired;
@@ -95,6 +95,7 @@ export class Game2CombatTrack {
     if (!desired && a.volume < 0.008 && !a.paused) {
       a.volume = 0;
       a.pause();
+      this.savedTime = Number.isFinite(a.currentTime) ? a.currentTime : 0;
     }
     // Only duck the generated arena score if the external track is playing.
     return desired && !a.paused;

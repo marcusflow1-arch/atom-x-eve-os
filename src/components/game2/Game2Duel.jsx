@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Loader2, Menu, Swords, Users } from 'lucide-react';
 import { getAccessToken } from '@base44/sdk';
-import { base44 } from '@/api/base44Client';
-import { selectGame1CombatTrack } from './engine/combatTrack.js';
 import { appParams } from '@/lib/app-params';
 import { game2RailwayUrl } from './net/railway.js';
 import Game2Lobby from './Game2Lobby';
@@ -101,14 +99,10 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
     const arena = choice !== 'single';
     const map = choice === 'online' ? online?.mapId || 'training' : mapId; // online: the arena picked in the lobby
     const authored = arena && !!GAME2_AUTHORED_MAPS[map]; // a large authored level instead of a BSP
-    const common = { sfxBase: `${ASSET_BASE}sfx/`, settings: loadSettings(), saber, mapId: map };
-    // Game 1's combat music is stored as HeroBackground "Combat 2" (then
-    // "Combat"). Resolve it without delaying Game 2's gameplay or asset load.
-    // The engine gets only the URL: music controllers do not share instances.
-    const combatTrackRequest = Promise.resolve()
-      .then(() => base44.entities.HeroBackground.list())
-      .then(selectGame1CombatTrack)
-      .catch(() => null);
+    // Game 2's own original recorded battle theme. Shared by story, training,
+    // duel, FFA and online matches, but only played when combat is active.
+    const common = { sfxBase: `${ASSET_BASE}sfx/`, settings: loadSettings(), saber, mapId: map,
+      combatMusicUrl: `${ASSET_BASE}audio/Game2_Battle_Theme.mp3` };
     let engineOptions = teamMode
       ? { mode: choice, ...common }
       : duel
@@ -155,9 +149,7 @@ function Game2Session({ choice, online, mapId, saber, onExit }) {
             if (!cancelled && !game?.disposed) setTutorialSnapshot(tutorial.snapshot());
           }, 160);
         }
-        combatTrackRequest.then((url) => {
-          if (!cancelled && game && url) game.setCombatTrackUrl(url);
-        });
+
         if (import.meta.env?.DEV) window.__game2 = game; // development builds only: lets local tests stage scenes
         if (choice !== 'online') setStatus({ phase: 'ready', text: '' });
         // Online play must not look connected until the shared arena welcomes this player.

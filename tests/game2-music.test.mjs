@@ -53,7 +53,7 @@ test('the mix follows the fight: drums and brass come up in battle', () => {
 
 test('Arena and Free For All play Beyond the Starfire after audio opens; volume, mute, and cleanup work', () => {
   const g = makeMatch('tdm');
-  assert.equal(g.scoreDef, SCORES.arena_anthem);
+  assert.equal(g.scoreDef, null, 'No procedural background music outside combat');
   g.startMapMusic(); assert.equal(g.score, undefined, 'no audio context yet (browsers need a click first)');
   g.sfx.ctx = fakeCtx(); g.startMapMusic(); assert.ok(g.score && g.score.running, 'playing');
   g.score.manual = true; if (g.score.timer) { clearInterval(g.score.timer); g.score.timer = null; }

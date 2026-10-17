@@ -55,7 +55,7 @@ export class Game {
     const gun = geo(); gun.box(0, 0.03, 0, 0.05, 0.13, 0.06, [0.16, 0.16, 0.19, 1]).box(0, -0.12, 0, 0.045, 0.2, 0.05, [0.32, 0.33, 0.38, 1]).box(0, -0.235, 0, 0.03, 0.05, 0.03, [0.9, 0.25, 0.15, 1]); this.gunMesh = R.uploadStatic(gun.build());
     this.arenaDef = this.teamMode || this.duel || this.tutorialMode || this.online ? AUTHORED_LEVELS[opts.mapId] || null : null; // a large authored arena instead of a BSP
     const level = this.missionDef ? buildLevel(this.missionDef.layout) : this.arenaDef ? buildLevel(this.arenaDef.layout) : null;
-    this.scoreDef = (this.duel || this.online || this.teamMode) ? SCORES.arena_anthem : level?.music ? SCORES[level.music] || null : null; // original Arena/FFA orchestral theme
+    this.scoreDef = null; // Game 2's recorded soundtrack is combat-only; no synthesized ambient loop during exploration.
     const arena = (this.duel || this.online || this.teamMode || this.attract || this.tutorialMode) && !this.arenaDef;
     if (arena && !A.duelMap) throw new Error('Game 2 selected map not loaded');
     this.world = new World(R, arena ? A.duelMap : null, level);
@@ -63,16 +63,15 @@ export class Game {
     this.enemySpawn = arena ? this.world.spawns.enemy.slice() : level?.teamHomes ? level.teamHomes.red.slice() : [0, 0, 8];
     if (this.duel && level?.duelSpawns) { this.playerSpawn = level.duelSpawns.player.slice(); this.enemySpawn = level.duelSpawns.enemy.slice(); this.playerSpawnYaw = level.playerYaw; } // an authored arena's duel ground
     this.fx = new FX(R); this.sfx = new Sfx(opts.sfxBase); this.input = this.attract ? new NullInput() : new Input(canvas); this.hud = new HUD(hudCanvas); this.npcs = [];
-    // The old bgm_boss is a backup only. Once the UI resolves Game 1's
-    // HeroBackground "Combat 2" track, that same URL takes precedence.
-    // Never start combat music while loading or walking through a quiet map.
+    // The new recorded MP3 owns combat music in every playable Game 2 mode.
+    // No score is played while roaming and it never shares Game 3D's track.
     this.combatTrack = new Game2CombatTrack();
     let fallbackCombatUrl = '';
     try {
       const configured = JSON.parse(globalThis.localStorage?.getItem('combat_audio_map_v1') || '{}');
       fallbackCombatUrl = typeof configured?.bgm_boss === 'string' ? configured.bgm_boss : '';
     } catch { /* no browser storage available */ }
-    this.combatTrack.setUrl((this.duel || this.online || this.teamMode) ? null : (opts.combatMusicUrl || fallbackCombatUrl));
+    this.combatTrack.setUrl(this.attract ? null : (opts.combatMusicUrl || fallbackCombatUrl));
     this.battleMusicUnlock = () => { this.startMapMusic(); this.combatTrack.unlock(); };
     if (!this.attract) this.startMapMusic();
     if (typeof window !== 'undefined' && !this.attract) {
@@ -222,7 +221,7 @@ export class Game {
     }
   }
   setCombatTrackUrl(url) {
-    if (this.disposed || this.attract || this.duel || this.online || this.teamMode) return;
+    if (this.disposed || this.attract || this.opts.combatMusicUrl) return;
     this.combatTrack.setUrl(url);
   }
   // Settings' Music volume under the master volume; silent while muted (M).
