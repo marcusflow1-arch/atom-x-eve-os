@@ -1,7 +1,8 @@
 // The player auras (PassiveSkillAuraEffects) read the live buff engine (skills/buffEngine.jsx),
-// the one store skills write: Power Charge lights the hand glow and Aegis Shield the barrier while
-// their records are live. Repulsion and Heaven's Destruction have no castable skill, so they stay
-// off (docs/game3d/BUILD_BALANCE.md, section 5).
+// the one store skills write, and show while their records are live: Power Charge the hand glow,
+// Aegis Shield the barrier, Heaven's Riposte the Repulsion ring, God's Deflection the Heaven's
+// Destruction ring. The legacy Repulsion / Heaven's Destruction skills cannot be cast, so their rings
+// follow those live skills (docs/game3d/BUILD_BALANCE.md, section 5).
 import { test, beforeEach, after, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import Module, { createRequire } from 'node:module';
@@ -15,6 +16,8 @@ globalThis.requestAnimationFrame = window.requestAnimationFrame.bind(window);
 globalThis.cancelAnimationFrame = window.cancelAnimationFrame.bind(window);
 Object.defineProperty(globalThis, 'navigator', { value: window.navigator, configurable: true });
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+// JSDOM has no 2D canvas; the two ring auras then skip drawing (their canvas is still mounted).
+window.HTMLCanvasElement.prototype.getContext = () => null;
 
 const require = createRequire(import.meta.url);
 require('framer-motion').MotionGlobalConfig.skipAnimations = true;
@@ -91,20 +94,28 @@ test('an aura goes when the engine tick drops its expired buff', async () => {
   assert.deepEqual(auras(), []);
 });
 
-test('only Power Charge and Aegis Shield light auras; repulsion and destruction have no trigger', async () => {
+test("Heaven's Riposte shows the Repulsion ring and God's Deflection the Heaven's Destruction ring", async () => {
+  await settle(() => activateBuff('heavens_riposte', 1));
+  assert.deepEqual(auras(), ['repulsion']);
+  await settle(() => activateBuff('gods_deflection', 1));
+  assert.deepEqual(auras(), ['destruction', 'repulsion']);
+  await settle(() => clearBuff('heavens_riposte'));
+  assert.deepEqual(auras(), ['destruction']);
+});
+
+test('every aura follows a live ACTIVE_BUFF; the legacy aura skills cannot be cast', async () => {
   const liveBuffs = getSkillsByType('ACTIVE_BUFF').map((s) => s.skill_id);
   for (const id of Object.values(AURA_TRIGGERS).flat()) assert.ok(liveBuffs.includes(id), `${id} is a live ACTIVE_BUFF`);
-  assert.deepEqual(AURA_TRIGGERS.repulsion, []);
-  assert.deepEqual(AURA_TRIGGERS.destruction, []);
   for (const id of ['repulsion', 'heavens_destruction', 'barrier_aura', 'guardian_wall', 'iron_fortress', 'counter_pulse']) {
     assert.equal(getSkillById(id), null, `${id} is not in the skill registry`);
     assert.equal(activateBuff(id, 1), null, `${id} cannot be cast as a buff`);
   }
 
-  const others = liveBuffs.filter((id) => id !== 'axe_power_charge' && id !== 'aegis_shield');
+  const triggers = Object.values(AURA_TRIGGERS).flat();
+  const others = liveBuffs.filter((id) => !triggers.includes(id));
   await settle(() => others.forEach((id) => activateBuff(id, 1)));
   assert.deepEqual(auras(), [], 'no other live buff lights an aura');
 
-  await settle(() => { activateBuff('axe_power_charge', 1); activateBuff('aegis_shield', 1, { maxHP: 1000 }); });
-  assert.deepEqual(auras(), ['barrier', 'power-charge']);
+  await settle(() => triggers.forEach((id) => activateBuff(id, 1, { maxHP: 1000 })));
+  assert.deepEqual(auras(), ['barrier', 'destruction', 'power-charge', 'repulsion']);
 });

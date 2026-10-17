@@ -295,6 +295,7 @@ Weapon mastery and its class passive count in the gear group: they belong to the
   - reflect can knock out the attacker;
   - every hero-against-hero hit is scaled by 0.23.
 - **Rogue kills give title kills at the live rate** (the rogue's level, not ×100).
+- **The four player auras show again** (`PassiveSkillAuraEffects.jsx`). They read the buff engine, like the two HUD buff strips, and last as long as their buff: Power Charge (`axe_power_charge`) lights the hand glow, Aegis Shield (`aegis_shield`) the barrier, Heaven's Riposte (`heavens_riposte`) the Repulsion lightning ring and God's Deflection (`gods_deflection`) the Heaven's Destruction ring. The legacy Repulsion ("Reflect Shield") and Heaven's Destruction ("Crit Negate") skills are only in the old loot and equipment lists and cannot be cast, so their rings follow the live skills with the same effect (the reflection and critical-protection bridges in `axe/skills/AXEDivineSkillSet.js`). The old buff store (`activeBuffsStore.jsx`), which nothing wrote, is deleted.
 
 **Assumptions to confirm or change:** the PvP scale, the rotation and the uptimes above, the caps table, and the archetype definitions. Each is one constant in `axePowerBudget.ts` or `tools/game3d/build-matchups.mjs`.
 
@@ -303,7 +304,6 @@ Weapon mastery and its class passive count in the gear group: they belong to the
 - Bleed chance and trap damage (no bleed or trap systems exist).
 - Summon strength and HP-to-damage.
 - Rage gain, shield scaling and crowd-control resistance from classes.
-- The repulsion and Heaven's Destruction player auras (`PassiveSkillAuraEffects.jsx`) never show: no skill can cast them. Their ids (`repulsion`, `heavens_destruction`, and `barrier_aura`, `guardian_wall`, `iron_fortress`, `counter_pulse` for the old barrier) are only in the legacy loot and equipment skill lists, not in the skill registry. Turning one on needs a live skill chosen for it (one id in `AURA_TRIGGERS`). The other two auras now read the buff engine, like the two HUD buff strips: Power Charge (`axe_power_charge`) lights the hand glow and Aegis Shield (`aegis_shield`) the barrier while the buff lasts. The old buff store (`activeBuffsStore.jsx`) is deleted.
 - Positioning and range are not in the races: a ranged build's real advantage of hitting from distance is on top of the numbers above.
 
 **Not run:** live multiplayer (two players in one world) and the deployed duel server.

@@ -11,17 +11,20 @@ import { subscribeBuffs } from './skills/buffEngine';
  * write when cast:
  *   - axe_power_charge → hand glow, 20s OR until the charged hit lands
  *   - aegis_shield     → barrier, 180s OR until the shield is used up
+ *   - heavens_riposte  → God's Repulsion lightning ring, 180s
+ *   - gods_deflection  → Heaven's Destruction tilted ring, 180s
  *
- * Repulsion and Heaven's Destruction have no skill that can cast them: their
- * ids live only in the legacy loot / equipment skill lists, which the skill
- * registry does not hold. They stay off until a live skill is chosen for
- * them; their looks are kept below.
+ * The legacy Repulsion ("Reflect Shield") and Heaven's Destruction ("Crit
+ * Negate") skills cannot be cast (they are not in the skill registry), so
+ * their rings follow the live skills with the same effect, the bridges in
+ * axe/skills/AXEDivineSkillSet.js: reflection → Heaven's Riposte, critical
+ * protection → God's Deflection.
  */
 export const AURA_TRIGGERS = {
   powerCharge: ['axe_power_charge'],
   barrier:     ['aegis_shield'],
-  repulsion:   [],
-  destruction: [],
+  repulsion:   ['heavens_riposte'],
+  destruction: ['gods_deflection'],
 };
 
 function auraState(buffs, now = performance.now()) {
@@ -93,6 +96,7 @@ function RepulsionAura() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const W = canvas.width;
     const H = canvas.height;
     const cx = W / 2;
@@ -251,6 +255,7 @@ function HeavensDestructionAura() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const W = canvas.width;
     const H = canvas.height;
     const cx = W / 2;
