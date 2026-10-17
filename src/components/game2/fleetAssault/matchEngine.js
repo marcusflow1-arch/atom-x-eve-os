@@ -2,6 +2,8 @@
 // implemented; this shared state couples the three theaters in one local match.
 export const FLEET_ROLES = Object.freeze([
  { id:'pilot', name:'Starfighter Pilot', description:'Bombard the flagship from orbit.' },
+ { id:'security_director', name:'Security Director', description:'Coordinate defense and automated turrets.' },
+ { id:'security_trooper', name:'Security Foot Soldier', description:'Protect ship corridors and control stations.' },
  { id:'breacher', name:'Heavy Assault', description:'Clear the boarding corridors.' },
  { id:'infiltrator', name:'Stealth Infiltrator', description:'Hunt the enemy Jedi commander.' },
  { id:'saboteur', name:'Reactor Saboteur', description:'Destroy the capital ship reactor.' },
@@ -13,7 +15,7 @@ export const commanderMaxHP=h=>Math.round(240*(0.3+0.7*(clamp(h)/100)**1.8));
 export const commanderFocusDebuff=h=>Math.round(100*(1-1/(1+Math.exp(-0.08*(clamp(h)-40)))));
 export const getSecurityState=h=>h>75?{turrets:100,vents:'LOCKED'}:h>40?{turrets:50,vents:'PARTIAL'}:h>10?{turrets:10,vents:'OPEN'}:{turrets:0,vents:'OPEN'};
 export function newFleetMatch(role='pilot'){
- return {status:'active',role,theater:'orbit',turn:0,hull:100,ownHull:100,shields:60,reactor:100,
+ return {status:'active',role:FLEET_ROLES.some(r=>r.id===role)?role:'pilot',theater:'orbit',turn:0,hull:100,ownHull:100,shields:60,reactor:100,
   commanderHP:240,relay:0,relayOwner:'hostile',guards:3,jedi:2,breach:false,
   tickets:{friendly:100,hostile:100},actions:{torpedoes:0,strikes:0,broadcasts:0},victory:null,
   log:[{text:'Fleet command: Hostile flagship detected. Secure the relay and prepare a boarding team.',theater:'command'}]};
@@ -45,20 +47,20 @@ export function dispatchFleetAction(prev,action){
  }
  case 'CLEAR_GUARD':
   if(s.theater!=='boarding'||!s.breach||!s.guards)return prev;
-  s.guards--;s.tickets.hostile=clamp(s.tickets.hostile-2);s.actions.strikes++;say(s,'Security trooper defeated; '+s.guards+' remain.','boarding');break;
+  s.guards=clamp(s.guards-(s.role==='breacher'?2:1));s.tickets.hostile=clamp(s.tickets.hostile-2);s.actions.strikes++;say(s,'Security trooper defeated; '+s.guards+' remain.','boarding');break;
  case 'DEFEAT_JEDI':
   if(s.theater!=='boarding'||s.guards||!s.jedi)return prev;
-  s.jedi--;s.tickets.hostile=clamp(s.tickets.hostile-5);s.actions.strikes++;say(s,'Enemy Jedi defeated; '+s.jedi+' remain.','boarding');break;
+  s.jedi=clamp(s.jedi-(s.role==='infiltrator'?2:1));s.tickets.hostile=clamp(s.tickets.hostile-5);s.actions.strikes++;say(s,'Enemy Jedi defeated; '+s.jedi+' remain.','boarding');break;
  case 'ATTACK_COMMANDER':
   if(s.theater!=='boarding'||s.guards||s.jedi)return prev;
   s.commanderHP=clamp(s.commanderHP-32,0,commanderMaxHP(s.hull));s.actions.strikes++;
   say(s,'Commander struck. Remaining HP: '+s.commanderHP+'.','boarding');break;
  case 'SABOTAGE':
   if(s.theater!=='boarding'||s.guards)return prev;
-  s.reactor=clamp(s.reactor-34);say(s,'Reactor sabotage successful. Core at '+s.reactor+'%.','boarding');break;
+  s.reactor=clamp(s.reactor-(s.role==='saboteur'?50:34));say(s,'Reactor sabotage successful. Core at '+s.reactor+'%.','boarding');break;
  case 'CAPTURE_RELAY':
   if(s.theater!=='planet')return prev;
-  s.relay=clamp(s.relay+25);say(s,s.relay===100?'Relay captured — friendly fleet targeting enhanced.':'Relay code upload: '+s.relay+'%.','planet');break;
+  s.relay=clamp(s.relay+(s.role==='ground'?50:25));say(s,s.relay===100?'Relay captured — friendly fleet targeting enhanced.':'Relay code upload: '+s.relay+'%.','planet');break;
  case 'CLEAR_GROUND':
   if(s.theater!=='planet')return prev;
   s.tickets.hostile=clamp(s.tickets.hostile-5);say(s,'Ground infantry cleared from relay perimeter.','planet');break;

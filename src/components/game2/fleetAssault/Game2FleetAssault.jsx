@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useState } from 'react';
-import { ArrowLeft, AudioLines, Check, ChevronRight, CircleHelp, Crosshair, Gauge, Radio, RotateCcw, Satellite, Shield, Ship, Swords, Users, Zap } from 'lucide-react';
+import { ArrowLeft, AudioLines, Check, ChevronRight, CircleHelp, Crosshair, Gauge, Radio, RotateCcw, Satellite, Shield, Ship, Swords, Zap } from 'lucide-react';
 import FleetWorld from './FleetWorld';
 import { FLEET_ROLES, commanderFocusDebuff, commanderMaxHP, currentObjective, dispatchFleetAction, getSecurityState, newFleetMatch } from './matchEngine';
 
@@ -60,7 +60,7 @@ export default function Game2FleetAssault({onExit}) {
       <div className="mt-1 text-xs text-white/45">{r.description}</div></button>)}</div>
     <div className="mt-7 flex flex-wrap items-center gap-4">
       <button data-testid="fleet-deploy" onClick={begin} className="inline-flex items-center gap-3 rounded-xl bg-cyan-300 px-6 py-3.5 text-sm font-extrabold tracking-widest text-slate-950 hover:bg-cyan-200">DEPLOY AS {roleInfo?.name.toUpperCase()} <ChevronRight size={18}/></button>
-      <div className="max-w-sm text-[11px] leading-relaxed text-amber-200/70">Offline gameplay prototype: the full 50v50 networking, server-authoritative flight, and live WebRTC voice channels are not online yet.</div>
+      <div className="max-w-sm text-[11px] leading-relaxed text-amber-200/70">Offline gameplay prototype: roles have basic combat bonuses, but the full 50v50 networking, server-authoritative flight, and live WebRTC voice channels are not online yet.</div>
     </div>
   </div>
  </div>;

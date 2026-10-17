@@ -21,3 +21,10 @@ test('reactor sabotage wins and restart resets match',()=>{
  assert.equal(s.reactor,0);assert.equal(s.status,'victory');assert.equal(act(s,{type:'RESTART'}).status,'active');
 });
 test('damaged hull reduces security and commander HP cap',()=>{assert.equal(getSecurityState(100).vents,'LOCKED');assert.equal(getSecurityState(25).vents,'OPEN');assert.ok(commanderMaxHP(25)<commanderMaxHP(95));});
+
+test('specialist roles give meaningful local combat and relay advantages',()=>{
+ let a=act(newFleetMatch('breacher'),{type:'GO_BOARD'});a=act(a,{type:'CLEAR_GUARD'});assert.equal(a.guards,1);
+ let b=act(newFleetMatch('ground'),{type:'GO_PLANET'});b=act(b,{type:'CAPTURE_RELAY'});assert.equal(b.relay,50);
+ let c=act(newFleetMatch('saboteur'),{type:'GO_BOARD'});for(let i=0;i<3;i++)c=act(c,{type:'CLEAR_GUARD'});
+ c=act(c,{type:'SABOTAGE'});assert.equal(c.reactor,50);
+});
