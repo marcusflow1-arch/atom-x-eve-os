@@ -3,6 +3,7 @@ import { BookOpen } from 'lucide-react';
 import { subscribeLoadout, getLoadout } from '../skills/loadoutStore';
 import { getSkillById } from '../skills/skillRegistry';
 import { subscribeBuffs } from '../skills/buffEngine';
+import { getSkillMastery, subscribeSkillMastery } from '../skills/skillMasteryStore';
 import HUDSkillsBookPanel from './HUDSkillsBookPanel';
 
 // Map a new-system buff record → { remaining, hits } for the floating label.
@@ -33,7 +34,7 @@ const TYPE_COLORS = {
   PASSIVE:       '#a78bfa',
 };
 
-function SlotButton({ slotKey, skill, cooldown, buffStatus }) {
+function SlotButton({ slotKey, skill, cooldown, buffStatus, mastery }) {
   const cd    = cooldown || 0;
   const maxCd = skill?.cooldown || 1;
   const cdPct = Math.min(1, cd / maxCd);
@@ -62,6 +63,7 @@ function SlotButton({ slotKey, skill, cooldown, buffStatus }) {
       )}
       <button
         className="relative w-[58px] h-[58px] rounded-sm transition-transform hover:scale-105"
+        title={skill && mastery ? masteryTitle(skill, mastery) : undefined}
         style={{
           background: skill
             ? `linear-gradient(135deg, ${color}55 0%, ${color}22 100%)`
@@ -78,6 +80,21 @@ function SlotButton({ slotKey, skill, cooldown, buffStatus }) {
         <div className="absolute inset-1 rounded-[2px] bg-black/35" />
         {skill && (
           <div className="absolute inset-0 flex items-center justify-center text-xl">{icon}</div>
+        )}
+        {skill && mastery && (
+          <>
+            {/* Skill mastery: level, rank colour and progress to the next level */}
+            <div
+              data-mastery-level={mastery.level}
+              className="absolute top-[2px] left-0 px-1 py-0.5 text-[9px] font-black leading-none tabular-nums"
+              style={{ background: 'rgba(0,0,0,0.75)', color: mastery.rank.color, borderBottomRightRadius: 3 }}
+            >
+              {mastery.level}
+            </div>
+            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'rgba(0,0,0,0.5)' }}>
+              <div className="h-full" style={{ width: `${Math.round(mastery.progress * 100)}%`, background: mastery.rank.color }} />
+            </div>
+          </>
         )}
         {onCooldown && (
           <div className="absolute inset-0 rounded-sm flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.55)' }}>
@@ -107,6 +124,11 @@ function SlotButton({ slotKey, skill, cooldown, buffStatus }) {
   );
 }
 
+function masteryTitle(skill, m) {
+  const xp = m.nextLevelXp == null ? 'mastered' : `${Math.floor(m.xp - m.levelStartXp)} / ${m.nextLevelXp - m.levelStartXp} XP`;
+  return `${skill.skill_name} — level ${m.level}/${m.maxLevel} (${m.rank.label}) · ${xp}`;
+}
+
 export default function HUDSkillSlots() {
   const [loadout, setLoadout] = useState(getLoadout());
   const [buffs, setBuffs] = useState({});
@@ -115,6 +137,7 @@ export default function HUDSkillSlots() {
 
   useEffect(() => subscribeLoadout(setLoadout), []);
   useEffect(() => subscribeBuffs((s) => setBuffs(s.buffs || {})), []);
+  useEffect(() => subscribeSkillMastery(() => force((n) => n + 1)), []);
   useEffect(() => {
     const id = setInterval(() => force((n) => n + 1), 200);
     return () => clearInterval(id);
@@ -127,6 +150,7 @@ export default function HUDSkillSlots() {
     return id ? getSkillById(id) : null;
   };
   const buffStatusForSlot = (idx) => getBuffStatusFromRecord(activeSlots[idx], buffs);
+  const masteryForSlot = (idx) => (activeSlots[idx] ? getSkillMastery(activeSlots[idx]) : null);
 
   return (
     <>
@@ -170,6 +194,7 @@ export default function HUDSkillSlots() {
               skill={skillForSlot(4 + i)}
               cooldown={cooldowns[4 + i]}
               buffStatus={buffStatusForSlot(4 + i)}
+              mastery={masteryForSlot(4 + i)}
             />
           ))}
 
@@ -209,6 +234,7 @@ export default function HUDSkillSlots() {
               skill={skillForSlot(i)}
               cooldown={cooldowns[i]}
               buffStatus={buffStatusForSlot(i)}
+              mastery={masteryForSlot(i)}
             />
           ))}
         </div>

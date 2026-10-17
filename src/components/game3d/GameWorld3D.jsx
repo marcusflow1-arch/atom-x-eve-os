@@ -2018,8 +2018,7 @@ export default function GameWorld3D() {
           }
 
           if (canCast) {
-            const result = castSkill(newSkillId, {
-              level: 1,
+            const result = castSkill(newSkillId, { // at the skill's mastery level (skillMasteryStore)
               maxHP: getHUDForSkill().maxHP || 100,
               slotIndex,
               targetId: lockOnTargetRef.current?.id || null,

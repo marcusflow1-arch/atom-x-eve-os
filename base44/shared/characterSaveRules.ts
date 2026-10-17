@@ -6,6 +6,7 @@
 // save (a level or Silver jump faster than play allows) are accepted but flagged for
 // review, so an honest player is never blocked by a guess.
 import { AXE_LEVEL_CAP } from './axePowerBudget.ts';
+import { SKILL_MASTERY_KEY, checkSkillMasterySave, skillMasteryRateFlags } from './skillMastery.ts';
 
 type Save = Record<string, string>;
 
@@ -90,6 +91,9 @@ export function checkCharacterSave(data: unknown, previous: Save | null = null, 
   }
   const ascension = parse(s.axe_ascension_v1);
   if (ascension?.ascended && level < 100) errors.push(`ascended at level ${level} (Ascension opens at 100)`);
+  // skill mastery: XP per skill, the level is read from it (skillMastery.ts)
+  const mastery = parse(s[SKILL_MASTERY_KEY]);
+  if (s[SKILL_MASTERY_KEY] !== undefined) errors.push(...checkSkillMasterySave(mastery));
   // gear: a fully built level-100 heroic item stays far below these
   const inventory = parse(s.axe_equipment_inventory_v2);
   const items = (inventory?.items || []) as any[];
@@ -120,6 +124,7 @@ export function checkCharacterSave(data: unknown, previous: Save | null = null, 
       .reduce((n: number, list: any) => n + (Array.isArray(list) ? list.filter((u: any) => String(u?.id || '').startsWith('mat_')).length : 0), 0);
     const gained = materials(s) - materials(previous);
     if (gained > 30 + 120 * minutes) flags.push(`material_rate: +${gained} in ${minutes.toFixed(1)} min`);
+    if (mastery) flags.push(...skillMasteryRateFlags(mastery, parse(previous[SKILL_MASTERY_KEY]), minutes));
   }
   return { ok: errors.length === 0, errors: errors.slice(0, 20), flags, bytes };
 }

@@ -1,6 +1,7 @@
 import { getSkillById, scaleStat } from './skillRegistry';
 import { canCastWithEquippedWeapon, describeWeaponMismatch } from './weaponValidator';
 import { activateBuff } from './buffEngine';
+import { getSkillMasteryLevel, noteBuffCast, noteSkillCharge, noteSkillStrike } from './skillMasteryStore';
 import { SKILL_TYPE, CAST_TYPE } from './skillTypes';
 import { getLoadout } from './loadoutStore';
 import { getActiveWeaponId } from '../progression/weaponMastery/WeaponScalingPipeline';
@@ -56,13 +57,14 @@ function dispatchStrike(skill, hitIndex, level, echo = null) {
     ? consumeCriticalFocusForSingleHit()
     : false;
   if (forceCritical) armForcedCriticalHit(1);
+  const hitsTotal = echo?.total ?? skill.hit_count + (getAXEMountFusionState().active ? planAXEMountSoulEchoes(skill).length : 0); // the fused count on every strike of the cast
 
   window.dispatchEvent(new CustomEvent('playerSkillStrike', {
     detail: {
       skillId: skill.skill_id,
       multiplier,
       hitIndex,
-      hitsTotal: echo?.total ?? skill.hit_count + (getAXEMountFusionState().active ? planAXEMountSoulEchoes(skill).length : 0), // the fused count on every strike of the cast
+      hitsTotal,
       castType: skill.cast_type,
       weaponType: skill.weapon_type,
       forceCritical,
@@ -78,6 +80,7 @@ function dispatchStrike(skill, hitIndex, level, echo = null) {
       aerial: Boolean(skill.aerial),
     },
   }));
+  noteSkillStrike(skill.skill_id, hitsTotal); // mastery: earned if the strike lands
 }
 
 function scheduleSequential(skill, level) {
@@ -135,7 +138,8 @@ export function castSkill(skillId, ctx = {}) {
     return { ok: false, reason: weaponCheck.reason };
   }
 
-  const level = ctx.level || 1;
+  // the skill's mastery level unless the caller fixes one (skillMasteryStore)
+  const level = Number(ctx.level) || getSkillMasteryLevel(skillId);
   const inferredSlot = Number.isInteger(ctx.slotIndex)
     ? ctx.slotIndex
     : getLoadout().activeSlots.indexOf(skillId);
@@ -143,7 +147,8 @@ export function castSkill(skillId, ctx = {}) {
   if (inferredSlot === 1) {
     markCasting(180);
     primeCriticalFocus(inferredSlot);
-    if (skill.skill_type === SKILL_TYPE.ACTIVE_BUFF) activateBuff(skillId, level, { maxHP: ctx.maxHP });
+    if (skill.skill_type === SKILL_TYPE.ACTIVE_BUFF) noteBuffCast(skillId, activateBuff(skillId, level, { maxHP: ctx.maxHP })?.expiresAt);
+    else noteSkillCharge(skillId);
     reportSkillCast(getActiveWeaponId());
     toast(`${skill.icon || '⚡'} Critical Focus armed`);
     return { ok: true, charge: true };
@@ -151,7 +156,7 @@ export function castSkill(skillId, ctx = {}) {
 
   if (skill.skill_type === SKILL_TYPE.ACTIVE_BUFF) {
     markCasting(220);
-    activateBuff(skillId, level, { maxHP: ctx.maxHP });
+    noteBuffCast(skillId, activateBuff(skillId, level, { maxHP: ctx.maxHP })?.expiresAt);
     reportSkillCast(getActiveWeaponId());
     toast(`${skill.icon} ${skill.skill_name} activated`);
     return { ok: true };

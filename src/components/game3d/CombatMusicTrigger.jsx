@@ -18,6 +18,7 @@ import { useEffect, useRef } from 'react';
 import { enterCombat, exitCombat } from './combatMusicController';
 import { subscribePlayerHUD } from './playerHUDStore';
 import { setCombatFlag } from './talents/advancedClassStore';
+import { noteCombatActivity } from './skills/skillMasteryStore';
 
 const COMBAT_IDLE_TIMEOUT_MS = 5000;
 
@@ -31,6 +32,7 @@ export default function CombatMusicTrigger() {
     const bump = () => {
       enterCombat();
       setCombatFlag('in_combat', true);
+      noteCombatActivity(); // skill mastery: buffs that are up count as used
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       idleTimerRef.current = setTimeout(() => {
         idleTimerRef.current = null;

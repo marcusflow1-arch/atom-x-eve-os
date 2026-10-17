@@ -108,6 +108,30 @@ The owner's third version adds the following. v1 governs where versions conflict
 | Soul skill transformations: 1 → 2-hit spectral strike, 3 → 5-hit flurry, AoE → double AoE (the second rolls crit independently) | Slice C | **Done** |
 | Outfits with static stats and a show/hide hotkey | `AXECostumeStore.js`: costume bonuses and `setAXECostumeHidden` | Present (hotkey not checked) |
 
+## 12. v4 additions (owner's vision, 2026-10-16)
+
+The owner wants every system working together, the back end done and the mechanics settled before content, however
+long it takes.
+
+| Vision v4 | Game 3D today | Status |
+|---|---|---|
+| Skills start at level 1 and evolve to the next level by being used, up to the highest; single hit, multi-hit, AoE and buffs alike | Slice E (below): `skills/skillMasteryStore.jsx`. Before it, every skill was cast at level 1 forever | **Done** (branch `game3d/skill-mastery`) |
+| WASD movement, with click-to-move as an option the player can switch on | WASD, camera-relative, in `GameWorld3D.jsx`; no click-to-move; boss AI has its own move targets | Partial, additive |
+| Realistic skill effects, so it reads as a new game | A cast light beam (`createPlayerCastLightBeam`), the soul-fusion and Ascension effect runtimes; skill strikes reuse the basic attack swing | Partial (rendering branch) |
+| AAA graphics; shrink the world if needed, with the camera set so a player sees no difference | `axe/core/axeWorldScaleConfig.js` (meters, a 1.8 m hero), region streaming (`axe/world/AXEWorldStreamingSystem.js`); no quality tiers, LOD budget or renderer benchmark | **Missing** (rendering, benchmarked; see D12) |
+| Realistic flowing water; swimming | No water surface or swim state anywhere in Game 3D | **Missing** |
+| Levitation and flight | Ascension levitation only (a 0.15 m hover, movement ×1.12) and the wing meshes (`PlayerAngelWings.jsx`) | Partial |
+| The Chosen's base above the city, visible far up, reachable only by flying | Nothing; the streaming system has a `Divine` region type | **Missing** (needs flight) |
+| Breath of the Wild–style exploration: elite skills and rare materials found out in the land | Region and POI streaming, interaction intents (`Gather`, `Inspect`, `Open`), quest location discovery (`reportLocationDiscovery`); the legacy skill book names drop sources (hidden dungeon, legendary encounter) | Partial (frameworks only; nothing placed) |
+
+**On shrinking the world:** scaling the world and the camera together renders exactly the same picture, so on its own
+it does not make the game run faster. GPU cost comes from triangles, draw calls, screen pixels, lights and shaders,
+not from world units. A small world scale also costs depth precision (flicker on distant surfaces) and needs physics
+retuned. What keeps the look while running well is what AAA games do: levels of detail and impostors for distant
+buildings, instancing, streaming regions in and out (already scaffolded), compressed textures and meshes (KTX2,
+meshopt/Draco), baked lighting and dynamic resolution. A player cannot see these when they are tuned. They belong in a
+benchmarked rendering branch (`.claude/skills/game2-renderer-benchmark/SKILL.md` describes the method).
+
 ## Delivered
 
 - **Slice A, weapons (2026-10-15):** five archetypes beside the existing three roles (`axe/weapons/AXEWeaponArchetypes.js`);
@@ -129,6 +153,11 @@ The owner's third version adds the following. v1 governs where versions conflict
   one-hour cooldown; levitation (0.15 m, movement ×1.12) and the Angel Cloak (+500 HP, +40 defense, +30 attribution
   defense, +3% movement; the mesh can be hidden). Progression → Ascension. Report:
   [reports/WUXIA-D-ascension.md](reports/WUXIA-D-ascension.md).
+- **Slice E, skill mastery (2026-10-16):** every skill starts at level 1 and levels up to 30 by being used: strikes
+  that land, buffs that are up in a fight. Ranks run Base → Master → Demigod → God → Chosen. Each use earns the
+  skill's cooldown in XP, about 20 hours of fighting to master. The level feeds every cast. The level shows on the
+  skill slots and a toast announces each level-up. The save is per character, kept by the Character Vault and checked
+  by the server. [SKILL_MASTERY.md](SKILL_MASTERY.md).
 
 ## Decisions the owner must make
 
@@ -139,6 +168,17 @@ The owner's third version adds the following. v1 governs where versions conflict
 - **D5:** replace the 0–200 kill-currency halo with the +96 CP/silver halo, or keep both?
 - **D6:** any real-money shop at all? It needs an economy and security review before any code.
 - **D7:** sumi-e for the UI only, or for the 3D world rendering too (a separate rendering branch, benchmarked)?
+- **D8 (skill mastery):** about 20 hours to master a skill: keep? Should the ranks change the skill itself (bigger
+  effect, an extra hit, a new visual) and should mastery shorten cooldowns? Keep, merge or remove the old skill book
+  points? ([SKILL_MASTERY.md](SKILL_MASTERY.md))
+- **D9 (click-to-move):** owner's answer: WASD by default, click-to-move as a switchable option. Open: should a click
+  on an enemy also lock on and attack?
+- **D10 (water and flight):** where can heroes swim, and does it cost stamina? Who can fly and from when (the Chosen
+  Ascension at level 100, wings, or both)? Can flying heroes fight?
+- **D11 (the Chosen's base):** who are "the Chosen": heroes who took the Taurus Chosen Ascension, or the Chosen
+  skill rank? What is there (a hub, vendors, a trial)?
+- **D12 (graphics):** the target device and frame rate (for example 60 fps on a mid-range laptop GPU) and the quality
+  tiers. These set the rendering budget the benchmark measures against.
 
 ## Proposed build order
 
@@ -150,3 +190,17 @@ Additive slices first; none of them changes an existing save.
 4. **Mount soul fusion:** 7 mount gear slots, the combination share, absorption pills (timed state), a clan-coloured aura and the three soul skills.
 5. **Wing Halo ranks 1–20** on top of the existing 120% wings.
 6. After D1–D7: rarity, caps and halo migrations, CP towers and titles, the shop, and the sumi-e rendering pass.
+
+v4, mechanics and back end first, each on its own branch:
+
+7. **Skill mastery** (slice E, done on its branch).
+8. **Click-to-move option** (movement): a settings switch, ground click to move, WASD cancels the move; it never
+   changes WASD play.
+9. **Swimming** (movement): a swim state, buoyancy, surface and underwater movement, and a water volume in the world
+   data. **Flowing water** (rendering, benchmarked) is a separate branch.
+10. **Flight** (movement): take-off, hover, glide and landing, built on the existing levitation and wings. Then **the
+    Chosen's sky base** (world content), reachable only by flight.
+11. **Exploration discoveries** (progression and world): elite skill scrolls and rare materials placed in regions
+    through the interaction system, granted by the server so they cannot be faked.
+12. **Rendering budget** (rendering, benchmarked): quality tiers, LOD and streaming budgets, then realistic skill
+    effects on that budget.
