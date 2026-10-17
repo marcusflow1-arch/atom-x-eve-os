@@ -546,7 +546,7 @@ export class Game {
     else if (p.status === 'dead') { if (!this.teamMode && (i.pressed('Enter') || this.t - p.deadAt > 12)) this.respawnPlayer(); return; }
     // R: from the pistol, the saber; otherwise execute the foe that is ready for it (the prompt shows), else draw / holster
     if (i.pressed('KeyR')) { if (this.playerWeapon === 'bryar') this.switchWeapon('saber'); else { const ex = this.execCandidate && findExecutable(this, p); if (ex) this.startExecution(p, ex.victim, ex.kind); else p.toggleSaber(); } }
-    if (i.pressed('KeyQ') && this.playerWeapon) this.switchWeapon();
+    // Q is reserved for hold-to-evade. Weapon swapping remains available through the existing R saber draw/holster flow.
     // A holstered saber can be drawn directly with either mouse attack.
     // Draw immediately so that the initiating input is not discarded behind
     // LS_DRAW; the held primary attack can flow into the next saber strike.
