@@ -55,7 +55,7 @@ export class Game {
     const gun = geo(); gun.box(0, 0.03, 0, 0.05, 0.13, 0.06, [0.16, 0.16, 0.19, 1]).box(0, -0.12, 0, 0.045, 0.2, 0.05, [0.32, 0.33, 0.38, 1]).box(0, -0.235, 0, 0.03, 0.05, 0.03, [0.9, 0.25, 0.15, 1]); this.gunMesh = R.uploadStatic(gun.build());
     this.arenaDef = this.teamMode || this.duel || this.tutorialMode || this.online ? AUTHORED_LEVELS[opts.mapId] || null : null; // a large authored arena instead of a BSP
     const level = this.missionDef ? buildLevel(this.missionDef.layout) : this.arenaDef ? buildLevel(this.arenaDef.layout) : null;
-    this.scoreDef = level?.music ? SCORES[level.music] || null : null; // an authored arena's own generated score (music.js)
+    this.scoreDef = (this.duel || this.online || this.teamMode) ? SCORES.arena_anthem : level?.music ? SCORES[level.music] || null : null; // original Arena/FFA orchestral theme
     const arena = (this.duel || this.online || this.teamMode || this.attract || this.tutorialMode) && !this.arenaDef;
     if (arena && !A.duelMap) throw new Error('Game 2 selected map not loaded');
     this.world = new World(R, arena ? A.duelMap : null, level);
@@ -72,7 +72,7 @@ export class Game {
       const configured = JSON.parse(globalThis.localStorage?.getItem('combat_audio_map_v1') || '{}');
       fallbackCombatUrl = typeof configured?.bgm_boss === 'string' ? configured.bgm_boss : '';
     } catch { /* no browser storage available */ }
-    this.combatTrack.setUrl(opts.combatMusicUrl || fallbackCombatUrl);
+    this.combatTrack.setUrl((this.duel || this.online || this.teamMode) ? null : (opts.combatMusicUrl || fallbackCombatUrl));
     this.battleMusicUnlock = () => { this.startMapMusic(); this.combatTrack.unlock(); };
     if (!this.attract) this.startMapMusic();
     if (typeof window !== 'undefined' && !this.attract) {

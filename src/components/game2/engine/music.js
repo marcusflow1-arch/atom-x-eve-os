@@ -11,7 +11,40 @@ const CHORDS = { // root position triads from the third octave (MIDI); the bass 
 };
 
 // "Skybridge" (D minor, 116 BPM): A A B C, 8 bars each (about 66 s), then again from the top
+export const ARENA_ANTHEM = Object.freeze({
+  name: 'Starlight Reckoning', bpm: 144,
+  sections: {
+    A: { chords: ['Dm', 'Gm', 'Bb', 'A', 'Dm', 'F', 'Gm', 'A'], drums: 'march', brass: 'stab', choir: true, ostinato: 0 },
+    B: { chords: ['Bb', 'C', 'Dm', 'A', 'Gm', 'Bb', 'A', 'Dm'], drums: 'battle', brass: 'swell', choir: true, ostinato: 4 },
+    C: { chords: ['Dm', 'Bb', 'Gm', 'A', 'F', 'Gm', 'A', 'Dm'], drums: 'battle', brass: 'stab2', choir: true, ostinato: 0 },
+  },
+  melodies: {
+    A: [
+      [[0, 74, 1], [1, 77, .5], [1.5, 81, 1], [3, 79, 1]],
+      [[0, 77, 1.5], [1.5, 74, .5], [2, 72, 1], [3, 70, 1]],
+      [[0, 77, 1], [1, 81, 1], [2, 82, .5], [2.5, 81, .5], [3, 77, 1]],
+      [[0, 76, 2], [2, 73, 1], [3, 76, 1]],
+      [[0, 74, .5], [.5, 77, .5], [1, 81, 1], [2, 84, 1], [3, 81, 1]],
+      [[0, 79, 1.5], [1.5, 77, .5], [2, 76, 1], [3, 72, 1]],
+      [[0, 74, 1], [1, 77, 1], [2, 81, 1], [3, 82, 1]],
+      [[0, 81, 3], [3, 76, 1]],
+    ],
+    C: [
+      [[0, 86, 1], [1, 89, .5], [1.5, 93, 1], [3, 91, 1]],
+      [[0, 89, 2], [2, 86, 1], [3, 84, 1]],
+      [[0, 86, 1], [1, 89, 1], [2, 93, 1], [3, 91, 1]],
+      [[0, 88, 3], [3, 85, 1]],
+      [[0, 89, 1], [1, 93, 1], [2, 96, 2]],
+      [[0, 91, 1], [1, 89, 1], [2, 86, 2]],
+      [[0, 88, 1], [1, 85, 1], [2, 88, 2]],
+      [[0, 86, 4]],
+    ],
+  },
+  form: [{ s: 'A', melody: 'A' }, { s: 'B' }, { s: 'C', melody: 'C' }],
+});
+
 export const SCORES = Object.freeze({
+  arena_anthem: ARENA_ANTHEM,
   skybridge: {
     name: 'Skybridge', bpm: 116,
     sections: {
